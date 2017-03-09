@@ -1,0 +1,102 @@
+<!--
+Copyright 2016 Michael A Updike
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+
+<link rel="import" href="../setting-toggle/setting-toggle.html">
+<link rel="import" href="../setting-dropdown/setting-dropdown.html">
+<link rel="import" href="../setting-text/setting-text.html">
+
+<dom-module id="settings-page">
+	<style include="iron-flex iron-flex-alignment"></style>
+	<style include="shared-styles"></style>
+	<template>
+		<style>
+
+			:host {
+				display: block;
+				position: relative;
+			}
+
+		</style>
+
+		<paper-card class="page-content" heading="Settings">
+			<div class="card-content">
+				<setting-toggle section-title="Clipboard"
+				                name="monitorClipboard"
+								main-label="Monitor clipboard"
+								secondary-label="Automatically store contents when possible"
+								checked="{{monitorEnabled}}"></setting-toggle>
+				<setting-toggle name="allowPush"
+								main-label="Push to devices"
+								secondary-label="Send contents to registered devices"
+								checked="{{pushEnabled}}"></setting-toggle>
+				<setting-toggle name="autoSend"
+								main-label="Auto send"
+								secondary-label="Automatically send contents when possible"
+								disabled$="[[!pushEnabled]]"
+								indent></setting-toggle>
+
+				<setting-text section-title="General"
+				              id="deviceNickname"
+				              name="deviceNickname"
+				              main-label="Nickname"
+				              secondary-label="Descriptive name for this device"
+				              placeholder="e.g. Home Laptop"
+				              maxlength="32"></setting-text>
+				<setting-dropdown name="storageDuration"
+				                  label="Storage duration"
+                                  items='["One day", "One week", "One month", "One year", "Until space needed"]'></setting-dropdown>
+
+				<setting-toggle section-title="Notifications"
+				                name="notifyOnSend"
+				                main-label="Notify on send"
+				                secondary-label="Display notification when a message is sent"
+				                noseparator></setting-toggle>
+			</div>
+		</paper-card>
+	</template>
+</dom-module>
+
+<script>
+(function(window) {
+	'use strict';
+	window.app = window.app || {};
+	app.SettingsPageFactory = Polymer({
+		is: 'settings-page',
+
+		listeners: {
+			'setting-text-changed': '_onNicknameChanged',
+		},
+
+		/**
+		 * Event: (@link Device} nickname changed
+		 * @private
+		 */
+		_onNicknameChanged: function() {
+			chrome.runtime.sendMessage({
+				message: 'deviceNameChanged',
+			}, function() {});
+		},
+
+	});
+})(window);
+</script>

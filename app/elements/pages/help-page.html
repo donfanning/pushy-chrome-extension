@@ -1,0 +1,123 @@
+<!--
+Copyright 2016 Michael A Updike
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+
+<link rel="import" href="../setting-link/setting-link.html">
+
+<script type="text/javascript" src="../../scripts/utils.js"></script>
+
+<dom-module id="help-page">
+	<template>
+		<style include="iron-flex iron-flex-alignment"></style>
+		<style include="shared-styles"></style>
+		<style>
+
+		:host {
+			display: block;
+			position: relative;
+		}
+
+		hr {
+			margin-left: 0;
+			margin-right: 0;
+		}
+
+		.card-content {
+			padding: 0;
+			margin: 0;
+		}
+
+		</style>
+
+		<paper-card class="page-content" heading="Help & feedback">
+			<div class="card-content">
+				<setting-link section-title="Feedback (English only, please)"
+				              label="Question"
+				              icon="myicons:mail"
+				              url="mailto:clipmanapp%40gmail.com?subject=Question&body=[[_computeEmailBody()]]"></setting-link>
+				<setting-link label="Bug report"
+				              icon="myicons:mail"
+				              url="mailto:clipmanapp%40gmail.com?subject=Bug%20report&body=[[_computeEmailBody()]]"></setting-link>
+				<setting-link label="Feature request"
+				              icon="myicons:mail"
+				              url="mailto:clipmanapp%40gmail.com?subject=Feature%20request&body=[[_computeEmailBody()]]"></setting-link>
+				<setting-link label="General feedback"
+				              icon="myicons:mail"
+				              url="mailto:clipmanapp%40gmail.com?subject=General%20feedback"></setting-link>
+				<setting-link label="Submit Github issue"
+				              icon="myicons:github"
+				              url="https://github.com/opus1269/Clip-Man-Chrome/issues/new"
+				              noseparator=""></setting-link>
+				<hr />
+				<setting-link section-title="Help"
+				              label="Extension documentation"
+				              icon="myicons:github"
+				              url="https://github.com/opus1269/Clip-Man-Chrome/blob/master/README.md"></setting-link>
+				<setting-link label="Release notes"
+				              icon="myicons:github"
+				              url="https://github.com/opus1269/Clip-Man-Chrome/releases/tag/v[[_computeVersion()]]"></setting-link>
+				<setting-link label="Open source licenses"
+				              icon="myicons:github"
+				              url="https://github.com/opus1269/Clip-Man-Chrome/blob/master/LICENSES.md"></setting-link>
+				<setting-link label="Source code"
+				              icon="myicons:github"
+				              url="https://github.com/opus1269/Clip-Man-Chrome"
+				              noseparator=""></setting-link>
+			</div>
+		</paper-card>
+	</template>
+</dom-module>
+
+<script>
+(function(window) {
+	'use strict';
+	window.app = window.app || {};
+	app.HelpPageFactory = Polymer({
+		is: 'help-page',
+
+       /**
+        * computed binding: Get the body for support emails
+        *
+        * @return {String}
+        * @private
+        */
+       _computeEmailBody: function() {
+			const text = 'Extension version: ' + app.Utils.getVersion() +
+					'\nChrome version: ' + app.Utils.getFullChromeVersion() +
+					'\nOS: ' + app.Utils.get('os') + '\n\n';
+			return encodeURIComponent(text);
+       },
+
+       /**
+        * computed binding: Get the extension version
+        *
+        * @return {String}
+        * @private
+        */
+       _computeVersion: function() {
+			const text = app.Utils.getVersion();
+			return encodeURIComponent(text);
+       },
+
+	});
+})(window);
+</script>

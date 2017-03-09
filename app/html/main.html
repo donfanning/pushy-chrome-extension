@@ -1,0 +1,148 @@
+﻿<!--
+Copyright 2016 Michael A Updike
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="description" content="">
+	<meta name="generator" content="Clip Man" />
+
+	<title>Clip Man</title>
+
+	<link rel="stylesheet" href="../styles/main.css">
+
+	<!-- All imports here - will be vulcanized -->
+	<link rel="import" href="../elements/elements.html">
+
+	<!-- For iron-flex-layout -->
+	<style is="custom-style" include="iron-flex iron-flex-alignment iron-flex-factors iron-positioning"></style>
+
+	<!-- For shared styles, shared-styles.html import in elements.html -->
+	<style is="custom-style" include="shared-styles"></style>
+</head>
+
+<body unresolved class="fullbleed layout vertical">
+
+	<template is="dom-bind" id="t">
+		<style is="custom-style">
+
+			#mainToolbar .middle-container  {
+				height: 100%;
+				margin-left: 48px;
+			}
+
+			#mainToolbar .middle {
+				@apply(--paper-font-headline);
+				padding-bottom: 0;
+			}
+
+			/*noinspection CssUnusedSymbol*/
+			#drawerToolbar {
+				color: var(--secondary-text-color);
+				background-color: var(--drawer-menu-color);
+				border-bottom: var(--drawer-toolbar-border-color);
+			}
+
+			#drawerToolbar .menu-name {
+				@apply(--paper-font-title);
+			}
+
+			#drawer.paper-drawer-panel > [drawer] {
+				border-right: 1px solid rgba(0, 0, 0, 0.14);
+			}
+
+		</style>
+
+		<paper-drawer-panel id="paperDrawerPanel" responsive-width="1500px" drawer-width="300px">
+			<paper-material elevation="2" drawer fixed>
+				<paper-scroll-header-panel>
+					<paper-toolbar id="drawerToolbar">
+						<span class="paper-font-title">Menu</span>
+					</paper-toolbar>
+					<!-- Drawer Content -->
+					<paper-menu class="list" id="mainMenu" attr-for-selected="id" selected="[[route]]">
+						<template is="dom-repeat" items="[[pages]]">
+							<paper-item id="[[item.route]]" class="center horizontal layout"
+							            on-tap="onNavMenuItemTapped" disabled$="[[item.disabled]]">
+								<iron-icon icon="[[item.icon]]"></iron-icon>
+								<span>[[item.label]]</span>
+							</paper-item>
+						</template>
+					</paper-menu>
+				</paper-scroll-header-panel>
+			</paper-material>
+
+			<!-- Main Header Panel -->
+			<paper-header-panel id="mainPanel" main fixed>
+				<!-- Main Toolbar -->
+				<paper-toolbar id="mainToolbar">
+					<paper-icon-button id="paperToggle" icon="myicons:menu" paper-drawer-toggle></paper-icon-button>
+					<span class="space"></span>
+					<div class="middle middle-container center horizontal layout flex">
+						<div class="app-name flex">Clip Man</div>
+					</div>
+				</paper-toolbar>
+
+				<!-- Main Content -->
+				<div id="mainContainer">
+
+					<!-- Error dialog -->
+					<paper-dialog id="errorDialog" modal entry-animation="scale-up-animation"
+					              exit-animation="fade-out-animation">
+						<h2>[[dialogTitle]]</h2>
+						<paper-dialog-scrollable>
+							<pre>[[dialogText]]</pre>
+						</paper-dialog-scrollable>
+						<div class="buttons">
+							<paper-button dialog-dismiss>OK</paper-button>
+						</div>
+					</paper-dialog>
+
+					<!-- All the pages -->
+					<neon-animated-pages attr-for-selected="data-route" selected="{{route}}"
+					                     on-neon-animation-finish="onPageAnimation"
+					                     entry-animation="fade-in-animation" exit-animation="fade-out-animation">
+						<neon-animatable data-route="page-main">
+							<section>
+								<main-page id="mainPage"></main-page>
+							</section>
+						</neon-animatable>
+						<neon-animatable data-route="page-signin">
+							<section id="signInInsertion"></section>
+						</neon-animatable>
+						<neon-animatable data-route="page-devices">
+							<section id="devicesInsertion"></section>
+						</neon-animatable>
+						<neon-animatable data-route="page-settings">
+							<section id="settingsInsertion"></section>
+						</neon-animatable>
+						<neon-animatable data-route="page-help">
+							<section id="helpInsertion"></section>
+						</neon-animatable>
+					</neon-animated-pages>
+				</div>
+			</paper-header-panel>
+		</paper-drawer-panel>
+	</template>
+
+	<script src="../lib/moment.min.js"></script>
+	<script src="../lib/chrome-promise.js"></script>
+	<script src="../scripts/utils.js"></script>
+	<script src="../scripts/device.js"></script>
+	<script src="../scripts/clip_item.js"></script>
+	<script src="../scripts/main.js"></script>
+</body>
+</html>

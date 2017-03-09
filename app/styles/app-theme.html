@@ -1,0 +1,122 @@
+<!--
+Copyright 2016 Michael A Updike
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/paper-styles/default-theme.html">
+
+<style is="custom-style">
+
+	/*
+	 Polymer includes a shim for CSS Custom Properties that we can use for application theming.
+	 Below, you'll find the default palette for the Polymer Starter Kit layout. Feel free to play
+	 with changing the colors used or generate your own palette of colours at MaterialPalette.com.
+
+	 See https://www.polymer-project.org/1.0/docs/devguide/styling.html#xscope-styling-details
+	 for further information on custom CSS properties.
+	 */
+
+	/* Application theme */
+
+	:root {
+		/*
+		 * Primary and accent colors. Also see color.html for more colors.
+		 */
+		--primary-color: var(--paper-indigo-700);
+		--light-primary-color: var(--paper-indigo-500);
+		--dark-primary-color: var(--paper-indigo-900);
+		--accent-color: var(--paper-teal-700);
+		--light-accent-color: var(--paper-teal-200);
+		--dark-accent-color: var(--paper-teal-900);
+
+		/*
+		 * You can use these generic variables in your elements for easy theming.
+		 * For example, if all your elements use `--primary-text-color` as its main
+		 * color, then switching from a light to a dark theme is just a matter of
+		 * changing the value of `--primary-text-color` in your application.
+		 */
+		/*--primary-text-color: var(--light-theme-text-color);*/
+		/*--primary-background-color: var(--light-theme-background-color);*/
+		/*--secondary-text-color: var(--light-theme-secondary-color);*/
+		/*--disabled-text-color: var(--light-theme-disabled-color);*/
+		/*--divider-color: var(--light-theme-divider-color);*/
+		/*--error-color: var(--paper-deep-orange-a700);*/
+
+
+		/* Components */
+
+		--menu-icon-color: var(--dark-theme-text-color);
+		--selected-color: rgba(197, 202, 233, .4);
+		--setting-item-color: var(--accent-color);
+
+		/* paper-drawer-panel */
+		--drawer-menu-color: white;
+		--drawer-border-color: 1px solid #cccccc;
+		--drawer-toolbar-border-color: 1px solid rgba(0, 0, 0, 0.22);
+
+		/* paper-menu */
+		--menu-link-color: var(--primary-text-color);
+
+		/* paper-toggle-button */
+		--paper-toggle-button-checked-button-color: var(--setting-item-color);
+		--paper-toggle-button-checked-bar-color: var(--setting-item-color);
+
+		/* paper-slider */
+		--paper-slider-active-color: var(--setting-item-color);
+		--paper-slider-secondary-color: var(--setting-item-color);
+		--paper-slider-knob-color: var(--setting-item-color);
+		--paper-slider-pin-color: var(--setting-item-color);
+		--paper-slider-knob-start-color: var(--setting-item-color);
+		--paper-slider-pin-start-color: var(--setting-item-color);
+		--paper-slider-knob-start-border-color: transparent;
+
+		/* paper-input */
+		--paper-input-container-focus-color: var(--setting-item-color);
+
+		/* paper-checkbox */
+		--paper-checkbox-checked-color: var(--setting-item-color);
+
+	}
+
+	/* General styles */
+
+	.space {
+		@apply(--layout-flex);
+	}
+
+	paper-scroll-header-panel {
+		height: 100%;
+	}
+
+	paper-menu iron-icon {
+		margin-right: 20px;
+		opacity: .6;
+	}
+
+	.paper-menu > .iron-selected {
+		color: var(--primary-color);
+	}
+
+	paper-menu paper-item {
+		--paper-item: {
+			color: var(--menu-link-color);
+			text-rendering: optimizeLegibility;
+			cursor: pointer;
+		};
+	}
+
+
+</style>

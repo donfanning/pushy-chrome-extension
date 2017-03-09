@@ -1,0 +1,128 @@
+<!--
+Copyright 2016 Michael A Updike
+
+		   Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+
+<dom-module id="setting-dropdown">
+	<style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+	<style include="shared-styles"></style>
+	<template>
+		<style>
+			:host {
+				display: block;
+			}
+
+			:host([disabled]) {
+				pointer-events: none;
+			}
+
+			:host([disabled]) .setting-label {
+				color: var(--disabled-text-color);
+			}
+
+			:host > paper-item {
+				padding-top: 10px;
+				padding-bottom: 10px;
+			}
+
+			:host paper-dropdown-menu {
+				width: 175px;
+
+				--paper-input-container-input: {
+					text-align: right;
+				};
+			}
+
+		</style>
+
+		<div class="section-title setting-label" tabindex="-1" hidden$="[[!sectionTitle]]">{{sectionTitle}}</div>
+
+		<paper-item class="center horizontal layout" tabindex="-1">
+			<div class="setting-label flex">{{label}}</div>
+			<paper-dropdown-menu disabled$="[[disabled]]" noink no-label-float>
+				<paper-menu class="dropdown-content" selected="{{value}}">
+					<template is="dom-repeat" items="[[items]]">
+						<paper-item>[[item]]</paper-item>
+					</template>
+				</paper-menu>
+			</paper-dropdown-menu>
+		</paper-item>
+		<hr hidden$="[[noseparator]]" />
+		<iron-localstorage name="{{name}}" value="{{value}}" on-iron-localstorage-load-empty="_init"></iron-localstorage>
+
+	</template>
+</dom-module>
+
+<script>
+'use strict';
+
+Polymer({
+	is: 'setting-dropdown',
+
+	hostAttributes: {
+		role: 'group',
+		tabIndex: -1,
+	},
+
+	properties: {
+
+		name: {
+			type: String,
+			value: 'store',
+		},
+
+		label: {
+			type: String,
+			value: '',
+		},
+
+		items: {
+			type: Array,
+			value: function() {
+				return [];
+			},
+		},
+
+		sectionTitle: {
+			type: String,
+			value: '',
+		},
+
+		disabled: {
+			type: Boolean,
+			value: false,
+		},
+
+		noseparator: {
+			type: Boolean,
+			value: false,
+		},
+
+	},
+
+	// initialize value if it is not in localstorage
+	_init: function() {
+		this.set('value', '0');
+	},
+
+});
+</script>

@@ -1,0 +1,313 @@
+<!--
+Copyright 2016 Michael A Updike
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-ripple/paper-ripple.html">
+
+<link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/scale-up-animation.html">
+
+<link rel="import" href="../my_icons.html">
+
+<script type="text/javascript" src="../../scripts/utils.js"></script>
+
+<dom-module id="signin-page">
+	<template>
+		<style include="iron-flex iron-flex-alignment"></style>
+		<style include="shared-styles"></style>
+		<style>
+
+			:host {
+				display: block;
+				position: relative;
+			}
+
+			#description {
+				@apply(--paper-font-subhead);
+				padding: 0;
+				margin: 64px 16px 16px 16px
+			}
+
+			.buttonContainer {
+				padding-top: 16px;
+				padding-bottom: 8px;
+				border-top: 1px solid #d9d9d9;
+			}
+
+			#googleAccountButton {
+				outline: none;
+				font-size: 14px;
+				font-weight: 400;
+				font-family: 'RobotoDraft','Roboto',arial,sans-serif;
+				white-space: nowrap;
+				cursor: pointer;
+				background: #fff;
+				border: 1px solid #d9d9d9;
+				border-radius: 3px;
+				box-sizing: border-box;
+				margin: 0 0.29em;
+				z-index: 0;
+			}
+
+			iron-icon {
+				width: 22px;
+				height: 22px;
+				margin: 6px;
+			}
+
+			#waiter {
+				margin: 20px auto;
+			}
+
+			#waiter paper-item {
+				@apply(--paper-font-title);
+			}
+
+		</style>
+
+		<paper-card class="page-content" heading="Google Sign-In[[_computeEmailLabel(signedIn)]]">
+			<div class="card-content">
+
+				<!-- Error dialog -->
+				<paper-dialog id="errorDialog" modal entry-animation="scale-up-animation"
+				              exit-animation="fade-out-animation">
+					<h2>[[dialogTitle]]</h2>
+					<paper-dialog-scrollable>
+						<pre>[[dialogText]]</pre>
+					</paper-dialog-scrollable>
+					<div class="buttons">
+						<paper-button dialog-dismiss autofocus>CLOSE</paper-button>
+						<paper-button dialog-confirm hidden$="[[!isResponseButton]]"
+						              on-click="_onDialogButtonClicked">OK</paper-button>
+					</div>
+				</paper-dialog>
+
+				<div id="description" class="horizontal layout center flex"
+				     style$="visibility: [[_computeDescVisibility(waitForSignIn)]];">
+					You must be signed in to the Browser with the account you
+					wish to use to share with your other devices.  It is only used to ensure
+					that all messages goes to a single account. You also need to "Allow Notifications"
+					so the extension can send and receive messages.
+				</div>
+
+				<div id="waiter" class="vertical layout center"
+				     style$="visibility: [[_computeWaiterVisibility(waitForSignIn)]];">
+					<paper-spinner active="[[waitForSignIn]]" tabindex="-1"></paper-spinner>
+					<paper-item>[[_computeWaiterLabel(waitForSignIn)]]</paper-item>
+				</div>
+				<div class="buttonContainer vertical layout center">
+					<paper-item id="googleAccountButton"  tabindex="0"
+					            on-click="_onAccountButtonClicked" disabled$="[[isSignInDisabled]]">
+						<paper-ripple center></paper-ripple>
+						<iron-icon icon="myicons:google" item-icon></iron-icon>
+						<span class="setting-label">[[_computeButtonLabel(signedIn)]]</span>
+					</paper-item>
+				</div>
+			</div>
+		</paper-card>
+		<iron-localstorage name="signedIn" value="{{signedIn}}"
+		                   on-iron-localstorage-load-empty="_initSignedIn"></iron-localstorage>
+	</template>
+</dom-module>
+
+<script>
+(function(window) {
+	'use strict';
+
+	const ERROR_SIGN_IN = 'Failed to sign in.';
+	const ERROR_SIGN_OUT = 'Failed to sign out.';
+	const ERROR_PERMISSION =
+		'Notification permission is required to sign-in.';
+	const ERROR_BLOCKED_MESSAGE =
+		'You either blocked the request or the Chrome settings block\n' +
+		'all notifications. If you want to sign-in, go to\n' +
+		'Chrome settings -> Show advanced settings...\n' +
+		'Click on "content settings... In the notification area\n' +
+		'make sure "Ask when a site wants to show notifications"\n' +
+		'is selected and in the "Manage Exceptions" area allow this if\n' +
+		'it is blocked: ' + app.Utils.getExtensionName() + '/';
+	const ERROR_DEFAULT_MESSAGE =
+		'Display notification pop-up again?';
+	const ERROR_UNKNOWN_MESSAGE =
+		'An error occurred. Please try again later.\n';
+
+	window.app = window.app || {};
+	app.SignInPageFactory = Polymer({
+		is: 'signin-page',
+
+		properties: {
+
+			signedIn: {
+				type: Boolean,
+				value: false,
+				notify: true,
+			},
+
+			isSignInDisabled: {
+				type: Boolean,
+				value: true,
+				notify: true,
+			},
+
+			waitForSignIn: {
+				type: Boolean,
+				value: false,
+				notify: true,
+			},
+
+			dialogTitle: {
+				type: String,
+				value: 'Title',
+				notify: true,
+			},
+
+			dialogText: {
+				type: String,
+				value: 'Text',
+				notify: true,
+			},
+
+			isResponseButton: {
+				type: Boolean,
+				value: false,
+			},
+
+		},
+
+		onCurrentPage: function() {
+			this._checkChromeSignIn();
+		},
+
+		_checkChromeSignIn: function() {
+			// Need to be signed in to Chrome
+			const self = this;
+			chrome.identity.getProfileUserInfo(function(userInfo) {
+				if (!app.Utils.isSignedIn() && app.Utils.isWhiteSpace(userInfo.id)) {
+					self.set('isSignInDisabled', true);
+				} else {
+					self.set('isSignInDisabled', false);
+					self._checkPermissions();
+				}
+			});
+		},
+
+		_checkPermissions: function() {
+			// Note: Don't rely on Notification.permission
+			//  if extension requests notifications permission
+
+			// ask for Notification permissions
+			const self = this;
+			self.set('isSignInDisabled', true);
+			Notification.requestPermission().then(function(permission) {
+				if (permission === 'denied') {
+					// user denied or Chrome setting blocks all
+					self._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE, false);
+				} else if (permission === 'default') {
+					// user closed notification popup
+					self._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE, true);
+				} else {
+					// granted
+					self.set('isSignInDisabled', false);
+				}
+			}).catch(function(error) {
+				// something went wrong
+				self._showDialog(ERROR_PERMISSION, ERROR_UNKNOWN_MESSAGE + error, false);
+			});
+		},
+
+		_signIn: function() {
+			const self = this;
+			chrome.runtime.sendMessage({message: 'signIn'}, function(response) {
+				if (response.message === 'error') {
+					self._showDialog(ERROR_SIGN_IN, response.error, false);
+				}
+				self.set('waitForSignIn', false);
+			});
+		},
+
+		_signOut: function() {
+			const self = this;
+			chrome.runtime.sendMessage({message: 'signOut'}, function(response) {
+				if (response.message === 'error') {
+					self._showDialog(ERROR_SIGN_OUT, response.error, false);
+				}
+				self.set('waitForSignIn', false);
+			});
+		},
+
+		_showDialog: function(title, message, isResponseButton) {
+			this.set('dialogTitle', title);
+			this.set('dialogText', message);
+			this.set('isResponseButton', isResponseButton);
+			this.$.errorDialog.open();
+		},
+
+		_onAccountButtonClicked: function() {
+			this.set('waitForSignIn', true);
+			app.Utils.isSignedIn() ? this._signOut() : this._signIn();
+		},
+
+		_onDialogButtonClicked: function() {
+			this._checkPermissions();
+		},
+
+		_computeEmailLabel: function(signedIn) {
+			return signedIn ? ' - Signed in as: ' + app.Utils.get('email') : '';
+		},
+
+		_computeButtonLabel: function(signedIn) {
+			return signedIn ? 'Sign out' : 'Sign in';
+		},
+
+		_computeWaiterLabel: function(waiting) {
+			let label = '';
+			if (waiting) {
+				if (app.Utils.isSignedIn()) {
+					label = 'Signing Out...';
+				} else {
+					label = 'Signing In...';
+				}
+			}
+			return label;
+		},
+
+		_computeDescVisibility: function(waitFor) {
+			return waitFor ? 'hidden' : 'visible';
+		},
+
+		_computeWaiterVisibility: function(waitFor) {
+			return waitFor ? 'visible' : 'hidden';
+		},
+
+		// initialize value if it is not in localStorage
+		_initSignedIn: function() {
+			this.set('signedIn', false);
+		},
+	});
+
+})(window);
+</script>

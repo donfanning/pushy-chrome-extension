@@ -1,0 +1,592 @@
+<!--
+Copyright 2016 Michael A Updike
+
+		   Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-selector/iron-selector.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../../bower_components/paper-tooltip/paper-tooltip.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+
+<link rel="import" href="../my_icons.html">
+
+<script type="text/javascript" src="../../lib/linkify.min.js"></script>
+<script type="text/javascript" src="../../lib/linkify-element.min.js"></script>
+<script type="text/javascript" src="../../scripts/utils.js"></script>
+<script type="text/javascript" src="../../scripts/clip_item.js"></script>
+
+<dom-module id="main-page">
+	<template>
+		<style include="iron-flex iron-flex-alignment iron-flex-factors iron-positioning"></style>
+		<style include="shared-styles"></style>
+		<style>
+			:host {
+				display: block;
+				position: relative;
+			}
+
+			.page-content {
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+
+			.page-toolbar {
+				margin-bottom: 0;
+			}
+
+			.body-content {
+				padding-top: 0;
+			}
+
+			#clipList {
+				min-width: 600px;
+				height: 82vh;
+				overflow: hidden;
+				overflow-y: scroll;
+				border: 1px #CCCCCC;
+				border-right-style: solid;
+				padding: 0 0 32px;
+				margin: 0;
+			}
+
+			#clipViewer {
+				height: 82vh;
+				@apply(--paper-font-subhead);
+				white-space: pre-wrap;
+				overflow: hidden;
+				overflow-y: scroll;
+				padding: 16px;
+				margin: 0;
+			}
+
+			.list-item {
+				position: relative;
+				border: 1px #CCCCCC;
+				border-bottom-style: solid;
+				padding: 0;
+				margin: 0;
+				cursor: pointer;
+			}
+
+			.list-item paper-item {
+				/*stupid documentation*/
+				--paper-item-focused-before: {
+					background: transparent;
+				};
+			}
+
+			.date-row {
+				padding: 0 8px;
+			}
+
+			.date-text {
+				color: var(--accent-color);
+				text-align: center;
+			}
+
+			.clip-text-row {
+				padding-left: 0;
+				padding-right: 0;
+			}
+
+			.clip-text {
+				line-height: 1.2em;
+				height: 2.4em;
+				overflow: hidden;
+				margin-left: 16px;
+				margin-right: 16px;
+			}
+
+			.select-checkbox {
+				padding-left: 28px;
+			}
+
+			.iron-selected {
+				background: var(--selected-color);
+			}
+
+		</style>
+
+		<paper-material elevation="1" class="page-content">
+			<paper-material elevation="1">
+				<paper-toolbar class="page-toolbar">
+					<span class="space"></span>
+					<div class="middle middle-container center horizontal layout flex">
+						<div class="flex">[[title]]</div>
+						<paper-icon-button id="fav" icon="[[_computeFavIcon(isFavFilter)]]"
+						                   style$="color: [[_computeFavIconColor(isFavFilter)]];"
+										   on-tap="_onFavFilterTapped"></paper-icon-button>
+						<paper-tooltip for="fav" position="left" offset="0">
+							[[_computeFavToolTip(isFavFilter)]]</paper-tooltip>
+						<paper-icon-button id="select" icon="myicons:check-box"
+										   on-tap="_onSelectAllTapped"></paper-icon-button>
+						<paper-tooltip for="select" position="left" offset="0">Select all items</paper-tooltip>
+						<paper-icon-button id="deselect" icon="myicons:check-box-outline-blank"
+										   on-tap="_onDeselectAllTapped"></paper-icon-button>
+						<paper-tooltip for="deselect" position="left" offset="0">Deselect all items</paper-tooltip>
+						<paper-icon-button id="delete" icon="myicons:delete" on-tap="_onDeleteSelectedTapped"
+										   disabled$="[[!hasSelections]]"></paper-icon-button>
+						<paper-tooltip for="delete" position="left" offset="0">Delete selected items</paper-tooltip>
+					</div>
+				</paper-toolbar>
+			</paper-material>
+
+			<div class="body-content horizontal layout">
+
+				<!-- Delete dialog -->
+				<paper-dialog id="deleteDialog" modal entry-animation="scale-up-animation"
+							  exit-animation="fade-out-animation">
+					<h2>Delete selected items?</h2>
+					<p>This operation cannot be undone.</p>
+					<paper-checkbox class="select-checkbox" checked="{{deleteFavs}}">
+						Include favorites</paper-checkbox>
+					<div class="buttons">
+						<paper-button dialog-dismiss autofocus>CANCEL</paper-button>
+						<paper-button dialog-confirm on-click="_doDelete">DELETE</paper-button>
+					</div>
+				</paper-dialog>
+
+				<!-- Main list -->
+				<div id="clipList" class="flex-2">
+					<iron-selector id="ironSelector" attr-for-selected="idx" selected="{{selectedIdx}}">
+						<template is="dom-repeat" id="listTemplate" items="[[clipItems]]" as="clipItem"
+								  sort="_sortByDate" filter="_filterByFav">
+							<div class="list-item horizontal center layout" id="item[[index]]"
+								 idx="[[clipItem.idx]]" on-tap="_onItemSelected">
+								<paper-checkbox class="select-checkbox" checked="{{clipItem.checked}}"
+												on-change="_onCheckedTapped"></paper-checkbox>
+								<div class="clip-body flex vertical layout" tabindex="-1">
+									<paper-item class="date-row center horizontal layout">
+										<paper-icon-button id="fav[[index]]"
+														   icon="[[_computeFavIcon(clipItem.fav)]]"
+														   style$="color: [[_computeFavColor(clipItem.fav)]];"
+														   on-tap="_onFavTapped"></paper-icon-button>
+										<paper-item-body class="date-text center flex">
+											{{_computeDate(clipItem.date)}}</paper-item-body>
+										<paper-icon-button id="copy[[index]]" icon="myicons:content-copy"
+														   on-tap="_onCopyTapped"></paper-icon-button>
+									</paper-item>
+									<paper-item class="clip-text-row">
+										<paper-item-body class="clip-text fit vertical start-justified layout">
+											[[clipItem.text]]</paper-item-body>
+									</paper-item>
+								</div>
+							</div>
+						</template>
+					</iron-selector>
+				</div>
+				<div id="clipViewer" class="flex-3"></div>
+			</div>
+		</paper-material>
+	</template>
+</dom-module>
+
+<script>
+'use strict';
+Polymer({
+	is: 'main-page',
+
+	properties: {
+
+		clipItems: {
+			type: Array,
+			value: [],
+			notify: true,
+		},
+
+		selections: {
+			type: Array,
+			value: [],
+			notify: true,
+		},
+
+		hasSelections: {
+			type: Boolean,
+			value: false,
+			notify: true,
+		},
+
+		selectedIdx: {
+			type: Number,
+			value: 0,
+			notify: true,
+		},
+
+		selectedItem: {
+			type: app.ClipItem,
+			value: null,
+			notify: true,
+			observer: '_selectedItemChanged',
+		},
+
+		isFavFilter: {
+			type: Boolean,
+			value: false,
+			notify: true,
+		},
+
+		deleteFavs: {
+			type: Boolean,
+			value: false,
+			notify: true,
+		},
+
+		title: {
+			type: String,
+			value: 'Local clip',
+			notify: true,
+		},
+
+	},
+
+	observers: [
+		'_selectionsAddedOrRemoved(selections.splices)',
+	],
+
+	ready: function() {
+		this._loadClipItems();
+		// listen for chrome messages
+		chrome.runtime.onMessage.addListener(this._onChromeMessage);
+		// listen for copy and cut events on document
+		document.addEventListener('cut', this._onCopy, true);
+		document.addEventListener('copy', this._onCopy, true);
+		// listen for dom-change event
+		addEventListener('dom-change', this._selectFirst);
+	},
+
+	/**
+	 * We have animated in and are now the current page
+	 */
+	onCurrentPage: function() {
+		this._loadClipItems();
+	},
+
+	/**
+	 * Select first row after sorting and filtering.
+	 * Man, seems like there should be an easier way
+	 *
+	 * @param {Event} event - dom-change
+	 */
+	_selectFirst: function(event) {
+		const me =
+			document.getElementsByTagName('main-page')[0];
+		if (event.target === me.$.listTemplate) {
+			if (me.clipItems && me.clipItems.length) {
+				const ironSelector = me.$.ironSelector;
+				const listItem = ironSelector.firstElementChild;
+				const clipItem = me.$.listTemplate.itemForElement(listItem);
+				if (clipItem) {
+					me.set('selectedItem', clipItem);
+					me.set('selectedIdx', clipItem.idx);
+				}
+			}
+		}
+	},
+
+	/**
+	 * Event: Select all menu icon tapped
+	 *
+	 * @private
+	 */
+	_onSelectAllTapped: function() {
+		this.splice('selections', 0, this.selections.length);
+		for (let i = 0; i < this.clipItems.length; i++) {
+			this.set('clipItems.' + i + '.checked', true);
+			this.push('selections', {
+				pos: i,
+				idx: this.clipItems[i].idx,
+			});
+		}
+	},
+
+	/**
+	 * Event: Deselect all menu icon tapped
+	 *
+	 * @private
+	 */
+	_onDeselectAllTapped: function() {
+		for (let i = 0; i < this.selections.length; i++) {
+			this.set('clipItems.' + this.selections[i].pos + '.checked', false);
+		}
+		this.splice('selections', 0, this.selections.length);
+	},
+
+	/**
+	 * Event: Delete menu icon tapped
+	 *
+	 * @private
+	 */
+	_onDeleteSelectedTapped: function() {
+		this.set('deleteFavs', false);
+		this.$.deleteDialog.open();
+	},
+
+	/**
+	 * Event: Favorite filter menu icon tapped
+	 *
+	 * @private
+	 */
+	_onFavFilterTapped: function() {
+		this._setFavFilter(!this.isFavFilter);
+	},
+
+	_onItemSelected: function(event) {
+		this.set('selectedItem', this.$.listTemplate.itemForElement(event.target));
+	},
+
+	// toggle selection state of a list row
+	_onCheckedTapped: function(event) {
+		const clipItem = event.model.clipItem;
+
+		if (clipItem.checked) {
+			const pos = this.clipItems.map(function(e) {
+				return e.idx;
+			}).indexOf(clipItem.idx);
+			if (pos !== -1) {
+				this.push('selections', {
+					pos: pos, idx: clipItem.idx,
+				});
+			}
+		} else {
+			const index = this.selections.map(function(e) {
+				return e.idx;
+			}).indexOf(clipItem.idx);
+			if (index !== -1) {
+				this.splice('selections', index, 1);
+			}
+		}
+	},
+
+	// copy list row's clipItem to clipboard
+	_onCopyTapped: function(event) {
+		const clipItem = event.model.clipItem;
+		clipItem.setDate(Date.now());
+		clipItem.setRemote(false);
+
+		// copy to clipboard
+		chrome.runtime.sendMessage({
+			message: 'copyToClipboard',
+			clipItem: clipItem,
+		}, function() {});
+
+		// update persisted value
+		const self = this;
+		clipItem.save(function() {
+			// reload list
+			self._loadClipItems();
+		});
+
+	},
+
+	// toggle favorite state of list row
+	_onFavTapped: function(event) {
+		const clipItem = event.model.clipItem;
+		const fav = !clipItem.fav;
+
+		const pos = this.clipItems.map(function(e) {
+			return e.idx;
+		}).indexOf(clipItem.idx);
+		if (pos !== -1) {
+			this.set('clipItems.' + pos + '.fav', fav);
+		}
+
+		// update persisted value
+		clipItem.save(function() {
+		});
+
+		if (this.isFavFilter) {
+			// redraw if filtering by favorites
+			this.$.listTemplate.render();
+		}
+	},
+
+	// event: clipboard copy
+	_onCopy: function() {
+		chrome.runtime.sendMessage({
+			message: 'copiedToClipboard',
+		}, function() {});
+	},
+
+	/**
+	 * Event: Process message from chrome.runtime.sendMessage
+	 *
+	 * @param {JSON} request object
+	 * @private
+	 */
+	_onChromeMessage: function(request) {
+		const me =
+			document.getElementsByTagName('main-page')[0];
+		if ((request.message === 'clipAdded') ||
+			(request.message === 'clipsDeleted')) {
+			me._loadClipItems();
+		}
+		if (request.message === 'clipAdded') {
+			me.$.clipList.scrollTop = 0;
+		}
+	},
+
+	/**
+	 *  Load the ClipItems
+	 *
+	 * @private
+	 */
+	_loadClipItems: function() {
+
+		const self = this;
+		app.ClipItem.loadAll(function(error, items) {
+			// clear list
+			self.splice('clipItems', 0, self.clipItems.length);
+
+			// populate list
+			for (let i = 0; i < items.length; i++) {
+				items[i].idx = i;
+				items[i].checked = false;
+				self.push('clipItems', items[i]);
+			}
+		});
+	},
+
+	_setFavFilter: function(filter) {
+		if (filter) {
+			// deselect any selected non-fav rows
+			this._deselectNonFavorites();
+		}
+		this.isFavFilter = filter;
+		this.$.listTemplate.render();
+	},
+
+	/**
+	 * Delete the selected list rows, optionally including the favorites
+	 *
+	 * @private
+	 */
+	_doDelete: function() {
+		let keys = [];
+		for (let i = 0; i < this.selections.length; i++) {
+			const clipItem = this.get('clipItems.' + this.selections[i].pos);
+			if (!clipItem.fav || this.deleteFavs) {
+				keys.push(clipItem.text);
+			}
+		}
+
+		if (keys.length) {
+			const self = this;
+			app.ClipItem.remove(keys, function() {
+				app.ClipItem.isEmpty(function(error, isEmpty) {
+					if(isEmpty) {
+						self._clearClipViewer();
+					}
+					self.splice('selections', 0, self.selections.length);
+					self._loadClipItems();
+				});
+			});
+		}
+	},
+
+	// deselect all rows that aren't favorites
+	_deselectNonFavorites: function() {
+		const len = this.selections.length;
+		this.selections.sort(function(a, b) {
+			return a - b;
+		});
+		for (let i = len - 1; i >= 0; i--) {
+			const pos = this.selections[i].pos;
+			if (!this.clipItems[pos].fav) {
+				this.set('clipItems.' + pos + '.checked', false);
+				this.splice('selections', i, 1);
+			}
+		}
+	},
+
+	_sortByDate: function(a, b) {
+		return b.date - a.date;
+	},
+
+	_filterByFav: function(clipItem) {
+		return this.isFavFilter ? clipItem.fav : true;
+	},
+
+	// observer: selected item changed
+	_selectedItemChanged: function() {
+		const clipItem = this.selectedItem;
+		if (clipItem && clipItem.remote) {
+			this.set('title', 'Remote clip - ' + clipItem.device);
+		} else {
+			this.set('title', 'Local clip');
+		}
+
+		const el = this.$.clipViewer;
+		if (el) {
+			this._clearClipViewer();
+
+			if (clipItem) {
+				// update text
+				el.textContent = clipItem.text;
+				// linkify it - creates element children
+				linkifyElement(el);
+			}
+		}
+	},
+
+	_selectionsAddedOrRemoved: function() {
+		this.set('hasSelections', !!this.selections.length);
+	},
+
+	_clearClipViewer: function() {
+		const el = this.$.clipViewer;
+		if (el) {
+			// delete all children previous linkify created
+			while (el.firstChild) {
+				el.removeChild(el.firstChild);
+			}
+		}
+	},
+
+	_computeFavIcon: function(isTrue) {
+		return isTrue ? 'myicons:favorite' : 'myicons:favorite-border';
+	},
+
+	_computeFavIconColor: function(isTrue) {
+		return isTrue ? 'rgba(255, 0, 0, .8)' : 'var(--menu-icon-color)';
+	},
+
+	_computeFavColor: function(isTrue) {
+		return isTrue ? 'rgba(255, 0, 0, .8)' : 'var(--primary-text-color)';
+	},
+
+	_computeDate: function(date) {
+		return app.Utils.getRelativeTime(date);
+
+	},
+
+	_computeFavToolTip: function(isFilter) {
+		return isFilter ? 'Show all' : 'Show favorites';
+	},
+
+});
+</script>

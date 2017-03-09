@@ -1,0 +1,24 @@
+{
+  "name": "clip-man-chrome",
+  "authors": [
+    "Michael A. Updike <igreilly1269@gmail.com>"
+  ],
+  "description": "Share clipboard content across devices",
+  "license": "Apache",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "components",
+    "assets",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.0.0",
+    "iron-elements": "PolymerElements/iron-elements#^1.0.0",
+    "paper-elements": "PolymerElements/paper-elements#^1.0.0",
+    "neon-elements": "PolymerElements/neon-elements#^1.0.0"
+  }
+}

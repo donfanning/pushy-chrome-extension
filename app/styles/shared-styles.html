@@ -1,0 +1,121 @@
+<!--
+Copyright 2016 Michael A Updike
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!-- shared styles for all elements and main.html -->
+<dom-module id="shared-styles">
+	<template>
+		<style>
+			.page-title {
+				@apply(--paper-font-display2);
+			}
+
+			@media (max-width: 600px) {
+				.page-title {
+					font-size: 24px!important;
+				}
+			}
+
+			.page-content {
+				width: 700px;
+				padding: 0;
+				margin: 0;
+				--paper-card-header-color: white;
+				--paper-card-header: {
+					background: var(--light-primary-color);
+				};
+			}
+
+			.page-content p {
+				@apply(--paper-font-subhead);
+			}
+
+			.page-toolbar {
+				font-size: 24px;
+				font-weight: 400;
+				background: var(--light-primary-color);
+				margin-bottom: 8px;
+			}
+
+			.body-content {
+				padding: 8px 0 8px 0;
+				margin: 0;
+			}
+
+			.card-content {
+				padding: 8px 0 8px 0;
+				margin: 0;
+			}
+
+			.section-title {
+				color: var(--setting-item-color);
+				font-size: 14px;
+				font-weight: 500;
+				margin: 16px 0 8px 16px;
+			}
+
+			.setting-toggle-button {
+				--paper-toggle-button-checked-button-color: var(--setting-item-color);
+				--paper-toggle-button-checked-bar-color: var(--setting-item-color);
+			}
+
+			.button-a {
+				color: var(--primary-text-color);
+				text-decoration: none;
+				border-style: none;
+				text-rendering: optimizeLegibility;
+			}
+
+			paper-material {
+				border-radius: 2px;
+				background: white;
+				padding: 0;
+			}
+
+			paper-toggle-button {
+				cursor: pointer;
+			}
+
+			paper-button {
+				margin-top: 8px;
+				margin-bottom: 16px;
+				@apply(--layout-center);
+				@apply(--layout-horizontal);
+			}
+
+			paper-button iron-icon {
+				margin-right: 8px;
+			}
+
+			paper-toolbar  paper-icon-button {
+				color: var(--menu-icon-color);
+			}
+
+			paper-fab {
+				margin: 16px;
+			}
+
+			:host([disabled]) .setting-label {
+				color: var(--disabled-text-color);
+			}
+
+			hr {
+				margin: 0 8px;
+				border: none;
+				border-top: 1px #CCCCCC solid;
+			}
+
+		</style>
+	</template>
+</dom-module>
