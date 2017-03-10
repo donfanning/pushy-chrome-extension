@@ -16,25 +16,27 @@
  *
  */
 window.app = window.app || {};
-/** @namespace Devices */
 app.Devices = (function() {
 	'use strict';
 
 	/**
+	 * A list of remote {@link Device} objects we know about
+	 *  @namespace Devices
+	 */
+
+	/**
 	 * A Map of {@link Device} objects keyed by their unique names
-	 *
 	 * @type {Map}
-	 * @alias Devices._devices
+	 * @memberOf Devices
 	 */
 	let _devices = new Map();
 
 	/**
 	 * Convert Map to Object
-	 *
-	 * @param {Map} map a Map
+	 * @param {Map} map - a Map
 	 * @return {Object} as Object
 	 * @private
-	 * @alias Devices._mapToObj
+	 * @memberOf Devices
 	 */
 	function _mapToObj(map) {
 		let obj = Object.create(null);
@@ -48,9 +50,8 @@ app.Devices = (function() {
 
 	/**
 	 * Get the {@link Device} objects from localStorage
-	 *
 	 * @private
-	 * @alias Devices._load
+	 * @memberOf Devices
 	 */
 	function _load() {
 		_devices = new Map();
@@ -59,8 +60,8 @@ app.Devices = (function() {
 			for (let k in json) {
 				if (json.hasOwnProperty(k)) {
 					let v = json[k];
-					let device = new app.Device(v.model, v.sn, v.os, v.nickname,
-						v.lastSeen);
+					let device = new app.Device(v.model, v.sn, v.os,
+						v.nickname, v.lastSeen);
 					_devices.set(k, device);
 				}
 			}
@@ -68,10 +69,9 @@ app.Devices = (function() {
 	}
 
 	/**
-	 * Save the Devices to localStorage
-	 *
+	 * Save the {@link Device} objects localStorage
 	 * @private
-	 * @alias Devices._save
+	 * @memberOf Devices
 	 */
 	function _save() {
 		app.Utils.set('devices', _mapToObj(_devices));
@@ -84,9 +84,8 @@ app.Devices = (function() {
 	/**
 	 * Event: called when document and resources are loaded
 	 * Load the {@link Device} objects from localStorage
-	 *
 	 * @private
-	 * @alias Devices._onLoad
+	 * @memberOf Devices
 	 */
 	function _onLoad() {
 		_load();
@@ -99,9 +98,8 @@ app.Devices = (function() {
 
 		/**
 		 * Get an {@link Iterator} on the Devices
-		 *
 		 * @return {Iterator.<Device>}
-		 * @alias Devices.entries
+		 * @memberOf Devices
 		 */
 		entries: function() {
 			return _devices.entries();
@@ -109,9 +107,8 @@ app.Devices = (function() {
 
 		/**
 		 * Add a new {@link Device}
-		 *
-		 * @param {Device} device Device to add
-		 * @alias Devices.add
+		 * @param {Device} device - {@link Device} to add
+		 * @memberOf Devices
 		 */
 		add: function(device) {
 			_devices.set(device.getUniqueName(), device);
@@ -120,9 +117,8 @@ app.Devices = (function() {
 
 		/**
 		 * Remove a {@link Device}
-		 *
-		 * @param {Device} device Device to remove
-		 * @alias Devices.remove
+		 * @param {Device} device - {@link Device} to remove
+		 * @memberOf Devices
 		 */
 		remove: function(device) {
 			this.removeByName(device.getUniqueName());
@@ -130,9 +126,8 @@ app.Devices = (function() {
 
 		/**
 		 * Remove a {@link Device} with the given unique name
-		 *
-		 * @param {String} uniqueName Name of Device to remove
-		 * @alias Devices.removeByName
+		 * @param {String} uniqueName - Name of Device to remove
+		 * @memberOf Devices
 		 */
 		removeByName: function(uniqueName) {
 			_devices.delete(uniqueName);
@@ -141,8 +136,7 @@ app.Devices = (function() {
 
 		/**
 		 * Remove all {@link Device} objects
-		 *
-		 * @alias Devices.clear
+		 * @memberOf Devices
 		 */
 		clear: function() {
 			_devices.clear();

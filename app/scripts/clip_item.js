@@ -81,19 +81,6 @@
 	};
 
 	/**
-	 * Remove ourselves from storage
-	 * @return {Promise<void>}
-	 */
-	ClipItem.prototype.remove = function() {
-		const chromep = new ChromePromise();
-		return chromep.storage.local.remove(this.text).then(function() {
-			return Promise.resolve();
-		}).catch(function(error) {
-			return Promise.reject(error);
-		});
-	};
-
-	/**
 	 * Add new {@link ClipItem} to storage
 	 * @param {string} text - The text of the clip
 	 * @param {int} date - Time in milliSecs from epoch
@@ -106,8 +93,9 @@
 		const clipItem = new ClipItem(text, date, fav, remote, device);
 		return clipItem.save().then(function() {
 			// let listeners know a ClipItem was added
-			chrome.runtime.sendMessage({message: 'clipAdded'}, function() {});
-		}).then(function() {
+			chrome.runtime.sendMessage({
+				message: 'clipAdded',
+			}, function(response) {});
 			return Promise.resolve(clipItem);
 		}).catch(function(error) {
 			return Promise.reject(error);
@@ -142,48 +130,33 @@
 	};
 
 	/**
-	 * This callback passes an array of<br>
-	 *     {@link ClipItem} objects, or error on failure.
-	 * @callback clipsCallback
-	 * @param {string|null} error - description of failure
-	 * @param {ClipItem[]} clips - array of {@link ClipItem} objects
-	 * @memberOf ClipItem
-	 */
-
-	/**
 	 * Return all the {@link ClipItem} objects from storage
-	 * @param {clipsCallback} callback
+	 * @return {Promise<Array>} Array of {@link ClipItem} objects
 	 */
-	ClipItem.loadAll = function(callback) {
-		callback = callback || function() {};
-
-		chrome.storage.local.get(null, function(items) {
-			if (chrome.runtime.lastError) {
-				callback(chrome.runtime.lastError.message, null);
-			} else {
-				let array = [];
-				for (let k in items) {
-					if (items.hasOwnProperty(k)) {
-						array.push(ClipItem._getNew(k, items[k]));
-					}
+	ClipItem.loadAll = function() {
+		const chromep = new ChromePromise();
+		return chromep.storage.local.get(null).then(function(items) {
+			let array = [];
+			for (let k in items) {
+				if (items.hasOwnProperty(k)) {
+					array.push(ClipItem._getNew(k, items[k]));
 				}
-				callback(null, array);
 			}
+			return Promise.resolve(array);
+		}).catch(function(error) {
+			return Promise.reject(error);
 		});
 	};
 
 	/**
 	 * Delete items older than the storageDuration setting
-	 * @param {booleanCallback} callback - true if any items were deleted
+	 * @return {Promise<boolean>} true if items were deleted
 	 */
-	ClipItem.deleteOld = function(callback) {
-		callback = callback || function() {};
-
+	ClipItem.deleteOld = function() {
 		const durationType = app.Utils.get('storageDuration');
 		if (durationType === 4) {
 			// store forever
-			callback(null, false);
-			return;
+			return Promise.resolve(false);
 		}
 
 		let duration;
@@ -199,23 +172,23 @@
 		const now = Date.now();
 		const olderThanTime = now - duration;
 
-		ClipItem._deleteOlderThan(olderThanTime, function(error, didDelete) {
-			callback(error, didDelete);
+		ClipItem._deleteOlderThan(olderThanTime).then(function(didDelete) {
+			return Promise.resolve(didDelete);
+		}).catch(function(error) {
+			return Promise.reject(error);
 		});
 	};
 
 	/**
 	 * Delete non-favorite {@link ClipItem} objects older than the given time
 	 * @param {int} time - time in millis since epoch
-	 * @param {booleanCallback} callback - true if any items were deleted
+	 * @return {Promise<boolean>} true if items were deleted
 	 * @private
 	 */
-	ClipItem._deleteOlderThan = function(time, callback) {
-		callback = callback || function() {};
-
+	ClipItem._deleteOlderThan = function(time) {
 		let keys = [];
 
-		ClipItem.loadAll(function(error, items) {
+		return ClipItem.loadAll().then(function(items) {
 			for (let i = 0; i < items.length; i++) {
 				const clipItem = items[i];
 				if (!clipItem.fav && (clipItem.date <= time)) {
@@ -228,11 +201,13 @@
 					chrome.runtime.sendMessage({
 						message: 'clipsDeleted',
 					}, function() {});
-					callback(null, true);
+					return Promise.resolve(true);
 				});
 			} else {
-				callback(null, false);
+				return Promise.resolve(false);
 			}
+		}).catch(function(error) {
+			return Promise.reject(error);
 		});
 	};
 

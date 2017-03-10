@@ -458,7 +458,7 @@ Polymer({
 	_loadClipItems: function() {
 
 		const self = this;
-		app.ClipItem.loadAll(function(error, items) {
+		app.ClipItem.loadAll().then(function(items) {
 			// clear list
 			self.splice('clipItems', 0, self.clipItems.length);
 
