@@ -36,21 +36,14 @@ app.User = (function() {
 	 * @memberOf User
 	 */
 	function _onSignInChanged(account, signedIn) {
-		const lastUid = app.Utils.get('lastUid');
-		if (signedIn) {
-			if (account.id === lastUid) {
-				// signed back in as same user. there is hope.
-				app.Utils.set('signedIn', true);
-				app.Utils.set('registered', true);
-			} else {
-				// signed in as new user. need to request access again
-				app.Utils.set('signedIn', false);
-				app.Utils.set('registered', false);
-			}
-		} else {
-			// signed out of chrome we no longer can communicate
+		const uid = app.Utils.get('uid');
+		if (app.Utils.isSignedIn() && !signedIn && (account.id == uid)) {
+			// our user signed out of Chrome while we were signed in
+			app.Utils.set('needsCleanup', true);
 			app.Utils.set('signedIn', false);
 			app.Utils.set('registered', false);
+			app.Utils.set('cleanupRegToken', app.Utils.get('regToken'));
+			app.Fb.signOut();
 		}
 		app.User.setInfo();
 	}
@@ -84,7 +77,7 @@ app.User = (function() {
 
 		/**
 		 * Sign-out of firebase
-		 * @return {Promise<void>} An {@link Error} on reject
+		 * @return {Promise<void>}
 		 * @memberOf User
 		 */
 		signOut: function() {
@@ -94,6 +87,59 @@ app.User = (function() {
 
 			return app.Fb.signOut().then(function() {
 				app.Utils.set('signedIn', false);
+				return Promise.resolve();
+			}).catch(function(error) {
+				return Promise.reject(error);
+			});
+		},
+
+
+		/**
+		 * Sign in and register {@link Device}
+		 * @return {Promise.<void>}
+		 * @memberOf User
+		 */
+		addAccess: function() {
+
+			/**
+			 * Cleanup if user signed-out of Browser
+			 * @return {Promise.<void>}
+			 * @memberOf User
+			 */
+			function ifCleanup() {
+				if (app.Utils.get('needsCleanup')) {
+					app.Utils.set('needsCleanup', false);
+					return app.User.cleanup();
+				} else {
+					return Promise.resolve();
+				}
+			}
+
+			return ifCleanup().then(function() {
+				return app.User.signIn();
+			}).then(function() {
+				return app.Reg.register();
+			}).then(function() {
+				return app.Msg.sendDeviceAdded();
+			}).then(function() {
+				return Promise.resolve();
+			}).catch(function(error) {
+				return Promise.reject(error);
+			});
+		},
+
+		/**
+		 * Unregister {@link Device} and sign out
+		 * @return {Promise.<void>}
+		 * @memberOf User
+		 */
+		removeAccess: function() {
+			return app.Msg.sendDeviceRemoved().then(function() {
+				return app.Reg.unregister();
+			}).then(function() {
+				return app.User.signOut();
+			}).then(function() {
+				app.Devices.clear();
 				return Promise.resolve();
 			}).catch(function(error) {
 				return Promise.reject(error);
@@ -138,6 +184,21 @@ app.User = (function() {
 		},
 
 		/**
+		 * Cleanup after user signs out of Browser
+		 * @return {Promise.<void>}
+		 * @memberOf User
+		 */
+		cleanup: function() {
+			return app.User.getAccessToken(false).then(function(accessToken) {
+				return app.User.removeCachedAuthToken(accessToken);
+			}).then(function() {
+				return Promise.resolve();
+			}).catch(function() {
+				return Promise.resolve();
+			});
+		},
+
+		/**
 		 * Remove Auth token from cache
 		 * @param {string} token - Auth token
 		 * @return {Promise<void>} always resolves
@@ -149,7 +210,7 @@ app.User = (function() {
 		},
 
 		/**
-		 * Persist info on current Chrome user (may be no-one)
+		 * Persist info on current Browser user (may be no-one)
 		 * @return {Promise.<void>}
 		 * @memberOf User
 		 */

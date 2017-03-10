@@ -111,16 +111,11 @@ app.Fb = (function() {
 	 */
 	function _refreshRegToken() {
 		_messaging.getToken().then(function(refreshedToken) {
-			// TODO remove ... for testing
-			app.Utils.set('regTokenRefresh', refreshedToken);
 			if (app.Utils.isRegistered()) {
 				app.Reg.refresh(refreshedToken).then(function() {
 					_saveRegToken(refreshedToken);
-				}).catch(function(error) {
-				});
+				}).catch(function(error) {});
 			} else {
-				// TODO remove ... for testing
-				app.Utils.set('regTokenRefresh', refreshedToken);
 				// save token, not registered yet
 				_saveRegToken(refreshedToken);
 			}
@@ -164,15 +159,12 @@ app.Fb = (function() {
 			}).then(function(user) {
 				return Promise.resolve(user);
 			}).catch(function(error) {
-				// token may be bad, clear cached version
-				return app.User.removeCachedAuthToken(token).then(function() {
-					return Promise.reject(error);
-				});
+				return Promise.reject(error);
 			});
 		},
 
 		/**
-		 * SignOut of firebase
+		 * Unregister Service Worker and sign-out of firebase
 		 * @return {Promise<void>} An {@link Error} on reject
 		 * @memberOf Fb
 		 */

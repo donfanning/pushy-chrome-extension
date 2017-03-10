@@ -59,8 +59,13 @@
 
 	/**
 	 * Default values of localStorage
-	 * @type {object}
-	 * @default
+	 * @type {{version: int, monitorClipboard: boolean,
+	 * allowPush: boolean, autoSend: boolean, deviceSN: string,
+	 * deviceNickname: string, storageDuration: number, notify: boolean,
+	 * notifyOnSend: boolean, notifyOnReceive: boolean, devices: {},
+	 * signedIn: boolean, needsCleanup: boolean, email: string,
+	 * uid: string, lastEmail: string, lastUid: string,
+	 * registered: boolean, regId: string}}
 	 * @memberOf Background
 	 */
 	const DEF_VALUES = {
@@ -76,6 +81,7 @@
 		'notifyOnReceive': true,
 		'devices': {},
 		'signedIn': false,
+		'needsCleanup': false,
 		'email': '',
 		'uid': '',
 		'lastEmail': '',
@@ -192,59 +198,31 @@
 				new app.ClipItem(clip.text, clip.lastSeen, clip.fav,
 					clip.remote, clip.device);
 			_copyToClipboard(clipItem.text);
-			// send to our devices
 			_sendLocalClipItem(clipItem);
 		} else if (request.message === 'removeDevice') {
 			app.Devices.removeByName(request.deviceName);
 		} else if (request.message === 'deviceNameChanged') {
 			app.Reg.changeDeviceName();
 		} else if (request.message === 'ping') {
-			// async
-			ret = true;
-
 			app.Msg.sendPing().catch(function(error) {
 				_sendMessageFailed(error);
 			});
 		} else if (request.message === 'signIn') {
-			// async
-			ret = true;
-
 			// try to signIn a user
-			app.User.signIn().then(function() {
-				return app.Reg.register();
-			}).then(function() {
-				// let our devices know
-				return app.Msg.sendDeviceAdded();
-			}).then(function() {
-				response({
-					message: 'ok',
-				});
+			ret = true; // async
+			app.User.addAccess().then(function() {
+				response({message: 'ok'});
 			}).catch(function(error) {
 				app.User.signOut();
-				response({
-					message: 'error',
-					error: error.toString(),
-				});
+				response({message: 'error', error: error.toString()});
 			});
 		} else if (request.message === 'signOut') {
-			// async
-			ret = true;
-
 			// try to signOut a user
-			app.Msg.sendDeviceRemoved().then(function() {
-				return app.Reg.unregister();
-			}).then(function() {
-				return app.User.signOut();
-			}).then(function() {
-				app.Devices.clear();
-				response({
-					message: 'ok',
-				});
+			ret = true;  // async
+			app.User.removeAccess().then(function() {
+				response({message: 'ok'});
 			}).catch(function(error) {
-				response({
-					message: 'error',
-					error: error.toString(),
-				});
+				response({message: 'error', error: error.toString()});
 			});
 		}
 		return ret;
