@@ -100,13 +100,15 @@ app.Notify = (function() {
 						if (app.Utils.getChromeVersion(0) >= 50) {
 							options.requireInteraction = true;
 						}
-						chrome.notifications.create(type, options, function() {});
+						chrome.notifications.create(type, options,
+							function() {});
 						break;
 					case NOTIFY_SEND:
 						options.iconUrl = chrome.runtime.getURL(icon);
 						options.title = 'Sent push message';
 						options.message = data.message;
-						chrome.notifications.create(type, options, function() {});
+						chrome.notifications.create(type, options,
+							function() {});
 						break;
 					default:
 						break;

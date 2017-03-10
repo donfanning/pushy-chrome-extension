@@ -92,13 +92,14 @@
 	 */
 	const INTRO_TEXT =
 		'I am Clip Man. The clipboard manager with push notifications.\n\n' +
-		'Please signin from the "Manage Account" page to share with your other devices.\n\n' +
-		'You can click on the toolbar icon at any time to send the current contents of the ' +
-		'clipboard to all your other devices.\n\n' +
-		'Information you copy in most Chrome pages will automatically be sent ' +
-		'if you have enabled that in "Settings".\n\n' +
-		'You can display this page by right clicking on the toolbar icon and selecting "Options"\n\n' +
-		'It is a good idea to go to the "Settings" page and enter a nickname for this device.';
+		'Please signin from the "Manage Account" page to share with your ' +
+		'other devices.\n\n You can click on the toolbar icon at any time ' +
+		'to send the current contents of the clipboard to all your other ' +
+		'devices.\n\nInformation you copy in most Chrome pages will' +
+		' automatically be sent if you have enabled that in "Settings".\n\n' +
+		'You can display this page by right clicking on the toolbar icon and ' +
+		'selecting "Options"\n\nIt is a good idea to go to the "Settings" ' +
+		'page and enter a nickname for this device.';
 
 	/**
 	 * Event: Fired when the extension is first installed,
@@ -129,7 +130,8 @@
 	}
 
 	/**
-	 * Event: Fired when a profile that has this extension installed first starts up
+	 * Event: Fired when a profile that has this extension installed first
+	 *     starts up
 	 * @see https://developer.chrome.com/extensions/runtime#event-onStartup
 	 * @private
 	 * @memberOf Background
@@ -142,7 +144,7 @@
 
 	/**
 	 * Event: Fired when a browser action icon is clicked.
-	 * @see https://developer.chrome.com/extensions/browserAction#event-onClicked
+	 * @see https://goo.gl/abVwKu
 	 * @private
 	 * @memberOf Background
 	 */
@@ -253,7 +255,8 @@
 	}
 
 	/**
-	 * Event: Fired when the user clicked in a non-button area of the notification.
+	 * Event: Fired when the user clicked in a non-button area
+	 *     of the notification.
 	 * @see https://developer.chrome.com/apps/notifications#event-onClicked
 	 * @param {int} notificationId - type of notification
 	 * @private
@@ -279,7 +282,7 @@
 
 	/**
 	 * Event: Fired when a request is about to occur.
-	 * @see https://developer.chrome.com/extensions/webRequest#event-onBeforeRequest
+	 * @see https://goo.gl/4j4RtY
 	 * @param {object} details - details on the request
 	 * @return {object} cancel the request
 	 * @private
@@ -308,7 +311,8 @@
 	/**
 	 * Event: Fired when item in localStorage changes
 	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
-	 * @param {event} event
+	 * @param {Event} event
+	 * @param {string} event.key - storage item that changed
 	 * @private
 	 * @memberOf Background
 	 */
@@ -408,7 +412,7 @@
 
 	/**
 	 * Process a remote message for clipboard text
-	 * @param {JSON} data - the message
+	 * @param {GaeMsg} data - the message
 	 * @param {Device} device - the source {@link Device}
 	 * @private
 	 * @memberOf Background
@@ -417,8 +421,8 @@
 		const fav = (data.fav === '1');
 
 		// Persist
-		const clipItem =
-			new app.ClipItem(data.message, Date.now(), fav, true, device.getName());
+		const clipItem = new app.ClipItem(data.message, Date.now(), fav, true,
+				device.getName());
 		clipItem.save(function() {
 			// let listeners know a ClipItem was added
 			chrome.runtime.sendMessage({
@@ -432,7 +436,7 @@
 
 	/**
 	 * Process received push notifications
-	 * @param {JSON} data - push data
+	 * @param {GaeMsg} data - push data
 	 * @private
 	 * @memberOf Background
 	 */
@@ -441,8 +445,8 @@
 		const deviceSN = data.dSN;
 		const deviceOS = data.dOS;
 		const deviceNickname = data.dN;
-		const device =
-			new app.Device(deviceModel, deviceSN, deviceOS, deviceNickname, Date.now());
+		const device = new app.Device(deviceModel, deviceSN, deviceOS,
+			deviceNickname, Date.now());
 
 		if (device.isMe()) {
 			// don't handle our messages
@@ -542,7 +546,8 @@
 
 			// Persist
 			const clipItem =
-				new app.ClipItem(text, Date.now(), false, false, app.Device.myName());
+				new app.ClipItem(text, Date.now(), false, false,
+					app.Device.myName());
 			clipItem.save(function() {
 				// let listeners know a ClipItem was added
 				chrome.runtime.sendMessage({

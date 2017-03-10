@@ -46,7 +46,7 @@ module.exports = {
 
 	'rules': {
 		'linebreak-style': ['off', 'windows'],
-		'max-len': ['warn', 160],
+		'max-len': ['warn', 80],
 		'no-console': 'warn',
 		'no-unused-vars': 'warn',
 		'no-trailing-spaces': 'off',

@@ -206,7 +206,8 @@ limitations under the License.
 			// Need to be signed in to Chrome
 			const self = this;
 			chrome.identity.getProfileUserInfo(function(userInfo) {
-				if (!app.Utils.isSignedIn() && app.Utils.isWhiteSpace(userInfo.id)) {
+				if (!app.Utils.isSignedIn() &&
+					app.Utils.isWhiteSpace(userInfo.id)) {
 					self.set('isSignInDisabled', true);
 				} else {
 					self.set('isSignInDisabled', false);
@@ -225,23 +226,28 @@ limitations under the License.
 			Notification.requestPermission().then(function(permission) {
 				if (permission === 'denied') {
 					// user denied or Chrome setting blocks all
-					self._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE, false);
+					self._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE,
+						false);
 				} else if (permission === 'default') {
 					// user closed notification popup
-					self._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE, true);
+					self._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE,
+						true);
 				} else {
 					// granted
 					self.set('isSignInDisabled', false);
 				}
 			}).catch(function(error) {
 				// something went wrong
-				self._showDialog(ERROR_PERMISSION, ERROR_UNKNOWN_MESSAGE + error, false);
+				self._showDialog(ERROR_PERMISSION,
+					ERROR_UNKNOWN_MESSAGE + error, false);
 			});
 		},
 
 		_signIn: function() {
 			const self = this;
-			chrome.runtime.sendMessage({message: 'signIn'}, function(response) {
+			chrome.runtime.sendMessage({
+				message: 'signIn',
+			}, function(response) {
 				if (response.message === 'error') {
 					self._showDialog(ERROR_SIGN_IN, response.error, false);
 				}
@@ -251,7 +257,9 @@ limitations under the License.
 
 		_signOut: function() {
 			const self = this;
-			chrome.runtime.sendMessage({message: 'signOut'}, function(response) {
+			chrome.runtime.sendMessage({
+				message: 'signOut',
+			}, function(response) {
 				if (response.message === 'error') {
 					self._showDialog(ERROR_SIGN_OUT, response.error, false);
 				}

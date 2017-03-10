@@ -163,52 +163,61 @@
 
 				if (mustShowNotification) {
 					// if we don't have focus, show notification
-					return self.registration.getNotifications({tag: tag}).then((notifications) => {
-						const noteOptions = {
-							requireInteraction: true,
-							body: body,
-							icon: icon,
-							tag: tag,
-							timestamp: Date.now(),
-						};
-						if (tag === TAG_MESSAGE) {
-							noteOptions.actions = [{
-								action: 'search',
-								title: 'Search web',
-								icon: '../images/search-web.png',
-							}];
-						}
-						if (notifications.length > 0) {
-							// append our data to existing notification
-							noteOptions.renotify = true;
-							dataArray = notifications[0].data;
-							dataArray.push(data);
-							title = dataArray.length + ' new items\n' + title;
-							noteOptions.data = dataArray;
-						} else {
-							// this is for Chrome start-up so we can keep
-							// data because only last notification will be created
-							// this will also handle the first notification when
-							// extension doesn't have focus
+					return self.registration.getNotifications({tag: tag})
+						.then((notifications) => {
+							const noteOptions = {
+								requireInteraction: true,
+								body: body,
+								icon: icon,
+								tag: tag,
+								timestamp: Date.now(),
+							};
 							if (tag === TAG_MESSAGE) {
-								msgDataArray.push(data);
-								if (msgDataArray.length > 1) {
-									title = title + '\n' + msgDataArray.length + ' new items';
-								}
-								// shallow copy
-								noteOptions.data = JSON.parse(JSON.stringify(msgDataArray));
-							} else if (tag === TAG_DEVICE) {
-								deviceDataArray.push(data);
-								if (deviceDataArray.length > 1) {
-									title = title + '\n' + deviceDataArray.length + ' new items';
-								}
-								// shallow copy
-								noteOptions.data = JSON.parse(JSON.stringify(deviceDataArray));
+								noteOptions.actions = [{
+									action: 'search',
+									title: 'Search web',
+									icon: '../images/search-web.png',
+								}];
 							}
-						}
-						// return the notification.
-						return self.registration.showNotification(title, noteOptions);
-					});
+							if (notifications.length > 0) {
+								// append our data to existing notification
+								noteOptions.renotify = true;
+								dataArray = notifications[0].data;
+								dataArray.push(data);
+								title = dataArray.length + ' new items\n' +
+									title;
+								noteOptions.data = dataArray;
+							} else {
+								// this is for Chrome start-up so we can keep
+								// data because only last notification will be
+								// created this will also handle the first
+								// notification when extension doesn't have
+								// focus
+								if (tag === TAG_MESSAGE) {
+									msgDataArray.push(data);
+									if (msgDataArray.length > 1) {
+										title = title + '\n' +
+											msgDataArray.length + ' new items';
+									}
+									// shallow copy
+									noteOptions.data = JSON.parse(
+										JSON.stringify(msgDataArray));
+								} else if (tag === TAG_DEVICE) {
+									deviceDataArray.push(data);
+									if (deviceDataArray.length > 1) {
+										title = title + '\n' +
+											deviceDataArray.length +
+											' new items';
+									}
+									// shallow copy
+									noteOptions.data = JSON.parse(
+										JSON.stringify(deviceDataArray));
+								}
+							}
+							// return the notification.
+							return self.registration
+								.showNotification(title, noteOptions);
+						});
 				} else {
 					// Our extension is focused, skip notification
 					return doFakeFetch(dataArray).catch(function() {});

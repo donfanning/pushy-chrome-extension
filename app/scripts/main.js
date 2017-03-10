@@ -39,7 +39,8 @@ app.Main = (function() {
 	 * @memberOf Main
 	 */
 	const ANDROID_URI =
-		'https://play.google.com/store/apps/details?id=com.weebly.opus1269.clipman';
+		'https://play.google.com/store/apps/details?' +
+		'id=com.weebly.opus1269.clipman';
 
 	/**
 	 * Auto-binding template
@@ -56,7 +57,8 @@ app.Main = (function() {
 	 * @property {string} label - label for Nav menu
 	 * @property {string} route - element name route to page
 	 * @property {string} icon - icon for Nav Menu
-	 * @property {object|null} obj - something to be done when Nav menu is selected
+	 * @property {object|null} obj - something to be done when Nav menu
+	 * is selected
 	 * @property {boolean} ready - has page been inserted
 	 * @property {boolean} disabled - disabled state of Nav menu
 	 * @memberOf Main
@@ -69,13 +71,26 @@ app.Main = (function() {
 	 * @alias Main.pages
 	 */
 	t.pages = [
-		{label: 'Main', route: 'page-main', icon: 'myicons:list', obj: null, ready: true, disabled: false},
-		{label: 'Manage account', route: 'page-signin', icon: 'myicons:account-circle', obj: _showSignInPage, ready: false, disabled: false},
-		{label: 'Manage devices', route: 'page-devices', icon: 'myicons:phonelink', obj: _showDevicesPage, ready: false, disabled: false},
-		{label: 'Settings', route: 'page-settings', icon: 'myicons:settings', obj: _showSettingsPage, ready: false, disabled: false},
-		{label: 'Help & feedback', route: 'page-help', icon: 'myicons:help', obj: _showHelpPage, ready: false, disabled: false},
-		{label: 'Get android app', route: 'page-android', icon: 'myicons:android', obj: ANDROID_URI, ready: true, disabled: false},
-		{label: 'Rate extension', route: 'page-rate', icon: 'myicons:grade', obj: EXT_URI + 'reviews', ready: true, disabled: false},
+		{label: 'Main', route: 'page-main',
+			icon: 'myicons:list', obj: null, ready: true, disabled: false},
+		{label: 'Manage account', route: 'page-signin',
+			icon: 'myicons:account-circle', obj: _showSignInPage,
+			ready: false, disabled: false},
+		{label: 'Manage devices', route: 'page-devices',
+			icon: 'myicons:phonelink', obj: _showDevicesPage,
+			ready: false, disabled: false},
+		{label: 'Settings', route: 'page-settings',
+			icon: 'myicons:settings', obj: _showSettingsPage,
+			ready: false, disabled: false},
+		{label: 'Help & feedback', route: 'page-help',
+			icon: 'myicons:help', obj: _showHelpPage,
+			ready: false, disabled: false},
+		{label: 'Get android app', route: 'page-android',
+			icon: 'myicons:android', obj: ANDROID_URI,
+			ready: true, disabled: false},
+		{label: 'Rate extension', route: 'page-rate',
+			icon: 'myicons:grade', obj: EXT_URI + 'reviews',
+			ready: true, disabled: false},
 	];
 
 	/**

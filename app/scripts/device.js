@@ -94,7 +94,8 @@
 	Device.myName = function() {
 		let name = Device.myNickname();
 		if (app.Utils.isWhiteSpace(name)) {
-			name = Device.myModel() + ' - ' + Device.mySN() + ' - ' + Device.myOS();
+			name = Device.myModel() + ' - ' + Device.mySN() + ' - ' +
+				Device.myOS();
 		}
 		return name;
 	};

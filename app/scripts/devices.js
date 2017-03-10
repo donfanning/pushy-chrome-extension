@@ -59,8 +59,8 @@ app.Devices = (function() {
 			for (let k in json) {
 				if (json.hasOwnProperty(k)) {
 					let v = json[k];
-					let device =
-						new app.Device(v.model, v.sn, v.os, v.nickname, v.lastSeen);
+					let device = new app.Device(v.model, v.sn, v.os, v.nickname,
+						v.lastSeen);
 					_devices.set(k, device);
 				}
 			}

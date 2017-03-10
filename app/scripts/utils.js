@@ -85,7 +85,7 @@ app.Utils = (function() {
 
 		/**
 		 * Get the major Chrome version
-		 * @see http://stackoverflow.com/questions/4900436/detect-version-of-chrome-installed
+		 * @see https://goo.gl/2ITMNO
 		 * @return {int} Chrome major version
 		 * @memberOf Utils
 		 */
@@ -96,7 +96,7 @@ app.Utils = (function() {
 
 		/**
 		 * Get the full Chrome version
-		 * @see http://stackoverflow.com/questions/4900436/detect-version-of-chrome-installed
+		 * @see https://goo.gl/2ITMNO
 		 * @return {string} Chrome version
 		 * @memberOf Utils
 		 */
@@ -158,7 +158,8 @@ app.Utils = (function() {
 		 * @memberOf Utils
 		 */
 		getRelativeTime: function(time) {
-			return moment(time).fromNow() + ', ' + moment(time).format('h:mm a');
+			return moment(time).fromNow() + ', ' +
+				moment(time).format('h:mm a');
 		},
 
 		/**
@@ -283,14 +284,15 @@ app.Utils = (function() {
 		 *
 		 */
 		randomString: function(len) {
-			const POSSIBLE =
-				'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+			const POSS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
+				'abcdefghijklmnopqrstuvwxyz0123456789';
 			if (!len) {
 				len = 8;
 			}
 			let text = '';
 			for (let i = 0; i < len; i++) {
-				text += POSSIBLE.charAt(Math.floor(Math.random() * POSSIBLE.length));
+				text +=
+					POSS.charAt(Math.floor(Math.random() * POSS.length));
 			}
 			return text;
 		},

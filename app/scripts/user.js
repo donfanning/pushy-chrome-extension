@@ -27,7 +27,8 @@ app.User = (function() {
 	const ERROR_ALREADY_SIGNED_IN = 'Already signed in';
 
 	/**
-	 * Event: Fired when signin state changes for an account on the user's profile.
+	 * Event: Fired when signin state changes for an account on the user's
+	 *     profile.
 	 * @see https://developer.chrome.com/apps/identity#event-onSignInChanged
 	 * @param {object} account - chrome AccountInfo
 	 * @param {boolean} signedIn - true if signedIn
@@ -112,60 +113,29 @@ app.User = (function() {
 			const interactive = !app.Utils.isSignedIn();
 
 			const chromep = new ChromePromise();
-			return chromep.identity.getAuthToken({'interactive': interactive}).then(function(accessToken) {
-				if (chrome.runtime.lastError) {
-					const error = chrome.runtime.lastError.message;
-					if (retry && error && accessToken) {
-						// cached token may be expired or invalid.
-						// remove it and try again
-						console.log('getAccessToken removing cached token');
-						return app.User.removeCachedAuthToken(accessToken).then(function() {
-							return app.User.getAccessToken(false);
-						}).catch(function(error) {
-							return Promise.reject(error);
-						});
+			return chromep.identity.getAuthToken({'interactive': interactive})
+				.then(function(accessToken) {
+					if (chrome.runtime.lastError) {
+						const error = chrome.runtime.lastError.message;
+						if (retry && error && accessToken) {
+							// cached token may be expired or invalid.
+							// remove it and try again
+							return app.User.removeCachedAuthToken(accessToken)
+								.then(function() {
+									return app.User.getAccessToken(false);
+								}).catch(function(error) {
+									return Promise.reject(error);
+								});
+						} else {
+							throw new Error(error);
+						}
 					} else {
-						throw new Error(error);
+						return Promise.resolve(accessToken);
 					}
-				} else {
-					return Promise.resolve(accessToken);
-				}
-			}).catch(function(error) {
-				return Promise.reject(error);
-			});
+				}).catch(function(error) {
+					return Promise.reject(error);
+				});
 		},
-
-		// getAccessToken: function(retry) {
-		// 	// If signed in, first try to get token non-interactively.
-		// 	// If it fails, probably means token has expired or is invalid.
-		// 	const interactive = !app.Utils.isSignedIn();
-		//
-		// 	return new Promise(function(resolve, reject) {
-		// 		let retryToken = true;
-		// 		(function getToken() {
-		// 			chrome.identity.getAuthToken({
-		// 				'interactive': interactive,
-		// 			}, function(accessToken) {
-		// 				if (chrome.runtime.lastError) {
-		// 					let error = chrome.runtime.lastError.message;
-		// 					if (retryToken && error && accessToken) {
-		// 						// cached token may be expired or invalid.
-		// 						// remove it and try again
-		// 						console.log('removing cached token');
-		// 						retryToken = false;
-		// 						chrome.identity.removeCachedAuthToken({
-		// 							'token': accessToken,
-		// 						}, getToken);
-		// 					} else {
-		// 						return reject(new Error(chrome.runtime.lastError.message));
-		// 					}
-		// 				} else {
-		// 					resolve(accessToken);
-		// 				}
-		// 			});
-		// 		})();
-		// 	});
-		// },
 
 		/**
 		 * Remove Auth token from cache

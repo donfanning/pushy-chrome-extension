@@ -141,8 +141,8 @@ limitations under the License.
 				for (let key in devices) {
 					if (devices.hasOwnProperty(key)) {
 						const v = devices[key];
-						const device =
-							new app.Device(v.model, v.sn, v.os, v.nickname, v.lastSeen);
+						const device = new app.Device(v.model, v.sn, v.os,
+							v.nickname, v.lastSeen);
 						this.push('devices', device);
 					}
 				}

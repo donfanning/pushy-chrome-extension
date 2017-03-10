@@ -53,22 +53,22 @@ app.Msg = (function() {
 	const MSG_DEVICE_REMOVED = 'Device removed';
 
 	/**
-	 * Data packet sent to server
-	 * @typedef {Object} msg
+	 * Data packet sent to server - global
+	 * @typedef {Object} GaeMsg
 	 * @property {string} act - type of message
 	 * @property {string} message - content of message
 	 * @property {string} dM - {@link Device} model
 	 * @property {string} dSN - {@link Device} serial number
 	 * @property {string} dOS - {@link Device} operating system
 	 * @property {string} dN - {@link Device} nickname
-	 * @memberOf Msg
+	 * @property {string} fav - '1' if favorite item
 	 */
 
 	/**
 	 * Get the data packet we will send
 	 * @param {string} action - message type
 	 * @param {string} message - message content
-	 * @return {Msg.msg} data packet
+	 * @return {GaeMsg} data packet
 	 * @private
 	 * @memberOf Msg
 	 */
@@ -81,7 +81,7 @@ app.Msg = (function() {
 
 	/**
 	 * Send message to server for delivery to our (@link Devices}
-	 * @param {Msg.msg} data - data packet
+	 * @param {GaeMsg} data - data packet
 	 * @param {boolean} notify - display notification if true
 	 * @return {Promise<void>}
 	 * @private
@@ -103,7 +103,8 @@ app.Msg = (function() {
 			return app.Gae.doPost(url, token, true);
 		}).then(function() {
 			if (notify && app.Notify.onSend()) {
-				app.Notify.create(app.Notify.NOTIFY_SEND, data, app.Device.myName());
+				app.Notify.create(app.Notify.NOTIFY_SEND, data,
+					app.Device.myName());
 			}
 			return Promise.resolve();
 		}).catch(function(error) {

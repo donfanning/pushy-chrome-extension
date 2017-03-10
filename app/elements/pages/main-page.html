@@ -356,7 +356,8 @@ Polymer({
 	},
 
 	_onItemSelected: function(event) {
-		this.set('selectedItem', this.$.listTemplate.itemForElement(event.target));
+		this.set('selectedItem',
+			this.$.listTemplate.itemForElement(event.target));
 	},
 
 	// toggle selection state of a list row

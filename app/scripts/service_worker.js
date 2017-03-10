@@ -26,6 +26,7 @@ app.SW = (function() {
 
 	const ERROR_REG = 'Failed to register Service Worker: ';
 	const ERROR_UNREG = 'Failed to unregister Service Worker: ';
+	const ERROR_NOTREG = 'Not registered ';
 	const ERROR_UNREG_BOOL = 'returned false';
 
 	/**
@@ -52,12 +53,13 @@ app.SW = (function() {
 	 * @memberOf SW
 	 */
 	function _register() {
-		return navigator.serviceWorker.register(SERVICE_WORKER).then(function(swReg) {
-			_swRegistration = swReg;
-			return Promise.resolve(_swRegistration);
-		}).catch(function(error) {
-			return Promise.reject(new Error(ERROR_REG + error.message));
-		});
+		return navigator.serviceWorker.register(SERVICE_WORKER)
+			.then(function(swReg) {
+				_swRegistration = swReg;
+				return Promise.resolve(_swRegistration);
+			}).catch(function(error) {
+				return Promise.reject(new Error(ERROR_REG + error.message));
+			});
 	}
 
 	/**
@@ -67,17 +69,18 @@ app.SW = (function() {
 	 * @memberOf SW
 	 */
 	function _unsubscribePush() {
-		return _swRegistration.pushManager.getSubscription().then(function(subscription) {
-			if (subscription) {
-				return subscription.unsubscribe();
-			} else {
-				return Promise.reject(new Error('Not subscribed'));
-			}
-		}).then(function() {
-			return Promise.resolve();
-		}).catch(function(error) {
-			return Promise.reject(error);
-		});
+		return _swRegistration.pushManager.getSubscription()
+			.then(function(subscription) {
+				if (subscription) {
+					return subscription.unsubscribe();
+				} else {
+					return Promise.reject(new Error('Not subscribed'));
+				}
+			}).then(function() {
+				return Promise.resolve();
+			}).catch(function(error) {
+				return Promise.reject(error);
+			});
 	}
 
 	return {
@@ -108,7 +111,7 @@ app.SW = (function() {
 		 */
 		unregister: function() {
 			if (!_swRegistration) {
-				return Promise.reject(new Error(ERROR_UNREG + 'Not registered'));
+				return Promise.reject(new Error(ERROR_UNREG + ERROR_NOTREG));
 			}
 
 			return _unsubscribePush().then(function() {
