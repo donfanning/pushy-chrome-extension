@@ -121,7 +121,7 @@ limitations under the License.
 
 		ready: function() {
 			// listen for app messages
-			chrome.runtime.onMessage.addListener(this._onMessage);
+			chrome.runtime.onMessage.addListener(this._onChromeMessage);
 			this._loadDevices();
 		},
 
@@ -153,7 +153,7 @@ limitations under the License.
 			return b.lastSeen - a.lastSeen;
 		},
 
-		_onMessage: function(request) {
+		_onChromeMessage: function(request) {
 			const me =
 				document.getElementsByTagName('devices-page')[0];
 			if (request.message === 'devicesChanged') {

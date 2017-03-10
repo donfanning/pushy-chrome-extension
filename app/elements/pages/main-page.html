@@ -397,7 +397,7 @@ Polymer({
 
 		// update persisted value
 		const self = this;
-		clipItem.save(function() {
+		clipItem.save().then(function() {
 			// reload list
 			self._loadClipItems();
 		});
@@ -417,8 +417,7 @@ Polymer({
 		}
 
 		// update persisted value
-		clipItem.save(function() {
-		});
+		clipItem.save();
 
 		if (this.isFavFilter) {
 			// redraw if filtering by favorites
@@ -483,7 +482,6 @@ Polymer({
 
 	/**
 	 * Delete the selected list rows, optionally including the favorites
-	 *
 	 * @private
 	 */
 	_doDelete: function() {
@@ -497,14 +495,16 @@ Polymer({
 
 		if (keys.length) {
 			const self = this;
-			app.ClipItem.remove(keys, function() {
-				app.ClipItem.isEmpty(function(error, isEmpty) {
-					if(isEmpty) {
-						self._clearClipViewer();
-					}
-					self.splice('selections', 0, self.selections.length);
-					self._loadClipItems();
-				});
+			app.ClipItem.remove(keys).then(function() {
+				return app.ClipItem.isEmpty();
+			}).then(function(isEmpty) {
+				if (isEmpty) {
+					self._clearClipViewer();
+				}
+				self.splice('selections', 0, self.selections.length);
+				self._loadClipItems();
+			}).catch(function(error) {
+				throw new Error(error.message);
 			});
 		}
 	},

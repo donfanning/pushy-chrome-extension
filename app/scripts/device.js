@@ -20,7 +20,6 @@
 
 	/**
 	 * Creates a new Device instance.
-	 *
 	 * @constructor
 	 * @alias Device
 	 * @param {string} model The model name of a device
@@ -42,8 +41,7 @@
 	};
 
 	/**
-	 * Get a String that uniquely (hopefully) determines this {@link Device}
-	 *
+	 * Get a String that uniquely (hopefully) determines this {@link Device}*
 	 * @return {string} unique name
 	 */
 	Device.prototype.getUniqueName = function() {
@@ -52,7 +50,6 @@
 
 	/**
 	 * Get name suitable for display
-	 *
 	 * @return {string} descriptive name of {@link Device}
 	 */
 	Device.prototype.getName = function() {
@@ -65,7 +62,6 @@
 
 	/**
 	 * Determine if this is our {@link Device}
-	 *
 	 * @return {boolean} true if this is our {@link Device}
 	 */
 	Device.prototype.isMe = function() {
@@ -79,7 +75,6 @@
 
 	/**
 	 * Get unique name of our {@link Device}
-	 *
 	 * @return {string} unique name
 	 */
 	Device.myUniqueName = function() {
@@ -88,7 +83,6 @@
 
 	/**
 	 * Get display name of our {@link Device}
-	 *
 	 * @return {string} display name
 	 */
 	Device.myName = function() {
@@ -102,7 +96,6 @@
 
 	/**
 	 * Get model name of our {@link Device}
-	 *
 	 * @return {string} model name
 	 */
 	Device.myModel = function() {
@@ -111,7 +104,6 @@
 
 	/**
 	 * Get serial number of our {@link Device}
-	 *
 	 * @return {string} serial number
 	 */
 	Device.mySN = function() {
@@ -120,7 +112,6 @@
 
 	/**
 	 * Get operating system of our {@link Device}
-	 *
 	 * @return {string} operating system
 	 */
 	Device.myOS = function() {
@@ -129,7 +120,6 @@
 
 	/**
 	 * Get os version of our {@link Device}
-	 *
 	 * @return {string} operating system version
 	 */
 	Device.myVersion = function() {
@@ -138,7 +128,6 @@
 
 	/**
 	 * Get nickname of our {@link Device}
-	 *
 	 * @return {string} nickname
 	 */
 	Device.myNickname = function() {

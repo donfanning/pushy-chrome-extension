@@ -156,22 +156,15 @@
 		}
 
 		// Persist
-		const clipItem =
-			new app.ClipItem(text, Date.now(), false, false,
-				app.Device.myName());
-		clipItem.save(function() {
-			// let listeners know an item was added
-			chrome.runtime.sendMessage({
-				message: 'clipAdded',
-			}, function(response) {});
+		app.ClipItem.add(text, Date.now(), false, false, app.Device.myName())
+			.then(function(clipItem) {
+			if (app.Utils.allowPush() && app.Utils.isRegistered()) {
+				// send to our devices
+				app.Msg.sendClipItem(clipItem).catch(function(error) {
+					_sendMessageFailed(error);
+				});
+			}
 		});
-
-		if (app.Utils.allowPush() && app.Utils.isRegistered()) {
-			// send to our devices
-			app.Msg.sendClipItem(clipItem).catch(function(error) {
-				_sendMessageFailed(error);
-			});
-		}
 	}
 
 	// noinspection JSUnusedLocalSymbols
@@ -200,12 +193,15 @@
 					clip.remote, clip.device);
 			_copyToClipboard(clipItem.text);
 			// send to our devices
-			_sendClipItem(clipItem);
+			_sendLocalClipItem(clipItem);
 		} else if (request.message === 'removeDevice') {
 			app.Devices.removeByName(request.deviceName);
 		} else if (request.message === 'deviceNameChanged') {
 			app.Reg.changeDeviceName();
 		} else if (request.message === 'ping') {
+			// async
+			ret = true;
+
 			app.Msg.sendPing().catch(function(error) {
 				_sendMessageFailed(error);
 			});
@@ -411,30 +407,6 @@
 	}
 
 	/**
-	 * Process a remote message for clipboard text
-	 * @param {GaeMsg} data - the message
-	 * @param {Device} device - the source {@link Device}
-	 * @private
-	 * @memberOf Background
-	 */
-	function _processClipMessage(data, device) {
-		const fav = (data.fav === '1');
-
-		// Persist
-		const clipItem = new app.ClipItem(data.message, Date.now(), fav, true,
-				device.getName());
-		clipItem.save(function() {
-			// let listeners know a ClipItem was added
-			chrome.runtime.sendMessage({
-				message: 'clipAdded',
-			}, function(response) {});
-		});
-
-		_copyToClipboard(data.message);
-
-	}
-
-	/**
 	 * Process received push notifications
 	 * @param {GaeMsg} data - push data
 	 * @private
@@ -456,7 +428,12 @@
 		if (data.act === app.Msg.ACTION_MESSAGE) {
 			// Remote ClipItem
 			app.Devices.add(device);
-			_processClipMessage(data, device);
+			const fav = (data.fav === '1');
+			// Persist
+			app.ClipItem.add(data.message, Date.now(), fav, true,
+				device.getName());
+			// save to clipboard
+			_copyToClipboard(data.message);
 		} else if (data.act === app.Msg.ACTION_PING) {
 			// we were pinged
 			app.Devices.add(device);
@@ -516,7 +493,7 @@
 	 * @private
 	 * @memberOf Background
 	 */
-	function _sendClipItem(clipItem) {
+	function _sendLocalClipItem(clipItem) {
 		if (!clipItem.remote && app.Utils.isRegistered() &&
 			app.Utils.allowPush() && app.Utils.isAutoSend()) {
 			// send to our devices
@@ -545,18 +522,11 @@
 			}
 
 			// Persist
-			const clipItem =
-				new app.ClipItem(text, Date.now(), false, false,
-					app.Device.myName());
-			clipItem.save(function() {
-				// let listeners know a ClipItem was added
-				chrome.runtime.sendMessage({
-					message: 'clipAdded',
-				}, function(response) {});
+			app.ClipItem.add(text, Date.now(), false, false,
+				app.Device.myName()).then(function(clipItem) {
+				// send to our devices
+				_sendLocalClipItem(clipItem);
 			});
-
-			// send to our devices
-			_sendClipItem(clipItem);
 
 		}, CLIPBOARD_WAIT_MILLIS);
 	}
