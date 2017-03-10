@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Clip-Man-Chrome.iml" filepath="$PROJECT_DIR$/.idea/Clip-Man-Chrome.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Clip Man Chrome Extension.iml" filepath="$PROJECT_DIR$/.idea/Clip Man Chrome Extension.iml" />
     </modules>
   </component>
 </project>
