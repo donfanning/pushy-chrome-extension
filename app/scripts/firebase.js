@@ -72,7 +72,7 @@ app.Fb = (function() {
 			messagingSenderId: '597467211507',
 		};
 
-		return _deleteFirebaseApp().then(function() {
+		return _deleteFirebaseApp().then(() => {
 			_app = firebase.initializeApp(config);
 
 			_auth = firebase.auth();
@@ -85,7 +85,7 @@ app.Fb = (function() {
 			 */
 			_messaging.onTokenRefresh(_refreshRegToken);
 
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	}
@@ -110,16 +110,16 @@ app.Fb = (function() {
 	 * @memberOf Fb
 	 */
 	function _refreshRegToken() {
-		_messaging.getToken().then(function(refreshedToken) {
+		_messaging.getToken().then((refreshedToken) => {
 			if (app.Utils.isRegistered()) {
-				app.Reg.refresh(refreshedToken).then(function() {
+				app.Reg.refresh(refreshedToken).then(() => {
 					_saveRegToken(refreshedToken);
-				}).catch(function(error) {});
+				}).catch((error) => {});
 			} else {
 				// save token, not registered yet
 				_saveRegToken(refreshedToken);
 			}
-		}).catch(function(error) {});
+		}).catch((error) => {});
 	}
 
 	/**
@@ -151,14 +151,14 @@ app.Fb = (function() {
 		 * @memberOf Fb
 		 */
 		signIn: function(token) {
-			return app.SW.initialize().then(function() {
+			return app.SW.initialize().then(() => {
 				const credential =
 					firebase.auth.GoogleAuthProvider.credential(null, token);
 				// Authorize Firebase with the Google access token.
 				return _auth.signInWithCredential(credential);
-			}).then(function(user) {
+			}).then((user) => {
 				return Promise.resolve(user);
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(error);
 			});
 		},
@@ -169,11 +169,11 @@ app.Fb = (function() {
 		 * @memberOf Fb
 		 */
 		signOut: function() {
-			return app.SW.unregister().then(function() {
+			return app.SW.unregister().then(() => {
 				return _auth.signOut();
-			}).then(function() {
+			}).then(() => {
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(error);
 			});
 		},
@@ -184,7 +184,7 @@ app.Fb = (function() {
 		 * @memberOf Fb
 		 */
 		getRegToken: function() {
-			return _messaging.getToken().then(function(token) {
+			return _messaging.getToken().then((token) => {
 				if (token) {
 					_saveRegToken(token);
 					return Promise.resolve(token);

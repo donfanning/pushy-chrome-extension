@@ -18,9 +18,11 @@
 (function() {
 	'use strict';
 
-	/** @namespace ServiceWorker */
-
-
+	/**
+	 * Service Worker to handle push notifications
+	 * @namespace ServiceWorker
+	 */
+	
 	const URL_FETCH_BASE = 'http://www.anyoldthing.com/?';
 	const URL_SEARCH_BASE = 'https://www.google.com/search?q=';
 	const URL_MAIN =
@@ -49,17 +51,16 @@
 	let msgDataArray = [];
 	let deviceDataArray = [];
 
-	self.addEventListener('install', function() {
+	self.addEventListener('install', () => {
 		self.skipWaiting();
 	});
 
-	self.addEventListener('activate', function() {
+	self.addEventListener('activate', () => {
 		clients.claim();
 	});
 
 	/**
 	 * Get the name of the Device who sent the message
-	 *
 	 * @param {JSON} data message object
 	 * @return {string} device name
 	 * @memberOf ServiceWorker
@@ -76,8 +77,7 @@
 
 	/**
 	 * Get the tag for the notification
-	 *
-	 * @param {JSON} data message object
+	 * @param {GaeMsg} data message object
 	 * @return {string} notification tag
 	 * @memberOf ServiceWorker
 	 */
@@ -91,8 +91,7 @@
 
 	/**
 	 * Get the icon for the notification
-	 *
-	 * @param {JSON} data message object
+	 * @param {GaeMsg} data message object
 	 * @return {string|null} path to icon, null for
 	 * actions without notifications (ping based)
 	 * @memberOf ServiceWorker
@@ -113,7 +112,6 @@
 	 * Send fake GET request so extension can intercept it<br />
 	 * and get the payload
 	 * @see https://bugs.chromium.org/p/chromium/issues/detail?id=452942
-	 *
 	 * @param {Array} dataArray Array of JSON objects
 	 * @return {Promise<void>} always resolves
 	 * @memberOf ServiceWorker
@@ -123,9 +121,9 @@
 		deviceDataArray = [];
 		URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
 		return new Promise(function(resolve, reject) {
-			fetch(URL_FETCH, {method: 'GET'}).then(function() {
+			fetch(URL_FETCH, {method: 'GET'}).then(() => {
 				resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				reject(error);
 			});
 		});
@@ -164,63 +162,62 @@
 				if (mustShowNotification) {
 					// if we don't have focus, show notification
 					return self.registration.getNotifications({tag: tag})
-						.then((notifications) => {
-							const noteOptions = {
-								requireInteraction: true,
-								body: body,
-								icon: icon,
-								tag: tag,
-								timestamp: Date.now(),
-							};
+					.then((notifications) => {
+						const noteOptions = {
+							requireInteraction: true,
+							body: body,
+							icon: icon,
+							tag: tag,
+							timestamp: Date.now(),
+						};
+						if ((tag === TAG_MESSAGE)) {
+							noteOptions.actions = [{
+								action: 'search',
+								title: 'Search web',
+								icon: '../images/search-web.png',
+							}];
+						}
+						if ((notifications.length > 0)) {
+							// append our data to existing notification
+							noteOptions.renotify = true;
+							dataArray = notifications[0].data;
+							dataArray.push(data);
+							title = dataArray.length + ' new items\n' + title;
+							noteOptions.data = dataArray;
+						} else {
+							// this is for Chrome start-up so we can keep
+							// data because only last notification will be
+							// created this will also handle the first
+							// notification when extension doesn't have
+							// focus
 							if (tag === TAG_MESSAGE) {
-								noteOptions.actions = [{
-									action: 'search',
-									title: 'Search web',
-									icon: '../images/search-web.png',
-								}];
-							}
-							if (notifications.length > 0) {
-								// append our data to existing notification
-								noteOptions.renotify = true;
-								dataArray = notifications[0].data;
-								dataArray.push(data);
-								title = dataArray.length + ' new items\n' +
-									title;
-								noteOptions.data = dataArray;
-							} else {
-								// this is for Chrome start-up so we can keep
-								// data because only last notification will be
-								// created this will also handle the first
-								// notification when extension doesn't have
-								// focus
-								if (tag === TAG_MESSAGE) {
-									msgDataArray.push(data);
-									if (msgDataArray.length > 1) {
-										title = title + '\n' +
-											msgDataArray.length + ' new items';
-									}
-									// shallow copy
-									noteOptions.data = JSON.parse(
-										JSON.stringify(msgDataArray));
-								} else if (tag === TAG_DEVICE) {
-									deviceDataArray.push(data);
-									if (deviceDataArray.length > 1) {
-										title = title + '\n' +
-											deviceDataArray.length +
-											' new items';
-									}
-									// shallow copy
-									noteOptions.data = JSON.parse(
-										JSON.stringify(deviceDataArray));
+								msgDataArray.push(data);
+								if (msgDataArray.length > 1) {
+									title = title + '\n' +
+										msgDataArray.length + ' new items';
 								}
+								// shallow copy
+								noteOptions.data = JSON.parse(
+									JSON.stringify(msgDataArray));
+							} else if (tag === TAG_DEVICE) {
+								deviceDataArray.push(data);
+								if (deviceDataArray.length > 1) {
+									title = title + '\n' +
+										deviceDataArray.length +
+										' new items';
+								}
+								// shallow copy
+								noteOptions.data = JSON.parse(
+									JSON.stringify(deviceDataArray));
 							}
-							// return the notification.
-							return self.registration
-								.showNotification(title, noteOptions);
-						});
+						}
+						// return the notification.
+						return self.registration
+							.showNotification(title, noteOptions);
+					});
 				} else {
 					// Our extension is focused, skip notification
-					return doFakeFetch(dataArray).catch(function() {});
+					return doFakeFetch(dataArray).catch(() => {});
 				}
 			});
 
@@ -232,7 +229,7 @@
 	/**
 	 * Listen for notificationclick events
 	 */
-	self.addEventListener('notificationclick', function(event) {
+	self.addEventListener('notificationclick', (event) => {
 		event.notification.close();
 
 		let url = URL_MAIN;
@@ -246,7 +243,7 @@
 		event.waitUntil(clients.matchAll({
 				includeUncontrolled: true,
 				type: 'window',
-			}).then(function(windowClients) {
+			}).then((windowClients) => {
 				for (let i = 0; i < windowClients.length; i++) {
 					const client = windowClients[i];
 					if (client.url === url && 'focus' in client) {
@@ -265,10 +262,10 @@
 	/**
 	 * Listen for notificationclose events
 	 */
-	self.addEventListener('notificationclose', function(event) {
+	self.addEventListener('notificationclose', (event) => {
 		// can't open or focus window here.
 		event.waitUntil(
-			doFakeFetch(event.notification.data).catch(function() {})
+			doFakeFetch(event.notification.data).catch(() => {})
 		);
 	});
 })();

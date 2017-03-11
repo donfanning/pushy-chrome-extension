@@ -78,7 +78,7 @@ app.Devices = (function() {
 		// let listeners know we changed
 		chrome.runtime.sendMessage({
 			message: 'devicesChanged',
-		}, function(response) {});
+		}, (response) => {});
 	}
 
 	/**

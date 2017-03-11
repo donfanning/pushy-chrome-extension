@@ -16,27 +16,28 @@
  *
  */
 window.app = window.app || {};
-/** @namespace Notify */
 app.Notify = (function() {
 	'use strict';
+
+	/**
+	 * TODO remove receive done by service worker
+	 * Handle display of notification
+	 *  @namespace Notify
+	 */
 
 	const NOTIFY_RECEIVE = 'CLIP_MAN_RECEIVE';
 	const NOTIFY_SEND = 'CLIP_MAN_SEND';
 
-	/**
-	 * Icons
-	 */
 	const IC_LOCAL_COPY = '/images/ic_local_copy.png';
 	const IC_ADD_DEVICE = '/images/ic_add_device.png';
 	const IC_REMOVE_DEVICE = '/images/ic_remove_device.png';
 
 	/**
 	 * Get the icon for the notification
-	 *
-	 * @param {JSON} data message object
+	 * @param {GaeMsg} data message object
 	 * @return {String|null} path to icon, null for
 	 * actions without notifications (ping based)
-	 * @alias Notify._getIcon
+	 * @memberOf Notify
 	 */
 	function _getIcon(data) {
 		let path = '';
@@ -54,25 +55,22 @@ app.Notify = (function() {
 
 		/**
 		 * Receive notification type
-		 *
-		 * @alias Notify.NOTIFY_RECEIVE
+		 * @memberOf Notify
 		 */
 		NOTIFY_RECEIVE: NOTIFY_RECEIVE,
 
 		/**
 		 * Send notification type
-		 *
-		 * @alias Notify.NOTIFY_SEND
+		 * @memberOf Notify
 		 */
 		NOTIFY_SEND: NOTIFY_SEND,
 
 		/**
 		 * Create and display a notification
-		 *
-		 * @param {String} type notification type (send or receive)
-		 * @param {JSON} data message data
-		 * @param {String} deviceName source (@link app.Device}
-		 * @alias Notify.create
+		 * @param {string} type - notification type (send or receive)
+		 * @param {GaeMsg} data - message data
+		 * @param {string} deviceName - source {@link Device}
+		 * @memberOf Notify
 		 */
 		create: function(type, data, deviceName) {
 			const options = {
@@ -100,15 +98,13 @@ app.Notify = (function() {
 						if (app.Utils.getChromeVersion(0) >= 50) {
 							options.requireInteraction = true;
 						}
-						chrome.notifications.create(type, options,
-							function() {});
+						chrome.notifications.create(type, options, () => {});
 						break;
 					case NOTIFY_SEND:
 						options.iconUrl = chrome.runtime.getURL(icon);
 						options.title = 'Sent push message';
 						options.message = data.message;
-						chrome.notifications.create(type, options,
-							function() {});
+						chrome.notifications.create(type, options, () => {});
 						break;
 					default:
 						break;
@@ -118,9 +114,8 @@ app.Notify = (function() {
 
 		/**
 		 * Determine if send notifications are enabled
-		 *
 		 * @return {Boolean} true if enabled
-		 * @alias Notify.onSend
+		 * @memberOf Notify
 		 */
 		onSend: function() {
 			const notify = app.Utils.get('notify');
@@ -130,9 +125,8 @@ app.Notify = (function() {
 
 		/**
 		 * Determine if receive notifications are enabled
-		 *
 		 * @return {Boolean} true if enabled
-		 * @alias Notify.onReceive
+		 * @memberOf Notify
 		 */
 		onReceive: function() {
 			const notify = app.Utils.get('notify');

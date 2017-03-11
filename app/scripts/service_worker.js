@@ -26,7 +26,7 @@ app.SW = (function() {
 
 	const ERROR_REG = 'Failed to register Service Worker: ';
 	const ERROR_UNREG = 'Failed to unregister Service Worker: ';
-	const ERROR_NOTREG = 'Not registered ';
+	const ERROR_NOT_REG = 'Not registered ';
 	const ERROR_UNREG_BOOL = 'returned false';
 
 	/**
@@ -48,16 +48,16 @@ app.SW = (function() {
 	/**
 	 * Register the Service Worker
 	 * Note: This can be called if already registered
-	 * @return {Promise<ServiceWorkerRegistration>} reject with {@link Error}
+	 * @return {Promise<ServiceWorkerRegistration>}
 	 * @private
 	 * @memberOf SW
 	 */
 	function _register() {
 		return navigator.serviceWorker.register(SERVICE_WORKER)
-			.then(function(swReg) {
+			.then((swReg) => {
 				_swRegistration = swReg;
 				return Promise.resolve(_swRegistration);
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(new Error(ERROR_REG + error.message));
 			});
 	}
@@ -70,15 +70,15 @@ app.SW = (function() {
 	 */
 	function _unsubscribePush() {
 		return _swRegistration.pushManager.getSubscription()
-			.then(function(subscription) {
+			.then((subscription) => {
 				if (subscription) {
 					return subscription.unsubscribe();
 				} else {
 					return Promise.reject(new Error('Not subscribed'));
 				}
-			}).then(function() {
+			}).then(() => {
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(error);
 			});
 	}
@@ -87,7 +87,7 @@ app.SW = (function() {
 
 		/**
 		 * Initialize the {@link ServiceWorker} and firebase
-		 * @return {Promise<void>} reject with error
+		 * @return {Promise<void>}
 		 * @memberOf SW
 		 */
 		initialize: function() {
@@ -95,35 +95,35 @@ app.SW = (function() {
 				return Promise.resolve();
 			}
 
-			return _register().then(function(swReg) {
+			return _register().then((swReg) => {
 				return app.Fb.initialize(swReg);
-			}).then(function() {
+			}).then(() => {
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(new Error(ERROR_REG + error.message));
 			});
 		},
 
 		/**
 		 * Unregister the Service Worker
-		 * @return {Promise<void>} reject with {@link Error}
+		 * @return {Promise<void>}
 		 * @memberOf SW
 		 */
 		unregister: function() {
 			if (!_swRegistration) {
-				return Promise.reject(new Error(ERROR_UNREG + ERROR_NOTREG));
+				return Promise.reject(new Error(ERROR_UNREG + ERROR_NOT_REG));
 			}
 
-			return _unsubscribePush().then(function() {
+			return _unsubscribePush().then(() => {
 				return _swRegistration.unregister();
-			}).then(function(boolean) {
+			}).then((boolean) => {
 				if (!boolean) {
 					throw new Error(ERROR_UNREG_BOOL);
 				} else {
 					_swRegistration = null;
 					return Promise.resolve();
 				}
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(new Error(ERROR_UNREG + error.message));
 			});
 		},

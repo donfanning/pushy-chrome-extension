@@ -88,13 +88,13 @@ limitations under the License.
 		},
 
 		/**
-		 * Event: (@link Device} nickname changed
+		 * Event: {@link Device} nickname changed
 		 * @private
 		 */
 		_onNicknameChanged: function() {
 			chrome.runtime.sendMessage({
 				message: 'deviceNameChanged',
-			}, function() {});
+			}, () => {});
 		},
 
 	});

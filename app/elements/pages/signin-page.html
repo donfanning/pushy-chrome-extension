@@ -46,10 +46,17 @@ limitations under the License.
 				position: relative;
 			}
 
+			#errorDialog {
+				max-width: 40vw;
+			}
+
+			.contentContainer {
+				min-height: 25vh;
+			}
+
 			#description {
-				@apply(--paper-font-subhead);
 				padding: 0;
-				margin: 64px 16px 16px 16px
+				margin: 16px 16px 16px 16px
 			}
 
 			.buttonContainer {
@@ -93,35 +100,40 @@ limitations under the License.
 			<div class="card-content">
 
 				<!-- Error dialog -->
-				<paper-dialog id="errorDialog" modal entry-animation="scale-up-animation"
+				<paper-dialog id="errorDialog" modal
+				              entry-animation="scale-up-animation"
 				              exit-animation="fade-out-animation">
-					<h2>[[dialogTitle]]</h2>
+					<h2 id="dialogTitle" class="vertical layout center"></h2>
 					<paper-dialog-scrollable>
-						<pre>[[dialogText]]</pre>
+						<paper-item id="dialogText"></paper-item>
 					</paper-dialog-scrollable>
 					<div class="buttons">
 						<paper-button dialog-dismiss autofocus>CLOSE</paper-button>
-						<paper-button dialog-confirm hidden$="[[!isResponseButton]]"
+						<paper-button dialog-confirm hidden$="[[!confirmButton]]"
 						              on-click="_onDialogButtonClicked">OK</paper-button>
 					</div>
 				</paper-dialog>
 
-				<div id="description" class="horizontal layout center flex"
-				     style$="visibility: [[_computeDescVisibility(waitForSignIn)]];">
-					You must be signed in to the Browser with the account you
-					wish to use to share with your other devices.  It is only used to ensure
-					that all messages goes to a single account. You also need to "Allow Notifications"
-					so the extension can send and receive messages.
-				</div>
+				<div class="contentContainer horizontal layout center">
+					<paper-item id="description"
+					     style$="display: [[computeDescDisplay(waiting)]];">
+						You must be signed in to the Browser with the account you
+						wish to use to share with your other devices.  It is only used to ensure
+						that all messages goes to a single account. You also need to "Allow Notifications"
+						so the extension can send and receive messages.
+					</paper-item>
 
-				<div id="waiter" class="vertical layout center"
-				     style$="visibility: [[_computeWaiterVisibility(waitForSignIn)]];">
-					<paper-spinner active="[[waitForSignIn]]" tabindex="-1"></paper-spinner>
-					<paper-item>[[_computeWaiterLabel(waitForSignIn)]]</paper-item>
+					<div id="waiter" class="vertical layout center"
+					     style$="display: [[computeWaiterDisplay(waiting)]];">
+						<div class="horizontal center-justified layout">
+							<paper-spinner active="[[waiting]]" tabindex="-1"></paper-spinner>
+						</div>
+						<paper-item>[[_computeWaiterLabel(waiting)]]</paper-item>
+					</div>
 				</div>
 				<div class="buttonContainer vertical layout center">
 					<paper-item id="googleAccountButton"  tabindex="0"
-					            on-click="_onAccountButtonClicked" disabled$="[[isSignInDisabled]]">
+					            on-click="_onAccountButtonClicked" disabled$="[[signInDisabled]]">
 						<paper-ripple center></paper-ripple>
 						<iron-icon icon="myicons:google" item-icon></iron-icon>
 						<span class="setting-label">[[_computeButtonLabel(signedIn)]]</span>
@@ -143,17 +155,18 @@ limitations under the License.
 	const ERROR_PERMISSION =
 		'Notification permission is required to sign-in.';
 	const ERROR_BLOCKED_MESSAGE =
-		'You either blocked the request or the Chrome settings block\n' +
-		'all notifications. If you want to sign-in, go to\n' +
-		'Chrome settings -> Show advanced settings...\n' +
-		'Click on "content settings... In the notification area\n' +
-		'make sure "Ask when a site wants to show notifications"\n' +
-		'is selected and in the "Manage Exceptions" area allow this if\n' +
-		'it is blocked: ' + app.Utils.getExtensionName() + '/';
+		'<p>You either blocked the request or the Chrome settings block ' +
+		'all notifications. If you want to sign-in, go to ' +
+		'"Chrome settings -> Show advanced settings...". Click on ' +
+		'"content settings...". In the notification area ' +
+		'make sure "Ask when a site wants to show notifications" ' +
+		'is selected. In the "Manage Exceptions" area allow this if ' +
+		'it is blocked:<br />&nbsp&nbsp&nbsp&nbsp' +
+		app.Utils.getExtensionName() + '/</p>';
 	const ERROR_DEFAULT_MESSAGE =
 		'Display notification pop-up again?';
 	const ERROR_UNKNOWN_MESSAGE =
-		'An error occurred. Please try again later.\n';
+		'An error occurred. Please try again later.<br />';
 
 	window.app = window.app || {};
 	app.SignInPageFactory = Polymer({
@@ -167,31 +180,19 @@ limitations under the License.
 				notify: true,
 			},
 
-			isSignInDisabled: {
+			signInDisabled: {
 				type: Boolean,
 				value: true,
 				notify: true,
 			},
 
-			waitForSignIn: {
+			waiting: {
 				type: Boolean,
 				value: false,
 				notify: true,
 			},
 
-			dialogTitle: {
-				type: String,
-				value: 'Title',
-				notify: true,
-			},
-
-			dialogText: {
-				type: String,
-				value: 'Text',
-				notify: true,
-			},
-
-			isResponseButton: {
+			confirmButton: {
 				type: Boolean,
 				value: false,
 			},
@@ -202,81 +203,79 @@ limitations under the License.
 			this._checkChromeSignIn();
 		},
 
+		/**
+		 * Determine if the user is signed into the Browser
+		 * @private
+		 */
 		_checkChromeSignIn: function() {
-			// Need to be signed in to Chrome
-			const self = this;
-			chrome.identity.getProfileUserInfo(function(userInfo) {
+			const chromep = new ChromePromise();
+			chromep.identity.getProfileUserInfo().then((userInfo) => {
 				if (!app.Utils.isSignedIn() &&
 					app.Utils.isWhiteSpace(userInfo.id)) {
-					self.set('isSignInDisabled', true);
+					this.set('signInDisabled', true);
 				} else {
-					self.set('isSignInDisabled', false);
-					self._checkPermissions();
+					this.set('signInDisabled', false);
+					this._checkPermissions();
 				}
 			});
 		},
 
+		/**
+		 * Display popup to Allow Notifications if necessary
+		 * @private
+		 */
 		_checkPermissions: function() {
 			// Note: Don't rely on Notification.permission
-			//  if extension requests notifications permission
-
-			// ask for Notification permissions
-			const self = this;
-			self.set('isSignInDisabled', true);
-			Notification.requestPermission().then(function(permission) {
+			// if extension requests notifications permission
+			this.set('signInDisabled', true);
+			Notification.requestPermission().then((permission) => {
 				if (permission === 'denied') {
 					// user denied or Chrome setting blocks all
-					self._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE,
+					this._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE,
 						false);
 				} else if (permission === 'default') {
 					// user closed notification popup
-					self._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE,
+					this._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE,
 						true);
 				} else {
 					// granted
-					self.set('isSignInDisabled', false);
+					this.set('signInDisabled', false);
 				}
-			}).catch(function(error) {
+			}).catch((error) => {
 				// something went wrong
-				self._showDialog(ERROR_PERMISSION,
+				this._showDialog(ERROR_PERMISSION,
 					ERROR_UNKNOWN_MESSAGE + error, false);
 			});
 		},
 
 		_signIn: function() {
-			const self = this;
-			chrome.runtime.sendMessage({
-				message: 'signIn',
-			}, function(response) {
+			chrome.runtime.sendMessage({message: 'signIn'}, (response) => {
 				if (response.message === 'error') {
-					self._showDialog(ERROR_SIGN_IN, response.error, false);
+					this._showDialog(ERROR_SIGN_IN, response.error, false);
 				}
-				self.set('waitForSignIn', false);
+				this.set('waiting', false);
 			});
 		},
 
 		_signOut: function() {
-			const self = this;
-			chrome.runtime.sendMessage({
-				message: 'signOut',
-			}, function(response) {
+			chrome.runtime.sendMessage({message: 'signOut'}, (response) => {
 				if (response.message === 'error') {
-					self._showDialog(ERROR_SIGN_OUT, response.error, false);
+					this._showDialog(ERROR_SIGN_OUT, response.error, false);
 				}
-				self.set('waitForSignIn', false);
+				this.set('waiting', false);
 			});
 		},
 
-		_showDialog: function(title, message, isResponseButton) {
-			this.set('dialogTitle', title);
-			this.set('dialogText', message);
-			this.set('isResponseButton', isResponseButton);
+		_showDialog: function(title, text, confirmButton) {
+			this.$.dialogTitle.innerHTML = title;
+			this.$.dialogText.innerHTML = text;
+			this.set('confirmButton', confirmButton);
 			this.$.errorDialog.open();
 		},
 
 		_onAccountButtonClicked: function() {
-			this.set('waitForSignIn', true);
-			app.Utils.isSignedIn() ? this._signOut() : this._signIn();
+			this.set('waiting', true);
+			this.signedIn ? this._signOut() : this._signIn();
 		},
 
 		_onDialogButtonClicked: function() {
@@ -292,26 +291,20 @@ limitations under the License.
 		},
 
 		_computeWaiterLabel: function(waiting) {
-			let label = '';
-			if (waiting) {
-				if (app.Utils.isSignedIn()) {
-					label = 'Signing Out...';
-				} else {
-					label = 'Signing In...';
-				}
-			}
-			return label;
+			return this.signedIn ? 'Signing Out...' : 'Signing In...';
 		},
 
-		_computeDescVisibility: function(waitFor) {
-			return waitFor ? 'hidden' : 'visible';
+		computeDescDisplay: function(waiting) {
+			return waiting ? 'none' : 'block';
 		},
 
-		_computeWaiterVisibility: function(waitFor) {
-			return waitFor ? 'visible' : 'hidden';
+		computeWaiterDisplay: function(waiting) {
+			return waiting ? 'block' : 'none';
 		},
 
-		// initialize value if it is not in localStorage
+		/**
+		 * initialize value if it is not in localStorage
+		 */
 		_initSignedIn: function() {
 			this.set('signedIn', false);
 		},

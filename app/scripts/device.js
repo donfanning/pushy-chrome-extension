@@ -41,7 +41,7 @@
 	};
 
 	/**
-	 * Get a String that uniquely (hopefully) determines this {@link Device}*
+	 * Get a String that uniquely (hopefully) determines this {@link Device}
 	 * @return {string} unique name
 	 */
 	Device.prototype.getUniqueName = function() {

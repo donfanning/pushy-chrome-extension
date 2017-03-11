@@ -146,7 +146,7 @@ app.Main = (function() {
 	 * 	Listen for template bound event to know when bindings
 	 * 	have resolved and content has been stamped to the page
 	 */
-	t.addEventListener('dom-change', function() {
+	t.addEventListener('dom-change', () => {
 		// disable devices-page if not signed in
 		const idx = _getPageIdx('page-devices');
 		t.pages[idx].disabled = !app.Utils.isSignedIn();
@@ -228,7 +228,7 @@ app.Main = (function() {
 				isMainPage = true;
 			}
 			// highlight ourselves and tell the sender we are here
-			chrome.tabs.getCurrent(function(tab) {
+			chrome.tabs.getCurrent((tab) => {
 				chrome.tabs.update(tab.id, {'highlighted': true});
 			});
 			response({message: 'OK'});

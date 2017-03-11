@@ -73,11 +73,11 @@ app.Gae = (function() {
 	 * @memberOf Gae
 	 */
 	function _retryPost(url, token) {
-		return app.User.removeCachedAuthToken(token).then(function() {
+		return app.User.removeCachedAuthToken(token).then(() => {
 			return app.User.getAccessToken(false);
-		}).then(function(token) {
+		}).then((token) => {
 			return app.Gae.doPost(url, token, false);
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	}
@@ -112,7 +112,7 @@ app.Gae = (function() {
 				headers: headers,
 			};
 
-			return fetch(url, init).then(function(response) {
+			return fetch(url, init).then((response) => {
 				if (response.ok) {
 					return response.json();
 				} else if (retry && (response.status === 401)) {
@@ -122,7 +122,7 @@ app.Gae = (function() {
 					throw new Error('status: ' + response.status,
 						'\nreason: ' + response.statusText);
 				}
-			}).then(function(json) {
+			}).then((json) => {
 				if (json.success) {
 					return Promise.resolve();
 				} else if (retry && (json.reason === ERROR_UNAUTHORIZED_USER)) {
@@ -131,7 +131,7 @@ app.Gae = (function() {
 				} else {
 					throw new Error(json.reason);
 				}
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(error);
 			});
 		},

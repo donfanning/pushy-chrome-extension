@@ -65,12 +65,12 @@ app.User = (function() {
 				return Promise.reject(new Error(ERROR_ALREADY_SIGNED_IN));
 			}
 
-			return app.User.getAccessToken(true).then(function(token) {
+			return app.User.getAccessToken(true).then((token) => {
 				return app.Fb.signIn(token);
-			}).then(function() {
+			}).then(() => {
 				app.Utils.set('signedIn', true);
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) =>{
 				return Promise.reject(error);
 			});
 		},
@@ -85,10 +85,10 @@ app.User = (function() {
 				return Promise.resolve();
 			}
 
-			return app.Fb.signOut().then(function() {
+			return app.Fb.signOut().then(() => {
 				app.Utils.set('signedIn', false);
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(error);
 			});
 		},
@@ -115,15 +115,15 @@ app.User = (function() {
 				}
 			}
 
-			return ifCleanup().then(function() {
+			return ifCleanup().then(() => {
 				return app.User.signIn();
-			}).then(function() {
+			}).then(() => {
 				return app.Reg.register();
-			}).then(function() {
+			}).then(() => {
 				return app.Msg.sendDeviceAdded();
-			}).then(function() {
+			}).then(() => {
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(error);
 			});
 		},
@@ -134,14 +134,14 @@ app.User = (function() {
 		 * @memberOf User
 		 */
 		removeAccess: function() {
-			return app.Msg.sendDeviceRemoved().then(function() {
+			return app.Msg.sendDeviceRemoved().then(() => {
 				return app.Reg.unregister();
-			}).then(function() {
+			}).then(() => {
 				return app.User.signOut();
-			}).then(function() {
+			}).then(() => {
 				app.Devices.clear();
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(error);
 			});
 		},
@@ -160,16 +160,16 @@ app.User = (function() {
 
 			const chromep = new ChromePromise();
 			return chromep.identity.getAuthToken({'interactive': interactive})
-				.then(function(accessToken) {
+				.then((accessToken) => {
 					if (chrome.runtime.lastError) {
 						const error = chrome.runtime.lastError.message;
 						if (retry && error && accessToken) {
 							// cached token may be expired or invalid.
 							// remove it and try again
 							return app.User.removeCachedAuthToken(accessToken)
-								.then(function() {
+								.then(() => {
 									return app.User.getAccessToken(false);
-								}).catch(function(error) {
+								}).catch((error) => {
 									return Promise.reject(error);
 								});
 						} else {
@@ -178,7 +178,7 @@ app.User = (function() {
 					} else {
 						return Promise.resolve(accessToken);
 					}
-				}).catch(function(error) {
+				}).catch((error) => {
 					return Promise.reject(error);
 				});
 		},
@@ -189,11 +189,11 @@ app.User = (function() {
 		 * @memberOf User
 		 */
 		cleanup: function() {
-			return app.User.getAccessToken(false).then(function(accessToken) {
+			return app.User.getAccessToken(false).then((accessToken) => {
 				return app.User.removeCachedAuthToken(accessToken);
-			}).then(function() {
+			}).then(() => {
 				return Promise.resolve();
-			}).catch(function() {
+			}).catch(() => {
 				return Promise.resolve();
 			});
 		},
@@ -216,13 +216,13 @@ app.User = (function() {
 		 */
 		setInfo: function() {
 			const chromep = new ChromePromise();
-			return chromep.identity.getProfileUserInfo().then(function(user) {
+			return chromep.identity.getProfileUserInfo().then((user) => {
 				app.Utils.set('lastUid', app.Utils.get('uid'));
 				app.Utils.set('lastEmail', app.Utils.get('email'));
 				app.Utils.set('email', user.email);
 				app.Utils.set('uid', user.id);
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(error);
 			});
 		},

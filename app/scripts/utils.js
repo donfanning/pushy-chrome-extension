@@ -24,35 +24,6 @@ app.Utils = (function() {
 	 * @namespace Utils
 	 */
 
-	/**
-	 * This global callback passes an error on failure.
-	 * @callback errorCallback
-	 * @param {string|null} error - description of failure
-	 */
-
-	/**
-	 * This global callback passes a string, or error on failure.
-	 * @callback stringCallback
-	 * @param {string|null} error - description of failure
-	 * @param {string} response - content of response
-	 */
-
-	/**
-	 * This global callback passes an int, or error on failure.
-	 *
-	 * @callback intCallback
-	 * @param {string|null} error - description of failure
-	 * @param {int} value - integer value
-	 */
-
-	/**
-	 * This global callback passes a boolean, or error on failure.
-	 *
-	 * @callback booleanCallback
-	 * @param {string|null} error - description of failure
-	 * @param {boolean} value - boolean value
-	 */
-
 	const MIN_IN_DAY = 60 * 24;
 
 	const MILLIS_IN_DAY = MIN_IN_DAY * 60 * 1000;
@@ -112,7 +83,7 @@ app.Utils = (function() {
 		 */
 		getPlatformOS: function() {
 			const chromep = new ChromePromise();
-			return chromep.runtime.getPlatformInfo().then(function(info) {
+			return chromep.runtime.getPlatformInfo().then((info) => {
 				let output = 'Unknown';
 				const os = info.os;
 				switch (os) {
@@ -286,6 +257,7 @@ app.Utils = (function() {
 		randomString: function(len) {
 			const POSS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
 				'abcdefghijklmnopqrstuvwxyz0123456789';
+			!len ? len = 8 : true;
 			if (!len) {
 				len = 8;
 			}

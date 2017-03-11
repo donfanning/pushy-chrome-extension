@@ -47,11 +47,11 @@ app.Reg = (function() {
 	 * @memberOf Reg
 	 */
 	function _doCommand(url, errorPrefix) {
-		return app.User.getAccessToken(true).then(function(token) {
+		return app.User.getAccessToken(true).then((token) => {
 			return app.Gae.doPost(url, token, true);
-		}).then(function() {
+		}).then(() => {
 			return Promise.resolve();
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(new Error(errorPrefix + error));
 		});
 	}
@@ -68,16 +68,16 @@ app.Reg = (function() {
 				return Promise.resolve();
 			}
 
-			return app.Fb.getRegToken().then(function(regId) {
+			return app.Fb.getRegToken().then((regId) => {
 				const device = app.Gae.getDevice();
 				const url = URL_BASE + 'register/' +
 					regId + '/' +
 					encodeURIComponent(JSON.stringify(device));
 				return _doCommand(url, ERROR_REGISTER);
-			}).then(function() {
+			}).then(() => {
 				app.Utils.set('registered', true);
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(error);
 			});
 		},
@@ -92,14 +92,14 @@ app.Reg = (function() {
 				return Promise.resolve();
 			}
 
-			return app.Fb.getRegToken().then(function(regId) {
+			return app.Fb.getRegToken().then((regId) => {
 				const url = URL_BASE + 'unregister/' +
 					regId;
 				return _doCommand(url, ERROR_UNREGISTER);
-			}).then(function() {
+			}).then(() => {
 				app.Utils.set('registered', false);
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				// TODO unregister?
 				return Promise.reject(error);
 			});
@@ -123,11 +123,11 @@ app.Reg = (function() {
 				newRegToken + '/' +
 				oldRegToken;
 
-			return _doCommand(url, ERROR_REFRESH).then(function() {
+			return _doCommand(url, ERROR_REFRESH).then(() => {
 				app.Utils.set('regId', newRegToken);
 				app.Utils.set('registered', true);
 				return Promise.resolve();
-			}).catch(function(error) {
+			}).catch((error) => {
 				return Promise.reject(error);
 			});
 		},
@@ -142,7 +142,7 @@ app.Reg = (function() {
 				return Promise.resolve();
 			}
 
-			return app.Fb.getRegToken().then(function(regId) {
+			return app.Fb.getRegToken().then((regId) => {
 				const device = app.Gae.getDevice();
 				const url = URL_BASE + 'changeDeviceName/' +
 					regId + '/' +

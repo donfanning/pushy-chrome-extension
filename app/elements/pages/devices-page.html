@@ -120,8 +120,12 @@ limitations under the License.
 		},
 
 		ready: function() {
-			// listen for app messages
-			chrome.runtime.onMessage.addListener(this._onChromeMessage);
+			// listen for chrome messages
+			chrome.runtime.onMessage.addListener(function(request) {
+				if (request.message === 'devicesChanged') {
+					this._loadDevices();
+				}
+			}.bind(this));
 			this._loadDevices();
 		},
 
@@ -153,21 +157,12 @@ limitations under the License.
 			return b.lastSeen - a.lastSeen;
 		},
 
-		_onChromeMessage: function(request) {
-			const me =
-				document.getElementsByTagName('devices-page')[0];
-			if (request.message === 'devicesChanged') {
-				// update Devices list
-				me._loadDevices();
-			}
-		},
-
 		_onDeleteTapped: function(event) {
 			const device = event.model.device;
 			chrome.runtime.sendMessage({
 				message: 'removeDevice',
 				deviceName: device.getUniqueName(),
-			}, function() {});
+			}, () => {});
 		},
 
 		_onFabTapped: function() {
@@ -181,7 +176,7 @@ limitations under the License.
 		_ping: function() {
 			chrome.runtime.sendMessage({
 				message: 'ping',
-			}, function() {});
+			}, () => {});
 		},
 
 	});

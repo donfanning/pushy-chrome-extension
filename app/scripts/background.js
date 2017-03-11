@@ -120,7 +120,7 @@
 		if (details.reason === 'install') {
 			// extension installed
 			// save OS
-			app.Utils.getPlatformOS().then(function(os) {
+			app.Utils.getPlatformOS().then((os) => {
 				app.Utils.set('os', os);
 			});
 			_initializeData();
@@ -128,9 +128,9 @@
 		} else if (details.reason === 'update') {
 			// extension updated
 			_updateData();
-			_initializeFirebase().then(function() {
+			_initializeFirebase().then(() => {
 				return app.SW.update();
-			}).catch(function(error) {});
+			}).catch((error) => {});
 		}
 		_updateAlarms();
 	}
@@ -145,7 +145,7 @@
 	function _onStartup() {
 		_updateAlarms();
 		_deleteOldClipItems();
-		_initializeFirebase().catch(function(error) {});
+		_initializeFirebase().catch((error) => {});
 	}
 
 	/**
@@ -163,10 +163,10 @@
 
 		// Persist
 		app.ClipItem.add(text, Date.now(), false, false, app.Device.myName())
-			.then(function(clipItem) {
+			.then((clipItem) => {
 			if (app.Utils.allowPush() && app.Utils.isRegistered()) {
 				// send to our devices
-				app.Msg.sendClipItem(clipItem).catch(function(error) {
+				app.Msg.sendClipItem(clipItem).catch((error) => {
 					_sendMessageFailed(error);
 				});
 			}
@@ -204,24 +204,24 @@
 		} else if (request.message === 'deviceNameChanged') {
 			app.Reg.changeDeviceName();
 		} else if (request.message === 'ping') {
-			app.Msg.sendPing().catch(function(error) {
+			app.Msg.sendPing().catch((error) => {
 				_sendMessageFailed(error);
 			});
 		} else if (request.message === 'signIn') {
 			// try to signIn a user
 			ret = true; // async
-			app.User.addAccess().then(function() {
+			app.User.addAccess().then(() => {
 				response({message: 'ok'});
-			}).catch(function(error) {
+			}).catch((error) => {
 				app.User.signOut();
 				response({message: 'error', error: error.toString()});
 			});
 		} else if (request.message === 'signOut') {
 			// try to signOut a user
 			ret = true;  // async
-			app.User.removeAccess().then(function() {
+			app.User.removeAccess().then(() => {
 				response({message: 'ok'});
-			}).catch(function(error) {
+			}).catch((error) => {
 				response({message: 'error', error: error.toString()});
 			});
 		}
@@ -238,7 +238,7 @@
 	 */
 	function _onNotificationClicked(notificationId) {
 		_showMainTab();
-		chrome.notifications.clear(notificationId, function() {});
+		chrome.notifications.clear(notificationId, () => {});
 	}
 
 	/**
@@ -346,7 +346,7 @@
 	 */
 	function _initializeFirebase() {
 		if (app.Utils.isSignedIn()) {
-			return app.SW.initialize().catch(function(error) {});
+			return app.SW.initialize().catch((error) => {});
 		} else {
 			return Promise.resolve();
 		}
@@ -364,7 +364,7 @@
 			chrome.alarms.clear(ALARM_STORAGE);
 		} else {
 			// Add daily alarm to delete old clipItems
-			chrome.alarms.get(ALARM_STORAGE, function(alarm) {
+			chrome.alarms.get(ALARM_STORAGE, (alarm) => {
 				if (!alarm) {
 					chrome.alarms.create(ALARM_STORAGE, {
 						when: Date.now() + app.Utils.MILLIS_IN_DAY,
@@ -381,7 +381,7 @@
 	 * @memberOf Background
 	 */
 	function _deleteOldClipItems() {
-		app.ClipItem.deleteOld();
+		app.ClipItem.deleteOld().catch((error) => {});
 	}
 
 	/**
@@ -416,7 +416,7 @@
 			// we were pinged
 			app.Devices.add(device);
 			// send response
-			app.Msg.sendPingResponse().catch(function(error) {
+			app.Msg.sendPingResponse().catch((error) => {
 				_sendMessageFailed(error);
 			});
 		} else if (data.act === app.Msg.ACTION_PING_RESPONSE) {
@@ -475,7 +475,7 @@
 		if (!clipItem.remote && app.Utils.isRegistered() &&
 			app.Utils.allowPush() && app.Utils.isAutoSend()) {
 			// send to our devices
-			app.Msg.sendClipItem(clipItem).catch(function(error) {
+			app.Msg.sendClipItem(clipItem).catch((error) => {
 				_sendMessageFailed(error);
 			});
 		}
@@ -501,7 +501,7 @@
 
 			// Persist
 			app.ClipItem.add(text, Date.now(), false, false,
-				app.Device.myName()).then(function(clipItem) {
+				app.Device.myName()).then((clipItem) => {
 				// send to our devices
 				_sendLocalClipItem(clipItem);
 			});
@@ -518,7 +518,7 @@
 	function _showMainTab() {
 		chrome.runtime.sendMessage({
 			message: 'highlightTab',
-		}, function(response) {
+		}, (response) => {
 			if (!response) {
 				// no one listening, create it
 				chrome.tabs.create({url: '../html/main.html'});
@@ -533,14 +533,10 @@
 	 * @memberOf Background
 	 */
 	function _sendMessageFailed(error) {
-		let err = error;
-		if (error.message) {
-			err = error.message;
-		}
 		chrome.runtime.sendMessage({
 			message: 'sendMessageFailed',
-			error: err,
-		}, function() {});
+			error: error.toString(),
+		}, () => {});
 	}
 
 	/** 

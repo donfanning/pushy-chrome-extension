@@ -73,9 +73,9 @@
 		const chromep = new ChromePromise();
 		return chromep.storage.local.set({
 			[this.text]: value,
-		}).then(function() {
+		}).then(() => {
 			return Promise.resolve();
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	};
@@ -91,13 +91,13 @@
 	 */
 	ClipItem.add = function(text, date, fav, remote, device) {
 		const clipItem = new ClipItem(text, date, fav, remote, device);
-		return clipItem.save().then(function() {
+		return clipItem.save().then(() => {
 			// let listeners know a ClipItem was added
 			chrome.runtime.sendMessage({
 				message: 'clipAdded',
-			}, function(response) {});
+			}, (response) => {});
 			return Promise.resolve(clipItem);
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	};
@@ -109,9 +109,9 @@
 	 */
 	ClipItem.remove = function(keys) {
 		const chromep = new ChromePromise();
-		return chromep.storage.local.remove(keys).then(function() {
+		return chromep.storage.local.remove(keys).then(() => {
 			return Promise.resolve();
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	};
@@ -122,9 +122,9 @@
 	 */
 	ClipItem.isEmpty = function() {
 		const chromep = new ChromePromise();
-		return chromep.storage.local.getBytesInUse().then(function(bytes) {
+		return chromep.storage.local.getBytesInUse().then((bytes) => {
 			return Promise.resolve(!bytes);
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	};
@@ -135,7 +135,7 @@
 	 */
 	ClipItem.loadAll = function() {
 		const chromep = new ChromePromise();
-		return chromep.storage.local.get(null).then(function(items) {
+		return chromep.storage.local.get(null).then((items) => {
 			let array = [];
 			for (let k in items) {
 				if (items.hasOwnProperty(k)) {
@@ -143,7 +143,7 @@
 				}
 			}
 			return Promise.resolve(array);
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	};
@@ -172,9 +172,9 @@
 		const now = Date.now();
 		const olderThanTime = now - duration;
 
-		ClipItem._deleteOlderThan(olderThanTime).then(function(didDelete) {
+		ClipItem._deleteOlderThan(olderThanTime).then((didDelete) => {
 			return Promise.resolve(didDelete);
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	};
@@ -188,7 +188,7 @@
 	ClipItem._deleteOlderThan = function(time) {
 		let keys = [];
 
-		return ClipItem.loadAll().then(function(items) {
+		return ClipItem.loadAll().then((items) => {
 			for (let i = 0; i < items.length; i++) {
 				const clipItem = items[i];
 				if (!clipItem.fav && (clipItem.date <= time)) {
@@ -196,17 +196,17 @@
 				}
 			}
 			if (keys.length) {
-				app.ClipItem.remove(keys).then(function() {
+				app.ClipItem.remove(keys).then(() => {
 					// let listeners know one or more ClipItems were deleted
 					chrome.runtime.sendMessage({
 						message: 'clipsDeleted',
-					}, function() {});
+					}, () => {});
 					return Promise.resolve(true);
 				});
 			} else {
 				return Promise.resolve(false);
 			}
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	};

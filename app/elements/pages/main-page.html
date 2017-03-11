@@ -270,13 +270,39 @@ Polymer({
 
 	ready: function() {
 		this._loadClipItems();
-		// listen for chrome messages
-		chrome.runtime.onMessage.addListener(this._onChromeMessage);
+
 		// listen for copy and cut events on document
 		document.addEventListener('cut', this._onCopy, true);
 		document.addEventListener('copy', this._onCopy, true);
+
+		// listen for chrome messages
+		chrome.runtime.onMessage.addListener(function(request) {
+			if ((request.message === 'clipAdded') ||
+				(request.message === 'clipsDeleted')) {
+				this._loadClipItems();
+			}
+			if (request.message === 'clipAdded') {
+				this.$.clipList.scrollTop = 0;
+			}
+		}.bind(this));
+
 		// listen for dom-change event
-		addEventListener('dom-change', this._selectFirst);
+		addEventListener('dom-change', function(event) {
+			// Select first row after sorting and filtering.
+			// Man, seems like there should be an easier way
+			if (event.target === this.$.listTemplate) {
+				if (this.clipItems && this.clipItems.length) {
+					const ironSelector = this.$.ironSelector;
+					const listItem = ironSelector.firstElementChild;
+					const clipItem =
+						this.$.listTemplate.itemForElement(listItem);
+					if (clipItem) {
+						this.set('selectedItem', clipItem);
+						this.set('selectedIdx', clipItem.idx);
+					}
+				}
+			}
+		}.bind(this));
 	},
 
 	/**
@@ -287,30 +313,7 @@ Polymer({
 	},
 
 	/**
-	 * Select first row after sorting and filtering.
-	 * Man, seems like there should be an easier way
-	 *
-	 * @param {Event} event - dom-change
-	 */
-	_selectFirst: function(event) {
-		const me =
-			document.getElementsByTagName('main-page')[0];
-		if (event.target === me.$.listTemplate) {
-			if (me.clipItems && me.clipItems.length) {
-				const ironSelector = me.$.ironSelector;
-				const listItem = ironSelector.firstElementChild;
-				const clipItem = me.$.listTemplate.itemForElement(listItem);
-				if (clipItem) {
-					me.set('selectedItem', clipItem);
-					me.set('selectedIdx', clipItem.idx);
-				}
-			}
-		}
-	},
-
-	/**
 	 * Event: Select all menu icon tapped
-	 *
 	 * @private
 	 */
 	_onSelectAllTapped: function() {
@@ -326,7 +329,6 @@ Polymer({
 
 	/**
 	 * Event: Deselect all menu icon tapped
-	 *
 	 * @private
 	 */
 	_onDeselectAllTapped: function() {
@@ -338,7 +340,6 @@ Polymer({
 
 	/**
 	 * Event: Delete menu icon tapped
-	 *
 	 * @private
 	 */
 	_onDeleteSelectedTapped: function() {
@@ -348,7 +349,6 @@ Polymer({
 
 	/**
 	 * Event: Favorite filter menu icon tapped
-	 *
 	 * @private
 	 */
 	_onFavFilterTapped: function() {
@@ -393,13 +393,11 @@ Polymer({
 		chrome.runtime.sendMessage({
 			message: 'copyToClipboard',
 			clipItem: clipItem,
-		}, function() {});
+		}, () => {});
 
 		// update persisted value
-		const self = this;
-		clipItem.save().then(function() {
-			// reload list
-			self._loadClipItems();
+		clipItem.save().then(() => {
+			this._loadClipItems();
 		});
 
 	},
@@ -429,25 +427,7 @@ Polymer({
 	_onCopy: function() {
 		chrome.runtime.sendMessage({
 			message: 'copiedToClipboard',
-		}, function() {});
-	},
-
-	/**
-	 * Event: Process message from chrome.runtime.sendMessage
-	 *
-	 * @param {JSON} request object
-	 * @private
-	 */
-	_onChromeMessage: function(request) {
-		const me =
-			document.getElementsByTagName('main-page')[0];
-		if ((request.message === 'clipAdded') ||
-			(request.message === 'clipsDeleted')) {
-			me._loadClipItems();
-		}
-		if (request.message === 'clipAdded') {
-			me.$.clipList.scrollTop = 0;
-		}
+		}, () => {});
 	},
 
 	/**
@@ -456,17 +436,15 @@ Polymer({
 	 * @private
 	 */
 	_loadClipItems: function() {
-
-		const self = this;
-		app.ClipItem.loadAll().then(function(items) {
+		app.ClipItem.loadAll().then((items) => {
 			// clear list
-			self.splice('clipItems', 0, self.clipItems.length);
+			this.splice('clipItems', 0, this.clipItems.length);
 
 			// populate list
 			for (let i = 0; i < items.length; i++) {
 				items[i].idx = i;
 				items[i].checked = false;
-				self.push('clipItems', items[i]);
+				this.push('clipItems', items[i]);
 			}
 		});
 	},
@@ -494,18 +472,15 @@ Polymer({
 		}
 
 		if (keys.length) {
-			const self = this;
-			app.ClipItem.remove(keys).then(function() {
+			app.ClipItem.remove(keys).then(() => {
 				return app.ClipItem.isEmpty();
-			}).then(function(isEmpty) {
+			}).then((isEmpty) => {
 				if (isEmpty) {
-					self._clearClipViewer();
+					this._clearClipViewer();
 				}
-				self.splice('selections', 0, self.selections.length);
-				self._loadClipItems();
-			}).catch(function(error) {
-				throw new Error(error.message);
-			});
+				this.splice('selections', 0, this.selections.length);
+				this._loadClipItems();
+			}).catch(() => {});
 		}
 	},
 

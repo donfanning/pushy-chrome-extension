@@ -80,7 +80,7 @@ app.Msg = (function() {
 	}
 
 	/**
-	 * Send message to server for delivery to our (@link Devices}
+	 * Send message to server for delivery to our {@link Devices}
 	 * @param {GaeMsg} data - data packet
 	 * @param {boolean} notify - display notification if true
 	 * @return {Promise<void>}
@@ -94,20 +94,20 @@ app.Msg = (function() {
 
 		let url;
 
-		return app.Fb.getRegToken().then(function(regId) {
+		return app.Fb.getRegToken().then((regId) => {
 			url = URL_BASE +
 				regId + '/' +
 				encodeURIComponent(JSON.stringify(data));
 			return app.User.getAccessToken(true);
-		}).then(function(token) {
+		}).then((token) => {
 			return app.Gae.doPost(url, token, true);
-		}).then(function() {
+		}).then(() => {
 			if (notify && app.Notify.onSend()) {
 				app.Notify.create(app.Notify.NOTIFY_SEND, data,
 					app.Device.myName());
 			}
 			return Promise.resolve();
-		}).catch(function(error) {
+		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	}
