@@ -22,8 +22,7 @@ app.Fb = (function() {
 	/**
 	 * Manage interaction with firebase and its Namespaces
 	 * @see https://firebase.google.com/docs/web/setup
-	 *
-	 *  @namespace Fb
+	 * @namespace Fb
 	 */
 
 	/**
@@ -80,9 +79,7 @@ app.Fb = (function() {
 			_messaging = firebase.messaging();
 			_messaging.useServiceWorker(swReg);
 
-			/**
-			 * Callback fired if Instance ID token is updated.
-			 */
+			// Callback fired if Instance ID token is updated.
 			_messaging.onTokenRefresh(_refreshRegToken);
 
 		}).catch((error) => {
@@ -189,7 +186,7 @@ app.Fb = (function() {
 					_saveRegToken(token);
 					return Promise.resolve(token);
 				} else {
-					return Promise.resolve(new Error(ERROR_TOKEN));
+					return Promise.reject(new Error(ERROR_TOKEN));
 				}
 			});
 		},
