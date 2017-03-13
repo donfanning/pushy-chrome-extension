@@ -34,6 +34,7 @@ app.Gae = (function() {
 	 */
 	const GAE_ROOT_REMOTE = 'https://clip-man.appspot.com/_ah/api';
 
+	// noinspection Eslint,JSUnusedLocalSymbols
 	/**
 	 * Base path of local testing server
 	 * @const
@@ -41,11 +42,11 @@ app.Gae = (function() {
 	 * @private
 	 * @memberOf Gae
 	 */
+	// eslint-disable-next-line no-unused-vars
 	const GAE_ROOT_LOCAL = 'http://localhost:8080/_ah/api';
 
-	// TODO: set to GAE_ROOT_REMOTE before distributing
-	// const GAE_ROOT = GAE_ROOT_REMOTE;
-	const GAE_ROOT = GAE_ROOT_LOCAL;
+	// Set to GAE_ROOT_LOCAL for local testing
+	const GAE_ROOT = GAE_ROOT_REMOTE;
 
 	/**
 	 * Project ID
