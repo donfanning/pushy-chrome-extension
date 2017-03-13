@@ -201,8 +201,6 @@
 			_sendLocalClipItem(clipItem);
 		} else if (request.message === 'removeDevice') {
 			app.Devices.removeByName(request.deviceName);
-		} else if (request.message === 'deviceNameChanged') {
-			app.Reg.changeDeviceName();
 		} else if (request.message === 'ping') {
 			app.Msg.sendPing().catch((error) => {
 				_sendMessageFailed(error);
@@ -213,7 +211,11 @@
 			app.User.addAccess().then(() => {
 				response({message: 'ok'});
 			}).catch((error) => {
-				app.User.signOut();
+				app.User.removeAccess().then(() => {
+				}).catch(() => {
+					app.Utils.set('signedIn', false);
+					app.Utils.set('registered', false);
+				});
 				response({message: 'error', error: error.toString()});
 			});
 		} else if (request.message === 'signOut') {

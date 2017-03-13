@@ -36,7 +36,6 @@ app.Reg = (function() {
 	const ERROR_REGISTER = 'Failed to register with the server.\n';
 	const ERROR_UNREGISTER = 'Failed to unregister with the server.\n';
 	const ERROR_REFRESH = 'Failed to refresh token on the server.\n';
-	const ERROR_CHANGE_DEVICE = 'Failed to change device name.\n';
 
 	/**
 	 * Send request to server Endpoint
@@ -69,10 +68,7 @@ app.Reg = (function() {
 			}
 
 			return app.Fb.getRegToken().then((regId) => {
-				const device = app.Gae.getDevice();
-				const url = URL_BASE + 'register/' +
-					regId + '/' +
-					encodeURIComponent(JSON.stringify(device));
+				const url = URL_BASE + 'register/' + regId;
 				return _doCommand(url, ERROR_REGISTER);
 			}).then(() => {
 				app.Utils.set('registered', true);
@@ -93,8 +89,7 @@ app.Reg = (function() {
 			}
 
 			return app.Fb.getRegToken().then((regId) => {
-				const url = URL_BASE + 'unregister/' +
-					regId;
+				const url = URL_BASE + 'unregister/' + regId;
 				return _doCommand(url, ERROR_UNREGISTER);
 			}).then(() => {
 				app.Utils.set('registered', false);
@@ -129,25 +124,6 @@ app.Reg = (function() {
 				return Promise.resolve();
 			}).catch((error) => {
 				return Promise.reject(error);
-			});
-		},
-
-		/**
-		 * Update {@link Device} name on server
-		 * @return {Promise<void>}
-		 * @memberOf Reg
-		 */
-		changeDeviceName: function() {
-			if (app.Utils.notRegistered()) {
-				return Promise.resolve();
-			}
-
-			return app.Fb.getRegToken().then((regId) => {
-				const device = app.Gae.getDevice();
-				const url = URL_BASE + 'changeDeviceName/' +
-					regId + '/' +
-					encodeURIComponent(JSON.stringify(device));
-				return _doCommand(url, ERROR_CHANGE_DEVICE);
 			});
 		},
 

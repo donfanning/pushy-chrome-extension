@@ -93,7 +93,7 @@ limitations under the License.
 		 */
 		_onNicknameChanged: function() {
 			chrome.runtime.sendMessage({
-				message: 'deviceNameChanged',
+				message: 'ping',
 			}, () => {});
 		},
 
