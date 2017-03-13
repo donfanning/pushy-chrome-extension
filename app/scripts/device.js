@@ -22,11 +22,11 @@
 	 * Creates a new Device instance.
 	 * @constructor
 	 * @alias Device
-	 * @param {string} model The model name of a device
-	 * @param {string} sn The serial number (or other descriptor) of a device
-	 * @param {string} os The operating system of a device
-	 * @param {string} nickname The nickname of a device
-	 * @param {int} lastSeen A date in millis from the epoch
+	 * @param {string} model - The model name of a device
+	 * @param {string} sn - The serial number (or other descriptor) of a device
+	 * @param {string} os - The operating system of a device
+	 * @param {string} nickname - The nickname of a device
+	 * @param {int} lastSeen - A date in millis from the epoch
 	 */
 	const Device = function(model, sn, os, nickname, lastSeen) {
 		this.model = model;
@@ -39,6 +39,34 @@
 			this.lastSeen = Date.now();
 		}
 	};
+
+	/**
+	 * Model key
+	 * @const
+	 * @default
+ 	 */
+	Device.MODEL = 'dM';
+
+	/**
+	 * Serial Number key
+	 * @const
+	 * @default
+	 */
+	Device.SN = 'dSN';
+
+	/**
+	 * Operating system key
+	 * @const
+	 * @default
+	 */
+	Device.OS = 'dOS';
+
+	/**
+	 * Nickname key
+	 * @const
+	 * @default
+	 */
+	Device.NICKNAME = 'dN';
 
 	/**
 	 * Get a String that uniquely (hopefully) determines this {@link Device}
@@ -67,11 +95,6 @@
 	Device.prototype.isMe = function() {
 		return (this.getUniqueName() === Device.myUniqueName());
 	};
-
-	Device.MODEL = 'dM';
-	Device.SN = 'dSN';
-	Device.OS = 'dOS';
-	Device.NICKNAME = 'dN';
 
 	/**
 	 * Get unique name of our {@link Device}

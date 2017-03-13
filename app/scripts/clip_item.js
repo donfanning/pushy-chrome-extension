@@ -37,7 +37,7 @@
 	};
 
 	/**
-	 * Error indicating that {@link ClipItem.text} is null or all whitespace
+	 * Error indicating that {@link ClipItem} text is null or all whitespace
 	 * @const
 	 * @default
 	 * @type {string}
@@ -153,30 +153,25 @@
 	 * @return {Promise<boolean>} true if items were deleted
 	 */
 	ClipItem.deleteOld = function() {
-		const durationType = app.Utils.get('storageDuration');
-		if (durationType === 4) {
+		const durIndex = app.Utils.get('storageDuration');
+		const durations = [
+			app.Utils.MILLIS_IN_DAY,
+			app.Utils.MILLIS_IN_DAY * 7,
+			app.Utils.MILLIS_IN_DAY * 30,
+			app.Utils.MILLIS_IN_DAY * 365,
+		];
+
+		if (durIndex === 4) {
 			// store forever
 			return Promise.resolve(false);
+		} else {
+			const olderThanTime = Date.now() - durations[durIndex];
+			ClipItem._deleteOlderThan(olderThanTime).then((didDelete) => {
+				return Promise.resolve(didDelete);
+			}).catch((error) => {
+				return Promise.reject(error);
+			});
 		}
-
-		let duration;
-		if (durationType === 0) {
-			duration = app.Utils.MILLIS_IN_DAY;
-		} else if (durationType === 1) {
-			duration = app.Utils.MILLIS_IN_DAY * 7;
-		} else if (durationType === 2) {
-			duration = app.Utils.MILLIS_IN_DAY * 30;
-		} else if (durationType === 3) {
-			duration = app.Utils.MILLIS_IN_DAY * 365;
-		}
-		const now = Date.now();
-		const olderThanTime = now - duration;
-
-		ClipItem._deleteOlderThan(olderThanTime).then((didDelete) => {
-			return Promise.resolve(didDelete);
-		}).catch((error) => {
-			return Promise.reject(error);
-		});
 	};
 
 	/**
@@ -190,6 +185,7 @@
 
 		return ClipItem.loadAll().then((items) => {
 			for (let i = 0; i < items.length; i++) {
+				// get keys to delete
 				const clipItem = items[i];
 				if (!clipItem.fav && (clipItem.date <= time)) {
 					keys.push(clipItem.text);

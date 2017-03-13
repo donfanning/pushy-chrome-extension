@@ -56,20 +56,21 @@ app.Devices = (function() {
 	function _load() {
 		_devices = new Map();
 		const json = app.Utils.get('devices');
-		if (json) {
-			for (let k in json) {
-				if (json.hasOwnProperty(k)) {
-					let v = json[k];
-					let device = new app.Device(v.model, v.sn, v.os,
-						v.nickname, v.lastSeen);
-					_devices.set(k, device);
-				}
+		if (!json) {
+			return;
+		}
+		for (let k in json) {
+			if (json.hasOwnProperty(k)) {
+				let v = json[k];
+				let device =
+					new app.Device(v.model, v.sn, v.os, v.nickname, v.lastSeen);
+				_devices.set(k, device);
 			}
 		}
 	}
 
 	/**
-	 * Save the {@link Device} objects localStorage
+	 * Save the {@link Device} objects to localStorage
 	 * @private
 	 * @memberOf Devices
 	 */
@@ -82,7 +83,7 @@ app.Devices = (function() {
 	}
 
 	/**
-	 * Event: called when document and resources are loaded
+	 * Event: called when document and resources are loaded<br />
 	 * Load the {@link Device} objects from localStorage
 	 * @private
 	 * @memberOf Devices
