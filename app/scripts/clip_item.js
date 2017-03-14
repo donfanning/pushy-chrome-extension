@@ -166,11 +166,12 @@
 			return Promise.resolve(false);
 		} else {
 			const olderThanTime = Date.now() - durations[durIndex];
-			ClipItem._deleteOlderThan(olderThanTime).then((didDelete) => {
-				return Promise.resolve(didDelete);
-			}).catch((error) => {
-				return Promise.reject(error);
-			});
+			return ClipItem._deleteOlderThan(olderThanTime)
+				.then((didDelete) => {
+					return Promise.resolve(didDelete);
+				}).catch((error) => {
+					return Promise.reject(error);
+				});
 		}
 	};
 
@@ -192,7 +193,7 @@
 				}
 			}
 			if (keys.length) {
-				app.ClipItem.remove(keys).then(() => {
+				return app.ClipItem.remove(keys).then(() => {
 					// let listeners know one or more ClipItems were deleted
 					chrome.runtime.sendMessage({
 						message: 'clipsDeleted',
