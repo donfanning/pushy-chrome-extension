@@ -57,6 +57,24 @@ app.Gae = (function() {
 	 */
 	const PROJECT_ID = '597467211507';
 
+	/**
+	 * Max retries on 500 errors
+	 * @const
+	 * @default
+	 * @private
+	 * @memberOf Gae
+	 */
+	const MAX_ATTEMPTS = 4;
+
+	/**
+	 * Delay multiplier for exponential back-off
+	 * @const
+	 * @default
+	 * @private
+	 * @memberOf Gae
+	 */
+	const DELAY_TIME = 1000;
+
 	const HEADER_AUTHORIZATION = 'Authorization';
 	const HEADER_CONTENT_TYPE = 'Content-Type';
 	const HEADER_PROJECT_ID = 'project_id';
@@ -93,14 +111,15 @@ app.Gae = (function() {
 		GAE_ROOT: GAE_ROOT,
 
 		/**
-		 * Perform POST request to server
+		 * Perform POST request to server using exponential back-off
 		 * @param {string} url - server Endpoint
 		 * @param {string} token - authorization token
-		 * @param {boolean} retry - if true, retry with new token on error
+		 * @param {boolean} retryNewToken - if true,
+		 * retry with new token on error
 		 * @return {Promise.<void>}
 		 * @memberOf Gae
 		 */
-		doPost: function(url, token, retry) {
+		doPost: function(url, token, retryNewToken = false) {
 			const headers = {
 				[HEADER_AUTHORIZATION]: 'Bearer ' + token,
 				[HEADER_PROJECT_ID]: PROJECT_ID,
@@ -113,46 +132,51 @@ app.Gae = (function() {
 				headers: headers,
 			};
 
-			return fetch(url, init).then((response) => {
-				if (response.ok) {
-					return response.json();
-				} else if (retry && (response.status === 401)) {
-					// could be bad token. Remove cached one and try again
-					return _retryPost(url, token);
-				} else if (retry &&
-					((response.status >= 500) && (response.status < 600))) {
-					// temporary network issue, retry
-					return app.Gae.doPost(url, token, false);
-				} else {
-					throw new Error('status: ' + response.status,
-						'\nreason: ' + response.statusText);
-				}
-			}).then((json) => {
-				if (json.success) {
-					return Promise.resolve();
-				} else if (retry && (json.reason === ERROR_UNAUTHORIZED_USER)) {
-					// could be bad token. Try with new one
-					return _retryPost(url, token);
-				} else {
-					throw new Error(json.reason);
-				}
-			}).catch((error) => {
-				return Promise.reject(error);
-			});
-		},
+			let attempts = 0;
+			return _fetch(url, init);
 
-		/**
-		 * Get portion of {@link Device} stored on gae server
-		 * @return {{}} Subset of {@link Device} info as object literal
-		 * @memberOf Gae
-		 */
-		getDevice: function() {
-			return {
-				[app.Device.MODEL]: app.Device.myModel(),
-				[app.Device.SN]: app.Device.mySN(),
-				[app.Device.OS]: app.Device.myOS(),
-				[app.Device.NICKNAME]: app.Device.myNickname(),
-			};
+			/**
+			 * Fetch with exponential back-off
+			 * @param {string} url - server Endpoint
+			 * @param {object} init
+			 * @return {Promise.<void>}
+			 * @memberOf Gae
+			 */
+			function _fetch(url, init) {
+				return fetch(url, init).then((response) => {
+					if (response.ok) {
+						return response.json();
+					} else if (retryNewToken && (response.status === 401)) {
+						// could be bad token. Remove cached one and try again
+						return _retryPost(url, token);
+					} else if ((attempts < MAX_ATTEMPTS) &&
+						((response.status >= 500) && (response.status < 600))) {
+						// temporary network issue, retry with back-off
+						attempts++;
+						const delay = (Math.pow(2, attempts) - 1) * DELAY_TIME;
+						return new Promise(() => {
+							setTimeout(() => {
+								return _fetch(url, init);
+							}, delay);
+						});
+					} else {
+						throw new Error('status: ' + response.status,
+							'\nreason: ' + response.statusText);
+					}
+				}).then((json) => {
+					if (json.success) {
+						return Promise.resolve();
+					} else if (retryNewToken &&
+						(json.reason === ERROR_UNAUTHORIZED_USER)) {
+						// could be bad token. Try with new one
+						return _retryPost(url, token);
+					} else {
+						throw new Error(json.reason);
+					}
+				}).catch((error) => {
+					return Promise.reject(error);
+				});
+			}
 		},
 
 		/**

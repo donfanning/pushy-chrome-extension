@@ -53,7 +53,7 @@ app.Msg = (function() {
 	const MSG_DEVICE_REMOVED = 'Device removed';
 
 	/**
-	 * Data packet sent to server - global
+	 * Data packet sent to server
 	 * @typedef {Object} GaeMsg
 	 * @property {string} act - type of message
 	 * @property {string} message - content of message
@@ -73,10 +73,24 @@ app.Msg = (function() {
 	 * @memberOf Msg
 	 */
 	function _getData(action, message) {
-		const msg = app.Gae.getDevice();
+		const msg = _getDevice();
 		msg.act = action;
 		msg.message = message;
 		return msg;
+	}
+
+	/**
+	 * Get portion of {@link Device} sent in message
+	 * @return {{}} Subset of {@link Device} info as object literal
+	 * @memberOf Msg
+	 */
+	function _getDevice() {
+		return {
+			[app.Device.MODEL]: app.Device.myModel(),
+			[app.Device.SN]: app.Device.mySN(),
+			[app.Device.OS]: app.Device.myOS(),
+			[app.Device.NICKNAME]: app.Device.myNickname(),
+		};
 	}
 
 	/**
