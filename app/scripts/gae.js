@@ -119,6 +119,10 @@ app.Gae = (function() {
 				} else if (retry && (response.status === 401)) {
 					// could be bad token. Remove cached one and try again
 					return _retryPost(url, token);
+				} else if (retry &&
+					((response.status >= 500) && (response.status < 600))) {
+					// temporary network issue, retry
+					return app.Gae.doPost(url, token, false);
 				} else {
 					throw new Error('status: ' + response.status,
 						'\nreason: ' + response.statusText);
