@@ -121,8 +121,6 @@ app.Msg = (function() {
 					app.Device.myName());
 			}
 			return Promise.resolve();
-		}).catch((error) => {
-			return Promise.reject(error);
 		});
 	}
 

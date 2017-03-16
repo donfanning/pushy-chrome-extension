@@ -51,7 +51,7 @@ app.Reg = (function() {
 		}).then(() => {
 			return Promise.resolve();
 		}).catch((error) => {
-			return Promise.reject(new Error(errorPrefix + error));
+			throw new Error(errorPrefix + error);
 		});
 	}
 
@@ -73,8 +73,6 @@ app.Reg = (function() {
 			}).then(() => {
 				app.Utils.set('registered', true);
 				return Promise.resolve();
-			}).catch((error) => {
-				return Promise.reject(error);
 			});
 		},
 
@@ -122,8 +120,6 @@ app.Reg = (function() {
 				app.Utils.set('regId', newRegToken);
 				app.Utils.set('registered', true);
 				return Promise.resolve();
-			}).catch((error) => {
-				return Promise.reject(error);
 			});
 		},
 

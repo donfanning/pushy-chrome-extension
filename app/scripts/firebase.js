@@ -82,8 +82,6 @@ app.Fb = (function() {
 			// Callback fired if Instance ID token is updated.
 			_messaging.onTokenRefresh(_refreshRegToken);
 
-		}).catch((error) => {
-			return Promise.reject(error);
 		});
 	}
 
@@ -153,10 +151,6 @@ app.Fb = (function() {
 					firebase.auth.GoogleAuthProvider.credential(null, token);
 				// Authorize Firebase with the Google access token.
 				return _auth.signInWithCredential(credential);
-			}).then((user) => {
-				return Promise.resolve(user);
-			}).catch((error) => {
-				return Promise.reject(error);
 			});
 		},
 
@@ -168,10 +162,6 @@ app.Fb = (function() {
 		signOut: function() {
 			return app.SW.unregister().then(() => {
 				return _auth.signOut();
-			}).then(() => {
-				return Promise.resolve();
-			}).catch((error) => {
-				return Promise.reject(error);
 			});
 		},
 

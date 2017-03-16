@@ -76,10 +76,6 @@ app.SW = (function() {
 				} else {
 					return Promise.reject(new Error('Not subscribed'));
 				}
-			}).then(() => {
-				return Promise.resolve();
-			}).catch((error) => {
-				return Promise.reject(error);
 			});
 	}
 

@@ -45,7 +45,7 @@ app.User = (function() {
 			app.Utils.set('cleanupRegToken', app.Utils.get('regToken'));
 			app.Fb.signOut();
 		}
-		app.User.setInfo();
+		app.User.setInfo().catch((error) => {});
 	}
 
 	/**
@@ -70,8 +70,6 @@ app.User = (function() {
 			}).then(() => {
 				app.Utils.set('signedIn', true);
 				return Promise.resolve();
-			}).catch((error) =>{
-				return Promise.reject(error);
 			});
 		},
 
@@ -88,8 +86,6 @@ app.User = (function() {
 			return app.Fb.signOut().then(() => {
 				app.Utils.set('signedIn', false);
 				return Promise.resolve();
-			}).catch((error) => {
-				return Promise.reject(error);
 			});
 		},
 
@@ -121,10 +117,6 @@ app.User = (function() {
 				return app.Reg.register();
 			}).then(() => {
 				return app.Msg.sendDeviceAdded();
-			}).then(() => {
-				return Promise.resolve();
-			}).catch((error) => {
-				return Promise.reject(error);
 			});
 		},
 
@@ -141,8 +133,6 @@ app.User = (function() {
 			}).then(() => {
 				app.Devices.clear();
 				return Promise.resolve();
-			}).catch((error) => {
-				return Promise.reject(error);
 			});
 		},
 
@@ -169,8 +159,6 @@ app.User = (function() {
 							return app.User.removeCachedAuthToken(accessToken)
 								.then(() => {
 									return app.User.getAccessToken(false);
-								}).catch((error) => {
-									return Promise.reject(error);
 								});
 						} else {
 							throw new Error(error);
@@ -178,8 +166,6 @@ app.User = (function() {
 					} else {
 						return Promise.resolve(accessToken);
 					}
-				}).catch((error) => {
-					return Promise.reject(error);
 				});
 		},
 
@@ -191,17 +177,13 @@ app.User = (function() {
 		cleanup: function() {
 			return app.User.getAccessToken(false).then((accessToken) => {
 				return app.User.removeCachedAuthToken(accessToken);
-			}).then(() => {
-				return Promise.resolve();
-			}).catch(() => {
-				return Promise.resolve();
 			});
 		},
 
 		/**
 		 * Remove Auth token from cache
 		 * @param {string} token - Auth token
-		 * @return {Promise<void>} always resolves
+		 * @return {Promise<void>}
 		 * @memberOf User
 		 */
 		removeCachedAuthToken: function(token) {
@@ -222,8 +204,6 @@ app.User = (function() {
 				app.Utils.set('email', user.email);
 				app.Utils.set('uid', user.id);
 				return Promise.resolve();
-			}).catch((error) => {
-				return Promise.reject(error);
 			});
 		},
 

@@ -170,7 +170,7 @@
 					_sendMessageFailed(error);
 				});
 			}
-		});
+		}).catch((error) => {});
 	}
 
 	// noinspection JSUnusedLocalSymbols
@@ -271,13 +271,15 @@
 		let text = matches[1];
 		if (text) {
 			const dataArray = JSON.parse(text);
-			for (let i = 0; i < dataArray.length; i++) {
-				(function(index) {
-					setTimeout(function() {
-						// slow down message stream
-						_handleMessageReceived(dataArray[index]);
-					}, MESSAGE_WAIT_MILLIS);
-				})(i);
+			if (dataArray) {
+				for (let i = 0; i < dataArray.length; i++) {
+					(function(index) {
+						setTimeout(function() {
+							// slow down message stream
+							_handleMessageReceived(dataArray[index]);
+						}, MESSAGE_WAIT_MILLIS);
+					})(i);
+				}
 			}
 		}
 		// cancel fake request
@@ -324,7 +326,7 @@
 				false, app.Device.myName());
 		introClip.save();
 
-		app.User.setInfo();
+		app.User.setInfo().catch((error) => {});
 	}
 
 	/**
@@ -411,7 +413,7 @@
 			const fav = (data.fav === '1');
 			// Persist
 			app.ClipItem.add(data.message, Date.now(), fav, true,
-				device.getName());
+				device.getName()).catch((error) => {});
 			// save to clipboard
 			_copyToClipboard(data.message);
 		} else if (data.act === app.Msg.ACTION_PING) {
@@ -506,7 +508,7 @@
 				app.Device.myName()).then((clipItem) => {
 				// send to our devices
 				_sendLocalClipItem(clipItem);
-			});
+			}).catch((error) => {});
 
 		}, CLIPBOARD_WAIT_MILLIS);
 	}

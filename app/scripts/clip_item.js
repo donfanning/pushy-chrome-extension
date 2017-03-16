@@ -71,13 +71,7 @@
 
 		const value = ClipItem._getStorable(this);
 		const chromep = new ChromePromise();
-		return chromep.storage.local.set({
-			[this.text]: value,
-		}).then(() => {
-			return Promise.resolve();
-		}).catch((error) => {
-			return Promise.reject(error);
-		});
+		return chromep.storage.local.set({[this.text]: value});
 	};
 
 	/**
@@ -97,8 +91,6 @@
 				message: 'clipAdded',
 			}, (response) => {});
 			return Promise.resolve(clipItem);
-		}).catch((error) => {
-			return Promise.reject(error);
 		});
 	};
 
@@ -109,11 +101,7 @@
 	 */
 	ClipItem.remove = function(keys) {
 		const chromep = new ChromePromise();
-		return chromep.storage.local.remove(keys).then(() => {
-			return Promise.resolve();
-		}).catch((error) => {
-			return Promise.reject(error);
-		});
+		return chromep.storage.local.remove(keys);
 	};
 
 	/**
@@ -124,8 +112,6 @@
 		const chromep = new ChromePromise();
 		return chromep.storage.local.getBytesInUse().then((bytes) => {
 			return Promise.resolve(!bytes);
-		}).catch((error) => {
-			return Promise.reject(error);
 		});
 	};
 
@@ -143,8 +129,6 @@
 				}
 			}
 			return Promise.resolve(array);
-		}).catch((error) => {
-			return Promise.reject(error);
 		});
 	};
 
@@ -166,12 +150,7 @@
 			return Promise.resolve(false);
 		} else {
 			const olderThanTime = Date.now() - durations[durIndex];
-			return ClipItem._deleteOlderThan(olderThanTime)
-				.then((didDelete) => {
-					return Promise.resolve(didDelete);
-				}).catch((error) => {
-					return Promise.reject(error);
-				});
+			return ClipItem._deleteOlderThan(olderThanTime);
 		}
 	};
 
@@ -203,8 +182,6 @@
 			} else {
 				return Promise.resolve(false);
 			}
-		}).catch((error) => {
-			return Promise.reject(error);
 		});
 	};
 

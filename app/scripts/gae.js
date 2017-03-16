@@ -86,8 +86,6 @@ app.Gae = (function() {
 			return app.User.getAccessToken(false);
 		}).then((token) => {
 			return app.Gae.doPost(url, token, false);
-		}).catch((error) => {
-			return Promise.reject(error);
 		});
 	}
 
@@ -162,8 +160,6 @@ app.Gae = (function() {
 					} else {
 						throw new Error(json.reason);
 					}
-				}).catch((error) => {
-					return Promise.reject(error);
 				});
 			}
 		},
