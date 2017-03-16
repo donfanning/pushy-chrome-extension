@@ -49,15 +49,6 @@ app.Gae = (function() {
 	const GAE_ROOT = GAE_ROOT_REMOTE;
 
 	/**
-	 * Project ID
-	 * @const
-	 * @default
-	 * @private
-	 * @memberOf Gae
-	 */
-	const PROJECT_ID = '597467211507';
-
-	/**
 	 * Max retries on 500 errors
 	 * @const
 	 * @default
@@ -77,7 +68,6 @@ app.Gae = (function() {
 
 	const HEADER_AUTHORIZATION = 'Authorization';
 	const HEADER_CONTENT_TYPE = 'Content-Type';
-	const HEADER_PROJECT_ID = 'project_id';
 	const HEADER_ACCEPT = 'Accept';
 	const CONTENT_TYPE_JSON = 'application/json';
 
@@ -122,7 +112,6 @@ app.Gae = (function() {
 		doPost: function(url, token, retryNewToken = false) {
 			const headers = {
 				[HEADER_AUTHORIZATION]: 'Bearer ' + token,
-				[HEADER_PROJECT_ID]: PROJECT_ID,
 				[HEADER_CONTENT_TYPE]: CONTENT_TYPE_JSON,
 				[HEADER_ACCEPT]: CONTENT_TYPE_JSON,
 			};
