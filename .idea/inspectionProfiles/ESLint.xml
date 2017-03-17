@@ -66,7 +66,7 @@
     <inspection_tool class="HtmlUnknownTag" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="27">
+          <list size="42">
             <item index="0" class="java.lang.String" itemvalue="nobr" />
             <item index="1" class="java.lang.String" itemvalue="noembed" />
             <item index="2" class="java.lang.String" itemvalue="comment" />
@@ -94,6 +94,21 @@
             <item index="24" class="java.lang.String" itemvalue="neon-animated-pages" />
             <item index="25" class="java.lang.String" itemvalue="neon-animatable" />
             <item index="26" class="java.lang.String" itemvalue="main-page" />
+            <item index="27" class="java.lang.String" itemvalue="paper-card" />
+            <item index="28" class="java.lang.String" itemvalue="paper-fab" />
+            <item index="29" class="java.lang.String" itemvalue="setting-link" />
+            <item index="30" class="java.lang.String" itemvalue="paper-dropdown-menu" />
+            <item index="31" class="java.lang.String" itemvalue="iron-localstorage" />
+            <item index="32" class="java.lang.String" itemvalue="paper-slider" />
+            <item index="33" class="java.lang.String" itemvalue="paper-input" />
+            <item index="34" class="java.lang.String" itemvalue="iron-label" />
+            <item index="35" class="java.lang.String" itemvalue="paper-ripple" />
+            <item index="36" class="java.lang.String" itemvalue="paper-toggle-button" />
+            <item index="37" class="java.lang.String" itemvalue="setting-toggle" />
+            <item index="38" class="java.lang.String" itemvalue="setting-text" />
+            <item index="39" class="java.lang.String" itemvalue="setting-dropdown" />
+            <item index="40" class="java.lang.String" itemvalue="paper-spinner" />
+            <item index="41" class="java.lang.String" itemvalue="paper-icon-item" />
           </list>
         </value>
       </option>
