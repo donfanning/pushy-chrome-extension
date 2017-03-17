@@ -20,12 +20,10 @@ app.Notify = (function() {
 	'use strict';
 
 	/**
-	 * TODO remove receive done by service worker
 	 * Handle display of notification
 	 *  @namespace Notify
 	 */
 
-	const NOTIFY_RECEIVE = 'CLIP_MAN_RECEIVE';
 	const NOTIFY_SEND = 'CLIP_MAN_SEND';
 
 	const IC_LOCAL_COPY = '/images/ic_local_copy.png';
@@ -54,12 +52,6 @@ app.Notify = (function() {
 	return {
 
 		/**
-		 * Receive notification type
-		 * @memberOf Notify
-		 */
-		NOTIFY_RECEIVE: NOTIFY_RECEIVE,
-
-		/**
 		 * Send notification type
 		 * @memberOf Notify
 		 */
@@ -69,10 +61,9 @@ app.Notify = (function() {
 		 * Create and display a notification
 		 * @param {string} type - notification type (send or receive)
 		 * @param {GaeMsg} data - message data
-		 * @param {string} deviceName - source {@link Device}
 		 * @memberOf Notify
 		 */
-		create: function(type, data, deviceName) {
+		create: function(type, data) {
 			const options = {
 				type: 'basic',
 				title: 'Clip Man',
@@ -91,15 +82,6 @@ app.Notify = (function() {
 				}
 
 				switch (type) {
-					case NOTIFY_RECEIVE:
-						options.iconUrl = chrome.runtime.getURL(icon);
-						options.title = 'From - ' + deviceName;
-						options.message = data.message;
-						if (app.Utils.getChromeVersion(0) >= 50) {
-							options.requireInteraction = true;
-						}
-						chrome.notifications.create(type, options, () => {});
-						break;
 					case NOTIFY_SEND:
 						options.iconUrl = chrome.runtime.getURL(icon);
 						options.title = 'Sent push message';
@@ -121,17 +103,6 @@ app.Notify = (function() {
 			const notify = app.Utils.get('notify');
 			const notifyOnSend = app.Utils.get('notifyOnSend');
 			return notify && notifyOnSend;
-		},
-
-		/**
-		 * Determine if receive notifications are enabled
-		 * @return {Boolean} true if enabled
-		 * @memberOf Notify
-		 */
-		onReceive: function() {
-			const notify = app.Utils.get('notify');
-			const notifyOnReceive = app.Utils.get('notifyOnReceive');
-			return notify && notifyOnReceive;
 		},
 
 	};

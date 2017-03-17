@@ -117,8 +117,7 @@ app.Msg = (function() {
 			return app.Gae.doPost(url, token, true);
 		}).then(() => {
 			if (notify && app.Notify.onSend()) {
-				app.Notify.create(app.Notify.NOTIFY_SEND, data,
-					app.Device.myName());
+				app.Notify.create(app.Notify.NOTIFY_SEND, data);
 			}
 			return Promise.resolve();
 		});
