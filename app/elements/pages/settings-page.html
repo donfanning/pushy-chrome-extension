@@ -43,17 +43,19 @@ limitations under the License.
 				<setting-toggle section-title="Clipboard"
 				                name="monitorClipboard"
 								main-label="Monitor clipboard"
-								secondary-label="Automatically store contents when possible"
-								checked="{{monitorEnabled}}"></setting-toggle>
+								secondary-label="Automatically store contents when possible">
+				</setting-toggle>
 				<setting-toggle name="allowPush"
 								main-label="Push to devices"
 								secondary-label="Send contents to registered devices"
-								checked="{{pushEnabled}}"></setting-toggle>
+								checked="{{pushEnabled}}">
+				</setting-toggle>
 				<setting-toggle name="autoSend"
 								main-label="Auto send"
 								secondary-label="Automatically send contents when possible"
 								disabled$="[[!pushEnabled]]"
-								indent></setting-toggle>
+								indent>
+				</setting-toggle>
 
 				<setting-text section-title="General"
 				              id="deviceNickname"
@@ -61,16 +63,19 @@ limitations under the License.
 				              main-label="Nickname"
 				              secondary-label="Descriptive name for this device"
 				              placeholder="e.g. Home Laptop"
-				              maxlength="32"></setting-text>
+				              maxlength="32">
+				</setting-text>
 				<setting-dropdown name="storageDuration"
 				                  label="Storage duration"
-                                  items='["One day", "One week", "One month", "One year", "Until space needed"]'></setting-dropdown>
+                                  items='["One day", "One week", "One month", "One year", "Until space needed"]'>
+				</setting-dropdown>
 
 				<setting-toggle section-title="Notifications"
 				                name="notifyOnSend"
 				                main-label="Notify on send"
 				                secondary-label="Display notification when a message is sent"
-				                noseparator></setting-toggle>
+				                noseparator>
+				</setting-toggle>
 			</div>
 		</paper-card>
 	</template>
