@@ -37,6 +37,24 @@
 	};
 
 	/**
+	 * The Dexie database
+	 * @see http://dexie.org/
+	 * @type {object}
+	 * @private
+	 * @memberOf ClipItem
+	 */
+	let _db;
+
+	/**
+	 * The Dexie database version
+	 * @const
+	 * @type {int}
+	 * @private
+	 * @memberOf ClipItem
+	 */
+	const VERSION = 1;
+
+	/**
 	 * Error indicating that {@link ClipItem} text is null or all whitespace
 	 * @const
 	 * @default
@@ -68,10 +86,7 @@
 		if (app.Utils.isWhiteSpace(this.text)) {
 			return Promise.reject(new Error(ClipItem.ERROR_EMPTY_TEXT));
 		}
-
-		const value = ClipItem._getStorable(this);
-		const chromep = new ChromePromise();
-		return chromep.storage.local.set({[this.text]: value});
+		return _db.clipItems.put(this);
 	};
 
 	/**
@@ -100,8 +115,7 @@
 	 * @return {Promise<void>}
 	 */
 	ClipItem.remove = function(keys) {
-		const chromep = new ChromePromise();
-		return chromep.storage.local.remove(keys);
+		return _db.clipItems.bulkDelete(keys);
 	};
 
 	/**
@@ -109,9 +123,8 @@
 	 * @return {Promise<boolean>} true if no {@link ClipItem} objects
 	 */
 	ClipItem.isEmpty = function() {
-		const chromep = new ChromePromise();
-		return chromep.storage.local.getBytesInUse().then((bytes) => {
-			return Promise.resolve(!bytes);
+		return _db.clipItems.count().then((count) => {
+			return Promise.resolve(!count);
 		});
 	};
 
@@ -120,16 +133,7 @@
 	 * @return {Promise<Array>} Array of {@link ClipItem} objects
 	 */
 	ClipItem.loadAll = function() {
-		const chromep = new ChromePromise();
-		return chromep.storage.local.get(null).then((items) => {
-			let array = [];
-			for (let k in items) {
-				if (items.hasOwnProperty(k)) {
-					array.push(ClipItem._getNew(k, items[k]));
-				}
-			}
-			return Promise.resolve(array);
-		});
+		return _db.clipItems.toArray();
 	};
 
 	/**
@@ -161,65 +165,36 @@
 	 * @private
 	 */
 	ClipItem._deleteOlderThan = function(time) {
-		let keys = [];
+		return _db.clipItems
+			.where('date').below(time)
+			.filter(function(clipItem) {
+				return !clipItem.fav;
+			})
+			.delete()
+			.then((deleteCount) => {
+				return Promise.resolve(!!deleteCount);
+			});
+	};
 
-		return ClipItem.loadAll().then((items) => {
-			for (let i = 0; i < items.length; i++) {
-				// get keys to delete
-				const clipItem = items[i];
-				if (!clipItem.fav && (clipItem.date <= time)) {
-					keys.push(clipItem.text);
-				}
-			}
-			if (keys.length) {
-				return app.ClipItem.remove(keys).then(() => {
-					// let listeners know one or more ClipItems were deleted
-					chrome.runtime.sendMessage({
-						message: 'clipsDeleted',
-					}, () => {});
-					return Promise.resolve(true);
-				});
-			} else {
-				return Promise.resolve(false);
-			}
+	/**
+	 * Event: called when document and resources are loaded<br />
+	 * Initialize Dexie
+	 * @private
+	 * @memberOf ClipItem
+	 */
+	function _onLoad() {
+		_db = new Dexie('ClipItemsDB');
+
+		// define database
+		_db.version(VERSION).stores({
+			clipItems: '&text,date',
 		});
-	};
 
-	/**
-	 * The portion of a {@link ClipItem} that is persisted
-	 * @typedef {Object} ClipItem.Storable
-	 * @property {int} date - type of message
-	 * @property {boolean} fav - text of message
-	 * @property {boolean} remote - {@link Device} model
-	 * @property {string} device - {@link Device} serial number
-	 */
+		_db.clipItems.mapToClass(ClipItem);
+	}
 
-	/**
-	 * Create a new {@link ClipItem} from a {@link ClipItem.Storable}
-	 * @param {string} text - text of the new {@link ClipItem}
-	 * @param {ClipItem.Storable} Storable
-	 * @return {ClipItem}
-	 * @private
-	 */
-	ClipItem._getNew = function(text, Storable) {
-		return new ClipItem(text, Storable.date, Storable.fav,
-			Storable.remote, Storable.device);
-	};
-
-	/**
-	 * Create a {@link ClipItem.Storable} from a {@link ClipItem}
-	 * @param {ClipItem} clipItem - clip to use
-	 * @return {ClipItem.Storable} A new {@link ClipItem.Storable}
-	 * @private
-	 */
-	ClipItem._getStorable = function(clipItem) {
-		return {
-			'date': clipItem.date,
-			'fav': clipItem.fav,
-			'remote': clipItem.remote,
-			'device': clipItem.device,
-		};
-	};
+	// listen for document and resources loaded
+	window.addEventListener('load', _onLoad);
 
 	window.app = window.app || {};
 	window.app.ClipItem = ClipItem;

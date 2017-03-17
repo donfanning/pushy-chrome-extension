@@ -14,10 +14,11 @@
 /.idea/tasks.xml
 /.idea/libraries
 /.idea/shelf
+.idea/markdown-navigator.xml
+.idea/markdown-navigator/
 
 # Mac OS X clutter
 *.DS_Store
 
 # Windows clutter
 Thumbs.db
-

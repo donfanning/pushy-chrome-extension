@@ -42,6 +42,7 @@ module.exports = {
 		'LZString': true,
 		'ServiceWorkerRegistration': true,
 		'ChromePromise': true,
+		'Dexie': true,
 	},
 
 	'rules': {

@@ -7,7 +7,7 @@
     <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="48">
+          <list size="50">
             <item index="0" class="java.lang.String" itemvalue="include" />
             <item index="1" class="java.lang.String" itemvalue="disabled$" />
             <item index="2" class="java.lang.String" itemvalue="on-tap" />
@@ -56,6 +56,8 @@
             <item index="45" class="java.lang.String" itemvalue="item-icon" />
             <item index="46" class="java.lang.String" itemvalue="section-title" />
             <item index="47" class="java.lang.String" itemvalue="href$" />
+            <item index="48" class="java.lang.String" itemvalue="is" />
+            <item index="49" class="java.lang.String" itemvalue="unresolved" />
           </list>
         </value>
       </option>
@@ -64,7 +66,7 @@
     <inspection_tool class="HtmlUnknownTag" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="8">
+          <list size="27">
             <item index="0" class="java.lang.String" itemvalue="nobr" />
             <item index="1" class="java.lang.String" itemvalue="noembed" />
             <item index="2" class="java.lang.String" itemvalue="comment" />
@@ -73,6 +75,25 @@
             <item index="5" class="java.lang.String" itemvalue="script" />
             <item index="6" class="java.lang.String" itemvalue="iron-selector" />
             <item index="7" class="java.lang.String" itemvalue="iron-iconset-svg" />
+            <item index="8" class="java.lang.String" itemvalue="dom-module" />
+            <item index="9" class="java.lang.String" itemvalue="paper-material" />
+            <item index="10" class="java.lang.String" itemvalue="paper-toolbar" />
+            <item index="11" class="java.lang.String" itemvalue="paper-icon-button" />
+            <item index="12" class="java.lang.String" itemvalue="paper-tooltip" />
+            <item index="13" class="java.lang.String" itemvalue="paper-dialog" />
+            <item index="14" class="java.lang.String" itemvalue="paper-checkbox" />
+            <item index="15" class="java.lang.String" itemvalue="paper-button" />
+            <item index="16" class="java.lang.String" itemvalue="paper-item-body" />
+            <item index="17" class="java.lang.String" itemvalue="paper-item" />
+            <item index="18" class="java.lang.String" itemvalue="paper-drawer-panel" />
+            <item index="19" class="java.lang.String" itemvalue="paper-scroll-header-panel" />
+            <item index="20" class="java.lang.String" itemvalue="paper-menu" />
+            <item index="21" class="java.lang.String" itemvalue="iron-icon" />
+            <item index="22" class="java.lang.String" itemvalue="paper-header-panel" />
+            <item index="23" class="java.lang.String" itemvalue="paper-dialog-scrollable" />
+            <item index="24" class="java.lang.String" itemvalue="neon-animated-pages" />
+            <item index="25" class="java.lang.String" itemvalue="neon-animatable" />
+            <item index="26" class="java.lang.String" itemvalue="main-page" />
           </list>
         </value>
       </option>
@@ -80,6 +101,11 @@
     </inspection_tool>
     <inspection_tool class="JSLastCommaInArrayLiteral" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="JSLastCommaInObjectLiteral" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="LoggerInitializedWithForeignClass" enabled="false" level="WARNING" enabled_by_default="false">
+      <option name="loggerClassName" value="org.apache.log4j.Logger,org.slf4j.LoggerFactory,org.apache.commons.logging.LogFactory,java.util.logging.Logger" />
+      <option name="loggerFactoryMethodName" value="getLogger,getLogger,getLog,getLogger" />
+    </inspection_tool>
+    <inspection_tool class="NonBlockStatementBodyJS" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="XmlHighlighting" enabled="false" level="ERROR" enabled_by_default="false" />
   </profile>
 </component>
