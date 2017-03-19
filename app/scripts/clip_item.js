@@ -71,6 +71,22 @@
 	};
 
 	/**
+	 * Get fav
+	 * @return {boolean} fav
+	 */
+	ClipItem.prototype.getFav = function() {
+		return this.fav;
+	};
+
+	/**
+	 * Set favorite
+	 * @param {boolean} fav - is item a favorite
+	 */
+	ClipItem.prototype.setFav = function(fav) {
+		this.fav = fav;
+	};
+
+	/**
 	 * Set remote
 	 * @param {boolean} remote - true if not from our {@link Device}
 	 */
@@ -104,6 +120,7 @@
 			// let listeners know a ClipItem was added
 			chrome.runtime.sendMessage({
 				message: 'clipAdded',
+				clipItem: clipItem,
 			}, (response) => {});
 			return Promise.resolve(clipItem);
 		});

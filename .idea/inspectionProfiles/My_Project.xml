@@ -1,13 +1,13 @@
 <component name="InspectionProjectProfileManager">
   <profile version="1.0">
-    <option name="myName" value="ESLint" />
+    <option name="myName" value="My Project" />
     <inspection_tool class="Annotator" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="ES6ModulesDependencies" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="Eslint" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="50">
+          <list size="53">
             <item index="0" class="java.lang.String" itemvalue="include" />
             <item index="1" class="java.lang.String" itemvalue="disabled$" />
             <item index="2" class="java.lang.String" itemvalue="on-tap" />
@@ -58,6 +58,9 @@
             <item index="47" class="java.lang.String" itemvalue="href$" />
             <item index="48" class="java.lang.String" itemvalue="is" />
             <item index="49" class="java.lang.String" itemvalue="unresolved" />
+            <item index="50" class="java.lang.String" itemvalue="tabindex$" />
+            <item index="51" class="java.lang.String" itemvalue="class$" />
+            <item index="52" class="java.lang.String" itemvalue="observe" />
           </list>
         </value>
       </option>
