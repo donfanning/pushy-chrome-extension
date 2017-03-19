@@ -75,7 +75,7 @@
     <inspection_tool class="HtmlUnknownTag" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="43">
+          <list size="44">
             <item index="0" class="java.lang.String" itemvalue="nobr" />
             <item index="1" class="java.lang.String" itemvalue="noembed" />
             <item index="2" class="java.lang.String" itemvalue="comment" />
@@ -119,6 +119,7 @@
             <item index="40" class="java.lang.String" itemvalue="paper-spinner" />
             <item index="41" class="java.lang.String" itemvalue="paper-icon-item" />
             <item index="42" class="java.lang.String" itemvalue="iron-list" />
+            <item index="43" class="java.lang.String" itemvalue="iron-image" />
           </list>
         </value>
       </option>
@@ -143,7 +144,7 @@
       <option name="m_limit" value="5" />
     </inspection_tool>
     <inspection_tool class="RedundantSuppression" enabled="true" level="WARNING" enabled_by_default="true" />
-    <inspection_tool class="ReuseOfLocalVariableJS" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="ReuseOfLocalVariableJS" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="StatementsPerFunctionJS" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_limit" value="30" />
     </inspection_tool>

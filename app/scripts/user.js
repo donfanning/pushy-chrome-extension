@@ -67,8 +67,11 @@ app.User = (function() {
 
 			return app.User.getAccessToken(true).then((token) => {
 				return app.Fb.signIn(token);
-			}).then(() => {
+			}).then((user) => {
 				app.Utils.set('signedIn', true);
+				if (!app.Utils.isWhiteSpace(user.photoURL)) {
+					app.Utils.set('photoURL', user.photoURL);
+				}
 				return Promise.resolve();
 			});
 		},
@@ -85,6 +88,7 @@ app.User = (function() {
 
 			return app.Fb.signOut().then(() => {
 				app.Utils.set('signedIn', false);
+				app.Utils.set('photoURL', '');
 				return Promise.resolve();
 			});
 		},

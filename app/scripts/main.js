@@ -115,6 +115,13 @@ app.Main = (function() {
 	t.route = 'page-main';
 
 	/**
+	 * User photo
+	 * @type {string}
+	 * @memberOf Main
+	 */
+	t.avatar = app.Utils.get('photoURL');
+
+	/**
 	 * Previous route
 	 * @type {string}
 	 * @memberOf Main
@@ -208,6 +215,20 @@ app.Main = (function() {
 		}
 	};
 
+	/**
+	 * Computed Binding: Determine if avatar should be visible
+	 * @param {string} avatar - photo url
+	 * @return {string} display type
+	 * @memberOf Main
+	 */
+	t.computeAvatarDisplay = function(avatar) {
+		let ret = 'inline';
+		if (app.Utils.isWhiteSpace(avatar)) {
+			ret = 'none';
+		}
+		return ret;
+	};
+
 	// noinspection JSUnusedLocalSymbols
 	/**
 	 * Event: Fired when a message is sent from either an extension process<br>
@@ -228,6 +249,7 @@ app.Main = (function() {
 				isMainPage = true;
 			}
 			// highlight ourselves and tell the sender we are here
+			// noinspection JSCheckFunctionSignatures
 			chrome.tabs.getCurrent((tab) => {
 				chrome.tabs.update(tab.id, {'highlighted': true});
 			});
@@ -244,12 +266,15 @@ app.Main = (function() {
 	 *
 	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
 	 * @param {event} event
+	 * @param {string} event.key
 	 * @private
 	 * @memberOf Main
 	 */
 	function _onStorageChanged(event) {
 		if(event.key === 'signedIn') {
 			_setDevicesState();
+		} else if(event.key === 'photoURL') {
+			t.avatar = app.Utils.get('photoURL');
 		}
 	}
 

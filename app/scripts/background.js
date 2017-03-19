@@ -84,6 +84,7 @@
 		'needsCleanup': false,
 		'email': '',
 		'uid': '',
+		'photoURL': '',
 		'lastEmail': '',
 		'lastUid': '',
 		'registered': false,
@@ -97,15 +98,22 @@
 	 * @memberOf Background
 	 */
 	const INTRO_TEXT =
-		'I am Clip Man. The clipboard manager with push notifications.\n\n' +
-		'Please signin from the "Manage Account" page to share with your ' +
-		'other devices.\n\n You can click on the toolbar icon at any time ' +
-		'to send the current contents of the clipboard to all your other ' +
-		'devices.\n\nInformation you copy in most Chrome pages will' +
-		' automatically be sent if you have enabled that in "Settings".\n\n' +
-		'You can display this page by right clicking on the toolbar icon and ' +
-		'selecting "Options"\n\nIt is a good idea to go to the "Settings" ' +
-		'page and enter a nickname for this device.';
+		`I am Clip Man. The clipboard manager with push notifications.
+
+Please signin from the "Manage Account" page to share with your \
+other devices.
+
+You can click on the toolbar icon at any time to send the current \
+contents of the clipboard to all your other devices.
+
+Information you copy in most Chrome pages will \
+automatically be sent if you have enabled that in "Settings".
+
+You can display this page by right clicking on the toolbar icon and \
+selecting "Options".
+
+It is a good idea to go to the "Settings" page and enter a nickname \
+for this device.`;
 
 	/**
 	 * Event: Fired when the extension is first installed,

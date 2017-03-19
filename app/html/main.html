@@ -49,7 +49,6 @@ limitations under the License.
 				padding-bottom: 0;
 			}
 
-			/*noinspection CssUnusedSymbol*/
 			#drawerToolbar {
 				color: var(--secondary-text-color);
 				background-color: var(--drawer-menu-color);
@@ -70,7 +69,12 @@ limitations under the License.
 			<paper-material elevation="2" drawer fixed>
 				<paper-scroll-header-panel>
 					<paper-toolbar id="drawerToolbar">
-						<span class="paper-font-title">Menu</span>
+						<span class="menu-name flex">Menu</span>
+						<!--suppress HtmlUnknownTarget -->
+						<img src="[[avatar]]"
+						     style$="height: 40px; width: 40px;
+						             border-radius: 20px; box-sizing: border-box;
+						             display: [[computeAvatarDisplay(avatar)]];">
 					</paper-toolbar>
 					<!-- Drawer Content -->
 					<paper-menu class="list" id="mainMenu" attr-for-selected="id" selected="[[route]]">

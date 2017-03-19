@@ -96,7 +96,8 @@ limitations under the License.
 
 		</style>
 
-		<paper-card class="page-content" heading="Google Sign-In[[_computeEmailLabel(signedIn)]]">
+		<paper-card class="page-content"
+		            heading="[[_computeEmailLabel(signedIn)]]">
 			<div class="card-content">
 
 				<!-- Error dialog -->
@@ -155,14 +156,14 @@ limitations under the License.
 	const ERROR_PERMISSION =
 		'Notification permission is required to sign-in.';
 	const ERROR_BLOCKED_MESSAGE =
-		'<p>You either blocked the request or the Chrome settings block ' +
-		'all notifications. If you want to sign-in, go to ' +
-		'"Chrome settings -> Show advanced settings...". Click on ' +
-		'"content settings...". In the notification area ' +
-		'make sure "Ask when a site wants to show notifications" ' +
-		'is selected. In the "Manage Exceptions" area allow this if ' +
-		'it is blocked:<br />&nbsp&nbsp&nbsp&nbsp' +
-		app.Utils.getExtensionName() + '/</p>';
+		`<p>You either blocked the request or the Chrome settings block
+		all notifications. If you want to sign-in, go to
+		"Chrome settings -> Show advanced settings...". Click on
+		"content settings...". In the notification area
+		make sure "Ask when a site wants to show notifications"
+		is selected. In the "Manage Exceptions" area allow this if
+		it is blocked:<br />&nbsp&nbsp&nbsp&nbsp
+		${app.Utils.getExtensionName()}/</p>`;
 	const ERROR_DEFAULT_MESSAGE =
 		'Display notification pop-up again?';
 	const ERROR_UNKNOWN_MESSAGE =
@@ -248,6 +249,10 @@ limitations under the License.
 			});
 		},
 
+		/**
+		 * Attempt to sign in with current Browser account
+		 * @private
+		 */
 		_signIn: function() {
 			chrome.runtime.sendMessage({message: 'signIn'}, (response) => {
 				if (response.message === 'error') {
@@ -257,6 +262,10 @@ limitations under the License.
 			});
 		},
 
+		/**
+		 * Attempt to sign out of current Browser account
+		 * @private
+		 */
 		_signOut: function() {
 			chrome.runtime.sendMessage({message: 'signOut'}, (response) => {
 				if (response.message === 'error') {
@@ -283,14 +292,15 @@ limitations under the License.
 		},
 
 		_computeEmailLabel: function(signedIn) {
-			return signedIn ? ' - Signed in as: ' + app.Utils.get('email') : '';
+			return signedIn ? 'Signed in as: ' + app.Utils.get('email') :
+				'Account Sign In';
 		},
 
 		_computeButtonLabel: function(signedIn) {
 			return signedIn ? 'Sign out' : 'Sign in';
 		},
 
-		_computeWaiterLabel: function(waiting) {
+		_computeWaiterLabel: function() {
 			return this.signedIn ? 'Signing Out...' : 'Signing In...';
 		},
 
