@@ -306,7 +306,7 @@ Polymer({
 	_onSelectAllTapped: function() {
 		let selections = [];
 		for (let i = 0; i < this.listItems.length; i++) {
-			this.set('listItems.' + i + '.checked', true);
+			this.set(`listItems.${i}.checked`, true);
 			selections.push(this.listItems[i]);
 		}
 		this.set('selections', selections);
@@ -318,7 +318,7 @@ Polymer({
 	 */
 	_onDeselectAllTapped: function() {
 		for (let i = 0; i < this.listItems.length; i++) {
-			this.set('listItems.' + i + '.checked', false);
+			this.set(`listItems.${i}.checked`, false);
 		}
 		this.set('selections', []);
 	},
@@ -407,8 +407,8 @@ Polymer({
 		clipItem.save().catch(() => {});
 
 		const pos = this.listItems.indexOf(listItem);
-		this.set('listItems.' + pos + '.clipItem.date', date);
-		this.set('listItems.' + pos + '.clipItem.remote', remote);
+		this.set(`listItems.${pos}.clipItem.date`, date);
+		this.set(`listItems.${pos}.clipItem.remote`, remote);
 
 		// prevent row selection
 		event.stopPropagation();
@@ -436,7 +436,7 @@ Polymer({
 		clipItem.save().catch(() => {});
 
 		const pos = this.listItems.indexOf(listItem);
-		this.set('listItems.' + pos + '.clipItem.fav', fav);
+		this.set(`listItems.${pos}.clipItem.fav`, fav);
 	},
 
 	/**
@@ -569,7 +569,7 @@ Polymer({
 			const clipItem = listItem.clipItem;
 			if (!clipItem.fav) {
 				const pos = this.listItems.indexOf(listItem);
-				this.set('listItems.' + pos + '.checked', false);
+				this.set(`listItems.${pos}.checked`, false);
 				this.splice('selections', i, 1);
 			}
 		}
@@ -619,7 +619,7 @@ Polymer({
 		if (listItem) {
 			const clipItem = listItem.clipItem;
 			if (clipItem.remote) {
-				this.set('title', 'Remote clip - ' + clipItem.device);
+				this.set('title', `Remote clip - ${clipItem.device}`);
 			} else {
 				this.set('title', 'Local clip');
 			}
@@ -661,8 +661,8 @@ Polymer({
 	_updateDates: function() {
 		for (let i = 0; i < this.listItems.length; i++) {
 			const date = this.listItems[i].clipItem.date;
-			this.set('listItems.' + i + '.clipItem.date', date - 1);
-			this.set('listItems.' + i + '.clipItem.date', date);
+			this.set(`listItems.${i}.clipItem.date`, date - 1);
+			this.set(`listItems.${i}.clipItem.date`, date);
 		}
 	},
 

@@ -109,7 +109,7 @@ app.Gae = (function() {
 		 */
 		doPost: function(url, token, retryNewToken = false) {
 			const headers = {
-				[HEADER_AUTHORIZATION]: 'Bearer ' + token,
+				[HEADER_AUTHORIZATION]: `Bearer ${token}`,
 				[HEADER_CONTENT_TYPE]: CONTENT_TYPE_JSON,
 				[HEADER_ACCEPT]: CONTENT_TYPE_JSON,
 			};

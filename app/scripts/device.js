@@ -73,7 +73,7 @@
 	 * @return {string} unique name
 	 */
 	Device.prototype.getUniqueName = function() {
-		return this.model + ' - ' + this.sn + ' - ' + this.os;
+		return `${this.model} - ${this.sn} - ${this.os}`;
 	};
 
 	/**
@@ -83,7 +83,7 @@
 	Device.prototype.getName = function() {
 		let name = this.nickname;
 		if (app.Utils.isWhiteSpace(name)) {
-			name = this.model + ' - ' + this.sn + ' - ' + this.os;
+			name = this.getUniqueName();
 		}
 		return name;
 	};
@@ -101,7 +101,7 @@
 	 * @return {string} unique name
 	 */
 	Device.myUniqueName = function() {
-		return Device.myModel() + ' - ' + Device.mySN() + ' - ' + Device.myOS();
+		return `${Device.myModel()} - ${Device.mySN()} - ${Device.myOS()}`;
 	};
 
 	/**
@@ -111,8 +111,7 @@
 	Device.myName = function() {
 		let name = Device.myNickname();
 		if (app.Utils.isWhiteSpace(name)) {
-			name = Device.myModel() + ' - ' + Device.mySN() + ' - ' +
-				Device.myOS();
+			name = Device.myUniqueName();
 		}
 		return name;
 	};

@@ -31,7 +31,7 @@ app.Reg = (function() {
 	 * @private
 	 * @memberOf Reg
 	 */
-	const URL_BASE = app.Gae.GAE_ROOT + '/registration/v1/';
+	const URL_BASE = `${app.Gae.GAE_ROOT}/registration/v1/`;
 
 	const ERROR_REGISTER = 'Failed to register with the server.\n';
 	const ERROR_UNREGISTER = 'Failed to unregister with the server.\n';

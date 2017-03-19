@@ -30,7 +30,7 @@ app.Main = (function() {
 	 * @memberOf Main
 	 */
 	const EXT_URI =
-		'https://chrome.google.com/webstore/detail/' + chrome.runtime.id + '/';
+		`https://chrome.google.com/webstore/detail/${chrome.runtime.id}/`;
 
 	/**
 	 * Path to the android app in the Play Store

@@ -100,9 +100,10 @@ limitations under the License.
         * @private
         */
        _computeEmailBody: function() {
-			const text = 'Extension version: ' + app.Utils.getVersion() +
-					'\nChrome version: ' + app.Utils.getFullChromeVersion() +
-					'\nOS: ' + app.Utils.get('os') + '\n\n';
+			const text =
+				`Extension version: ${app.Utils.getVersion()}
+				Chrome version: ${app.Utils.getFullChromeVersion()}
+				OS: ${app.Utils.get('os')}\n\n\n`;
 			return encodeURIComponent(text);
        },
 

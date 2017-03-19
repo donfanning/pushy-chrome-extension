@@ -61,7 +61,7 @@
 
 	/**
 	 * Get the name of the Device who sent the message
-	 * @param {JSON} data message object
+	 * @param {GaeMsg} data message object
 	 * @return {string} device name
 	 * @memberOf ServiceWorker
 	 */
@@ -70,7 +70,7 @@
 		if (data.dN) {
 			name = data.dN;
 		} else {
-			name = data.dM + ' - ' + data.dSN + ' - ' + data.dOS;
+			name = `${data.dM} - ${data.dSN} - ${data.dOS}`;
 		}
 		return name;
 	}
@@ -138,7 +138,7 @@
 		const data = payload.data;
 		let dataArray = [data];
 		const deviceName = getDeviceName(data);
-		let title = 'From ' + deviceName;
+		let title = `From ${deviceName}`;
 		const body = payload.data.message;
 		const tag = getTag(data);
 		const icon = getIcon(data);
@@ -182,7 +182,7 @@
 							noteOptions.renotify = true;
 							dataArray = notifications[0].data;
 							dataArray.push(data);
-							title = dataArray.length + ' new items\n' + title;
+							title = `${dataArray.length} new items\n${title}`;
 							noteOptions.data = dataArray;
 						} else {
 							// this is for Chrome start-up so we can keep
@@ -193,8 +193,9 @@
 							if (tag === TAG_MESSAGE) {
 								msgDataArray.push(data);
 								if (msgDataArray.length > 1) {
-									title = title + '\n' +
-										msgDataArray.length + ' new items';
+									title =
+										`${title}
+										${msgDataArray.length} new items`;
 								}
 								// shallow copy
 								noteOptions.data = JSON.parse(
@@ -202,9 +203,9 @@
 							} else if (tag === TAG_DEVICE) {
 								deviceDataArray.push(data);
 								if (deviceDataArray.length > 1) {
-									title = title + '\n' +
-										deviceDataArray.length +
-										' new items';
+									title =
+										`${title}
+										${deviceDataArray.length} new items`;
 								}
 								// shallow copy
 								noteOptions.data = JSON.parse(

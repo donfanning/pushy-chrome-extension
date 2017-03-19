@@ -30,7 +30,7 @@ app.Msg = (function() {
 	 * @private
 	 * @memberOf Msg
 	 */
-	const URL_BASE = app.Gae.GAE_ROOT + '/messaging/v1/send/';
+	const URL_BASE = `${app.Gae.GAE_ROOT}/messaging/v1/send/`;
 
 	/**
 	 * Max message length. Server may reduce it more
