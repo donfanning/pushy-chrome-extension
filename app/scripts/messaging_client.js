@@ -112,7 +112,7 @@ app.Msg = (function() {
 			url = URL_BASE +
 				regId + '/' +
 				encodeURIComponent(JSON.stringify(data));
-			return app.User.getAccessToken(true);
+			return app.User.getAuthToken(true);
 		}).then((token) => {
 			return app.Gae.doPost(url, token, true);
 		}).then(() => {

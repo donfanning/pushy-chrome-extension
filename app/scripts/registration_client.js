@@ -46,7 +46,7 @@ app.Reg = (function() {
 	 * @memberOf Reg
 	 */
 	function _doCommand(url, errorPrefix) {
-		return app.User.getAccessToken(true).then((token) => {
+		return app.User.getAuthToken(true).then((token) => {
 			return app.Gae.doPost(url, token, true);
 		}).then(() => {
 			return Promise.resolve();

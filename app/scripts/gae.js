@@ -83,7 +83,7 @@ app.Gae = (function() {
 	 */
 	function _retryPost(url, token) {
 		return app.User.removeCachedAuthToken(token).then(() => {
-			return app.User.getAccessToken(false);
+			return app.User.getAuthToken(false);
 		}).then((token) => {
 			return app.Gae.doPost(url, token, false);
 		});

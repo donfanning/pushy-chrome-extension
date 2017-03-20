@@ -65,7 +65,7 @@ app.User = (function() {
 				return Promise.reject(new Error(ERROR_ALREADY_SIGNED_IN));
 			}
 
-			return app.User.getAccessToken(true).then((token) => {
+			return app.User.getAuthToken(true).then((token) => {
 				return app.Fb.signIn(token);
 			}).then((user) => {
 				app.Utils.set('signedIn', true);
@@ -141,36 +141,37 @@ app.User = (function() {
 		},
 
 		/**
-		 * Get a token for authorization
+		 * Get an OAuth2.0 token
 		 * @see https://developer.chrome.com/apps/identity#method-getAuthToken
 		 * @param {boolean} retry - if true, retry with new token on error
 		 * @return {Promise<token>} An access token
 		 * @memberOf User
 		 */
-		getAccessToken: function(retry) {
+		getAuthToken: function(retry) {
 			// If signed in, first try to get token non-interactively.
 			// If it fails, probably means token has expired or is invalid.
 			const interactive = !app.Utils.isSignedIn();
 
 			const chromep = new ChromePromise();
-			return chromep.identity.getAuthToken({'interactive': interactive})
-				.then((accessToken) => {
-					if (chrome.runtime.lastError) {
-						const error = chrome.runtime.lastError.message;
-						if (retry && error && accessToken) {
-							// cached token may be expired or invalid.
-							// remove it and try again
-							return app.User.removeCachedAuthToken(accessToken)
-								.then(() => {
-									return app.User.getAccessToken(false);
-								});
-						} else {
-							throw new Error(error);
-						}
+			return chromep.identity.getAuthToken({
+				'interactive': interactive,
+			}).then((token) => {
+				if (chrome.runtime.lastError) {
+					const error = chrome.runtime.lastError.message;
+					if (retry && error && token) {
+						// cached token may be expired or invalid.
+						// remove it and try again
+						return app.User.removeCachedAuthToken(token)
+							.then(() => {
+								return app.User.getAuthToken(false);
+							});
 					} else {
-						return Promise.resolve(accessToken);
+						throw new Error(error);
 					}
-				});
+				} else {
+					return Promise.resolve(token);
+				}
+			});
 		},
 
 		/**
@@ -179,8 +180,8 @@ app.User = (function() {
 		 * @memberOf User
 		 */
 		cleanup: function() {
-			return app.User.getAccessToken(false).then((accessToken) => {
-				return app.User.removeCachedAuthToken(accessToken);
+			return app.User.getAuthToken(false).then((token) => {
+				return app.User.removeCachedAuthToken(token);
 			});
 		},
 
