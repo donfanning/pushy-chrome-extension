@@ -280,12 +280,7 @@ Polymer({
 		// listen for chrome messages
 		chrome.runtime.onMessage.addListener(function(request) {
 			if (request.message === 'clipAdded') {
-				const clip = request.clipItem;
-				const clipItem = new app.ClipItem(clip.text, clip.date,
-					clip.fav, clip.remote, clip.device);
-				this.push('listItems', {checked: false, clipItem: clipItem});
-				// select first row and update UI
-				this._selectFirst();
+				this._addListItem(request);
 			} else if (request.message === 'clipsDeleted') {
 				this._loadClipItems();
 			}
@@ -573,6 +568,53 @@ Polymer({
 				this.splice('selections', i, 1);
 			}
 		}
+	},
+
+	/**
+	 * Add or update {@link ListItem} in {@link listItems}
+	 * @param {Object} request - Chrome message request
+	 */
+	_addListItem(request) {
+		const clip = request.clipItem;
+		const updated = request.updated;
+		if (updated) {
+			// clip text already existed, update it
+			const pos = this._getListItemPos(clip.text);
+			if (pos !== -1) {
+				const str = `listItems.${pos}.clipItem.`;
+				this.set(`${str}fav`, clip.fav);
+				this.set(`${str}date`, clip.date);
+				this.set(`${str}remote`, clip.remote);
+				this.set(`${str}device`, clip.device);
+			}
+			// shouldn't get here
+		} else {
+			// new clip, add it
+			const clipItem = new app.ClipItem(clip.text, clip.date,
+				clip.fav, clip.remote, clip.device);
+			this.push('listItems', {
+				checked: false,
+				clipItem: clipItem,
+			});
+		}
+		// select first row and update UI
+		this._selectFirst();
+	},
+
+	/**
+	 * Get position of {@link ListItem} with given text
+	 * @param {string} clipText - text to find
+	 * @return {int} position in array, -1 if not found
+	 */
+	_getListItemPos: function(clipText) {
+		let pos = -1;
+		for (let i = 0; i < this.listItems.length; i++) {
+			if (clipText === this.listItems[i].clipItem.text) {
+				pos = i;
+				break;
+			}
+		}
+		return pos;
 	},
 
 	/**

@@ -96,13 +96,23 @@
 
 	/**
 	 * Save ourselves to storage
-	 * @return {Promise<void>}
+	 * @return {Promise<string>} primary key it was stored under
 	 */
 	ClipItem.prototype.save = function() {
 		if (app.Utils.isWhiteSpace(this.text)) {
 			return Promise.reject(new Error(ClipItem.ERROR_EMPTY_TEXT));
 		}
 		return _db.clipItems.put(this);
+	};
+
+	/**
+	 * Determine if {@link ClipItem} text exists in storage
+	 * @return {Promise<boolean>} true if text exists
+	 */
+	ClipItem.prototype.exists = function() {
+		return _db.clipItems.get(this.text).then((item) => {
+			return Promise.resolve((item !== undefined));
+		});
 	};
 
 	/**
@@ -115,12 +125,17 @@
 	 * @return {Promise<ClipItem>} A new {@link ClipItem}
 	 */
 	ClipItem.add = function(text, date, fav, remote, device) {
+		let updated;
 		const clipItem = new ClipItem(text, date, fav, remote, device);
-		return clipItem.save().then(() => {
-			// let listeners know a ClipItem was added
+		return clipItem.exists().then((isTrue) => {
+			updated = isTrue;
+			return clipItem.save();
+		}).then(() => {
+			// let listeners know a ClipItem was added or updated
 			chrome.runtime.sendMessage({
 				message: 'clipAdded',
 				clipItem: clipItem,
+				updated: updated,
 			}, (response) => {});
 			return Promise.resolve(clipItem);
 		});
