@@ -58,14 +58,14 @@
 	const DATA_VERSION = 1;
 
 	/**
-	 * Default values of localStorage
-	 * @type {{version: int, monitorClipboard: boolean,
-	 * allowPush: boolean, autoSend: boolean, deviceSN: string,
+	 * Default values in localStorage
+	 * @type {{version: int, monitorClipboard: boolean, allowPush: boolean,
+	 * autoSend: boolean, allowReceive: boolean, deviceSN: string,
 	 * deviceNickname: string, storageDuration: number, notify: boolean,
 	 * notifyOnSend: boolean, notifyOnReceive: boolean, devices: {},
 	 * signedIn: boolean, needsCleanup: boolean, email: string,
-	 * uid: string, lastEmail: string, lastUid: string,
-	 * registered: boolean, regId: string}}
+	 * uid: string, photoURL: string, lastEmail: string, lastUid: string,
+	 * registered: boolean}}
 	 * @memberOf Background
 	 */
 	const DEF_VALUES = {
@@ -73,6 +73,7 @@
 		'monitorClipboard': true,
 		'allowPush': true,
 		'autoSend': true,
+		'allowReceive': true,
 		'deviceSN': app.Utils.randomString(8),
 		'deviceNickname': '',
 		'storageDuration': 2,
@@ -88,7 +89,6 @@
 		'lastEmail': '',
 		'lastUid': '',
 		'registered': false,
-		'regId': '',
 	};
 
 	/**
@@ -240,7 +240,7 @@ for this device.`;
 
 	/**
 	 * Event: Fired when the user clicked in a non-button area
-	 *     of the notification.
+	 * of the notification.
 	 * @see https://developer.chrome.com/apps/notifications#event-onClicked
 	 * @param {int} notificationId - type of notification
 	 * @private
@@ -420,10 +420,10 @@ for this device.`;
 			app.Devices.add(device);
 			const fav = (data.fav === '1');
 			// Persist
-			app.ClipItem.add(data.message, Date.now(), fav, true,
+			app.ClipItem.add(data.m, Date.now(), fav, true,
 				device.getName()).catch((error) => {});
 			// save to clipboard
-			_copyToClipboard(data.message);
+			_copyToClipboard(data.m);
 		} else if (data.act === app.Msg.ACTION_PING) {
 			// we were pinged
 			app.Devices.add(device);

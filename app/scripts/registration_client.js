@@ -35,7 +35,6 @@ app.Reg = (function() {
 
 	const ERROR_REGISTER = 'Failed to register with the server.\n';
 	const ERROR_UNREGISTER = 'Failed to unregister with the server.\n';
-	const ERROR_REFRESH = 'Failed to refresh token on the server.\n';
 
 	/**
 	 * Send request to server Endpoint
@@ -97,31 +96,5 @@ app.Reg = (function() {
 				return Promise.reject(error);
 			});
 		},
-
-		/**
-		 * Update firebase instanceId on server
-		 * @param {string} newRegToken - the new instanceId
-		 * @return {Promise<void>}
-		 * @memberOf Reg
-		 */
-		refresh: function(newRegToken) {
-			if (app.Utils.notRegistered()) {
-				app.Utils.set('regId', newRegToken);
-				return Promise.resolve();
-			}
-
-			const oldRegToken = app.Utils.get('regId');
-
-			const url = URL_BASE + 'refresh/' +
-				newRegToken + '/' +
-				oldRegToken;
-
-			return _doCommand(url, ERROR_REFRESH).then(() => {
-				app.Utils.set('regId', newRegToken);
-				app.Utils.set('registered', true);
-				return Promise.resolve();
-			});
-		},
-
 	};
 })();

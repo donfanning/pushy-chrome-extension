@@ -56,7 +56,7 @@ app.Msg = (function() {
 	 * Data packet sent to server
 	 * @typedef {Object} GaeMsg
 	 * @property {string} act - type of message
-	 * @property {string} message - content of message
+	 * @property {string} m - content of message
 	 * @property {string} dM - {@link Device} model
 	 * @property {string} dSN - {@link Device} serial number
 	 * @property {string} dOS - {@link Device} operating system
@@ -75,7 +75,7 @@ app.Msg = (function() {
 	function _getData(action, message) {
 		const msg = _getDevice();
 		msg.act = action;
-		msg.message = message;
+		msg.m = message;
 		return msg;
 	}
 

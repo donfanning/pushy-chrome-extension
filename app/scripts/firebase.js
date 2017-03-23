@@ -106,25 +106,10 @@ app.Fb = (function() {
 	 */
 	function _refreshRegToken() {
 		_messaging.getToken().then((refreshedToken) => {
-			if (app.Utils.isRegistered()) {
-				app.Reg.refresh(refreshedToken).then(() => {
-					_saveRegToken(refreshedToken);
-				}).catch((error) => {});
-			} else {
-				// save token, not registered yet
-				_saveRegToken(refreshedToken);
+			if (app.Utils.isSignedIn()) {
+				return app.Reg.register(refreshedToken);
 			}
 		}).catch((error) => {});
-	}
-
-	/**
-	 * Save registration token to localStorage
-	 * @param {string} token - a registration token
-	 * @private
-	 * @memberOf Fb
-	 */
-	function _saveRegToken(token) {
-		app.Utils.set('regId', token);
 	}
 
 	return {
@@ -173,7 +158,6 @@ app.Fb = (function() {
 		getRegToken: function() {
 			return _messaging.getToken().then((token) => {
 				if (token) {
-					_saveRegToken(token);
 					return Promise.resolve(token);
 				} else {
 					return Promise.reject(new Error(ERROR_TOKEN));

@@ -85,7 +85,7 @@ app.Notify = (function() {
 					case NOTIFY_SEND:
 						options.iconUrl = chrome.runtime.getURL(icon);
 						options.title = 'Sent push message';
-						options.message = data.message;
+						options.message = data.m;
 						chrome.notifications.create(type, options, () => {});
 						break;
 					default:

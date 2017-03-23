@@ -134,12 +134,12 @@
 	 */
 	self.addEventListener('push', (event) => {
 		const payload = event.data.json();
-		payload.data.message = decodeURIComponent(payload.data.message);
+		payload.data.m = decodeURIComponent(payload.data.m);
 		const data = payload.data;
 		let dataArray = [data];
 		const deviceName = getDeviceName(data);
 		let title = `From ${deviceName}`;
-		const body = payload.data.message;
+		const body = payload.data.m;
 		const tag = getTag(data);
 		const icon = getIcon(data);
 
