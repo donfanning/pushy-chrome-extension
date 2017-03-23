@@ -172,13 +172,10 @@ for this device.`;
 		// Persist
 		app.ClipItem.add(text, Date.now(), false, false, app.Device.myName())
 			.then((clipItem) => {
-			if (app.Utils.allowPush() && app.Utils.isRegistered()) {
-				// send to our devices
 				app.Msg.sendClipItem(clipItem).catch((error) => {
 					_sendMessageFailed(error);
 				});
-			}
-		}).catch((error) => {});
+			}).catch((error) => {});
 	}
 
 	// noinspection JSUnusedLocalSymbols
@@ -305,6 +302,25 @@ for this device.`;
 	function _onStorageChanged(event) {
 		if (event.key === 'storageDuration') {
 			_updateAlarms();
+		} else if (event.key === 'allowReceive') {
+			const allowReceive = app.Utils.allowReceive();
+			if (allowReceive) {
+				app.Reg.register().catch((error) => {
+					app.Utils.set('allowReceive', !allowReceive);
+					chrome.runtime.sendMessage({
+						message: 'registerFailed',
+						error: error.toString(),
+					}, () => {});
+				});
+			} else {
+				app.Reg.unregister().catch((error) => {
+					app.Utils.set('allowReceive', !allowReceive);
+					chrome.runtime.sendMessage({
+						message: 'unregisterFailed',
+						error: error.toString(),
+					}, () => {});
+				});
+			}
 		}
 	}
 
@@ -484,8 +500,7 @@ for this device.`;
 	 * @memberOf Background
 	 */
 	function _sendLocalClipItem(clipItem) {
-		if (!clipItem.remote && app.Utils.isRegistered() &&
-			app.Utils.allowPush() && app.Utils.isAutoSend()) {
+		if (!clipItem.remote && app.Utils.isAutoSend()) {
 			// send to our devices
 			app.Msg.sendClipItem(clipItem).catch((error) => {
 				_sendMessageFailed(error);

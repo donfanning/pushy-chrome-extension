@@ -62,12 +62,12 @@ app.Reg = (function() {
 		 * @memberOf Reg
 		 */
 		register: function() {
-			if (app.Utils.isRegistered()) {
+			if (app.Utils.isRegistered() || !app.Utils.allowReceive()) {
 				return Promise.resolve();
 			}
 
 			return app.Fb.getRegToken().then((regId) => {
-				const url = URL_BASE + 'register/' + regId;
+				const url = `${URL_BASE}register/${regId}`;
 				return _doCommand(url, ERROR_REGISTER);
 			}).then(() => {
 				app.Utils.set('registered', true);
@@ -86,14 +86,11 @@ app.Reg = (function() {
 			}
 
 			return app.Fb.getRegToken().then((regId) => {
-				const url = URL_BASE + 'unregister/' + regId;
+				const url = `${URL_BASE}unregister/${regId}`;
 				return _doCommand(url, ERROR_UNREGISTER);
 			}).then(() => {
 				app.Utils.set('registered', false);
 				return Promise.resolve();
-			}).catch((error) => {
-				// TODO unregister?
-				return Promise.reject(error);
 			});
 		},
 	};

@@ -32,6 +32,7 @@ app.Utils = (function() {
 
 		/**
 		 * Number of minutes in a day
+		 * @const
 		 * @type {int}
 		 * @memberOf Utils
 		 */
@@ -39,10 +40,19 @@ app.Utils = (function() {
 
 		/**
 		 * Number of milliseconds a in day
+		 * @const
 		 * @type {int}
 		 * @memberOf Utils
 		 */
 		MILLIS_IN_DAY: MILLIS_IN_DAY,
+
+		/** Get the extension's name
+		 * @return {string}
+		 * @memberOf Utils
+		 */
+		getExtensionName: function() {
+			return `chrome-extension://${chrome.runtime.id}`;
+		},
 
 		/**
 		 * Get the Extension version
@@ -113,27 +123,6 @@ app.Utils = (function() {
 		},
 
 		/**
-		 * Determine if a String is null or whitespace only
-		 * @param {string} str - string to check
-		 * @return {boolean} true if str is whitespace (or null)
-		 * @memberOf Utils
-		 */
-		isWhiteSpace: function(str) {
-			return (!str || str.length === 0 || /^\s*$/.test(str));
-		},
-
-		/**
-		 * Get a date string in time ago format
-		 * @param {int} time - time since epoch in millis
-		 * @return {string} Relative time format
-		 * @memberOf Utils
-		 */
-		getRelativeTime: function(time) {
-			return moment(time).fromNow() + ', ' +
-				moment(time).format('h:mm a');
-		},
-
-		/**
 		 * Get a JSON parsed value from localStorage
 		 * @param {string} key - key to get value for
 		 * @return {JSON|null} JSON object, null if key does not exist
@@ -145,16 +134,6 @@ app.Utils = (function() {
 				item = JSON.parse(item);
 			}
 			return item;
-		},
-
-		/**
-		 * Get a String value from localStorage
-		 * @param {string} key - key to get value for
-		 * @return {String|null} JSON object, null if key does not exist
-		 * @memberOf Utils
-		 */
-		getString: function(key) {
-			return localStorage.getItem(key);
 		},
 
 		/**
@@ -172,22 +151,8 @@ app.Utils = (function() {
 		},
 
 		/**
-		 * Save a String value to localStorage
-		 * @param {string} key - key to set value for
-		 * @param {string|null} value - new value, if null remove item
-		 * @memberOf Utils
-		 */
-		setString: function(key, value) {
-			if (value !== null) {
-				localStorage.setItem(key, value);
-			} else {
-				localStorage.removeItem(key);
-			}
-		},
-
-		/**
 		 * Are we saving clipboard contents
-		 * @return {boolean} true if we should monitor clipboard
+		 * @return {boolean} true if enabled
 		 * @memberOf Utils
 		 */
 		isMonitorClipboard: function() {
@@ -195,8 +160,8 @@ app.Utils = (function() {
 		},
 
 		/**
-		 * Has user enabled pushing to device
-		 * @return {boolean} true if autoSend is enabled
+		 * Has user enabled pushing to {@link Devices}
+		 * @return {boolean} true if enabled
 		 * @memberOf Utils
 		 */
 		allowPush: function() {
@@ -205,11 +170,20 @@ app.Utils = (function() {
 
 		/**
 		 * Has user enabled autoSend option
-		 * @return {boolean} true if autoSend is enabled
+		 * @return {boolean} true if enabled
 		 * @memberOf Utils
 		 */
 		isAutoSend: function() {
 			return app.Utils.get('autoSend');
+		},
+
+		/**
+		 * Has user enabled receiving from {@link Devices}
+		 * @return {boolean} true if enabled
+		 * @memberOf Utils
+		 */
+		allowReceive: function() {
+			return app.Utils.get('allowReceive');
 		},
 
 		/**
@@ -236,15 +210,28 @@ app.Utils = (function() {
 		 * @memberOf Utils
 		 */
 		notRegistered: function() {
-			return !this.get('registered');
+			return !this.isRegistered();
 		},
 
-		/** Get the extension's name
-		 * @return {string}
+		/**
+		 * Determine if a String is null or whitespace only
+		 * @param {string} str - string to check
+		 * @return {boolean} true if str is whitespace (or null)
 		 * @memberOf Utils
 		 */
-		getExtensionName: function() {
-			return 'chrome-extension://' + chrome.runtime.id;
+		isWhiteSpace: function(str) {
+			return (!str || str.length === 0 || /^\s*$/.test(str));
+		},
+
+		/**
+		 * Get a date string in time ago format
+		 * @param {int} time - time since epoch in millis
+		 * @return {string} Relative time format
+		 * @memberOf Utils
+		 */
+		getRelativeTime: function(time) {
+			return moment(time).fromNow() + ', ' +
+				moment(time).format('h:mm a');
 		},
 
 		/**

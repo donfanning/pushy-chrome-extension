@@ -102,16 +102,14 @@ app.Msg = (function() {
 	 * @memberOf Msg
 	 */
 	function _sendMessage(data, notify) {
-		if (app.Utils.notRegistered()) {
+		if (!app.Utils.isSignedIn() || !app.Utils.allowPush()) {
 			return Promise.resolve();
 		}
 
 		let url;
-
 		return app.Fb.getRegToken().then((regId) => {
-			url = URL_BASE +
-				regId + '/' +
-				encodeURIComponent(JSON.stringify(data));
+			const json = encodeURIComponent(JSON.stringify(data));
+			url = `${URL_BASE}${regId}/${json}`;
 			return app.User.getAuthToken(true);
 		}).then((token) => {
 			return app.Gae.doPost(url, token, true);
@@ -144,6 +142,7 @@ app.Msg = (function() {
 
 			let text = clipItem.text;
 			if (text.length > MAX_MSG_LEN) {
+				// limit message size. Server may limit more
 				text = text.substring(0, MAX_MSG_LEN - 1);
 			}
 
@@ -191,6 +190,5 @@ app.Msg = (function() {
 			const data = _getData(ACTION_PING_RESPONSE, MSG_PING_RESPONSE);
 			return _sendMessage(data, false);
 		},
-
 	};
 })();

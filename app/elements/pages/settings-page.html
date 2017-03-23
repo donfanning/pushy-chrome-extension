@@ -20,6 +20,9 @@ limitations under the License.
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-styles/color.html">
 <link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
 
 <link rel="import" href="../setting-toggle/setting-toggle.html">
 <link rel="import" href="../setting-dropdown/setting-dropdown.html">
@@ -40,21 +43,39 @@ limitations under the License.
 
 		<paper-card class="page-content" heading="Settings">
 			<div class="card-content">
-				<setting-toggle section-title="Clipboard"
+
+				<!-- Error dialog -->
+				<paper-dialog id="errorDialog" modal
+				              entry-animation="scale-up-animation"
+				              exit-animation="fade-out-animation">
+					<h2 id="dialogTitle" class="vertical layout center"></h2>
+					<paper-dialog-scrollable>
+						<paper-item id="dialogText"></paper-item>
+					</paper-dialog-scrollable>
+					<div class="buttons">
+						<paper-button dialog-dismiss autofocus>CLOSE</paper-button>
+					</div>
+				</paper-dialog>
+
+				<setting-toggle section-title="Clipboard & messaging"
 				                name="monitorClipboard"
 								main-label="Monitor clipboard"
 								secondary-label="Automatically store contents when possible">
 				</setting-toggle>
 				<setting-toggle name="allowPush"
 								main-label="Push to devices"
-								secondary-label="Send contents to registered devices"
+								secondary-label="Send messages to your registered devices"
 								checked="{{pushEnabled}}">
 				</setting-toggle>
 				<setting-toggle name="autoSend"
 								main-label="Auto send"
-								secondary-label="Automatically send contents when possible"
+								secondary-label="Automatically send when possible"
 								disabled$="[[!pushEnabled]]"
 								indent>
+				</setting-toggle>
+				<setting-toggle name="allowReceive"
+								main-label="Receive from devices"
+								secondary-label="Receive messages from your registered devices">
 				</setting-toggle>
 
 				<setting-text section-title="General"
@@ -67,7 +88,8 @@ limitations under the License.
 				</setting-text>
 				<setting-dropdown name="storageDuration"
 				                  label="Storage duration"
-                                  items='["One day", "One week", "One month", "One year", "Until space needed"]'>
+                                  items='["One day", "One week", "One month",
+                                   "One year", "Until space needed"]'>
 				</setting-dropdown>
 
 				<setting-toggle section-title="Notifications"
@@ -84,12 +106,40 @@ limitations under the License.
 <script>
 (function(window) {
 	'use strict';
+	const ERROR_REGISTER = 'Failed to register with server.';
+	const ERROR_UNREGISTER = 'Failed to unregister with server.';
+
 	window.app = window.app || {};
 	app.SettingsPageFactory = Polymer({
 		is: 'settings-page',
 
 		listeners: {
 			'setting-text-changed': '_onNicknameChanged',
+		},
+
+		ready: function() {
+			// listen for chrome messages
+			chrome.runtime.onMessage.addListener(function(request) {
+				if (request.message === 'registerFailed') {
+					const error = request.error;
+					this._showDialog(ERROR_REGISTER, error.toString());
+				} else if (request.message === 'unregisterFailed') {
+					const error = request.error;
+					this._showDialog(ERROR_UNREGISTER, error.toString());
+				}
+			}.bind(this));
+		},
+
+		/**
+		 * Display error dialog
+		 * @param {string} title - error title
+		 * @param {string} text - description of error
+		 * @private
+		 */
+		_showDialog: function(title, text) {
+			this.$.dialogTitle.innerHTML = title;
+			this.$.dialogText.innerHTML = text;
+			this.$.errorDialog.open();
 		},
 
 		/**
