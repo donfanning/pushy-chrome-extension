@@ -48,8 +48,8 @@
 	 * temporary variables to help get
 	 * all messages at Chrome start-up
 	 */
-	let msgDataArray = [];
-	let deviceDataArray = [];
+	let msgArr = [];
+	let deviceArr = [];
 
 	self.addEventListener('install', () => {
 		self.skipWaiting();
@@ -117,8 +117,8 @@
 	 * @memberOf ServiceWorker
 	 */
 	function doFakeFetch(dataArray) {
-		msgDataArray = [];
-		deviceDataArray = [];
+		msgArr = [];
+		deviceArr = [];
 		URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
 		return new Promise(function(resolve, reject) {
 			fetch(URL_FETCH, {method: 'GET'}).then(() => {
@@ -191,25 +191,22 @@
 							// notification when extension doesn't have
 							// focus
 							if (tag === TAG_MESSAGE) {
-								msgDataArray.push(data);
-								if (msgDataArray.length > 1) {
-									title =
-										`${title}
-										${msgDataArray.length} new items`;
+								msgArr.push(data);
+								if (msgArr.length > 1) {
+									title+= `\n${msgArr.length} new items`;
+
 								}
 								// shallow copy
 								noteOptions.data = JSON.parse(
-									JSON.stringify(msgDataArray));
+									JSON.stringify(msgArr));
 							} else if (tag === TAG_DEVICE) {
-								deviceDataArray.push(data);
-								if (deviceDataArray.length > 1) {
-									title =
-										`${title}
-										${deviceDataArray.length} new items`;
+								deviceArr.push(data);
+								if (deviceArr.length > 1) {
+									title+=`\n${deviceArr.length} new items`;
 								}
 								// shallow copy
 								noteOptions.data = JSON.parse(
-									JSON.stringify(deviceDataArray));
+									JSON.stringify(deviceArr));
 							}
 						}
 						// return the notification.
