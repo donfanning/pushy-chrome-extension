@@ -22,33 +22,68 @@
 	 * Service Worker to handle push notifications
 	 * @namespace ServiceWorker
 	 */
-	
+
+	/**
+	 * Fake fetch base path
+	 * @const
+	 * @default
+	 * @type {string}
+	 * @memberOf ServiceWorker
+	 */
 	const URL_FETCH_BASE = 'http://www.anyoldthing.com/?';
+
+	/**
+	 * Google search base path
+	 * @const
+	 * @default
+	 * @type {string}
+	 * @memberOf ServiceWorker
+	 */
 	const URL_SEARCH_BASE = 'https://www.google.com/search?q=';
+
+	/**
+	 * Path to extension
+	 * @const
+	 * @default
+	 * @type {string}
+	 * @memberOf ServiceWorker
+	 */
 	const URL_MAIN =
 		'chrome-extension://dnginconopbhmnapbipjoohbgknhkdoh/html/main.html';
 
+	/** @memberOf ServiceWorker */
 	let URL_FETCH;
 
+	/** @memberOf ServiceWorker */
 	const TAG_MESSAGE = 'tag-message';
+	/** @memberOf ServiceWorker */
 	const TAG_DEVICE = 'tag-device';
 
+	/** @memberOf ServiceWorker */
 	const ACTION_MESSAGE = 'm';
+	/** @memberOf ServiceWorker */
 	const ACTION_DEVICE_ADDED = 'add_our_device';
+	/** @memberOf ServiceWorker */
 	const ACTION_DEVICE_REMOVED = 'remove_our_device';
+	/** @memberOf ServiceWorker */
+	const ACTION_PING_RESPONSE = 'respond_to_ping';
 
-	/**
-	 * Icons
-	 */
+	/** @memberOf ServiceWorker */
 	const IC_REMOTE_COPY = '../images/ic_remote_copy.png';
+	/** @memberOf ServiceWorker */
 	const IC_ADD_DEVICE = '../images/ic_add_device.png';
+	/** @memberOf ServiceWorker */
 	const IC_REMOVE_DEVICE = '../images/ic_remove_device.png';
+	/** @memberOf ServiceWorker */
+	const IC_SEARCH = '../images/search-web.png';
 
 	/**
 	 * temporary variables to help get
 	 * all messages at Chrome start-up
 	 */
+	/** @memberOf ServiceWorker */
 	let msgArr = [];
+	/** @memberOf ServiceWorker */
 	let deviceArr = [];
 
 	self.addEventListener('install', () => {
@@ -92,151 +127,137 @@
 	/**
 	 * Get the icon for the notification
 	 * @param {GaeMsg} data message object
-	 * @return {string|null} path to icon, null for
-	 * actions without notifications (ping based)
+	 * @return {string} path to icon
 	 * @memberOf ServiceWorker
 	 */
 	function getIcon(data) {
 		let path = '';
 		if (data.act === ACTION_MESSAGE) {
 			path = IC_REMOTE_COPY;
-		} else if (data.act === ACTION_DEVICE_ADDED) {
-			path = IC_ADD_DEVICE;
 		} else if (data.act === ACTION_DEVICE_REMOVED) {
 			path = IC_REMOVE_DEVICE;
+		} else if (
+			(data.act === ACTION_DEVICE_ADDED) ||
+			(data.act === ACTION_PING_RESPONSE)) {
+			path = IC_ADD_DEVICE;
 		}
 		return path;
 	}
 
 	/**
-	 * Send fake GET request so extension can intercept it<br />
-	 * and get the payload
+	 * Send fake GET request so extension can intercept it and get the payload
 	 * @see https://bugs.chromium.org/p/chromium/issues/detail?id=452942
 	 * @param {Array} dataArray Array of JSON objects
-	 * @return {Promise<void>} always resolves
+	 * @return {Promise<void>}
 	 * @memberOf ServiceWorker
 	 */
 	function doFakeFetch(dataArray) {
 		msgArr = [];
 		deviceArr = [];
 		URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
-		return new Promise(function(resolve, reject) {
-			fetch(URL_FETCH, {method: 'GET'}).then(() => {
-				resolve();
-			}).catch((error) => {
-				reject(error);
-			});
+		return fetch(URL_FETCH, {method: 'GET'}).then(() => {
+			return Promise.resolve();
+		}).catch((error) => {
+			return Promise.reject(error);
 		});
 	}
 
-	/**
-	 * Listen for push events
-	 */
+	// Listen for push events
 	self.addEventListener('push', (event) => {
 		const payload = event.data.json();
-		payload.data.m = decodeURIComponent(payload.data.m);
 		const data = payload.data;
-		let dataArray = [data];
-		const deviceName = getDeviceName(data);
-		let title = `From ${deviceName}`;
-		const body = payload.data.m;
+		data.m = decodeURIComponent(data.m);
 		const tag = getTag(data);
 		const icon = getIcon(data);
+		const noteOpt = {
+			requireInteraction: true,
+			body: data.m,
+			icon: icon,
+			tag: tag,
+			timestamp: Date.now(),
+		};
+		let dataArray = [data];
+		let title = `From ${getDeviceName(data)}`;
 
 		const promiseChain =
 			clients.matchAll({includeUncontrolled: true}).then((clients) => {
-				let mustShowNotification = true;
-				for (let i = 0; i < clients.length; i++) {
-					if (clients[i].focused === true) {
-						mustShowNotification = false;
-						break;
+			let showNotification = true;
+			for (let i = 0; i < clients.length; i++) {
+				if (clients[i].focused === true) {
+					showNotification = false;
+					break;
+				}
+			}
+
+			if (!showNotification || (icon === '')) {
+				// Our extension is focused, skip notification
+				// or we were pinged
+				return doFakeFetch(dataArray).catch(() => {});
+			}
+
+			return self.registration.getNotifications({
+				tag: tag,
+			}).then((notifications) => {
+				if ((tag === TAG_MESSAGE)) {
+					noteOpt.actions = [{
+						action: 'search',
+						title: 'Search web',
+						icon: IC_SEARCH,
+					}];
+				}
+				if ((notifications.length > 0)) {
+					// append our data to existing notification
+					noteOpt.renotify = true;
+					dataArray = notifications[0].data;
+					dataArray.push(data);
+					title = `${dataArray.length} new items\n${title}`;
+					noteOpt.data = dataArray;
+				} else {
+					// this is for Chrome start-up so we can keep
+					// data because only last notification will be
+					// created this will also handle the first
+					// notification when extension doesn't have
+					// focus
+					if (tag === TAG_MESSAGE) {
+						msgArr.push(data);
+						if (msgArr.length > 1) {
+							title += `\n${msgArr.length} new items`;
+						}
+						// shallow copy
+						noteOpt.data = JSON.parse(JSON.stringify(msgArr));
+					} else if (tag === TAG_DEVICE) {
+						deviceArr.push(data);
+						if (deviceArr.length > 1) {
+							title += `\n${deviceArr.length} new items`;
+						}
+						// shallow copy
+						noteOpt.data = JSON.parse(JSON.stringify(deviceArr));
 					}
 				}
-
-				// skip notifications for ping type messages
-				// Chrome will display scare notification anyways
-				if (mustShowNotification && !icon) {
-					mustShowNotification = false;
-				}
-
-				if (mustShowNotification) {
-					// if we don't have focus, show notification
-					return self.registration.getNotifications({tag: tag})
-					.then((notifications) => {
-						const noteOptions = {
-							requireInteraction: true,
-							body: body,
-							icon: icon,
-							tag: tag,
-							timestamp: Date.now(),
-						};
-						if ((tag === TAG_MESSAGE)) {
-							noteOptions.actions = [{
-								action: 'search',
-								title: 'Search web',
-								icon: '../images/search-web.png',
-							}];
-						}
-						if ((notifications.length > 0)) {
-							// append our data to existing notification
-							noteOptions.renotify = true;
-							dataArray = notifications[0].data;
-							dataArray.push(data);
-							title = `${dataArray.length} new items\n${title}`;
-							noteOptions.data = dataArray;
-						} else {
-							// this is for Chrome start-up so we can keep
-							// data because only last notification will be
-							// created this will also handle the first
-							// notification when extension doesn't have
-							// focus
-							if (tag === TAG_MESSAGE) {
-								msgArr.push(data);
-								if (msgArr.length > 1) {
-									title+= `\n${msgArr.length} new items`;
-
-								}
-								// shallow copy
-								noteOptions.data = JSON.parse(
-									JSON.stringify(msgArr));
-							} else if (tag === TAG_DEVICE) {
-								deviceArr.push(data);
-								if (deviceArr.length > 1) {
-									title+=`\n${deviceArr.length} new items`;
-								}
-								// shallow copy
-								noteOptions.data = JSON.parse(
-									JSON.stringify(deviceArr));
-							}
-						}
-						// return the notification.
-						return self.registration
-							.showNotification(title, noteOptions);
-					});
-				} else {
-					// Our extension is focused, skip notification
-					return doFakeFetch(dataArray).catch(() => {});
-				}
+				return self.registration.showNotification(title, noteOpt);
 			});
+		});
 
 		event.waitUntil(
 			promiseChain
 		);
 	});
 
-	/**
-	 * Listen for notificationclick events
-	 */
+	// Listen for notificationclick events
 	self.addEventListener('notificationclick', (event) => {
-		event.notification.close();
-
 		let url = URL_MAIN;
-
 		if (event.action === 'search') {
+			// clicked on search action
 			url = URL_SEARCH_BASE + encodeURIComponent(event.notification.body);
 		}
 
-		doFakeFetch(event.notification.data).catch(function() {});
+		event.notification.close();
+
+		if (event.notification.icon !== '') {
+			// chrome generated notification has no icon
+			// we already handled it in push event
+			doFakeFetch(event.notification.data).catch(function() {});
+		}
 
 		event.waitUntil(clients.matchAll({
 				includeUncontrolled: true,
@@ -258,12 +279,21 @@
 	});
 
 	/**
-	 * Listen for notificationclose events
+	 * Event: Notification closed - can't open or focus window here.
+	 * @param {event} event - the event
 	 */
-	self.addEventListener('notificationclose', (event) => {
-		// can't open or focus window here.
+	function onNotificationClose(event) {
+		if (event.notification.icon === '') {
+			// chrome generated notification has no icon
+			// we already handled it in push event
+			return;
+		}
+
 		event.waitUntil(
 			doFakeFetch(event.notification.data).catch(() => {})
 		);
-	});
+	}
+
+	// Listen for notificationclose events
+	self.addEventListener('notificationclose', onNotificationClose);
 })();
