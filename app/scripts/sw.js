@@ -87,7 +87,7 @@
 	let deviceArr = [];
 
 	/**
-	 * Data packet sent to server
+	 * Service Worker Events
 	 * @typedef {Event} SWEvent
 	 * @property {Function} waitUntil(Promise) - wait till promise returns
 	 * @property {Object} notification - notification
