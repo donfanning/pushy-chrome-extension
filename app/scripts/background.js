@@ -80,6 +80,7 @@
 		'notify': true,
 		'notifyOnSend': false,
 		'notifyOnReceive': true,
+		'highPriority': true,
 		'devices': {},
 		'signedIn': false,
 		'needsCleanup': false,

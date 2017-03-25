@@ -57,46 +57,60 @@ limitations under the License.
 					</div>
 				</paper-dialog>
 
-				<setting-toggle section-title="Clipboard & messaging"
-				                name="monitorClipboard"
-								main-label="Monitor clipboard"
-								secondary-label="Automatically store contents when possible">
+				<setting-toggle
+						section-title="Clipboard & messaging"
+						name="monitorClipboard"
+						main-label="Monitor clipboard"
+						secondary-label="Automatically store contents when possible">
 				</setting-toggle>
-				<setting-toggle name="allowPush"
-								main-label="Push to devices"
-								secondary-label="Send messages to your registered devices"
-								checked="{{pushEnabled}}">
+				<setting-toggle
+						name="allowPush"
+						main-label="Push to devices"
+						secondary-label="Send messages to your registered devices"
+						checked="{{pushEnabled}}">
 				</setting-toggle>
-				<setting-toggle name="autoSend"
-								main-label="Auto send"
-								secondary-label="Automatically send when possible"
-								disabled$="[[!pushEnabled]]"
-								indent>
+				<setting-toggle
+						name="autoSend"
+						main-label="Auto send"
+						secondary-label="Automatically send when possible"
+						disabled$="[[!pushEnabled]]"
+						indent>
 				</setting-toggle>
-				<setting-toggle name="allowReceive"
-								main-label="Receive from devices"
-								secondary-label="Receive messages from your registered devices">
+				<setting-toggle
+						name="allowReceive"
+						main-label="Receive from devices"
+						secondary-label="Receive messages from your registered devices">
+				</setting-toggle>
+				<setting-toggle
+						name="highPriority"
+						main-label="High priority message"
+						secondary-label="Wakes android devices for immediate delivery. Uses more battery."
+						noseparator>
 				</setting-toggle>
 
-				<setting-text section-title="General"
-				              id="deviceNickname"
-				              name="deviceNickname"
-				              main-label="Nickname"
-				              secondary-label="Descriptive name for this device"
-				              placeholder="e.g. Home Laptop"
-				              maxlength="32">
+				<setting-text
+						section-title="General"
+						id="deviceNickname"
+						name="deviceNickname"
+						main-label="Nickname"
+						secondary-label="Descriptive name for this device"
+						placeholder="e.g. Home Laptop"
+						maxlength="32">
 				</setting-text>
-				<setting-dropdown name="storageDuration"
-				                  label="Storage duration"
-                                  items='["One day", "One week", "One month",
-                                   "One year", "Until space needed"]'>
+				<setting-dropdown
+						name="storageDuration"
+						label="Storage duration"
+						items='["One day", "One week", "One month",
+						 "One year", "Until space needed"]'
+						noseparator>
 				</setting-dropdown>
 
-				<setting-toggle section-title="Notifications"
-				                name="notifyOnSend"
-				                main-label="Notify on send"
-				                secondary-label="Display notification when a message is sent"
-				                noseparator>
+				<setting-toggle
+						section-title="Notifications"
+						name="notifyOnSend"
+						main-label="Notify on send"
+						secondary-label="Display notification when a message is sent"
+						noseparator>
 				</setting-toggle>
 			</div>
 		</paper-card>
