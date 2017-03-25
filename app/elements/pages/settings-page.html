@@ -133,7 +133,7 @@ limitations under the License.
 
 		ready: function() {
 			// listen for chrome messages
-			chrome.runtime.onMessage.addListener(function(request) {
+			chrome.runtime.onMessage.addListener((request) => {
 				if (request.message === 'registerFailed') {
 					const error = request.error;
 					this._showDialog(ERROR_REGISTER, error.toString());
@@ -141,7 +141,7 @@ limitations under the License.
 					const error = request.error;
 					this._showDialog(ERROR_UNREGISTER, error.toString());
 				}
-			}.bind(this));
+			});
 		},
 
 		/**
