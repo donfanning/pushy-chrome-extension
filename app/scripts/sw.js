@@ -86,13 +86,14 @@
 	/** @memberOf ServiceWorker */
 	let deviceArr = [];
 
-	self.addEventListener('install', () => {
-		self.skipWaiting();
-	});
-
-	self.addEventListener('activate', () => {
-		clients.claim();
-	});
+	/**
+	 * Data packet sent to server
+	 * @typedef {Event} SWEvent
+	 * @property {Function} waitUntil(Promise) - wait till promise returns
+	 * @property {Object} notification - notification
+	 * @property {Object} action - notification action
+	 * @memberOf ServiceWorker
+	 */
 
 	/**
 	 * Get the name of the Device who sent the message
@@ -162,8 +163,12 @@
 		});
 	}
 
-	// Listen for push events
-	self.addEventListener('push', (event) => {
+	/**
+	 * Event: Received push message
+	 * @param {SWEvent} event - the event
+	 * @memberOf ServiceWorker
+	 */
+	function onPush(event) {
 		const payload = event.data.json();
 		const data = payload.data;
 		data.m = decodeURIComponent(data.m);
@@ -179,8 +184,9 @@
 		let dataArray = [data];
 		let title = `From ${getDeviceName(data)}`;
 
-		const promiseChain =
-			clients.matchAll({includeUncontrolled: true}).then((clients) => {
+		const promiseChain = clients.matchAll({
+			includeUncontrolled: true,
+		}).then((clients) => {
 			let showNotification = true;
 			for (let i = 0; i < clients.length; i++) {
 				if (clients[i].focused === true) {
@@ -199,6 +205,7 @@
 				tag: tag,
 			}).then((notifications) => {
 				if ((tag === TAG_MESSAGE)) {
+					// add web search action
 					noteOpt.actions = [{
 						action: 'search',
 						title: 'Search web',
@@ -206,7 +213,7 @@
 					}];
 				}
 				if ((notifications.length > 0)) {
-					// append our data to existing notification
+					// append data to existing notification
 					noteOpt.renotify = true;
 					dataArray = notifications[0].data;
 					dataArray.push(data);
@@ -238,13 +245,15 @@
 			});
 		});
 
-		event.waitUntil(
-			promiseChain
-		);
-	});
+		event.waitUntil(promiseChain);
+	}
 
-	// Listen for notificationclick events
-	self.addEventListener('notificationclick', (event) => {
+	/**
+	 * Event: Notification clicked.
+	 * @param {SWEvent} event - the event
+	 * @memberOf ServiceWorker
+	 */
+	function onNotificationClick(event) {
 		let url = URL_MAIN;
 		if (event.action === 'search') {
 			// clicked on search action
@@ -259,28 +268,30 @@
 			doFakeFetch(event.notification.data).catch(function() {});
 		}
 
-		event.waitUntil(clients.matchAll({
-				includeUncontrolled: true,
-				type: 'window',
-			}).then((windowClients) => {
-				for (let i = 0; i < windowClients.length; i++) {
-					const client = windowClients[i];
-					if (client.url === url && 'focus' in client) {
-						// tab exists, focus it
-						return client.focus();
-					}
+		const promiseChain = clients.matchAll({
+			includeUncontrolled: true,
+			type: 'window',
+		}).then((windowClients) => {
+			for (let i = 0; i < windowClients.length; i++) {
+				const client = windowClients[i];
+				if (client.url === url && 'focus' in client) {
+					// tab exists, focus it
+					return client.focus();
 				}
-				if (clients.openWindow) {
-					// create new tab
-					return clients.openWindow(url);
-				}
-			})
-		);
-	});
+			}
+			if (clients.openWindow) {
+				// create new tab
+				return clients.openWindow(url);
+			}
+		});
+
+		event.waitUntil(promiseChain);
+	}
 
 	/**
 	 * Event: Notification closed - can't open or focus window here.
-	 * @param {event} event - the event
+	 * @param {SWEvent} event - the event
+	 * @memberOf ServiceWorker
 	 */
 	function onNotificationClose(event) {
 		if (event.notification.icon === '') {
@@ -293,6 +304,22 @@
 			doFakeFetch(event.notification.data).catch(() => {})
 		);
 	}
+
+	// Listen for install events
+	self.addEventListener('install', () => {
+		self.skipWaiting();
+	});
+
+	// Listen for activate events
+	self.addEventListener('activate', () => {
+		clients.claim();
+	});
+
+	// Listen for push events
+	self.addEventListener('push', onPush);
+
+	// Listen for notificationclick events
+	self.addEventListener('notificationclick', onNotificationClick);
 
 	// Listen for notificationclose events
 	self.addEventListener('notificationclose', onNotificationClose);
