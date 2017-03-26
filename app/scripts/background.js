@@ -444,8 +444,7 @@ for this device.`;
 		} else if (data.act === app.Msg.ACTION_PING) {
 			// we were pinged
 			app.Devices.add(device);
-			// send response
-			app.Msg.sendPingResponse().catch((error) => {
+			app.Msg.sendPingResponse(data.srcRegId).catch((error) => {
 				_sendMessageFailed(error);
 			});
 		} else if (data.act === app.Msg.ACTION_PING_RESPONSE) {

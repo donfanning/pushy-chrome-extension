@@ -41,15 +41,51 @@ app.Msg = (function() {
 	 */
 	const MAX_MSG_LEN = 4096;
 
+	/**
+	 * @value
+	 * @memberOf Msg
+	 */
 	const ACTION_MESSAGE = 'm';
+	/**
+	 * @value
+	 * @memberOf Msg
+	 */
 	const ACTION_PING = 'ping_others';
+	/**
+	 * @value
+	 * @memberOf Msg
+	 */
 	const ACTION_PING_RESPONSE = 'respond_to_ping';
+	/**
+	 * @value
+	 * @memberOf Msg
+	 */
 	const ACTION_DEVICE_ADDED = 'add_our_device';
+	/**
+	 * @value
+	 * @memberOf Msg
+	 */
 	const ACTION_DEVICE_REMOVED = 'remove_our_device';
 
+	/**
+	 * @value
+	 * @memberOf Msg
+	 */
 	const MSG_PING = 'Contacting other devices...';
+	/**
+	 * @value
+	 * @memberOf Msg
+	 */
 	const MSG_PING_RESPONSE = 'Device is online';
+	/**
+	 * @value
+	 * @memberOf Msg
+	 */
 	const MSG_DEVICE_ADDED = 'New device added';
+	/**
+	 * @value
+	 * @memberOf Msg
+	 */
 	const MSG_DEVICE_REMOVED = 'Device removed';
 
 	/**
@@ -61,7 +97,8 @@ app.Msg = (function() {
 	 * @property {string} dSN - {@link Device} serial number
 	 * @property {string} dOS - {@link Device} operating system
 	 * @property {string} dN - {@link Device} nickname
-	 * @property {string} fav - '1' if favorite item
+	 * @property {string} fav - '1' if favorite item (optional)
+	 * @property {string} srcRegId - source of ping (optional)
 	 */
 
 	/**
@@ -184,11 +221,13 @@ app.Msg = (function() {
 
 		/**
 		 * Respond to a ping from one of our {@link Devices}
+		 * @param {string} srcRegId - source of ping
 		 * @return {Promise<void>}
 		 * @memberOf Msg
 		 */
-		sendPingResponse: function() {
+		sendPingResponse: function(srcRegId) {
 			const data = _getData(ACTION_PING_RESPONSE, MSG_PING_RESPONSE);
+			data.srcRegId = srcRegId;
 			return _sendMessage(data, false);
 		},
 	};
