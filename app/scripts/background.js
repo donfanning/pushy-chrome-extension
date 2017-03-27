@@ -99,7 +99,7 @@
 	 * @memberOf Background
 	 */
 	const INTRO_TEXT =
-		`I am Clip Man. The clipboard manager with push notifications.
+		`A clipboard manager with push notifications.
 
 Please signin from the "Manage Account" page to share with your \
 other devices.

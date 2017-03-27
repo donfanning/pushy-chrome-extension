@@ -1,4 +1,4 @@
-# Clip Man Chrome Extension
+# Pushy Clipboard Chrome Extension
 
 This extension is a work in progress
 

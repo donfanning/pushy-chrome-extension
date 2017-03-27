@@ -66,7 +66,7 @@ app.Notify = (function() {
 		create: function(type, data) {
 			const options = {
 				type: 'basic',
-				title: 'Clip Man',
+				title: 'Pushy',
 				isClickable: true,
 				eventTime: Date.now(),
 			};
