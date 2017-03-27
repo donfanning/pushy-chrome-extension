@@ -49,7 +49,7 @@
 	 * @memberOf ServiceWorker
 	 */
 	const URL_MAIN =
-		'chrome-extension://dnginconopbhmnapbipjoohbgknhkdoh/html/main.html';
+		'chrome-extension://jemdfhaheennfkehopbpkephjlednffd/html/main.html';
 
 	/** @memberOf ServiceWorker */
 	let URL_FETCH;
