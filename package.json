@@ -1,5 +1,5 @@
 {
-  "name": "clip-man-chrome-extension",
+  "name": "pushy-chrome-extension",
   "version": "1.0.0",
   "description": "https://chrome.google.com/webstore/detail/clip-man/dnginconopbhmnapbipjoohbgknhkdoh",
   "main": "background.js",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "github",
-    "url": "https://github.com/Clip-Man/clip-man-chrome-extension"
+    "url": "https://github.com/Pushy-Clipboard/pushy-chrome-extension"
   },
   "author": "Michael Updike <igreilly1269@gmail.com>",
   "license": "Apache 2.0",
   "bugs": {
-    "url": "https://github.com/Clip-Man/clip-man-chrome-extension/issues"
+    "url": "https://github.com/Pushy-Clipboard/pushy-chrome-extension/issues"
   },
-  "homepage": "https://github.com/Clip-Man/clip-man-chrome-extension",
+  "homepage": "https://github.com/Pushy-Clipboard/pushy-chrome-extension",
   "private": true,
   "devDependencies": {
     "del": "^2.2.2",
