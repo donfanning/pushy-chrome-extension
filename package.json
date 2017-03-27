@@ -1,7 +1,7 @@
 {
   "name": "pushy-chrome-extension",
   "version": "1.0.0",
-  "description": "https://chrome.google.com/webstore/detail/clip-man/dnginconopbhmnapbipjoohbgknhkdoh",
+  "description": "https://chrome.google.com/webstore/detail/pushy-clipboard/jemdfhaheennfkehopbpkephjlednffd",
   "main": "background.js",
   "scripts": {
     "update_savedev": "npm update --save-dev",
