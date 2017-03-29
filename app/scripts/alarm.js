@@ -97,7 +97,6 @@ app.Alarm = (function() {
 		/**
 		 * Delete {@link ClipItem} objects older than the
 		 * storageDuration setting
-		 * @private
 		 * @memberOf Alarm
 		 */
 		deleteOldClipItems: function() {
