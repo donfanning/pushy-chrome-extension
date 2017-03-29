@@ -49,10 +49,54 @@ app.User = (function() {
 		app.User.setInfo().catch((error) => {});
 	}
 
+	// noinspection JSUnusedLocalSymbols
+	/**
+	 * Event: Fired when a message is sent from either an extension process<br>
+	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
+	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
+	 * @param {object} request - details for the message
+	 * @param {object} sender - MessageSender object
+	 * @param {function} response - function to call once after processing
+	 * @return {boolean} true if asynchronous
+	 * @private
+	 * @memberOf Background
+	 */
+	function _onChromeMessage(request, sender, response) {
+		let ret = false;
+
+		if (request.message === 'signIn') {
+			// try to signIn a user
+			ret = true; // async
+			app.User.addAccess().then(() => {
+				response({message: 'ok'});
+			}).catch((error) => {
+				app.User.removeAccess().then(() => {
+				}).catch(() => {
+					app.Utils.set('signedIn', false);
+					app.Utils.set('registered', false);
+				});
+				response({message: 'error', error: error.toString()});
+			});
+		} else if (request.message === 'signOut') {
+			// try to signOut a user
+			ret = true;  // async
+			app.User.removeAccess().then(() => {
+				response({message: 'ok'});
+			}).catch((error) => {
+				response({message: 'error', error: error.toString()});
+			});
+		}
+		return ret;
+	}
 	/**
 	 * Listen for changes to Browser sign-in
 	 */
 	chrome.identity.onSignInChanged.addListener(_onSignInChanged);
+
+	/**
+	 * Listen for Chrome messages
+	 */
+	chrome.runtime.onMessage.addListener(_onChromeMessage);
 
 	return {
 

@@ -54,6 +54,44 @@ app.Reg = (function() {
 		});
 	}
 
+	/**
+	 * Event: Fired when item in localStorage changes
+	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
+	 * @param {Event} event
+	 * @param {string} event.key - storage item that changed
+	 * @private
+	 * @memberOf Background
+	 */
+	function _onStorageChanged(event) {
+		if (event.key === 'allowReceive') {
+			const allowReceive = app.Utils.allowReceive();
+			if (allowReceive) {
+				// user wants to receive messages now
+				app.Reg.register().catch((error) => {
+					app.Utils.set('allowReceive', !allowReceive);
+					chrome.runtime.sendMessage({
+						message: 'registerFailed',
+						error: error.toString(),
+					}, () => {});
+				});
+			} else {
+				// user no longer wants to receive messages
+				app.Reg.unregister().catch((error) => {
+					app.Utils.set('allowReceive', !allowReceive);
+					chrome.runtime.sendMessage({
+						message: 'unregisterFailed',
+						error: error.toString(),
+					}, () => {});
+				});
+			}
+		}
+	}
+
+	/**
+	 * Listen for changes to localStorage
+	 */
+	addEventListener('storage', _onStorageChanged, false);
+
 	return {
 
 		/**

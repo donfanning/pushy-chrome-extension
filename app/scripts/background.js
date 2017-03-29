@@ -184,27 +184,6 @@ for this device.`;
 			app.Msg.sendPing().catch((error) => {
 				app.Gae.sendMessageFailed(error);
 			});
-		} else if (request.message === 'signIn') {
-			// try to signIn a user
-			ret = true; // async
-			app.User.addAccess().then(() => {
-				response({message: 'ok'});
-			}).catch((error) => {
-				app.User.removeAccess().then(() => {
-				}).catch(() => {
-					app.Utils.set('signedIn', false);
-					app.Utils.set('registered', false);
-				});
-				response({message: 'error', error: error.toString()});
-			});
-		} else if (request.message === 'signOut') {
-			// try to signOut a user
-			ret = true;  // async
-			app.User.removeAccess().then(() => {
-				response({message: 'ok'});
-			}).catch((error) => {
-				response({message: 'error', error: error.toString()});
-			});
 		}
 		return ret;
 	}
@@ -246,25 +225,6 @@ for this device.`;
 	function _onStorageChanged(event) {
 		if (event.key === 'storageDuration') {
 			_updateAlarms();
-		} else if (event.key === 'allowReceive') {
-			const allowReceive = app.Utils.allowReceive();
-			if (allowReceive) {
-				app.Reg.register().catch((error) => {
-					app.Utils.set('allowReceive', !allowReceive);
-					chrome.runtime.sendMessage({
-						message: 'registerFailed',
-						error: error.toString(),
-					}, () => {});
-				});
-			} else {
-				app.Reg.unregister().catch((error) => {
-					app.Utils.set('allowReceive', !allowReceive);
-					chrome.runtime.sendMessage({
-						message: 'unregisterFailed',
-						error: error.toString(),
-					}, () => {});
-				});
-			}
 		}
 	}
 
