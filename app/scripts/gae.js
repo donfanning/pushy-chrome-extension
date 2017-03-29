@@ -180,5 +180,17 @@ app.Gae = (function() {
 			return response;
 		},
 
+		/**
+		 * Notify listeners that send message failed
+		 * @param {Error} error - what caused the failure
+		 * @memberOf Gae
+		 */
+		sendMessageFailed: function(error) {
+			chrome.runtime.sendMessage({
+				message: 'sendMessageFailed',
+				error: error.toString(),
+			}, () => {});
+		},
+
 	};
 })();

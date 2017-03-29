@@ -34,14 +34,6 @@
 	const ALARM_STORAGE = 'storage';
 
 	/**
-	 * Delay time for fcm message processing
-	 * @type {int}
-	 * @default
-	 * @memberOf Background
-	 */
-	const MESSAGE_WAIT_MILLIS = 500;
-
-	/**
 	 * Delay time for reading from clipboard
 	 * @type {int}
 	 * @default
@@ -174,7 +166,7 @@ for this device.`;
 		app.ClipItem.add(text, Date.now(), false, false, app.Device.myName())
 			.then((clipItem) => {
 				app.Msg.sendClipItem(clipItem).catch((error) => {
-					_sendMessageFailed(error);
+					app.Gae.sendMessageFailed(error);
 				});
 			}).catch((error) => {});
 	}
@@ -203,13 +195,13 @@ for this device.`;
 			const clipItem =
 				new app.ClipItem(clip.text, clip.lastSeen, clip.fav,
 					clip.remote, clip.device);
-			_copyToClipboard(clipItem.text);
+			app.Utils.copyToClipboard(clipItem.text);
 			_sendLocalClipItem(clipItem);
 		} else if (request.message === 'removeDevice') {
 			app.Devices.removeByName(request.deviceName);
 		} else if (request.message === 'ping') {
 			app.Msg.sendPing().catch((error) => {
-				_sendMessageFailed(error);
+				app.Gae.sendMessageFailed(error);
 			});
 		} else if (request.message === 'signIn') {
 			// try to signIn a user
@@ -260,36 +252,6 @@ for this device.`;
 		if (alarm.name === ALARM_STORAGE) {
 			_deleteOldClipItems();
 		}
-	}
-
-	/**
-	 * Event: Fired when a request is about to occur.
-	 * @see https://goo.gl/4j4RtY
-	 * @param {object} details - details on the request
-	 * @return {object} cancel the request
-	 * @private
-	 * @memberOf Background
-	 */
-	function _onWebRequestBefore(details) {
-		const url = decodeURI(details.url);
-		const regex = /http:\/\/www\.anyoldthing\.com\/\?(.*)/;
-		const matches = url.match(regex);
-		let text = matches[1];
-		if (text) {
-			const dataArray = JSON.parse(text);
-			if (dataArray) {
-				for (let i = 0; i < dataArray.length; i++) {
-					(function(index) {
-						setTimeout(function() {
-							// slow down message stream
-							_handleMessageReceived(dataArray[index]);
-						}, MESSAGE_WAIT_MILLIS);
-					})(i);
-				}
-			}
-		}
-		// cancel fake request
-		return {cancel: true};
 	}
 
 	/**
@@ -414,52 +376,6 @@ for this device.`;
 	}
 
 	/**
-	 * Process received push notifications
-	 * @param {GaeMsg} data - push data
-	 * @private
-	 * @memberOf Background
-	 */
-	function _handleMessageReceived(data) {
-		const deviceModel = data.dM;
-		const deviceSN = data.dSN;
-		const deviceOS = data.dOS;
-		const deviceNickname = data.dN;
-		const device = new app.Device(deviceModel, deviceSN, deviceOS,
-			deviceNickname, Date.now());
-
-		if (device.isMe()) {
-			// don't handle our messages
-			return;
-		}
-
-		if (data.act === app.Msg.ACTION_MESSAGE) {
-			// Remote ClipItem
-			app.Devices.add(device);
-			const fav = (data.fav === '1');
-			// Persist
-			app.ClipItem.add(data.m, Date.now(), fav, true,
-				device.getName()).catch((error) => {});
-			// save to clipboard
-			_copyToClipboard(data.m);
-		} else if (data.act === app.Msg.ACTION_PING) {
-			// we were pinged
-			app.Devices.add(device);
-			app.Msg.sendPingResponse(data.srcRegId).catch((error) => {
-				_sendMessageFailed(error);
-			});
-		} else if (data.act === app.Msg.ACTION_PING_RESPONSE) {
-			// someone is around
-			app.Devices.add(device);
-		} else if (data.act === app.Msg.ACTION_DEVICE_ADDED) {
-			// someone new is here
-			app.Devices.add(device);
-		} else if (data.act === app.Msg.ACTION_DEVICE_REMOVED) {
-			// someone went away
-			app.Devices.remove(device);
-		}
-	}
-
-	/**
 	 * Get the text from the clipboard
 	 * @return {string} text from clipboard
 	 * @private
@@ -478,22 +394,6 @@ for this device.`;
 	}
 
 	/**
-	 * Copy the given text to the clipboard
-	 * @param {string} text - text to copy
-	 * @private
-	 * @memberOf Background
-	 */
-	function _copyToClipboard(text) {
-		const input = document.createElement('textArea');
-		document.body.appendChild(input);
-		input.textContent = text;
-		input.focus();
-		input.select();
-		document.execCommand('Copy');
-		input.remove();
-	}
-
-	/**
 	 * Send local {@link ClipItem} push notification if enabled
 	 * @param {ClipItem} clipItem - {@link ClipItem} to send
 	 * @private
@@ -503,7 +403,7 @@ for this device.`;
 		if (!clipItem.remote && app.Utils.isAutoSend()) {
 			// send to our devices
 			app.Msg.sendClipItem(clipItem).catch((error) => {
-				_sendMessageFailed(error);
+				app.Gae.sendMessageFailed(error);
 			});
 		}
 	}
@@ -554,19 +454,6 @@ for this device.`;
 	}
 
 	/**
-	 * Notify listeners that send message failed
-	 * @param {Error} error - what caused the failure
-	 * @private
-	 * @memberOf Background
-	 */
-	function _sendMessageFailed(error) {
-		chrome.runtime.sendMessage({
-			message: 'sendMessageFailed',
-			error: error.toString(),
-		}, () => {});
-	}
-
-	/** 
 	 * Listen for extension install or update
 	 */
 	chrome.runtime.onInstalled.addListener(_onInstalled);
@@ -595,14 +482,6 @@ for this device.`;
 	 * Listen for alarms
 	 */
 	chrome.alarms.onAlarm.addListener(_onAlarm);
-
-	/**
-	 * Listen for web requests
-	 */
-	chrome.webRequest.onBeforeRequest.addListener(_onWebRequestBefore,
-		{
-			urls: ['http://www.anyoldthing.com/*'],
-		}, ['blocking']);
 
 	/**
 	 * Listen for changes to localStorage

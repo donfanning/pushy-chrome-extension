@@ -256,5 +256,20 @@ app.Utils = (function() {
 			return text;
 		},
 
+		/**
+		 * Copy the given text to the clipboard
+		 * @param {string} text - text to copy
+		 * @memberOf Utils
+		 */
+		copyToClipboard: function(text) {
+			const input = document.createElement('textArea');
+			document.body.appendChild(input);
+			input.textContent = text;
+			input.focus();
+			input.select();
+			document.execCommand('Copy');
+			input.remove();
+		},
+
 	};
 })(window);
