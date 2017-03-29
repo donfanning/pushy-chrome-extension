@@ -28,7 +28,7 @@ app.ReceiveMsg = (function() {
 	 * Delay time for fcm message processing
 	 * @type {int}
 	 * @default
-	 * @memberOf Background
+	 * @memberOf ReceiveMsg
 	 */
 	const MESSAGE_WAIT_MILLIS = 500;
 
