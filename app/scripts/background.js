@@ -26,14 +26,6 @@
 	 */
 
 	/**
-	 * Alarm for cleaning up localStorage
-	 * @type {string}
-	 * @default
-	 * @memberOf Background
-	 */
-	const ALARM_STORAGE = 'storage';
-
-	/**
 	 * Version of localStorage - update when items are added, removed, changed
 	 * @type {int}
 	 * @default
@@ -125,7 +117,7 @@ for this device.`;
 				return app.SW.update();
 			}).catch((error) => {});
 		}
-		_updateAlarms();
+		app.Alarm.updateAlarms();
 	}
 
 	/**
@@ -136,8 +128,8 @@ for this device.`;
 	 * @memberOf Background
 	 */
 	function _onStartup() {
-		_updateAlarms();
-		_deleteOldClipItems();
+		app.Alarm.updateAlarms();
+		app.Alarm.deleteOldClipItems();
 		_initializeFirebase().catch((error) => {});
 	}
 
@@ -202,33 +194,6 @@ for this device.`;
 	}
 
 	/**
-	 * Event: Fired when an alarm has elapsed.
-	 * @see https://developer.chrome.com/apps/alarms#event-onAlarm
-	 * @param {object} alarm - details on alarm
-	 * @private
-	 * @memberOf Background
-	 */
-	function _onAlarm(alarm) {
-		if (alarm.name === ALARM_STORAGE) {
-			_deleteOldClipItems();
-		}
-	}
-
-	/**
-	 * Event: Fired when item in localStorage changes
-	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
-	 * @param {Event} event
-	 * @param {string} event.key - storage item that changed
-	 * @private
-	 * @memberOf Background
-	 */
-	function _onStorageChanged(event) {
-		if (event.key === 'storageDuration') {
-			_updateAlarms();
-		}
-	}
-
-	/**
 	 * Save the {@link DEF_VALUES} array to localStorage
 	 * @private
 	 * @memberOf Background
@@ -285,38 +250,6 @@ for this device.`;
 	}
 
 	/**
-	 * Set the repeating alarms
-	 * @private
-	 * @memberOf Background
-	 */
-	function _updateAlarms() {
-		const durationType = app.Utils.get('storageDuration');
-		if (durationType === 4) {
-			// until room is needed
-			chrome.alarms.clear(ALARM_STORAGE);
-		} else {
-			// Add daily alarm to delete old clipItems
-			chrome.alarms.get(ALARM_STORAGE, (alarm) => {
-				if (!alarm) {
-					chrome.alarms.create(ALARM_STORAGE, {
-						when: Date.now() + app.Utils.MILLIS_IN_DAY,
-						periodInMinutes: app.Utils.MIN_IN_DAY,
-					});
-				}
-			});
-		}
-	}
-
-	/**
-	 * Delete {@link ClipItem} objects older than the storageDuration setting
-	 * @private
-	 * @memberOf Background
-	 */
-	function _deleteOldClipItems() {
-		app.ClipItem.deleteOld().catch((error) => {});
-	}
-
-	/**
 	 * Send message to the main tab to focus it.<br>
 	 * If not found, create it
 	 * @private
@@ -357,15 +290,5 @@ for this device.`;
 	 * Listen for click on our notifications
 	 */
 	chrome.notifications.onClicked.addListener(_onNotificationClicked);
-
-	/**
-	 * Listen for alarms
-	 */
-	chrome.alarms.onAlarm.addListener(_onAlarm);
-
-	/**
-	 * Listen for changes to localStorage
-	 */
-	addEventListener('storage', _onStorageChanged, false);
 
 })(document);
