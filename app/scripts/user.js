@@ -42,8 +42,9 @@ app.User = (function() {
 			app.Utils.set('needsCleanup', true);
 			app.Utils.set('signedIn', false);
 			app.Utils.set('registered', false);
-			app.Utils.set('cleanupRegToken', app.Utils.get('regToken'));
+			app.Utils.set('photoURL', '');
 			app.Fb.signOut();
+
 		}
 		app.User.setInfo().catch((error) => {});
 	}
