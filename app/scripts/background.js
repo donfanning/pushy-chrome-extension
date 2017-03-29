@@ -34,14 +34,6 @@
 	const ALARM_STORAGE = 'storage';
 
 	/**
-	 * Delay time for reading from clipboard
-	 * @type {int}
-	 * @default
-	 * @memberOf Background
-	 */
-	const CLIPBOARD_WAIT_MILLIS = 250;
-
-	/**
 	 * Version of localStorage - update when items are added, removed, changed
 	 * @type {int}
 	 * @default
@@ -157,7 +149,7 @@ for this device.`;
 	 */
 	function _onIconClicked() {
 		// get the clipboard contents
-		const text = _getTextFromClipboard();
+		const text = app.CB.getTextFromClipboard();
 		if (app.Utils.isWhiteSpace(text)) {
 			return;
 		}
@@ -186,18 +178,7 @@ for this device.`;
 	function _onChromeMessage(request, sender, response) {
 		let ret = false;
 
-		if (request.message === 'copiedToClipboard') {
-			// we put data on the clipboard
-			_addClipItemFromClipboard();
-		} else if (request.message === 'copyToClipboard') {
-			// copy a ClipItem to the clipboard
-			const clip = request.clipItem;
-			const clipItem =
-				new app.ClipItem(clip.text, clip.lastSeen, clip.fav,
-					clip.remote, clip.device);
-			app.Utils.copyToClipboard(clipItem.text);
-			_sendLocalClipItem(clipItem);
-		} else if (request.message === 'removeDevice') {
+		if (request.message === 'removeDevice') {
 			app.Devices.removeByName(request.deviceName);
 		} else if (request.message === 'ping') {
 			app.Msg.sendPing().catch((error) => {
@@ -373,67 +354,6 @@ for this device.`;
 	 */
 	function _deleteOldClipItems() {
 		app.ClipItem.deleteOld().catch((error) => {});
-	}
-
-	/**
-	 * Get the text from the clipboard
-	 * @return {string} text from clipboard
-	 * @private
-	 * @memberOf Background
-	 */
-	function _getTextFromClipboard() {
-		const input = document.createElement('textArea');
-		document.body.appendChild(input);
-		input.focus();
-		input.select();
-		document.execCommand('Paste');
-		const text = input.value;
-		input.remove();
-
-		return text;
-	}
-
-	/**
-	 * Send local {@link ClipItem} push notification if enabled
-	 * @param {ClipItem} clipItem - {@link ClipItem} to send
-	 * @private
-	 * @memberOf Background
-	 */
-	function _sendLocalClipItem(clipItem) {
-		if (!clipItem.remote && app.Utils.isAutoSend()) {
-			// send to our devices
-			app.Msg.sendClipItem(clipItem).catch((error) => {
-				app.Gae.sendMessageFailed(error);
-			});
-		}
-	}
-
-	/**
-	 * Add a new {@link ClipItem} from the Clipboard contents
-	 * @private
-	 * @memberOf Background
-	 */
-	function _addClipItemFromClipboard() {
-		if (!app.Utils.isMonitorClipboard()) {
-			return;
-		}
-
-		// wait a little to make sure clipboard is ready
-		setTimeout(function() {
-			// get the clipboard contents
-			const text = _getTextFromClipboard();
-			if (app.Utils.isWhiteSpace(text)) {
-				return;
-			}
-
-			// Persist
-			app.ClipItem.add(text, Date.now(), false, false,
-				app.Device.myName()).then((clipItem) => {
-				// send to our devices
-				_sendLocalClipItem(clipItem);
-			}).catch((error) => {});
-
-		}, CLIPBOARD_WAIT_MILLIS);
 	}
 
 	/**

@@ -104,7 +104,7 @@ app.ReceiveMsg = (function() {
 					.add(data.m, Date.now(), fav, true, device.getName())
 					.catch((error) => {});
 				// save to clipboard
-				app.Utils.copyToClipboard(data.m);
+				app.CB.copyToClipboard(data.m);
 			} else if (data.act === app.Msg.ACTION_PING) {
 				// we were pinged
 				app.Devices.add(device);

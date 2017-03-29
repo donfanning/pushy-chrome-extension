@@ -230,8 +230,8 @@ app.Utils = (function() {
 		 * @memberOf Utils
 		 */
 		getRelativeTime: function(time) {
-			return moment(time).fromNow() + ', ' +
-				moment(time).format('h:mm a');
+			return `${moment(time).fromNow()}, ` +
+				`${moment(time).format('h:mm a')}`;
 		},
 
 		/**
@@ -254,21 +254,6 @@ app.Utils = (function() {
 					POSS.charAt(Math.floor(Math.random() * POSS.length));
 			}
 			return text;
-		},
-
-		/**
-		 * Copy the given text to the clipboard
-		 * @param {string} text - text to copy
-		 * @memberOf Utils
-		 */
-		copyToClipboard: function(text) {
-			const input = document.createElement('textArea');
-			document.body.appendChild(input);
-			input.textContent = text;
-			input.focus();
-			input.select();
-			document.execCommand('Copy');
-			input.remove();
 		},
 
 	};
