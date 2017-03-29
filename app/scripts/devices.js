@@ -92,8 +92,40 @@ app.Devices = (function() {
 		_load();
 	}
 
-	// listen for document and resources loaded
+	// noinspection JSUnusedLocalSymbols
+	/**
+	 * Event: Fired when a message is sent from either an extension process<br>
+	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
+	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
+	 * @param {object} request - details for the message
+	 * @param {object} sender - MessageSender object
+	 * @param {function} response - function to call once after processing
+	 * @return {boolean} true if asynchronous
+	 * @private
+	 * @memberOf Devices
+	 */
+	function _onChromeMessage(request, sender, response) {
+		let ret = false;
+
+		if (request.message === 'removeDevice') {
+			app.Devices.removeByName(request.deviceName);
+		} else if (request.message === 'ping') {
+			app.Msg.sendPing().catch((error) => {
+				app.Gae.sendMessageFailed(error);
+			});
+		}
+		return ret;
+	}
+
+	/**
+	 * listen for document and resources loaded
+	 */
 	window.addEventListener('load', _onLoad);
+
+	/**
+	 * Listen for Chrome messages
+	 */
+	chrome.runtime.onMessage.addListener(_onChromeMessage);
 
 	return {
 

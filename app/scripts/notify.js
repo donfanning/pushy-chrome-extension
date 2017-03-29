@@ -20,21 +20,55 @@ app.Notify = (function() {
 	'use strict';
 
 	/**
-	 * Handle display of notification
+	 * Handle display of notifications
 	 *  @namespace Notify
 	 */
 
+	/**
+	 * Send notification type
+	 * @type {string}
+	 * @default
+	 * @const
+	 * @private
+	 * @memberOf Notify
+	 */
 	const NOTIFY_SEND = 'CLIP_MAN_SEND';
 
+	/**
+	 * Local copy icon
+	 * @type {string}
+	 * @default
+	 * @const
+	 * @private
+	 * @memberOf Notify
+	 */
 	const IC_LOCAL_COPY = '/images/ic_local_copy.png';
+
+	/**
+	 * Add device icon
+	 * @type {string}
+	 * @default
+	 * @const
+	 * @private
+	 * @memberOf Notify
+	 */
 	const IC_ADD_DEVICE = '/images/ic_add_device.png';
+
+	/**
+	 * Remove device icon
+	 * @type {string}
+	 * @default
+	 * @const
+	 * @private
+	 * @memberOf Notify
+	 */
 	const IC_REMOVE_DEVICE = '/images/ic_remove_device.png';
 
 	/**
 	 * Get the icon for the notification
 	 * @param {GaeMsg} data message object
 	 * @return {String|null} path to icon, null for
-	 * actions without notifications (ping based)
+	 * actions without notifications (ping)
 	 * @memberOf Notify
 	 */
 	function _getIcon(data) {
@@ -48,6 +82,24 @@ app.Notify = (function() {
 		}
 		return path;
 	}
+
+	/**
+	 * Event: Fired when the user clicked in a non-button area
+	 *     of the notification.
+	 * @see https://developer.chrome.com/apps/notifications#event-onClicked
+	 * @param {int} notificationId - type of notification
+	 * @private
+	 * @memberOf Background
+	 */
+	function _onNotificationClicked(notificationId) {
+		app.Notify.showMainTab();
+		chrome.notifications.clear(notificationId, () => {});
+	}
+
+	/**
+	 * Listen for click on our notifications
+	 */
+	chrome.notifications.onClicked.addListener(_onNotificationClicked);
 
 	return {
 
@@ -103,6 +155,22 @@ app.Notify = (function() {
 			const notify = app.Utils.get('notify');
 			const notifyOnSend = app.Utils.get('notifyOnSend');
 			return notify && notifyOnSend;
+		},
+
+		/**
+		 * Send message to the main tab to focus it. If not found, create it
+		 * @private
+		 * @memberOf Notify
+		 */
+		showMainTab: function() {
+			chrome.runtime.sendMessage({
+				message: 'highlightTab',
+			}, (response) => {
+				if (!response) {
+					// no one listening, create it
+					chrome.tabs.create({url: '../html/main.html'});
+				}
+			});
 		},
 
 	};

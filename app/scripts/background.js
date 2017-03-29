@@ -29,6 +29,8 @@
 	 * Version of localStorage - update when items are added, removed, changed
 	 * @type {int}
 	 * @default
+	 * @const
+	 * @private
 	 * @memberOf Background
 	 */
 	const DATA_VERSION = 1;
@@ -42,6 +44,8 @@
 	 * signedIn: boolean, needsCleanup: boolean, email: string,
 	 * uid: string, photoURL: string, lastEmail: string, lastUid: string,
 	 * registered: boolean}}
+	 * @const
+	 * @private
 	 * @memberOf Background
 	 */
 	const DEF_VALUES = {
@@ -72,6 +76,8 @@
 	 * Initial {@link ClipItem}
 	 * @type {string}
 	 * @default
+	 * @const
+	 * @private
 	 * @memberOf Background
 	 */
 	const INTRO_TEXT =
@@ -93,8 +99,8 @@ It is a good idea to go to the "Settings" page and enter a nickname \
 for this device.`;
 
 	/**
-	 * Event: Fired when the extension is first installed,
-	 * when the extension is updated to a new version,
+	 * Event: Fired when the extension is first installed,<br />
+	 * when the extension is updated to a new version,<br />
 	 * and when Chrome is updated to a new version.
 	 * @see https://developer.chrome.com/extensions/runtime#event-onInstalled
 	 * @param {object} details - type of event
@@ -109,7 +115,7 @@ for this device.`;
 				app.Utils.set('os', os);
 			});
 			_initializeData();
-			_showMainTab();
+			app.Notify.showMainTab();
 		} else if (details.reason === 'update') {
 			// extension updated
 			_updateData();
@@ -147,50 +153,12 @@ for this device.`;
 		}
 
 		// Persist
-		app.ClipItem.add(text, Date.now(), false, false, app.Device.myName())
-			.then((clipItem) => {
-				app.Msg.sendClipItem(clipItem).catch((error) => {
-					app.Gae.sendMessageFailed(error);
-				});
-			}).catch((error) => {});
-	}
-
-	// noinspection JSUnusedLocalSymbols
-	/**
-	 * Event: Fired when a message is sent from either an extension process<br>
-	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
-	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
-	 * @param {object} request - details for the message
-	 * @param {object} sender - MessageSender object
-	 * @param {function} response - function to call once after processing
-	 * @return {boolean} true if asynchronous
-	 * @private
-	 * @memberOf Background
-	 */
-	function _onChromeMessage(request, sender, response) {
-		let ret = false;
-
-		if (request.message === 'removeDevice') {
-			app.Devices.removeByName(request.deviceName);
-		} else if (request.message === 'ping') {
-			app.Msg.sendPing().catch((error) => {
+		app.ClipItem.add(text, Date.now(), false,
+			false, app.Device.myName()).then((clipItem) => {
+			app.Msg.sendClipItem(clipItem).catch((error) => {
 				app.Gae.sendMessageFailed(error);
 			});
-		}
-		return ret;
-	}
-
-	/**
-	 * Event: Fired when the user clicked in a non-button area
-	 * of the notification.
-	 * @see https://developer.chrome.com/apps/notifications#event-onClicked
-	 * @param {int} notificationId - type of notification
-	 * @private
-	 * @memberOf Background
-	 */
-	function _onNotificationClicked(notificationId) {
-		_showMainTab();
-		chrome.notifications.clear(notificationId, () => {});
+		}).catch((error) => {});
 	}
 
 	/**
@@ -250,23 +218,6 @@ for this device.`;
 	}
 
 	/**
-	 * Send message to the main tab to focus it.<br>
-	 * If not found, create it
-	 * @private
-	 * @memberOf Background
-	 */
-	function _showMainTab() {
-		chrome.runtime.sendMessage({
-			message: 'highlightTab',
-		}, (response) => {
-			if (!response) {
-				// no one listening, create it
-				chrome.tabs.create({url: '../html/main.html'});
-			}
-		});
-	}
-
-	/**
 	 * Listen for extension install or update
 	 */
 	chrome.runtime.onInstalled.addListener(_onInstalled);
@@ -281,14 +232,4 @@ for this device.`;
 	 */
 	chrome.browserAction.onClicked.addListener(_onIconClicked);
 
-	/**
-	 * Listen for Chrome messages
-	 */
-	chrome.runtime.onMessage.addListener(_onChromeMessage);
-
-	/**
-	 * Listen for click on our notifications
-	 */
-	chrome.notifications.onClicked.addListener(_onNotificationClicked);
-
-})(document);
+})();
