@@ -59,7 +59,7 @@ app.User = (function() {
 	 * @param {function} response - function to call once after processing
 	 * @return {boolean} true if asynchronous
 	 * @private
-	 * @memberOf Background
+	 * @memberOf User
 	 */
 	function _onChromeMessage(request, sender, response) {
 		let ret = false;

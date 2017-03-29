@@ -60,7 +60,7 @@ app.Reg = (function() {
 	 * @param {Event} event
 	 * @param {string} event.key - storage item that changed
 	 * @private
-	 * @memberOf Background
+	 * @memberOf Reg
 	 */
 	function _onStorageChanged(event) {
 		if (event.key === 'allowReceive') {
