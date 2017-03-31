@@ -62,11 +62,7 @@
 	/** @memberOf ServiceWorker */
 	const ACTION_MESSAGE = 'm';
 	/** @memberOf ServiceWorker */
-	const ACTION_DEVICE_ADDED = 'add_our_device';
-	/** @memberOf ServiceWorker */
 	const ACTION_DEVICE_REMOVED = 'remove_our_device';
-	/** @memberOf ServiceWorker */
-	const ACTION_PING_RESPONSE = 'respond_to_ping';
 
 	/** @memberOf ServiceWorker */
 	const IC_REMOTE_COPY = '../images/ic_remote_copy.png';
@@ -76,15 +72,6 @@
 	const IC_REMOVE_DEVICE = '../images/ic_remove_device.png';
 	/** @memberOf ServiceWorker */
 	const IC_SEARCH = '../images/search-web.png';
-
-	/**
-	 * temporary variables to help get
-	 * all messages at Chrome start-up
-	 */
-	/** @memberOf ServiceWorker */
-	let msgArr = [];
-	/** @memberOf ServiceWorker */
-	let deviceArr = [];
 
 	/**
 	 * Service Worker Events
@@ -132,15 +119,11 @@
 	 * @memberOf ServiceWorker
 	 */
 	function getIcon(data) {
-		let path = '';
+		let path = IC_ADD_DEVICE;
 		if (data.act === ACTION_MESSAGE) {
 			path = IC_REMOTE_COPY;
 		} else if (data.act === ACTION_DEVICE_REMOVED) {
 			path = IC_REMOVE_DEVICE;
-		} else if (
-			(data.act === ACTION_DEVICE_ADDED) ||
-			(data.act === ACTION_PING_RESPONSE)) {
-			path = IC_ADD_DEVICE;
 		}
 		return path;
 	}
@@ -148,19 +131,13 @@
 	/**
 	 * Send fake GET request so extension can intercept it and get the payload
 	 * @see https://bugs.chromium.org/p/chromium/issues/detail?id=452942
-	 * @param {Array} dataArray Array of JSON objects
+	 * @param {GaeMsg} data - Message packet
 	 * @return {Promise<void>}
 	 * @memberOf ServiceWorker
 	 */
-	function doFakeFetch(dataArray) {
-		msgArr = [];
-		deviceArr = [];
-		URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
-		return fetch(URL_FETCH, {method: 'GET'}).then(() => {
-			return Promise.resolve();
-		}).catch((error) => {
-			return Promise.reject(error);
-		});
+	function doFakeFetch(data) {
+		URL_FETCH = `${URL_FETCH_BASE}${JSON.stringify(data)}`;
+		return fetch(URL_FETCH, {method: 'GET'});
 	}
 
 	/**
@@ -173,73 +150,49 @@
 		const data = payload.data;
 		data.m = decodeURIComponent(data.m);
 		const tag = getTag(data);
-		const icon = getIcon(data);
 		const noteOpt = {
-			requireInteraction: true,
+			requireInteraction: (tag === TAG_MESSAGE),
 			body: data.m,
-			icon: icon,
+			icon: getIcon(data),
 			tag: tag,
 			timestamp: Date.now(),
 		};
-		let dataArray = [data];
+		if ((tag === TAG_MESSAGE)) {
+			// add web search action
+			noteOpt.actions = [{
+				action: 'search',
+				title: 'Search web',
+				icon: IC_SEARCH,
+			}];
+		}
 		let title = `From ${getDeviceName(data)}`;
+
+		// send data to extension
+		doFakeFetch(data).catch(() => {});
 
 		const promiseChain = clients.matchAll({
 			includeUncontrolled: true,
+			type: 'window',
 		}).then((clients) => {
-			let showNotification = true;
 			for (let i = 0; i < clients.length; i++) {
 				if (clients[i].focused === true) {
-					showNotification = false;
+					// we have focus let notification hide itself
+					noteOpt.requireInteraction = false;
 					break;
 				}
-			}
-
-			if (!showNotification || (icon === '')) {
-				// Our extension is focused, skip notification
-				// or we were pinged
-				return doFakeFetch(dataArray).catch(() => {});
 			}
 
 			return self.registration.getNotifications({
 				tag: tag,
 			}).then((notifications) => {
-				if ((tag === TAG_MESSAGE)) {
-					// add web search action
-					noteOpt.actions = [{
-						action: 'search',
-						title: 'Search web',
-						icon: IC_SEARCH,
-					}];
-				}
 				if ((notifications.length > 0)) {
-					// append data to existing notification
+					// append to existing notification
 					noteOpt.renotify = true;
-					dataArray = notifications[0].data;
-					dataArray.push(data);
-					title = `${dataArray.length} new items\n${title}`;
-					noteOpt.data = dataArray;
+					// count of notifications
+					noteOpt.data = notifications[0].data + 1;
+					title = `${noteOpt.data} new items\n${title}`;
 				} else {
-					// this is for Chrome start-up so we can keep
-					// data because only last notification will be
-					// created this will also handle the first
-					// notification when extension doesn't have
-					// focus
-					if (tag === TAG_MESSAGE) {
-						msgArr.push(data);
-						if (msgArr.length > 1) {
-							title += `\n${msgArr.length} new items`;
-						}
-						// shallow copy
-						noteOpt.data = JSON.parse(JSON.stringify(msgArr));
-					} else if (tag === TAG_DEVICE) {
-						deviceArr.push(data);
-						if (deviceArr.length > 1) {
-							title += `\n${deviceArr.length} new items`;
-						}
-						// shallow copy
-						noteOpt.data = JSON.parse(JSON.stringify(deviceArr));
-					}
+					noteOpt.data = 1;
 				}
 				return self.registration.showNotification(title, noteOpt);
 			});
@@ -262,19 +215,13 @@
 
 		event.notification.close();
 
-		if (event.notification.icon !== '') {
-			// chrome generated notification has no icon
-			// we already handled it in push event
-			doFakeFetch(event.notification.data).catch(function() {});
-		}
-
 		const promiseChain = clients.matchAll({
 			includeUncontrolled: true,
 			type: 'window',
 		}).then((windowClients) => {
 			for (let i = 0; i < windowClients.length; i++) {
 				const client = windowClients[i];
-				if (client.url === url && 'focus' in client) {
+				if ((client.url === url) && 'focus' in client) {
 					// tab exists, focus it
 					return client.focus();
 				}
@@ -286,23 +233,6 @@
 		});
 
 		event.waitUntil(promiseChain);
-	}
-
-	/**
-	 * Event: Notification closed - can't open or focus window here.
-	 * @param {SWEvent} event - the event
-	 * @memberOf ServiceWorker
-	 */
-	function onNotificationClose(event) {
-		if (event.notification.icon === '') {
-			// chrome generated notification has no icon
-			// we already handled it in push event
-			return;
-		}
-
-		event.waitUntil(
-			doFakeFetch(event.notification.data).catch(() => {})
-		);
 	}
 
 	// Listen for install events
@@ -320,7 +250,4 @@
 
 	// Listen for notificationclick events
 	self.addEventListener('notificationclick', onNotificationClick);
-
-	// Listen for notificationclose events
-	self.addEventListener('notificationclose', onNotificationClose);
 })();

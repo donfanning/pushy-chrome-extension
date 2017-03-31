@@ -57,16 +57,12 @@ app.ReceiveMsg = (function() {
 		const matches = url.match(regex);
 		let text = matches[1];
 		if (text) {
-			const dataArray = JSON.parse(text);
-			if (dataArray) {
-				for (let i = 0; i < dataArray.length; i++) {
-					(function(index) {
-						setTimeout(function() {
-							// process message and slow down message stream
-							app.ReceiveMsg.process(dataArray[index]);
-						}, MESSAGE_WAIT_MILLIS);
-					})(i);
-				}
+			const data = JSON.parse(text);
+			if (data) {
+				setTimeout(function() {
+					// process message and slow down message stream
+					app.ReceiveMsg.process(data);
+				}, MESSAGE_WAIT_MILLIS);
 			}
 		}
 		// cancel fake request
