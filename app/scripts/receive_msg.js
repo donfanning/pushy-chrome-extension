@@ -72,10 +72,9 @@ app.ReceiveMsg = (function() {
 	/**
 	 * Listen for web requests
 	 */
-	chrome.webRequest.onBeforeRequest.addListener(_onWebRequestBefore,
-		{
-			urls: ['http://www.anyoldthing.com/*'],
-		}, ['blocking']);
+	chrome.webRequest.onBeforeRequest.addListener(_onWebRequestBefore, {
+		urls: ['http://www.anyoldthing.com/*'],
+	}, ['blocking']);
 
 	return {
 
@@ -86,8 +85,8 @@ app.ReceiveMsg = (function() {
 		 */
 		process: function(data) {
 			const device = _getDevice(data);
-			if (device.isMe()) {
-				// don't handle our messages
+			if (!app.Utils.isSignedIn() || device.isMe()) {
+				// don't handle our messages or if we are signed out
 				return;
 			}
 
