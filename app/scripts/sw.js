@@ -167,18 +167,16 @@
 		}
 		let title = `From ${getDeviceName(data)}`;
 
-		// send data to extension
-		doFakeFetch(data).catch(() => {});
-
 		const promiseChain = clients.matchAll({
 			includeUncontrolled: true,
 			type: 'window',
 		}).then((clients) => {
 			for (let i = 0; i < clients.length; i++) {
 				if (clients[i].focused === true) {
-					// we have focus let notification hide itself
-					noteOpt.requireInteraction = false;
-					break;
+					// we have focus, don't display notification
+					// send data to extension
+					doFakeFetch(data).catch(() => {});
+					return Promise.resolve();
 				}
 			}
 
@@ -194,6 +192,8 @@
 				} else {
 					noteOpt.data = 1;
 				}
+				// send data to extension
+				doFakeFetch(data).catch(() => {});
 				return self.registration.showNotification(title, noteOpt);
 			});
 		});
@@ -236,13 +236,13 @@
 	}
 
 	// Listen for install events
-	self.addEventListener('install', () => {
-		self.skipWaiting();
+	self.addEventListener('install', (event) => {
+		event.waitUntil(self.skipWaiting());
 	});
 
 	// Listen for activate events
-	self.addEventListener('activate', () => {
-		clients.claim();
+	self.addEventListener('activate', (event) => {
+		event.waitUntil(self.clients.claim());
 	});
 
 	// Listen for push events
