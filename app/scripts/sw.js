@@ -42,17 +42,14 @@
 	const URL_SEARCH_BASE = 'https://www.google.com/search?q=';
 
 	/**
-	 * Path to extension
+	 * Path to extension's main page
 	 * @const
 	 * @default
 	 * @type {string}
 	 * @memberOf ServiceWorker
 	 */
-	const URL_MAIN =
+	const URL_EXT =
 		'chrome-extension://jemdfhaheennfkehopbpkephjlednffd/html/main.html';
-
-	/** @memberOf ServiceWorker */
-	let URL_FETCH;
 
 	/** @memberOf ServiceWorker */
 	const TAG_MESSAGE = 'tag-message';
@@ -73,6 +70,14 @@
 	/** @memberOf ServiceWorker */
 	const IC_SEARCH = '../images/search-web.png';
 
+	// temporary variable to help get all messages at Chrome start-up
+	// normally, can't use globals in service worker, but this is
+	// only used when Chrome first starts up. Pretty sure it won't be
+	// stopped during this time
+	// could use indexedDB if we really have to
+	/** @memberOf ServiceWorker */
+	let msgArr = [];
+
 	/**
 	 * Service Worker Events
 	 * @typedef {Event} SWEvent
@@ -84,7 +89,7 @@
 
 	/**
 	 * Get the name of the Device who sent the message
-	 * @param {GaeMsg} data message object
+	 * @param {GaeMsg} data  - message object
 	 * @return {string} device name
 	 * @memberOf ServiceWorker
 	 */
@@ -100,7 +105,7 @@
 
 	/**
 	 * Get the tag for the notification
-	 * @param {GaeMsg} data message object
+	 * @param {GaeMsg} data - message object
 	 * @return {string} notification tag
 	 * @memberOf ServiceWorker
 	 */
@@ -114,7 +119,7 @@
 
 	/**
 	 * Get the icon for the notification
-	 * @param {GaeMsg} data message object
+	 * @param {GaeMsg} data - message object
 	 * @return {string} path to icon
 	 * @memberOf ServiceWorker
 	 */
@@ -129,14 +134,28 @@
 	}
 
 	/**
+	 * Send any data attached to a notification to the extension
+	 * @param {GaeMsg[]} dataArray - possible array of {@link GaeMsg} objects
+	 * @return {Promise<void>} always resolves
+	 */
+	function processNotificationData(dataArray) {
+		if (dataArray instanceof Array) {
+			return doFakeFetch(dataArray).catch(() => {});
+		} else {
+			return Promise.resolve();
+		}
+	}
+
+	/**
 	 * Send fake GET request so extension can intercept it and get the payload
 	 * @see https://bugs.chromium.org/p/chromium/issues/detail?id=452942
-	 * @param {GaeMsg} data - Message packet
-	 * @return {Promise<void>}
+	 * @param {GaeMsg[]} dataArray Array of {@link GaeMsg} objects
+	 * @return {Promise<void>} fails if extension successfully canceled request
 	 * @memberOf ServiceWorker
 	 */
-	function doFakeFetch(data) {
-		URL_FETCH = `${URL_FETCH_BASE}${JSON.stringify(data)}`;
+	function doFakeFetch(dataArray) {
+		msgArr = [];
+		const URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
 		return fetch(URL_FETCH, {method: 'GET'});
 	}
 
@@ -156,6 +175,7 @@
 			icon: getIcon(data),
 			tag: tag,
 			timestamp: Date.now(),
+			data: null,
 		};
 		if ((tag === TAG_MESSAGE)) {
 			// add web search action
@@ -175,8 +195,7 @@
 				if (clients[i].focused === true) {
 					// we have focus, don't display notification
 					// send data to extension
-					doFakeFetch(data).catch(() => {});
-					return Promise.resolve();
+					return doFakeFetch([data]).catch(() => {});
 				}
 			}
 
@@ -186,14 +205,45 @@
 				if ((notifications.length > 0)) {
 					// append to existing notification
 					noteOpt.renotify = true;
-					// count of notifications
-					noteOpt.data = notifications[0].data + 1;
-					title = `${noteOpt.data} new items\n${title}`;
+					const noteData = notifications[0].data;
+					if (noteData instanceof Array) {
+						// data is in the notification
+						// add current and send all to extension
+						noteData.push(data);
+						return processNotificationData(noteData).then(() => {
+							title += `\n${noteData.length} new items`;
+							// set data back to item count
+							noteOpt.data = noteData.length;
+							// simulate doFakeFetch cancel error
+							throw new Error('fetch failed');
+						});
+					} else {
+						// count of notifications
+						noteOpt.data = notifications[0].data + 1;
+						title = `${noteOpt.data} new items\n${title}`;
+					}
 				} else {
+					// new notification
 					noteOpt.data = 1;
 				}
 				// send data to extension
-				doFakeFetch(data).catch(() => {});
+				return doFakeFetch([data]);
+			}).then(() => {
+				// Extension did not cancel the fake fetch
+				// add data to the notification instead
+				// this is necessary for Chrome OS at startup at least
+				if (tag === TAG_MESSAGE) {
+					msgArr.push(data);
+					if (msgArr.length > 1) {
+						title += `\n${msgArr.length} new items`;
+					}
+					// shallow copy
+					noteOpt.data = JSON.parse(JSON.stringify(msgArr));
+				}
+				return self.registration.showNotification(title, noteOpt);
+			}).catch(() => {
+				// This is the normal outcome of the extension canceling
+				// the fake fetch
 				return self.registration.showNotification(title, noteOpt);
 			});
 		});
@@ -207,7 +257,7 @@
 	 * @memberOf ServiceWorker
 	 */
 	function onNotificationClick(event) {
-		let url = URL_MAIN;
+		let url = URL_EXT;
 		if (event.action === 'search') {
 			// clicked on search action
 			url = URL_SEARCH_BASE + encodeURIComponent(event.notification.body);
@@ -219,20 +269,33 @@
 			includeUncontrolled: true,
 			type: 'window',
 		}).then((windowClients) => {
-			for (let i = 0; i < windowClients.length; i++) {
-				const client = windowClients[i];
-				if ((client.url === url) && 'focus' in client) {
-					// tab exists, focus it
-					return client.focus();
+			return processNotificationData(event.notification.data).then(() => {
+				for (let i = 0; i < windowClients.length; i++) {
+					const client = windowClients[i];
+					if ((client.url === url) && 'focus' in client) {
+						// tab exists, focus it
+						return client.focus();
+					}
 				}
-			}
-			if (clients.openWindow) {
-				// create new tab
-				return clients.openWindow(url);
-			}
+				if (clients.openWindow) {
+					// create new tab
+					return clients.openWindow(url);
+				}
+			}).catch(() => {});
 		});
 
 		event.waitUntil(promiseChain);
+	}
+
+	/**
+	 * Event: Notification closed - can't open or focus window here.
+	 * @param {SWEvent} event - the event
+	 * @memberOf ServiceWorker
+	 */
+	function onNotificationClose(event) {
+		event.waitUntil(
+			processNotificationData(event.notification.data).catch(() => {})
+		);
 	}
 
 	// Listen for install events
@@ -250,4 +313,7 @@
 
 	// Listen for notificationclick events
 	self.addEventListener('notificationclick', onNotificationClick);
+
+	// Listen for notificationclose events
+	self.addEventListener('notificationclose', onNotificationClose);
 })();

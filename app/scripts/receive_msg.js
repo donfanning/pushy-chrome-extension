@@ -28,6 +28,7 @@ app.ReceiveMsg = (function() {
 	 * Delay time for fcm message processing
 	 * @type {int}
 	 * @default
+	 * @const
 	 * @memberOf ReceiveMsg
 	 */
 	const MESSAGE_WAIT_MILLIS = 500;
@@ -57,12 +58,16 @@ app.ReceiveMsg = (function() {
 		const matches = url.match(regex);
 		let text = matches[1];
 		if (text) {
-			const data = JSON.parse(text);
-			if (data) {
-				setTimeout(function() {
-					// process message and slow down message stream
-					app.ReceiveMsg.process(data);
-				}, MESSAGE_WAIT_MILLIS);
+			const dataArray = JSON.parse(text);
+			if (dataArray) {
+				for (let i = 0; i < dataArray.length; i++) {
+					(function(index) {
+						setTimeout(function() {
+							// slow down message stream
+							app.ReceiveMsg.process(dataArray[index]);
+						}, MESSAGE_WAIT_MILLIS);
+					})(i);
+				}
 			}
 		}
 		// cancel fake request
@@ -80,7 +85,7 @@ app.ReceiveMsg = (function() {
 
 		/**
 		 * Process received push notifications
-		 * @param {GaeMsg} data - push data
+		 * @param {GaeMsg} data - push message
 		 * @memberOf ReceiveMsg
 		 */
 		process: function(data) {
