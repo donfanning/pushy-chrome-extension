@@ -43,6 +43,16 @@ app.Main = (function() {
 		'id=com.weebly.opus1269.clipman';
 
 	/**
+	 * Path to my screen saver extension
+	 * @type {string}
+	 * @default
+	 * @memberOf Main
+	 */
+	const SCREEN_SAVER_URI =
+		'https://chrome.google.com/webstore/detail/photo-screen-saver/' +
+		'kohpcmlfdjfdggcjmjhhbcbankgmppgc';
+
+	/**
 	 * Auto-binding template
 	 * @type {object}
 	 * @memberOf Main
@@ -61,6 +71,7 @@ app.Main = (function() {
 	 * is selected
 	 * @property {boolean} ready - has page been inserted
 	 * @property {boolean} disabled - disabled state of Nav menu
+	 * @property {boolean} divider - true for divider before item
 	 * @memberOf Main
 	 */
 
@@ -72,25 +83,29 @@ app.Main = (function() {
 	 */
 	t.pages = [
 		{label: 'Main', route: 'page-main',
-			icon: 'myicons:list', obj: null, ready: true, disabled: false},
+			icon: 'myicons:list', obj: null,
+			ready: true, disabled: false, divider: false},
 		{label: 'Manage account', route: 'page-signin',
 			icon: 'myicons:account-circle', obj: _showSignInPage,
-			ready: false, disabled: false},
+			ready: false, disabled: false, divider: false},
 		{label: 'Manage devices', route: 'page-devices',
 			icon: 'myicons:phonelink', obj: _showDevicesPage,
-			ready: false, disabled: false},
+			ready: false, disabled: false, divider: false},
 		{label: 'Settings', route: 'page-settings',
 			icon: 'myicons:settings', obj: _showSettingsPage,
-			ready: false, disabled: false},
+			ready: false, disabled: false, divider: false},
 		{label: 'Help & feedback', route: 'page-help',
 			icon: 'myicons:help', obj: _showHelpPage,
-			ready: false, disabled: false},
+			ready: false, disabled: false, divider: false},
 		{label: 'Get android app', route: 'page-android',
 			icon: 'myicons:android', obj: ANDROID_URI,
-			ready: true, disabled: false},
+			ready: true, disabled: false, divider: true},
 		{label: 'Rate extension', route: 'page-rate',
-			icon: 'myicons:grade', obj: EXT_URI + 'reviews',
-			ready: true, disabled: false},
+			icon: 'myicons:grade', obj: `${EXT_URI}reviews`,
+			ready: true, disabled: false, divider: false},
+		{label: 'Try Photo Screen Saver', route: 'page-screensaver',
+			icon: 'myicons:extension', obj: SCREEN_SAVER_URI,
+			ready: true, disabled: false, divider: true},
 	];
 
 	/**
