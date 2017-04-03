@@ -219,6 +219,12 @@ limitations under the License.
 <script>
 'use strict';
 Polymer({
+
+	/**
+	 * Main Page - list of {@link ClipItem} objects
+	 * @namespace MainPage
+	 */
+
 	is: 'main-page',
 
 	properties: {
@@ -228,6 +234,7 @@ Polymer({
 		 * @typedef {Object} ListItem
 		 * @property {boolean} checked - true if selected
 		 * @property {ClipItem} clipItem - {@link ClipItem}
+		 * @memberOf MainPage
 		 */
 
 		listItems: {
@@ -262,7 +269,7 @@ Polymer({
 
 		title: {
 			type: String,
-			value: 'Local clip',
+			value: '',
 		},
 	},
 
@@ -530,25 +537,28 @@ Polymer({
 	 * @private
 	 */
 	_deleteSelectedRows: function() {
+		if (!this.deleteFavs) {
+			// don't delete favs
+			this._deselectFavorites();
+		}
+
 		let keys = [];
 		for (let i = 0; i < this.selections.length; i++) {
 			const listItem = this.selections[i];
 			const clipItem = listItem.clipItem;
-			if (!clipItem.fav || this.deleteFavs) {
-				const pos = this.listItems.indexOf(listItem);
-				this.splice('listItems', pos, 1);
-				keys.push(clipItem.text);
-			}
+			const pos = this.listItems.indexOf(listItem);
+			this.splice('listItems', pos, 1);
+			keys.push(clipItem.text);
 		}
 
 		if (keys.length) {
 			app.ClipItem.remove(keys).then(() => {
 				return app.ClipItem.isEmpty();
 			}).then((isEmpty) => {
-				if (isEmpty) {
-					this._clearClipViewer();
-				}
 				this.set('selections', []);
+				if (isEmpty) {
+					this._updateView();
+				}
 			}).catch(() => {});
 		}
 	},
@@ -558,11 +568,28 @@ Polymer({
 	 * @private
 	 */
 	_deselectNonFavorites: function() {
+		this._deselect(false);
+	},
+
+	/**
+	 * Deselect all rows that are favorites
+	 * @private
+	 */
+	_deselectFavorites: function() {
+		this._deselect(true);
+	},
+
+	/**
+	 * Deselect rows by favorite type
+	 * @param {boolean} fav - true deselect favs, false non-favs
+	 * @private
+	 */
+	_deselect: function(fav) {
 		const len = this.selections.length;
 		for (let i = len - 1; i >= 0; i--) {
 			const listItem = this.selections[i];
 			const clipItem = listItem.clipItem;
-			if (!clipItem.fav) {
+			if (clipItem.fav === fav) {
 				const pos = this.listItems.indexOf(listItem);
 				this.set(`listItems.${pos}.checked`, false);
 				this.splice('selections', i, 1);
