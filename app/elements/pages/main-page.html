@@ -298,7 +298,18 @@ Polymer({
 	 * Event: We have animated in and are now the current page
 	 */
 	onCurrentPage: function() {
-		this._updateDates();
+		this.updateDates();
+	},
+
+	/**
+	 * Update the relative dates
+	 */
+	updateDates: function() {
+		for (let i = 0; i < this.listItems.length; i++) {
+			const date = this.listItems[i].clipItem.date;
+			this.set(`listItems.${i}.clipItem.date`, date - 1);
+			this.set(`listItems.${i}.clipItem.date`, date);
+		}
 	},
 
 	/**
@@ -682,7 +693,7 @@ Polymer({
 	 */
 	_updateView: function() {
 		this._clearClipViewer();
-		this._updateDates();
+		this.updateDates();
 		const el = this.$.ironSelector.selectedItem;
 		const listItem = this.$.listTemplate.itemForElement(el);
 		if (listItem) {
@@ -722,18 +733,6 @@ Polymer({
 		// linkify it - creates element children
 		linkifyElement(el);
 	},
-
-	/**
-	 * Update the relative dates
-	 * @private
-	 */
-	_updateDates: function() {
-		for (let i = 0; i < this.listItems.length; i++) {
-			const date = this.listItems[i].clipItem.date;
-			this.set(`listItems.${i}.clipItem.date`, date - 1);
-			this.set(`listItems.${i}.clipItem.date`, date);
-		}
-	},
-
+	
 });
 </script>

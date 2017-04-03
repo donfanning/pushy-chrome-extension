@@ -67,9 +67,8 @@ app.Main = (function() {
 	 * @property {string} label - label for Nav menu
 	 * @property {string} route - element name route to page
 	 * @property {string} icon - icon for Nav Menu
-	 * @property {object|null} obj - something to be done when Nav menu
-	 * is selected
-	 * @property {boolean} ready - has page been inserted
+	 * @property {object|null} obj - something to be done when selected
+	 * @property {boolean} ready - true if html is inserted
 	 * @property {boolean} disabled - disabled state of Nav menu
 	 * @property {boolean} divider - true for divider before item
 	 * @memberOf Main
@@ -177,7 +176,7 @@ app.Main = (function() {
 	});
 	
 	/**
-	 * Event: navigation menu selections
+	 * Event: navigation menu selected
 	 * @param {Event} event
 	 * @memberOf Main
 	 */
@@ -206,7 +205,6 @@ app.Main = (function() {
 
 	/**
 	 * Event: display error dialog
-	 *
 	 * @param {Event} event
 	 * @memberOf Main
 	 */
@@ -257,12 +255,6 @@ app.Main = (function() {
 	 */
 	function _onChromeMessage(request, sender, response) {
 		if (request.message === 'highlightTab') {
-			if (!isMainPage) {
-				// focus main page
-				prevRoute = t.route;
-				t.route = 'page-main';
-				isMainPage = true;
-			}
 			// highlight ourselves and tell the sender we are here
 			// noinspection JSCheckFunctionSignatures
 			chrome.tabs.getCurrent((tab) => {
@@ -278,7 +270,6 @@ app.Main = (function() {
 
 	/**
 	 * Event: Fired when item in localStorage changes
-	 *
 	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
 	 * @param {event} event
 	 * @param {string} event.key
@@ -291,6 +282,33 @@ app.Main = (function() {
 		} else if(event.key === 'photoURL') {
 			t.avatar = app.Utils.get('photoURL');
 		}
+	}
+
+	/**
+	 * Event: Fired when the highlighted or selected tabs in a window changes.
+	 * @see https://developer.chrome.com/extensions/tabs#event-onHighlighted
+	 * @param {object} highlightInfo
+	 * @private
+	 * @memberOf Main
+	 */
+	function _onHighlighted(highlightInfo) {
+		const tabIds = highlightInfo.tabIds;
+		chrome.tabs.getCurrent(function(tab) {
+			for (let i = 0; i < tabIds.length; i++) {
+				if (tabIds[i] === tab.id) {
+					if (!isMainPage) {
+						// focus main page
+						prevRoute = t.route;
+						t.route = 'page-main';
+						isMainPage = true;
+						t.$.mainMenu.select(t.route);
+					} else {
+						t.$.mainPage.updateDates();
+					}
+					break;
+				}
+			}
+		});
 	}
 
 	/**
@@ -308,7 +326,6 @@ app.Main = (function() {
 
 	/**
 	 * Show the signin page
-	 *
 	 * @param {int} index
 	 * @private
 	 * @memberOf Main
@@ -326,7 +343,6 @@ app.Main = (function() {
 
 	/**
 	 * Show the devices page
-	 *
 	 * @param {int} index
 	 * @private
 	 * @memberOf Main
@@ -344,7 +360,6 @@ app.Main = (function() {
 
 	/**
 	 * Show the settings page
-	 *
 	 * @param {int} index
 	 * @private
 	 * @memberOf Main
@@ -362,7 +377,6 @@ app.Main = (function() {
 
 	/**
 	 * Show the help page
-	 *
 	 * @param {int} index
 	 * @private
 	 * @memberOf Main
@@ -380,7 +394,6 @@ app.Main = (function() {
 
 	/**
 	 * Scroll Main Panel to top
-	 *
 	 * @private
 	 * @memberOf Main
 	 */
@@ -390,7 +403,6 @@ app.Main = (function() {
 
 	/**
 	 * Close drawer if drawerPanel is narrow
-	 *
 	 * @private
 	 * @memberOf Main
 	 */
@@ -403,7 +415,6 @@ app.Main = (function() {
 
 	/**
 	 * Set enabled state of Devices menu item
-	 *
 	 * @private
 	 * @memberOf Main
 	 */
@@ -420,5 +431,8 @@ app.Main = (function() {
 
 	// listen for changes to localStorage
 	addEventListener('storage', _onStorageChanged, false);
+
+	// listen for changes to highlighted tabs
+	chrome.tabs.onHighlighted.addListener(_onHighlighted);
 
 })();
