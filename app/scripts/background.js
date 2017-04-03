@@ -123,6 +123,7 @@ for this device.`;
 				return app.SW.update();
 			}).catch((error) => {});
 		}
+		app.Utils.setBadgeText();
 		app.Alarm.updateAlarms();
 	}
 
@@ -137,6 +138,7 @@ for this device.`;
 		app.Alarm.updateAlarms();
 		app.Alarm.deleteOldClipItems();
 		_initializeFirebase().catch((error) => {});
+		app.Utils.setBadgeText();
 	}
 
 	/**
@@ -159,6 +161,20 @@ for this device.`;
 				app.Gae.sendMessageFailed(error);
 			});
 		}).catch((error) => {});
+	}
+
+	/**
+	 * Event: Fired when item in localStorage changes
+	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
+	 * @param {Event} event
+	 * @param {string} event.key - storage item that changed
+	 * @private
+	 * @memberOf Background
+	 */
+	function _onStorageChanged(event) {
+		if ((event.key === 'allowPush') || (event.key === 'signedIn')) {
+			app.Utils.setBadgeText();
+		}
 	}
 
 	/**
@@ -231,5 +247,10 @@ for this device.`;
 	 * Listen for click on the icon
 	 */
 	chrome.browserAction.onClicked.addListener(_onIconClicked);
+
+	/**
+	 * Listen for changes to localStorage
+	 */
+	addEventListener('storage', _onStorageChanged, false);
 
 })();

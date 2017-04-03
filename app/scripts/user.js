@@ -40,9 +40,8 @@ app.User = (function() {
 		if (app.Utils.isSignedIn() && !signedIn && (account.id == uid)) {
 			// our user signed out of Chrome while we were signed in
 			app.Utils.set('needsCleanup', true);
-			app.Utils.set('signedIn', false);
+			_setSignIn(false);
 			app.Utils.set('registered', false);
-			app.Utils.set('photoURL', '');
 			app.Fb.signOut();
 
 		}
@@ -72,7 +71,7 @@ app.User = (function() {
 			}).catch((error) => {
 				app.User.removeAccess().then(() => {
 				}).catch(() => {
-					app.Utils.set('signedIn', false);
+					_setSignIn(false);
 					app.Utils.set('registered', false);
 				});
 				response({message: 'error', error: error.toString()});
@@ -88,6 +87,20 @@ app.User = (function() {
 		}
 		return ret;
 	}
+
+	/**
+	 * Set signIn state
+	 * @param {boolean} val - true if signed in
+	 * @private
+	 */
+	function _setSignIn(val) {
+		app.Utils.set('signedIn', val);
+		app.Utils.setBadgeText();
+		if (!val) {
+			app.Utils.set('photoURL', '');
+		}
+	}
+
 	/**
 	 * Listen for changes to Browser sign-in
 	 */
@@ -113,7 +126,7 @@ app.User = (function() {
 			return app.User.getAuthToken(true).then((token) => {
 				return app.Fb.signIn(token);
 			}).then((user) => {
-				app.Utils.set('signedIn', true);
+				_setSignIn(true);
 				if (!app.Utils.isWhiteSpace(user.photoURL)) {
 					app.Utils.set('photoURL', user.photoURL);
 				}
@@ -132,8 +145,7 @@ app.User = (function() {
 			}
 
 			return app.Fb.signOut().then(() => {
-				app.Utils.set('signedIn', false);
-				app.Utils.set('photoURL', '');
+				_setSignIn(false);
 				return Promise.resolve();
 			});
 		},

@@ -214,6 +214,18 @@ app.Utils = (function() {
 		},
 
 		/**
+		 * Set the badge displayed on the extension icon
+		 * @memberOf Utils
+		 */
+		setBadgeText: function() {
+			let text = '';
+			if (app.Utils.isSignedIn() && app.Utils.allowPush()) {
+				text = 'SEND';
+			}
+			chrome.browserAction.setBadgeText({text: text});
+		},
+
+		/**
 		 * Determine if a String is null or whitespace only
 		 * @param {string} str - string to check
 		 * @return {boolean} true if str is whitespace (or null)
