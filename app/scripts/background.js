@@ -113,6 +113,7 @@ for this device.`;
 				app.Utils.set('os', os);
 			});
 			_initializeData();
+			_injectContentScript();
 			app.Notify.showMainTab();
 		} else if (details.reason === 'update') {
 			// extension updated
@@ -235,6 +236,32 @@ for this device.`;
 		} else {
 			return Promise.resolve();
 		}
+	}
+
+	/**
+	 * Inject our script into all open pages that match
+	 * @private
+	 * @memberOf Background
+	 */
+	function _injectContentScript() {
+		// noinspection JSCheckFunctionSignatures
+		chrome.windows.getAll({populate: true}, function(windows) {
+			for (let i = 0; i < windows.length; i++) {
+				// all windows
+				const win = windows[i];
+				for (let j = 0; j < win.tabs.length; j++) {
+					// all tabs in window
+					const tab = win.tabs[j];
+					// our matches
+					if (tab.url.match(/(http|https):\/\//gi)) {
+						console.log('injecting: ', tab.url);
+						chrome.tabs.executeScript(tab.id, {
+							file: 'scripts/on_copy_cut_content_script.js',
+						});
+					}
+				}
+			}
+		});
 	}
 
 	/**
