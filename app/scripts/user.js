@@ -261,8 +261,6 @@ app.User = (function() {
 		setInfo: function() {
 			const chromep = new ChromePromise();
 			return chromep.identity.getProfileUserInfo().then((user) => {
-				app.Utils.set('lastUid', app.Utils.get('uid'));
-				app.Utils.set('lastEmail', app.Utils.get('email'));
 				app.Utils.set('email', user.email);
 				app.Utils.set('uid', user.id);
 				return Promise.resolve();

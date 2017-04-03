@@ -33,7 +33,7 @@
 	 * @private
 	 * @memberOf Background
 	 */
-	const DATA_VERSION = 1;
+	const DATA_VERSION = 2;
 
 	/**
 	 * Default values in localStorage
@@ -67,8 +67,6 @@
 		'email': '',
 		'uid': '',
 		'photoURL': '',
-		'lastEmail': '',
-		'lastUid': '',
 		'registered': false,
 	};
 
@@ -214,7 +212,13 @@ for this device.`;
 	function _updateData() {
 		// New items and removal of unused items can take place here
 		// when the version changes
-		// const oldVersion = app.Utils.get('version');
+		const oldVersion = app.Utils.getInt('version');
+		if (oldVersion < 2) {
+			// remove unused variables
+			localStorage.removeItem('lastEmail');
+			localStorage.removeItem('lastUid');
+			app.Utils.set('version', DATA_VERSION);
+		}
 
 		_saveDefaults();
 	}

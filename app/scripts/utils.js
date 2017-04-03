@@ -151,6 +151,16 @@ app.Utils = (function() {
 		},
 
 		/**
+		 * Get integer value from localStorage
+		 * @param {string} key - key to get value for
+		 * @return {Integer} value as integer
+		 *
+		 */
+		getInt: function(key) {
+			return parseInt(localStorage.getItem(key), 10);
+		},
+
+		/**
 		 * Are we saving clipboard contents
 		 * @return {boolean} true if enabled
 		 * @memberOf Utils
