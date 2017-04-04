@@ -8,6 +8,7 @@
 
 	if (window.injected) {
 		// every other attempt to inject but first
+		// window may be the top window or an iFrame
 		return;
 	}
 	window.injected = true;
@@ -23,6 +24,6 @@
 	}
 
 	// register event listeners for copy and cut events on document
-	document.addEventListener('copy', onMyCopy, true);
-	document.addEventListener('cut', onMyCopy, true);
+	window.addEventListener('copy', onMyCopy, true);
+	window.addEventListener('cut', onMyCopy, true);
 })();
