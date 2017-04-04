@@ -117,7 +117,7 @@ limitations under the License.
 
 				<div class="contentContainer horizontal layout center">
 					<paper-item id="description"
-					     style$="display: [[computeDescDisplay(waiting)]];">
+					     style$="display: [[_computeDescDisplay(waiting)]];">
 						You must be signed in to the Browser with the account you
 						wish to use to share with your other devices.  It is only used to ensure
 						that all messages goes to a single account. You also need to "Allow Notifications"
@@ -125,7 +125,7 @@ limitations under the License.
 					</paper-item>
 
 					<div id="waiter" class="vertical layout center"
-					     style$="display: [[computeWaiterDisplay(waiting)]];">
+					     style$="display: [[_computeWaiterDisplay(waiting)]];">
 						<div class="horizontal center-justified layout">
 							<paper-spinner active="[[waiting]]" tabindex="-1"></paper-spinner>
 						</div>
@@ -292,7 +292,7 @@ limitations under the License.
 		},
 
 		_computeEmailLabel: function(signedIn) {
-			return signedIn ? 'Signed in as: ' + app.Utils.get('email') :
+			return signedIn ? `Signed in as: ${app.Utils.get('email')}` :
 				'Account Sign In';
 		},
 
@@ -304,11 +304,11 @@ limitations under the License.
 			return this.signedIn ? 'Signing Out...' : 'Signing In...';
 		},
 
-		computeDescDisplay: function(waiting) {
+		_computeDescDisplay: function(waiting) {
 			return waiting ? 'none' : 'block';
 		},
 
-		computeWaiterDisplay: function(waiting) {
+		_computeWaiterDisplay: function(waiting) {
 			return waiting ? 'block' : 'none';
 		},
 
