@@ -6,24 +6,26 @@
 	 * @namespace ContentScript
 	 */
 
-	if (window.injected) {
-		// every other attempt to inject but first
-		// window may be the top window or an iFrame
-		return;
+	if (window.onMyCopy) {
+		window.removeEventListener('copy', window.onMyCopy);
+		window.removeEventListener('cut', window.onMyCopy);
 	}
-	window.injected = true;
 
 	/**
 	 * On copy or cut event, send a message to our extension
 	 * @memberOf ContentScript
 	 */
-	function onMyCopy() {
-		chrome.runtime.sendMessage(chrome.runtime.id, {
-			message: 'copiedToClipboard',
-		}, (response) => {});
-	}
+	window.onMyCopy = function onMyCopy() {
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				message: 'copiedToClipboard',
+			}, () => {});
+		} catch(ex) {
+			// noinspection UnnecessaryReturnStatementJS
+			return;
+		}
+	};
 
-	// register event listeners for copy and cut events on document
-	window.addEventListener('copy', onMyCopy, true);
-	window.addEventListener('cut', onMyCopy, true);
+	window.addEventListener('copy', window.onMyCopy);
+	window.addEventListener('cut', window.onMyCopy);
 })();
