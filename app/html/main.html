@@ -116,6 +116,38 @@ limitations under the License.
 						</div>
 					</paper-dialog>
 
+					<!-- permissions dialog -->
+					<paper-dialog id="permissionsDialog" modal entry-animation="scale-up-animation"
+					              exit-animation="fade-out-animation">
+						<h2>Manage optional permissions</h2>
+						<paper-dialog-scrollable>
+							<pre>
+The extension has an optional permission that will automatically know when you copy text
+in most Web pages you visit. I recommend that you allow this, otherwise you will
+need to click on the main icon any time you want to store or share this text with your
+other devices. If you click on ALLOW... another dialog will be displayed asking you to allow
+or deny this permission, if you have not already done so.
+
+The message is pretty scary. It will say:
+
+   Read and change all your data on the websites you visit.
+
+In fact, the extension does not read or change any data. All it does is get notified when
+you copy something to the clipboard. This extension is open source, if you are curious,
+this is the <a href="https://github.com/Pushy-Clipboard/pushy-chrome-extension/blob/master/app/scripts/on_copy_cut_content_script.js" target="_blank">code</a> that is used.
+
+You can always change whether the extension has this permission from the Menu option:
+
+    Manage optional permissions
+
+</pre>
+						</paper-dialog-scrollable>
+						<div class="buttons">
+							<paper-button dialog-dismiss on-click="onDenyPermissionsClicked">DENY</paper-button>
+							<paper-button dialog-confirm autofocus on-click="onAcceptPermissionsClicked">ALLOW...</paper-button>
+						</div>
+					</paper-dialog>
+
 					<!-- All the pages -->
 					<neon-animated-pages attr-for-selected="data-route" selected="{{route}}"
 					                     on-neon-animation-finish="onPageAnimation"
@@ -149,6 +181,7 @@ limitations under the License.
 	<script src="../scripts/utils.js"></script>
 	<script src="../scripts/device.js"></script>
 	<script src="../scripts/clip_item.js"></script>
+	<script src="../scripts/permissions.js"></script>
 	<script src="../scripts/main.js"></script>
 </body>
 </html>

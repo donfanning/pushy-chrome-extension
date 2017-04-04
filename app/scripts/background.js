@@ -53,6 +53,7 @@
 		'monitorClipboard': true,
 		'allowPush': true,
 		'autoSend': true,
+		'permissions': 'notSet', // enum: notSet allowed denied
 		'allowReceive': true,
 		'deviceSN': app.Utils.randomString(8),
 		'deviceNickname': '',
@@ -113,7 +114,6 @@ for this device.`;
 				app.Utils.set('os', os);
 			});
 			_initializeData();
-			_injectContentScript();
 			app.Notify.showMainTab();
 		} else if (details.reason === 'update') {
 			// extension updated
@@ -124,6 +124,7 @@ for this device.`;
 		}
 		app.Utils.setBadgeText();
 		app.Alarm.updateAlarms();
+		app.Permissions.injectContentScripts();
 	}
 
 	/**
@@ -160,6 +161,17 @@ for this device.`;
 				app.Gae.sendMessageFailed(error);
 			});
 		}).catch((error) => {});
+	}
+
+	/**
+	 * Event: Fired when a tab is updated.
+	 * @see https://developer.chrome.com/extensions/tabs#event-onUpdated
+	 * @param {int} tabId
+	 * @private
+	 * @memberOf Background
+	 */
+	function _onTabUpdated(tabId) {
+		app.Permissions.injectContentScript(tabId);
 	}
 
 	/**
@@ -215,10 +227,10 @@ for this device.`;
 		// when the version changes
 		const oldVersion = app.Utils.getInt('version');
 		if (oldVersion < 2) {
+			app.Utils.set('version', DATA_VERSION);
 			// remove unused variables
 			localStorage.removeItem('lastEmail');
 			localStorage.removeItem('lastUid');
-			app.Utils.set('version', DATA_VERSION);
 		}
 
 		_saveDefaults();
@@ -238,50 +250,19 @@ for this device.`;
 		}
 	}
 
-	/**
-	 * Inject our script into all open pages that match
-	 * @private
-	 * @memberOf Background
-	 */
-	function _injectContentScript() {
-		// noinspection JSCheckFunctionSignatures
-		chrome.windows.getAll({populate: true}, function(windows) {
-			for (let i = 0; i < windows.length; i++) {
-				// all windows
-				const win = windows[i];
-				for (let j = 0; j < win.tabs.length; j++) {
-					// all tabs in window
-					const tab = win.tabs[j];
-					// our matches
-					if (tab.url.match(/(http|https):\/\//gi)) {
-						console.log('injecting: ', tab.url);
-						chrome.tabs.executeScript(tab.id, {
-							file: 'scripts/on_copy_cut_content_script.js',
-						});
-					}
-				}
-			}
-		});
-	}
-
-	/**
-	 * Listen for extension install or update
-	 */
+	// Listen for extension install or update
 	chrome.runtime.onInstalled.addListener(_onInstalled);
 
-	/** 
-	 * Listen for Chrome starting
-	 */
+	// Listen for Chrome starting
 	chrome.runtime.onStartup.addListener(_onStartup);
 
-	/**
-	 * Listen for click on the icon
-	 */
+	// Listen for click on the icon
 	chrome.browserAction.onClicked.addListener(_onIconClicked);
 
-	/**
-	 * Listen for changes to localStorage
-	 */
+	// Listen for tab updates
+	chrome.tabs.onUpdated.addListener(_onTabUpdated);
+
+	// Listen for changes to localStorage
 	addEventListener('storage', _onStorageChanged, false);
 
 })();

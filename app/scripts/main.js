@@ -39,8 +39,8 @@ app.Main = (function() {
 	 * @memberOf Main
 	 */
 	const ANDROID_URI =
-		'https://play.google.com/store/apps/details?' +
-		'id=com.weebly.opus1269.clipman';
+		'https://play.google.com/store/apps/details' +
+		'?id=com.weebly.opus1269.clipman';
 
 	/**
 	 * Path to my screen saver extension
@@ -93,6 +93,9 @@ app.Main = (function() {
 		{label: 'Settings', route: 'page-settings',
 			icon: 'myicons:settings', obj: _showSettingsPage,
 			ready: false, disabled: false, divider: false},
+		{label: 'Manage optional permissions', route: 'page-permissions',
+			icon: 'myicons:perm-data-setting', obj: _showPermissionsDialog,
+			ready: true, disabled: false, divider: false},
 		{label: 'Help & feedback', route: 'page-help',
 			icon: 'myicons:help', obj: _showHelpPage,
 			ready: false, disabled: false, divider: false},
@@ -173,6 +176,8 @@ app.Main = (function() {
 		t.pages[idx].disabled = !app.Utils.isSignedIn();
 		// listen for Chrome messages
 		chrome.runtime.onMessage.addListener(_onChromeMessage);
+		// check for permissions
+		_checkPermissions();
 	});
 	
 	/**
@@ -226,6 +231,26 @@ app.Main = (function() {
 		} else if (t.route === 'page-devices') {
 			devicesPage.onCurrentPage();
 		}
+	};
+
+	/**
+	 * Event: Clicked on accept permissions dialog button
+	 * @memberOf Main
+	 */
+	t.onAcceptPermissionsClicked = function() {
+		app.Permissions.request().then((granted) => {
+			if (granted) {
+				app.Permissions.injectContentScripts();
+			}
+		}).catch(() => {});
+	};
+
+	/**
+	 * Event: Clicked on deny permissions dialog button
+	 * @memberOf Main
+	 */
+	t.onDenyPermissionsClicked = function() {
+		app.Permissions.remove().catch(() => {});
 	};
 
 	/**
@@ -293,9 +318,11 @@ app.Main = (function() {
 	 */
 	function _onHighlighted(highlightInfo) {
 		const tabIds = highlightInfo.tabIds;
-		chrome.tabs.getCurrent(function(tab) {
+		chrome.tabs.getCurrent(function(myTab) {
 			for (let i = 0; i < tabIds.length; i++) {
-				if (tabIds[i] === tab.id) {
+				const tabId = tabIds[i];
+				if (tabId === myTab.id) {
+					// our tab
 					if (!isMainPage) {
 						// focus main page
 						prevRoute = t.route;
@@ -309,6 +336,18 @@ app.Main = (function() {
 				}
 			}
 		});
+	}
+
+	/**
+	 * Display dialog to prompt for accepting optional permissions
+	 * if it has not been set yet
+	 * @memberOf Main
+	 * @private
+	 */
+	function _checkPermissions() {
+		if (app.Utils.get('permissions') === app.Permissions.NOT_SET) {
+			_showPermissionsDialog();
+		}
 	}
 
 	/**
@@ -373,6 +412,15 @@ app.Main = (function() {
 		}
 		t.route = t.pages[index].route;
 		_scrollPageToTop();
+	}
+
+	/**
+	 * Show the permissions dialog
+	 * @private
+	 * @memberOf Main
+	 */
+	function _showPermissionsDialog() {
+		t.$.permissionsDialog.open();
 	}
 
 	/**
