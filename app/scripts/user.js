@@ -37,7 +37,7 @@ app.User = (function() {
 	 */
 	function _onSignInChanged(account, signedIn) {
 		const uid = app.Utils.get('uid');
-		if (app.Utils.isSignedIn() && !signedIn && (account.id == uid)) {
+		if (app.Utils.isSignedIn() && !signedIn && (account.id === uid)) {
 			// our user signed out of Chrome while we were signed in
 			app.Utils.set('needsCleanup', true);
 			_setSignIn(false);
