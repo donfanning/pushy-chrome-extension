@@ -1,0 +1,38 @@
+A clipboard manager with push notifications.
+
+Monitor and store all text placed on the clipboard.
+Mark favorite items for easy access.
+
+Share with the following devices using push notifications:
+Any desktop hardware that supports the Chrome Browser
+Android phones and tablets using the companion app:
+  https://play.google.com/store/apps/details?id=com.weebly.opus1269.clipman
+
+
+REQUIRED PERMISSIONS:
+
+* Display notifications
+
+Needed to let you know when push messages are sent and received
+
+* Read data you copy and paste
+
+This is the main purpose of the extension
+
+* Know your email address
+
+Needed to know who you are logged in as when sharing with your other devices
+
+OPTIONAL PERMISSION:
+
+* Read and change all your data on the websites you visit
+
+I know it sounds scary, but all I do is listen for copy and cut commands so I know when the clipboard has info. The page is not read or changed.
+
+
+
+
+Free and advertising free. I write software for fun and hope it benefits others.
+Open source code
+https://github.com/Pushy-Clipboard/pushy-chrome-extension
+
