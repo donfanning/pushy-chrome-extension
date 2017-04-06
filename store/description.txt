@@ -23,6 +23,7 @@ This is the main purpose of the extension
 
 Needed to know who you are logged in as when sharing with your other devices
 
+
 OPTIONAL PERMISSION:
 
 * Read and change all your data on the websites you visit
@@ -30,6 +31,9 @@ OPTIONAL PERMISSION:
 I know it sounds scary, but all I do is listen for copy and cut commands so I know when the clipboard has info. The page is not read or changed.
 
 
+PRIVACY:
+
+https://github.com/Pushy-Clipboard/pushy-chrome-extension/blob/master/PRIVACY.md
 
 
 Free and advertising free. I write software for fun and hope it benefits others.
