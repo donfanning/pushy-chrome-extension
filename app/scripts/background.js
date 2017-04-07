@@ -109,6 +109,7 @@ for this device.`;
 	function _onInstalled(details) {
 		if (details.reason === 'install') {
 			// extension installed
+			app.GA.event(app.GA.INSTALLED);
 			// save OS
 			app.Utils.getPlatformOS().then((os) => {
 				app.Utils.set('os', os);
@@ -117,6 +118,7 @@ for this device.`;
 			app.Notify.showMainTab();
 		} else if (details.reason === 'update') {
 			// extension updated
+			app.GA.event(app.GA.UPDATED);
 			_updateData();
 			_initializeFirebase().then(() => {
 				return app.SW.update();
@@ -129,12 +131,13 @@ for this device.`;
 
 	/**
 	 * Event: Fired when a profile that has this extension installed first
-	 *     starts up
+	 * starts up
 	 * @see https://developer.chrome.com/extensions/runtime#event-onStartup
 	 * @private
 	 * @memberOf Background
 	 */
 	function _onStartup() {
+		app.GA.page('/background.html');
 		app.Alarm.updateAlarms();
 		app.Alarm.deleteOldClipItems();
 		_initializeFirebase().catch((error) => {});

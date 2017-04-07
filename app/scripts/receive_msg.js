@@ -96,6 +96,8 @@ app.ReceiveMsg = (function() {
 				return;
 			}
 
+			app.GA.event(app.GA.RECEIVED);
+
 			if (data.act === app.Msg.ACTION_MESSAGE) {
 				// Remote ClipItem
 				app.Devices.add(device);

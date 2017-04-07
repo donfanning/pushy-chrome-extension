@@ -53,9 +53,11 @@ module.exports = {
 		'ServiceWorkerRegistration': true,
 		'ChromePromise': true,
 		'Dexie': true,
+		'ga': true,
 	},
 
 	'rules': {
+		'prefer-rest-params': 'off',
 		'eqeqeq': ['error', 'always'],
 		'linebreak-style': ['off', 'windows'],
 		'max-len': ['warn', 80],

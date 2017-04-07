@@ -108,6 +108,7 @@ app.Reg = (function() {
 				const url = `${URL_BASE}register/${regId}`;
 				return _doCommand(url, ERROR_REGISTER);
 			}).then(() => {
+				app.GA.event(app.GA.REGISTERED);
 				app.Utils.set('registered', true);
 				return Promise.resolve();
 			});
@@ -127,6 +128,7 @@ app.Reg = (function() {
 				const url = `${URL_BASE}unregister/${regId}`;
 				return _doCommand(url, ERROR_UNREGISTER);
 			}).then(() => {
+				app.GA.event(app.GA.UNREGISTERED);
 				app.Utils.set('registered', false);
 				return Promise.resolve();
 			});

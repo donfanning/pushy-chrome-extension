@@ -171,6 +171,8 @@ app.Main = (function() {
 	 * 	have resolved and content has been stamped to the page
 	 */
 	t.addEventListener('dom-change', () => {
+		// track usage
+		app.GA.page('/main.html');
 		// disable devices-page if not signed in
 		const idx = _getPageIdx('page-devices');
 		t.pages[idx].disabled = !app.Utils.isSignedIn();
