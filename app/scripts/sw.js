@@ -30,7 +30,7 @@
 	 * @type {string}
 	 * @memberOf ServiceWorker
 	 */
-	const URL_FETCH_BASE = 'http://www.anyoldthing.com/?';
+	const URL_FETCH_BASE = 'https://pushy-clipboard.github.io/?';
 
 	/**
 	 * Google search base path

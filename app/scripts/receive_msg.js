@@ -54,9 +54,12 @@ app.ReceiveMsg = (function() {
 	 */
 	function _onWebRequestBefore(details) {
 		const url = decodeURI(details.url);
-		const regex = /http:\/\/www\.anyoldthing\.com\/\?(.*)/;
+		const regex = /https:\/\/pushy-clipboard\.github\.io\/\?(.*)/;
+		let text;
 		const matches = url.match(regex);
-		let text = matches[1];
+		if (matches && (matches.length > 1)) {
+			text = matches[1];
+		}
 		if (text) {
 			const dataArray = JSON.parse(text);
 			if (dataArray) {
@@ -74,11 +77,9 @@ app.ReceiveMsg = (function() {
 		return {cancel: true};
 	}
 
-	/**
-	 * Listen for web requests
-	 */
+	// Listen for web requests
 	chrome.webRequest.onBeforeRequest.addListener(_onWebRequestBefore, {
-		urls: ['http://www.anyoldthing.com/*'],
+		urls: ['https://pushy-clipboard.github.io/*'],
 	}, ['blocking']);
 
 	return {
