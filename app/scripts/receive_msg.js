@@ -71,10 +71,10 @@ app.ReceiveMsg = (function() {
 						}, MESSAGE_WAIT_MILLIS);
 					})(i);
 				}
+				// cancel fake request
+				return {cancel: true};
 			}
 		}
-		// cancel fake request
-		return {cancel: true};
 	}
 
 	// Listen for web requests
