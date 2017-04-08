@@ -150,7 +150,9 @@ app.GA = (function() {
 		 * @param {string} page - page path
 		 */
 		page: function(page) {
-			ga('send', 'pageview', page);
+			if (page) {
+				ga('send', 'pageview', page);
+			}
 		},
 
 		/**
@@ -159,7 +161,9 @@ app.GA = (function() {
 		 * @param {GAEvent} event
 		 */
 		event: function(event) {
-			ga('send', 'event', event.cat, event.act);
+			if (event) {
+				ga('send', 'event', event.cat, event.act);
+			}
 		},
 	};
 
