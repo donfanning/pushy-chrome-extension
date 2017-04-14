@@ -38,11 +38,11 @@
 	/**
 	 * Default values in localStorage
 	 * @type {{version: int, monitorClipboard: boolean, allowPush: boolean,
-	 * autoSend: boolean, allowReceive: boolean, deviceSN: string,
-	 * deviceNickname: string, storageDuration: number, notify: boolean,
-	 * notifyOnSend: boolean, notifyOnReceive: boolean, devices: {},
-	 * signedIn: boolean, needsCleanup: boolean, email: string,
-	 * uid: string, photoURL: string, lastEmail: string, lastUid: string,
+	 * autoSend: boolean, permissions: string, allowReceive: boolean,
+	 * deviceSN: string, deviceNickname: string, storageDuration: number,
+	 * notify: boolean, notifyOnSend: boolean, notifyOnReceive: boolean,
+	 * highPriority: boolean, devices: {}, signedIn: boolean,
+	 * needsCleanup: boolean, email: string, uid: string, photoURL: string,
 	 * registered: boolean}}
 	 * @const
 	 * @private
