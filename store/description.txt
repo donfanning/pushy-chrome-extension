@@ -28,7 +28,7 @@ OPTIONAL PERMISSION:
 
 * Read and change all your data on the websites you visit
 
-I know it sounds scary, but all I do is listen for copy and cut commands so I know when the clipboard has info. The page is not read or changed.
+You will be prompted to opt in to this permission. It allows you to automatically store text you copy on most Web Sites you visit.
 
 
 PRIVACY:
