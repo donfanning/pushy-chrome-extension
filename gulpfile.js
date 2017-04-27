@@ -2,33 +2,36 @@
 
 // paths and files
 const base = {
-	app: 'clip-man-chrome-extension',
+	app: 'pushy-chrome-extension',
 	src: 'app/',
 	dist: 'dist/',
 	dev: 'dev/',
 	store: 'store/',
 };
 const path = {
-	scripts: base.src + 'scripts/',
-	html: base.src + 'html/',
-	elements: base.src + 'elements/',
-	styles: base.src + 'styles/',
-	images: base.src + 'images/',
-	assets: base.src + 'assets/',
-	lib: base.src + 'lib/',
-	bower: base.src + 'bower_components/',
+	scripts: `${base.src}scripts/`,
+	html: `${base.src}html/`,
+	elements: `${base.src}elements/`,
+	styles: `${base.src}styles/`,
+	images: `${base.src}images/`,
+	assets: `${base.src}assets/`,
+	lib: `${base.src}lib/`,
+	bower: `${base.src}bower_components/`,
 };
 const files = {
-	manifest: base.src + 'manifest.json',
-	scripts: path.scripts + '*.*',
-	html: path.html + '*.*',
-	styles: path.styles + '**/*.*',
-	elements: path.elements + '**/*.*',
-	images: path.images + '*.*',
-	assets: path.assets + '*.*',
-	lib: path.lib + '**/*.*',
-	bower: [path.bower + '**/*', '!' + path.bower + '**/test/*',
-		'!' + path.bower + '**/demo/*'],
+	manifest: `${base.src}manifest.json`,
+	scripts: `${path.scripts}*.*`,
+	html: `${path.html}*.*`,
+	styles: `${path.styles}**/*.*`,
+	elements: `${path.elements}**/*.*`,
+	images: `${path.images}*.*`,
+	assets: `${path.assets}*.*`,
+	lib: `${path.lib}**/*.*`,
+	bower: [
+		`${path.bower}**/*`,
+		`!${path.bower}**/test/*`,
+		`!${path.bower}**/demo/*`,
+	],
 };
 
 // command options
@@ -63,7 +66,8 @@ const plugins = require('gulp-load-plugins')({
 	replaceString: /\bgulp[\-.]/,
 });
 
-const regex = new RegExp('^(.*?)' + base.app + '\\\\', 'g');
+// const regex = new RegExp('^(.*?)' + base.app + '\\\\', 'g');
+const regex = new RegExp(`^(.*?)${base.app}\\\\`, 'g');
 
 /**
  * Output filenames that changed
@@ -84,7 +88,7 @@ gulp.task('watch', ['manifest', 'scripts', 'html', 'styles', 'elements',
 	function() {
 		gulp.watch(files.manifest, ['manifest']).on('change', onChange);
 		gulp.watch([files.scripts, 'gulpfile.js', '.eslintrc.js',
-				base.src + '*.js'], ['scripts']).on('change', onChange);
+				`${base.src}*.js`], ['scripts']).on('change', onChange);
 		gulp.watch(files.html, ['html']).on('change', onChange);
 		gulp.watch(files.styles, ['styles']).on('change', onChange);
 		gulp.watch(files.elements, ['elements']).on('change', onChange);
@@ -128,7 +132,7 @@ gulp.task('clean-all', function() {
 
 // manifest.json
 gulp.task('manifest', function() {
-	return gulp.src(base.src + 'manifest.json', {base: '.'})
+	return gulp.src(files.manifest, {base: '.'})
 		.pipe(plugins.changed(isProd ? base.dist : base.dev))
 		.pipe((isProd && !isProdTest) ? plugins.stripLine('"key":') :
 			gutil.noop())
@@ -145,7 +149,7 @@ gulp.task('bower', function() {
 // lint Javascript
 gulp.task('lintjs', function() {
 	return gulp.src([files.scripts, files.elements, './gulpfile.js',
-		'./.eslintrc.js', base.src + '*.js'], {base: '.'})
+		'./.eslintrc.js', `${base.src}*.js`], {base: '.'})
 		.pipe(plugins.changed(base.dev))
 		.pipe(plugins.eslint())
 		.pipe(plugins.eslint.format())
@@ -154,7 +158,7 @@ gulp.task('lintjs', function() {
 
 // scripts - lint first
 gulp.task('scripts', ['lintjs'], function() {
-	return gulp.src([files.scripts, base.src + '*.js'], {base: '.'})
+	return gulp.src([files.scripts, `${base.src}*.js`], {base: '.'})
 		.pipe(plugins.changed(isProd ? base.dist : base.dev))
 		.pipe(isProd ? minifier(minifierOpts,
 				uglifyjs).on('error', gutil.log) : gutil.noop())
@@ -211,7 +215,7 @@ gulp.task('lib', function() {
 
 // vulcanize for production
 gulp.task('vulcanize', function() {
-	return gulp.src(base.src + 'elements/' + 'elements.html', {base: '.'})
+	return gulp.src(`${path.elements}elements.html`, {base: '.'})
 		.pipe(plugins.vulcanize(vulcanizeOpts))
 		.pipe(plugins.crisper(crisperOpts))
 		.pipe(plugins.if('*.html', plugins.minifyInline()))
@@ -222,7 +226,7 @@ gulp.task('vulcanize', function() {
 
 // compress for the Chrome Web Store
 gulp.task('zip', function() {
-	return gulp.src(base.dist + base.src + '**')
+	return gulp.src(`${base.dist}${base.src}**`)
 		.pipe(!isProdTest ? plugins.zip('store.zip') :
 			plugins.zip('store-test.zip'))
 		.pipe(!isProdTest ? gulp.dest(base.store) : gulp.dest(base.dist));
