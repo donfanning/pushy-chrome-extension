@@ -109,7 +109,7 @@ for this device.`;
 	function _onInstalled(details) {
 		if (details.reason === 'install') {
 			// extension installed
-			app.GA.event(app.GA.INSTALLED);
+			app.GA.event(app.GA.EVENT.INSTALLED);
 			// save OS
 			app.Utils.getPlatformOS().then((os) => {
 				app.Utils.set('os', os);
@@ -118,7 +118,7 @@ for this device.`;
 			app.Notify.showMainTab();
 		} else if (details.reason === 'update') {
 			// extension updated
-			app.GA.event(app.GA.UPDATED);
+			app.GA.event(app.GA.EVENT.UPDATED);
 			_updateData();
 			_initializeFirebase().then(() => {
 				return app.SW.update();

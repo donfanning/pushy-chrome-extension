@@ -57,7 +57,7 @@
 			return;
 		}
 
-		app.GA.event(app.GA.RECEIVED);
+		app.GA.event(app.GA.EVENT.RECEIVED);
 
 		if (data.act === app.Msg.ACTION.MESSAGE) {
 			// received remote ClipItem

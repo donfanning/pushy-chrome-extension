@@ -71,7 +71,7 @@ app.Msg = (function() {
 	 * @private
 	 * @memberOf Msg
 	 */
-	const MSG = {
+	const BODY = {
 		PING: 'Contacting other devices...',
 		PING_RESPONSE: 'Device is online',
 		DEVICE_ADDED: 'New device added',
@@ -80,7 +80,7 @@ app.Msg = (function() {
 
 	/**
 	 * Data packet sent to server
-	 * @typedef {Object} GaeMsg
+	 * @typedef {{}} GaeMsg
 	 * @property {string} act - type of message
 	 * @property {string} m - content of message
 	 * @property {string} dM - {@link Device} model
@@ -94,15 +94,15 @@ app.Msg = (function() {
 	/**
 	 * Get the data packet we will send
 	 * @param {string} action - message type
-	 * @param {string} message - message content
+	 * @param {string} body - message body
 	 * @return {GaeMsg} data packet
 	 * @private
 	 * @memberOf Msg
 	 */
-	function _getData(action, message) {
+	function _getData(action, body) {
 		const msg = _getDevice();
 		msg.act = action;
-		msg.m = message;
+		msg.m = body;
 		return msg;
 	}
 
@@ -145,7 +145,7 @@ app.Msg = (function() {
 			if (notify && app.Notify.onSend()) {
 				app.Notify.create(app.Notify.NOTIFY_SEND, data);
 			}
-			app.GA.event(app.GA.SENT);
+			app.GA.event(app.GA.EVENT.SENT);
 			return Promise.resolve();
 		});
 	}
@@ -182,7 +182,7 @@ app.Msg = (function() {
 		 * @memberOf Msg
 		 */
 		sendDeviceAdded: function() {
-			const data = _getData(ACTION.DEVICE_ADDED, MSG.DEVICE_ADDED);
+			const data = _getData(ACTION.DEVICE_ADDED, BODY.DEVICE_ADDED);
 			return _sendMessage(data, true);
 		},
 
@@ -192,7 +192,7 @@ app.Msg = (function() {
 		 * @memberOf Msg
 		 */
 		sendDeviceRemoved: function() {
-			const data = _getData(ACTION.DEVICE_REMOVED, MSG.DEVICE_REMOVED);
+			const data = _getData(ACTION.DEVICE_REMOVED, BODY.DEVICE_REMOVED);
 			return _sendMessage(data, true);
 		},
 
@@ -202,7 +202,7 @@ app.Msg = (function() {
 		 * @memberOf Msg
 		 */
 		sendPing: function() {
-			const data = _getData(ACTION.PING, MSG.PING);
+			const data = _getData(ACTION.PING, BODY.PING);
 			return _sendMessage(data, false);
 		},
 
@@ -213,7 +213,7 @@ app.Msg = (function() {
 		 * @memberOf Msg
 		 */
 		sendPingResponse: function(srcRegId) {
-			const data = _getData(ACTION.PING_RESPONSE, MSG.PING_RESPONSE);
+			const data = _getData(ACTION.PING_RESPONSE, BODY.PING_RESPONSE);
 			data.srcRegId = srcRegId;
 			return _sendMessage(data, false);
 		},

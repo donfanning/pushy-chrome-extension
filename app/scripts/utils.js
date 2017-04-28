@@ -29,7 +29,6 @@ app.Utils = (function() {
 	const MILLIS_IN_DAY = MIN_IN_DAY * 60 * 1000;
 
 	return {
-
 		/**
 		 * Number of minutes in a day
 		 * @const
@@ -154,7 +153,7 @@ app.Utils = (function() {
 		 * Get integer value from localStorage
 		 * @param {string} key - key to get value for
 		 * @return {Integer} value as integer
-		 *
+		 * @memberOf Utils
 		 */
 		getInt: function(key) {
 			return parseInt(localStorage.getItem(key), 10);
@@ -277,6 +276,5 @@ app.Utils = (function() {
 			}
 			return text;
 		},
-
 	};
 })(window);

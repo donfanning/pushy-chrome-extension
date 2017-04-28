@@ -36,71 +36,31 @@ app.GA = (function() {
 
 	/**
 	 * Google Analytics Event
-	 * @typedef {Event} GAEvent
+	 * @typedef {object} GAEvent
 	 * @property {string} cat - category
 	 * @property {string} act - action
-	 * @memberOf GA
 	 */
 
 	/**
-	 * Extension installed
-	 * @type {GAEvent}
+	 * Event types
+	 * @type {object}
+	 * @property {GAEvent} INSTALLED - extension installed
+	 * @property {GAEvent} UPDATED - extension updated
+	 * @property {GAEvent} SENT - message sent
+	 * @property {GAEvent} RECEIVED - message received
+	 * @property {GAEvent} REGISTERED - {@link Device} registered
+	 * @property {GAEvent} UNREGISTERED - {@link Device} unregistered
 	 * @const
-	 * @default
-	 * @private
 	 * @memberOf GA
 	 */
-	const INSTALLED = {cat: 'extension', act: 'installed'};
-
-	/**
-	 * Extension updated
-	 * @type {GAEvent}
-	 * @const
-	 * @default
-	 * @private
-	 * @memberOf GA
-	 */
-	const UPDATED = {cat: 'extension', act: 'updated'};
-
-	/**
-	 * Message sent
-	 * @type {GAEvent}
-	 * @const
-	 * @default
-	 * @private
-	 * @memberOf GA
-	 */
-	const SENT = {cat: 'message', act: 'sent'};
-
-	/**
-	 * Message received
-	 * @type {GAEvent}
-	 * @const
-	 * @default
-	 * @private
-	 * @memberOf GA
-	 */
-	const RECEIVED = {cat: 'message', act: 'received'};
-
-	/**
-	 * Device registered
-	 * @type {GAEvent}
-	 * @const
-	 * @default
-	 * @private
-	 * @memberOf GA
-	 */
-	const REGISTERED = {cat: 'register', act: 'registered'};
-
-	/**
-	 * Device unregistered
-	 * @type {GAEvent}
-	 * @const
-	 * @default
-	 * @private
-	 * @memberOf GA
-	 */
-	const UNREGISTERED = {cat: 'register', act: 'unregistered'};
+	const EVENT = {
+		INSTALLED: {cat: 'extension', act: 'installed'},
+		UPDATED: {cat: 'extension', act: 'updated'},
+		SENT: {cat: 'message', act: 'sent'},
+		RECEIVED: {cat: 'message', act: 'received'},
+		REGISTERED: {cat: 'register', act: 'registered'},
+		UNREGISTERED: {cat: 'register', act: 'unregistered'},
+	};
 
 	/**
 	 * Event: called when document and resources are loaded<br />
@@ -137,12 +97,7 @@ app.GA = (function() {
 
 	return {
 
-		INSTALLED: INSTALLED,
-		UPDATED: UPDATED,
-		SENT: SENT,
-		RECEIVED: RECEIVED,
-		REGISTERED: REGISTERED,
-		UNREGISTERED: UNREGISTERED,
+		EVENT: EVENT,
 
 		/**
 		 * Send a page
