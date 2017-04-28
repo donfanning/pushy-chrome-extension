@@ -44,6 +44,7 @@
       <w>msec</w>
       <w>myicons</w>
       <w>noop</w>
+      <w>nosave</w>
       <w>noseparator</w>
       <w>notificationclick</w>
       <w>notificationclose</w>
