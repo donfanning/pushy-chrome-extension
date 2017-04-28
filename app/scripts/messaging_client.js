@@ -42,51 +42,41 @@ app.Msg = (function() {
 	const MAX_MSG_LEN = 4096;
 
 	/**
-	 * @value
+	 * Message action
+	 * @type {{MESSAGE: string,
+	 * PING: string,
+	 * PING_RESPONSE: string,
+	 * DEVICE_ADDED: string,
+	 * DEVICE_REMOVED: string}}
+	 * @const
+	 * @default
 	 * @memberOf Msg
 	 */
-	const ACTION_MESSAGE = 'm';
-	/**
-	 * @value
-	 * @memberOf Msg
-	 */
-	const ACTION_PING = 'ping_others';
-	/**
-	 * @value
-	 * @memberOf Msg
-	 */
-	const ACTION_PING_RESPONSE = 'respond_to_ping';
-	/**
-	 * @value
-	 * @memberOf Msg
-	 */
-	const ACTION_DEVICE_ADDED = 'add_our_device';
-	/**
-	 * @value
-	 * @memberOf Msg
-	 */
-	const ACTION_DEVICE_REMOVED = 'remove_our_device';
+	const ACTION = {
+		MESSAGE: 'm',
+		PING: 'ping_others',
+		PING_RESPONSE: 'respond_to_ping',
+		DEVICE_ADDED: 'add_our_device',
+		DEVICE_REMOVED: 'remove_our_device',
+	};
 
 	/**
-	 * @value
+	 * Message body
+	 * @type {{PING: string,
+	 * PING_RESPONSE: string,
+	 * DEVICE_ADDED: string,
+	 * DEVICE_REMOVED: string}}
+	 * @const
+	 * @default
+	 * @private
 	 * @memberOf Msg
 	 */
-	const MSG_PING = 'Contacting other devices...';
-	/**
-	 * @value
-	 * @memberOf Msg
-	 */
-	const MSG_PING_RESPONSE = 'Device is online';
-	/**
-	 * @value
-	 * @memberOf Msg
-	 */
-	const MSG_DEVICE_ADDED = 'New device added';
-	/**
-	 * @value
-	 * @memberOf Msg
-	 */
-	const MSG_DEVICE_REMOVED = 'Device removed';
+	const MSG = {
+		PING: 'Contacting other devices...',
+		PING_RESPONSE: 'Device is online',
+		DEVICE_ADDED: 'New device added',
+		DEVICE_REMOVED: 'Device removed',
+	};
 
 	/**
 	 * Data packet sent to server
@@ -162,11 +152,7 @@ app.Msg = (function() {
 
 	return {
 
-		ACTION_MESSAGE: ACTION_MESSAGE,
-		ACTION_PING: ACTION_PING,
-		ACTION_PING_RESPONSE: ACTION_PING_RESPONSE,
-		ACTION_DEVICE_ADDED: ACTION_DEVICE_ADDED,
-		ACTION_DEVICE_REMOVED: ACTION_DEVICE_REMOVED,
+		ACTION: ACTION,
 
 		/**
 		 * Send clipboard contents as represented by a {@link ClipItem}
@@ -185,7 +171,7 @@ app.Msg = (function() {
 				text = text.substring(0, MAX_MSG_LEN - 1);
 			}
 
-			const data = _getData(ACTION_MESSAGE, text);
+			const data = _getData(ACTION.MESSAGE, text);
 			data.FAV = clipItem.fav ? '1' : '0';
 			return _sendMessage(data, true);
 		},
@@ -196,7 +182,7 @@ app.Msg = (function() {
 		 * @memberOf Msg
 		 */
 		sendDeviceAdded: function() {
-			const data = _getData(ACTION_DEVICE_ADDED, MSG_DEVICE_ADDED);
+			const data = _getData(ACTION.DEVICE_ADDED, MSG.DEVICE_ADDED);
 			return _sendMessage(data, true);
 		},
 
@@ -206,7 +192,7 @@ app.Msg = (function() {
 		 * @memberOf Msg
 		 */
 		sendDeviceRemoved: function() {
-			const data = _getData(ACTION_DEVICE_REMOVED, MSG_DEVICE_REMOVED);
+			const data = _getData(ACTION.DEVICE_REMOVED, MSG.DEVICE_REMOVED);
 			return _sendMessage(data, true);
 		},
 
@@ -216,7 +202,7 @@ app.Msg = (function() {
 		 * @memberOf Msg
 		 */
 		sendPing: function() {
-			const data = _getData(ACTION_PING, MSG_PING);
+			const data = _getData(ACTION.PING, MSG.PING);
 			return _sendMessage(data, false);
 		},
 
@@ -227,7 +213,7 @@ app.Msg = (function() {
 		 * @memberOf Msg
 		 */
 		sendPingResponse: function(srcRegId) {
-			const data = _getData(ACTION_PING_RESPONSE, MSG_PING_RESPONSE);
+			const data = _getData(ACTION.PING_RESPONSE, MSG.PING_RESPONSE);
 			data.srcRegId = srcRegId;
 			return _sendMessage(data, false);
 		},

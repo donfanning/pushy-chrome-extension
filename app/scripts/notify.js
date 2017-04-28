@@ -35,34 +35,20 @@ app.Notify = (function() {
 	const NOTIFY_SEND = 'CLIP_MAN_SEND';
 
 	/**
-	 * Local copy icon
-	 * @type {string}
-	 * @default
+	 * Icons
+	 * @type {{LOCAL_COPY: string,
+	 * ADD_DEVICE: string,
+	 * REMOVE_DEVICE: string}}
 	 * @const
+	 * @default
 	 * @private
 	 * @memberOf Notify
 	 */
-	const IC_LOCAL_COPY = '/images/ic_local_copy.png';
-
-	/**
-	 * Add device icon
-	 * @type {string}
-	 * @default
-	 * @const
-	 * @private
-	 * @memberOf Notify
-	 */
-	const IC_ADD_DEVICE = '/images/ic_add_device.png';
-
-	/**
-	 * Remove device icon
-	 * @type {string}
-	 * @default
-	 * @const
-	 * @private
-	 * @memberOf Notify
-	 */
-	const IC_REMOVE_DEVICE = '/images/ic_remove_device.png';
+	const ICON = {
+		LOCAL_COPY: '/images/ic_local_copy.png',
+		ADD_DEVICE: '/images/ic_add_device.png',
+		REMOVE_DEVICE: '/images/ic_remove_device.png',
+	};
 
 	/**
 	 * Get the icon for the notification
@@ -73,36 +59,33 @@ app.Notify = (function() {
 	 */
 	function _getIcon(data) {
 		let path = '';
-		if (data.act === app.Msg.ACTION_MESSAGE) {
-			path = IC_LOCAL_COPY;
-		} else if (data.act === app.Msg.ACTION_DEVICE_ADDED) {
-			path = IC_ADD_DEVICE;
-		} else if (data.act === app.Msg.ACTION_DEVICE_REMOVED) {
-			path = IC_REMOVE_DEVICE;
+		if (data.act === app.Msg.ACTION.MESSAGE) {
+			path = ICON.LOCAL_COPY;
+		} else if (data.act === app.Msg.ACTION.DEVICE_ADDED) {
+			path = ICON.ADD_DEVICE;
+		} else if (data.act === app.Msg.ACTION.DEVICE_REMOVED) {
+			path = ICON.REMOVE_DEVICE;
 		}
 		return path;
 	}
 
 	/**
 	 * Event: Fired when the user clicked in a non-button area
-	 *     of the notification.
+	 * of the notification.
 	 * @see https://developer.chrome.com/apps/notifications#event-onClicked
-	 * @param {int} notificationId - type of notification
+	 * @param {string} id - notification type
 	 * @private
-	 * @memberOf Background
+	 * @memberOf Notify
 	 */
-	function _onNotificationClicked(notificationId) {
+	function _onNotificationClicked(id) {
 		app.Notify.showMainTab();
-		chrome.notifications.clear(notificationId, () => {});
+		chrome.notifications.clear(id, () => {});
 	}
 
-	/**
-	 * Listen for click on our notifications
-	 */
+	// Listen for click on our notifications
 	chrome.notifications.onClicked.addListener(_onNotificationClicked);
 
 	return {
-
 		/**
 		 * Send notification type
 		 * @memberOf Notify
@@ -129,19 +112,18 @@ app.Notify = (function() {
 			}
 
 			chrome.notifications.getPermissionLevel(function(level) {
-				if (level !== 'granted') {
-					return;
-				}
-
-				switch (type) {
-					case NOTIFY_SEND:
-						options.iconUrl = chrome.runtime.getURL(icon);
-						options.title = 'Sent push message';
-						options.message = data.m;
-						chrome.notifications.create(type, options, () => {});
-						break;
-					default:
-						break;
+				if (level === 'granted') {
+					switch (type) {
+						case NOTIFY_SEND:
+							options.iconUrl = chrome.runtime.getURL(icon);
+							options.title = 'Sent push message';
+							options.message = data.m;
+							chrome.notifications
+								.create(type, options, () => {});
+							break;
+						default:
+							break;
+					}
 				}
 			});
 		},
@@ -172,7 +154,5 @@ app.Notify = (function() {
 				}
 			});
 		},
-
 	};
-
 })();

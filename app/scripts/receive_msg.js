@@ -15,8 +15,7 @@
  * limitations under the License.
  *
  */
-window.app = window.app || {};
-app.ReceiveMsg = (function() {
+(function() {
 	'use strict';
 
 	/**
@@ -29,6 +28,7 @@ app.ReceiveMsg = (function() {
 	 * @type {int}
 	 * @default
 	 * @const
+	 * @private
 	 * @memberOf ReceiveMsg
 	 */
 	const MESSAGE_WAIT_MILLIS = 500;
@@ -45,7 +45,52 @@ app.ReceiveMsg = (function() {
 	}
 
 	/**
+	 * Process received push notifications
+	 * @param {GaeMsg} data - push message
+	 * @private
+	 * @memberOf ReceiveMsg
+	 */
+	function _process(data) {
+		const device = _getDevice(data);
+		if (!app.Utils.isSignedIn() || device.isMe()) {
+			// don't handle our messages or if we are signed out
+			return;
+		}
+
+		app.GA.event(app.GA.RECEIVED);
+
+		if (data.act === app.Msg.ACTION.MESSAGE) {
+			// received remote ClipItem
+			app.Devices.add(device);
+			const fav = (data.fav === '1');
+			// persist
+			app.ClipItem
+				.add(data.m, Date.now(), fav, true, device.getName())
+				.catch(() => {});
+			// save to clipboard
+			app.CB.copyToClipboard(data.m);
+		} else if (data.act === app.Msg.ACTION.PING) {
+			// we were pinged
+			app.Devices.add(device);
+			// respond to ping
+			app.Msg.sendPingResponse(data.srcRegId).catch((error) => {
+				app.Gae.sendMessageFailed(error);
+			});
+		} else if (data.act === app.Msg.ACTION.PING_RESPONSE) {
+			// someone is around
+			app.Devices.add(device);
+		} else if (data.act === app.Msg.ACTION.DEVICE_ADDED) {
+			// someone new is here
+			app.Devices.add(device);
+		} else if (data.act === app.Msg.ACTION.DEVICE_REMOVED) {
+			// someone went away
+			app.Devices.remove(device);
+		}
+	}
+
+	/**
 	 * Event: Fired when a request is about to occur.
+	 * Capture the Service Worker request and process messages
 	 * @see https://goo.gl/4j4RtY
 	 * @param {object} details - details on the request
 	 * @return {object} cancel the request
@@ -67,7 +112,7 @@ app.ReceiveMsg = (function() {
 					(function(index) {
 						setTimeout(function() {
 							// slow down message stream
-							app.ReceiveMsg.process(dataArray[index]);
+							_process(dataArray[index]);
 						}, MESSAGE_WAIT_MILLIS);
 					})(i);
 				}
@@ -81,51 +126,4 @@ app.ReceiveMsg = (function() {
 	chrome.webRequest.onBeforeRequest.addListener(_onWebRequestBefore, {
 		urls: ['https://pushy-clipboard.github.io/*'],
 	}, ['blocking']);
-
-	return {
-
-		/**
-		 * Process received push notifications
-		 * @param {GaeMsg} data - push message
-		 * @memberOf ReceiveMsg
-		 */
-		process: function(data) {
-			const device = _getDevice(data);
-			if (!app.Utils.isSignedIn() || device.isMe()) {
-				// don't handle our messages or if we are signed out
-				return;
-			}
-
-			app.GA.event(app.GA.RECEIVED);
-
-			if (data.act === app.Msg.ACTION_MESSAGE) {
-				// Remote ClipItem
-				app.Devices.add(device);
-				const fav = (data.fav === '1');
-				// Persist
-				app.ClipItem
-					.add(data.m, Date.now(), fav, true, device.getName())
-					.catch((error) => {});
-				// save to clipboard
-				app.CB.copyToClipboard(data.m);
-			} else if (data.act === app.Msg.ACTION_PING) {
-				// we were pinged
-				app.Devices.add(device);
-				app.Msg.sendPingResponse(data.srcRegId).catch((error) => {
-					app.Gae.sendMessageFailed(error);
-				});
-			} else if (data.act === app.Msg.ACTION_PING_RESPONSE) {
-				// someone is around
-				app.Devices.add(device);
-			} else if (data.act === app.Msg.ACTION_DEVICE_ADDED) {
-				// someone new is here
-				app.Devices.add(device);
-			} else if (data.act === app.Msg.ACTION_DEVICE_REMOVED) {
-				// someone went away
-				app.Devices.remove(device);
-			}
-		},
-
-	};
-
 })();
