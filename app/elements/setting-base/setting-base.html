@@ -1,0 +1,113 @@
+<!--
+  ~ Copyright 2017 Michael A Updike
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
+
+<dom-module id="setting-base">
+	<template>
+		<style include="shared-styles"></style>
+
+		<div class="section-title setting-label" tabindex="-1"
+			 hidden$="[[!sectionTitle]]">
+			[[sectionTitle]]
+		</div>
+		<content></content>
+		<hr hidden$="[[noseparator]]" />
+		<template is="dom-if" if="[[!nosave]]">
+			<iron-localstorage name="[[name]]" value="{{value}}"
+							   on-iron-localstorage-load-empty="_init">
+			</iron-localstorage>
+		</template>
+	</template>
+</dom-module>
+
+<script>
+	'use strict';
+	Polymer({
+		is: 'setting-base',
+
+		hostAttributes: {
+			role: 'group',
+			tabIndex: -1,
+		},
+
+		properties: {
+			name: {
+				type: String,
+				value: 'store',
+			},
+
+			value: {
+				type: Object,
+				value: '',
+				notify: true,
+			},
+
+			defaultValue: {
+				type: Object,
+				value: '',
+			},
+
+			sectionTitle: {
+				type: String,
+				value: '',
+			},
+
+			noseparator: {
+				type: Boolean,
+				value: false,
+			},
+
+			nosave: {
+				type: Boolean,
+				value: false,
+			},
+
+			disabled: {
+				type: Boolean,
+				value: false,
+			},
+		},
+
+		/**
+		 * Get the value of the item
+		 * @return {Object} value - value of item
+		 */
+		getValue: function() {
+			return this.value;
+		},
+
+		/**
+		 * Set the value of the item
+		 * @param {Object} value - value of item
+		 */
+		setValue: function(value) {
+			this.value = value;
+		},
+
+		/**
+		 * Initialize value if it is not in localStorage
+		 * @private
+		 */
+		_init: function() {
+			this.set('value', this.defaultValue);
+		},
+	});
+</script>

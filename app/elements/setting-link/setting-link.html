@@ -13,10 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/paper-styles/typography.html">
-<link rel="import" href="../../bower_components/paper-styles/color.html">
-<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../setting-base/setting-base.html">
+
 <link rel="import" href="../../bower_components/paper-ripple/paper-ripple.html">
 <link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
 
@@ -65,38 +63,27 @@ limitations under the License.
 
 		</style>
 
-		<div class="section-title" tabindex="-1" hidden$="[[!sectionTitle]]">{{sectionTitle}}</div>
-
-		<paper-icon-item on-tap="_onLinkTapped" class="flex">
-			<paper-ripple center></paper-ripple>
-			<iron-icon icon=[[icon]] item-icon></iron-icon>
-			<span class="setting-label">[[label]]</span>
-		</paper-icon-item>
-
-		<hr class="divider" hidden$="[[noseparator]]" />
-
+		<setting-base id="base" nosave
+		              section-title="[[sectionTitle]]"
+		              noseparator="[[noseparator]]" disabled="[[disabled]]">
+			<paper-icon-item on-tap="_onLinkTapped" class="flex">
+				<paper-ripple center></paper-ripple>
+				<iron-icon icon=[[icon]] item-icon></iron-icon>
+				<span class="setting-label">[[label]]</span>
+			</paper-icon-item>
+			<template is="dom-if" if="[[!noseparator]]">
+				<hr class="divider"/>
+			</template>
+		</setting-base>
 	</template>
 </dom-module>
 
 <script>
 'use strict';
-
 Polymer({
 	is: 'setting-link',
-
-	hostAttributes: {
-		role: 'group',
-		tabIndex: -1,
-	},
-
 	properties: {
-
 		label: {
-			type: String,
-			value: '',
-		},
-
-		sectionTitle: {
 			type: String,
 			value: '',
 		},
@@ -110,17 +97,6 @@ Polymer({
 			type: String,
 			value: '',
 		},
-
-		disabled: {
-			type: Boolean,
-			value: false,
-		},
-
-		noseparator: {
-			type: Boolean,
-			value: false,
-		},
-
 	},
 
 	/**
@@ -131,6 +107,5 @@ Polymer({
 		const chromep = new ChromePromise();
 		chromep.tabs.create({url: this.url});
 	},
-
 });
 </script>

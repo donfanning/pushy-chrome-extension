@@ -1,35 +1,33 @@
 <!--
-Copyright 2016 Michael A Updike
+  ~ Copyright 2017 Michael A Updike
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  -->
+<link rel="import" href="../setting-base/setting-base.html">
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-<link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/paper-styles/typography.html">
-<link rel="import" href="../../bower_components/paper-styles/color.html">
-<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
-<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-label/iron-label.html">
+
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../../bower_components/paper-ripple/paper-ripple.html">
 <link rel="import" href="../../bower_components/paper-toggle-button/paper-toggle-button.html">
 
 <dom-module id="setting-toggle">
-	<style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-	<style include="shared-styles"></style>
 	<template>
+		<style include="shared-styles"></style>
+		<style include="iron-flex iron-flex-alignment"></style>
 		<style>
-
 			:host {
 				display: block;
 				position: relative;
@@ -48,51 +46,40 @@ limitations under the License.
 			:host([indent]) paper-item {
 				padding-left: 24px;
 			}
-
 		</style>
 
-		<div class="section-title setting-label" tabindex="-1" hidden$="[[!sectionTitle]]">{{sectionTitle}}</div>
-
-		<iron-label for="toggle">
-			<paper-item class="center horizontal layout" tabindex="-1">
-				<paper-item-body class="flex" two-line>
-					<div class="setting-label" hidden$="[[!mainLabel]]">{{mainLabel}}</div>
-					<div class="setting-label" secondary hidden$="[[!secondaryLabel]]">{{secondaryLabel}}</div>
-					<paper-ripple center></paper-ripple>
-				</paper-item-body>
-				<paper-toggle-button id="toggle" checked="{{checked}}" disabled$="[[disabled]]"></paper-toggle-button>
-			</paper-item>
-		</iron-label>
-		<hr hidden$="[[noseparator]]" />
-		<iron-localstorage name="{{name}}" value="{{checked}}" on-iron-localstorage-load-empty="_init"></iron-localstorage>
-
+		<setting-base id="base"
+					  name="[[name]]" value="{{checked}}" default-value="false"
+					  section-title="[[sectionTitle]]"
+					  noseparator="[[noseparator]]" disabled="[[disabled]]">
+			<iron-label for="toggle">
+				<paper-item class="center horizontal layout" tabindex="-1">
+					<paper-item-body class="flex" two-line>
+						<div class="setting-label" hidden$="[[!mainLabel]]">
+							{{mainLabel}}
+						</div>
+						<div class="setting-label" secondary
+							 hidden$="[[!secondaryLabel]]">
+							{{secondaryLabel}}
+						</div>
+						<paper-ripple center></paper-ripple>
+					</paper-item-body>
+					<paper-toggle-button
+							id="toggle" class="setting-toggle-button"
+							checked="{{checked}}" disabled$="[[disabled]]">
+					</paper-toggle-button>
+				</paper-item>
+			</iron-label>
+		</setting-base>
 	</template>
 </dom-module>
 
 <script>
 'use strict';
-
 Polymer({
 	is: 'setting-toggle',
 
-	hostAttributes: {
-		role: 'group',
-		tabIndex: -1,
-	},
-
 	properties: {
-
-		name: {
-			type: String,
-			value: 'store',
-		},
-
-		checked: {
-			type: Boolean,
-			value: false,
-			notify: true,
-		},
-
 		mainLabel: {
 			type: String,
 			value: '',
@@ -102,28 +89,14 @@ Polymer({
 			type: String,
 			value: '',
 		},
-
-		sectionTitle: {
-			type: String,
-			value: '',
-		},
-
-		disabled: {
-			type: Boolean,
-			value: false,
-		},
-
-		noseparator: {
-			type: Boolean,
-			value: false,
-		},
-
 	},
 
-	// initialize value if it is not in localstorage
-	_init: function() {
-		this.set('checked', 'false');
+	/**
+	 * Set the checked state of the toggle
+	 * @param {boolean} checked - checked state
+	 */
+	setChecked: function(checked) {
+		this.$.base.setValue(checked);
 	},
-
 });
 </script>

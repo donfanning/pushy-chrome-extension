@@ -13,16 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/paper-styles/typography.html">
-<link rel="import" href="../../bower_components/paper-styles/color.html">
-<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
+<link rel="import" href="../setting-base/setting-base.html">
+
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 
 <dom-module id="setting-text">
 	<style include="shared-styles"></style>
+	<style include="iron-flex iron-flex-alignment"></style>
 	<template>
 		<style>
 
@@ -49,46 +48,29 @@ limitations under the License.
 
 		</style>
 
-		<div class="section-title setting-label" tabindex="-1" hidden$="[[!sectionTitle]]">{{sectionTitle}}</div>
-		<paper-item class="center horizontal layout" tabindex="-1">
-			<paper-item-body class="flex" two-line>
-				<div class="setting-label" hidden$="[[!mainLabel]]">{{mainLabel}}</div>
-				<div class="setting-label" secondary hidden$="[[!secondaryLabel]]">{{secondaryLabel}}</div>
-			</paper-item-body>
-			<paper-input id="text" value="{{value}}" minlength="1" maxlength="{{maxLength}}"
-			             placeholder="{{placeholder}}" tabindex="0" disabled$="[[disabled]]"
-						 on-blur="_onBlur" on-keyup="_onKeyUp"></paper-input>
-		</paper-item>
-		<hr hidden$="[[noseparator]]" />
-		<iron-localstorage name="{{name}}" value="{{value}}" on-iron-localstorage-load-empty="_init"></iron-localstorage>
-
+		<setting-base id="base"
+		              name="[[name]]" value="{{value}}" default-value="false"
+		              section-title="[[sectionTitle]]"
+		              noseparator="[[noseparator]]" disabled="[[disabled]]">
+			<paper-item class="center horizontal layout" tabindex="-1">
+				<paper-item-body class="flex" two-line>
+					<div class="setting-label" hidden$="[[!mainLabel]]">{{mainLabel}}</div>
+					<div class="setting-label" secondary hidden$="[[!secondaryLabel]]">{{secondaryLabel}}</div>
+				</paper-item-body>
+				<paper-input id="text" value="{{value}}" minlength="1" maxlength="{{maxLength}}"
+				             placeholder="{{placeholder}}" tabindex="0" disabled$="[[disabled]]"
+							 on-blur="_onBlur" on-keyup="_onKeyUp"></paper-input>
+			</paper-item>
+		</setting-base>
 	</template>
 </dom-module>
 
 <script>
 'use strict';
-
 Polymer({
 	is: 'setting-text',
 
-	hostAttributes: {
-		role: 'group',
-		tabIndex: -1,
-	},
-
 	properties: {
-
-		name: {
-			type: String,
-			value: 'store',
-		},
-
-		value: {
-			type: String,
-			value: '',
-			notify: true,
-		},
-
 		placeholder: {
 			type: String,
 			value: 'e.g. Text',
@@ -110,22 +92,6 @@ Polymer({
 			type: String,
 			value: '',
 		},
-
-		sectionTitle: {
-			type: String,
-			value: '',
-		},
-
-		disabled: {
-			type: Boolean,
-			value: false,
-		},
-
-		noseparator: {
-			type: Boolean,
-			value: false,
-		},
-
 	},
 
 	// fire event when input loses focus
@@ -140,11 +106,5 @@ Polymer({
 			this.fire('setting-text-changed', {value: this.value});
 		}
 	},
-
-	// initialize value if it is not in local storage
-	_init: function() {
-		this.set('value', '');
-	},
-
 });
 </script>
