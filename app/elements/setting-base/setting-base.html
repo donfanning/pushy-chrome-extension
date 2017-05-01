@@ -17,22 +17,24 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-styles/color.html">
-<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
-<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
+<link rel="import"
+      href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import"
+      href="../../bower_components/iron-localstorage/iron-localstorage.html">
 
 <dom-module id="setting-base">
 	<template>
 		<style include="shared-styles"></style>
 
 		<div class="section-title setting-label" tabindex="-1"
-			 hidden$="[[!sectionTitle]]">
+		     hidden$="[[!sectionTitle]]">
 			[[sectionTitle]]
 		</div>
 		<content></content>
-		<hr hidden$="[[noseparator]]" />
+		<hr hidden$="[[noseparator]]"/>
 		<template is="dom-if" if="[[!nosave]]">
 			<iron-localstorage name="[[name]]" value="{{value}}"
-							   on-iron-localstorage-load-empty="_init">
+			                   on-iron-localstorage-load-empty="_init">
 			</iron-localstorage>
 		</template>
 	</template>
@@ -87,11 +89,11 @@
 		},
 
 		/**
-		 * Get the value of the item
-		 * @return {Object} value - value of item
+		 * Get a copy of the value of the item
+		 * @return {Object} value - shallow copy of value
 		 */
 		getValue: function() {
-			return this.value;
+			return JSON.parse(JSON.stringify(this.value));
 		},
 
 		/**
@@ -99,7 +101,7 @@
 		 * @param {Object} value - value of item
 		 */
 		setValue: function(value) {
-			this.value = value;
+			this.set('value', value);
 		},
 
 		/**
