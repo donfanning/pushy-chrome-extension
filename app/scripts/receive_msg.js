@@ -59,6 +59,13 @@
 
 		app.GA.event(app.GA.EVENT.RECEIVED);
 
+		try {
+			data.m = decodeURIComponent(data.m);
+		} catch (ex) {
+			// noinspection BadExpressionStatementJS
+			() => {};
+		}
+
 		if (data.act === app.Msg.ACTION.MESSAGE) {
 			// received remote ClipItem
 			app.Devices.add(device);
@@ -89,7 +96,7 @@
 	}
 
 	/**
-	 * Event: Fired when a request is about to occur.
+	 * Event: Fired when a Web request is about to occur.
 	 * Capture the Service Worker request and process messages
 	 * @see https://goo.gl/4j4RtY
 	 * @param {object} details - details on the request
@@ -98,7 +105,13 @@
 	 * @memberOf ReceiveMsg
 	 */
 	function _onWebRequestBefore(details) {
-		const url = decodeURI(details.url);
+		let url = details.url;
+		try {
+			url = decodeURI(url);
+		} catch(ex) {
+			// noinspection BadExpressionStatementJS
+			() => {};
+		}
 		const regex = /https:\/\/pushy-clipboard\.github\.io\/\?(.*)/;
 		let text;
 		const matches = url.match(regex);
@@ -106,7 +119,13 @@
 			text = matches[1];
 		}
 		if (text) {
-			const dataArray = JSON.parse(text);
+			let dataArray = null;
+			try {
+				dataArray = JSON.parse(text);
+			} catch (ex) {
+				// noinspection BadExpressionStatementJS
+				() => {};
+			}
 			if (dataArray) {
 				for (let i = 0; i < dataArray.length; i++) {
 					(function(index) {
@@ -116,9 +135,9 @@
 						}, MESSAGE_WAIT_MILLIS);
 					})(i);
 				}
-				// cancel fake request
-				return {cancel: true};
 			}
+			// cancel fake request
+			return {cancel: true};
 		}
 	}
 

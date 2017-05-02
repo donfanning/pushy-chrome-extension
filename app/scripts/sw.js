@@ -155,7 +155,8 @@
 	 */
 	function doFakeFetch(dataArray) {
 		msgArr = [];
-		const URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
+		let URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
+		URL_FETCH = encodeURI(URL_FETCH);
 		return fetch(URL_FETCH, {method: 'GET'});
 	}
 
@@ -167,11 +168,17 @@
 	function onPush(event) {
 		const payload = event.data.json();
 		const data = payload.data;
-		data.m = decodeURIComponent(data.m);
+		let body;
+		try {
+			body = decodeURIComponent(data.m);
+		} catch(ex) {
+			// noinspection BadExpressionStatementJS
+			() => {};
+		}
 		const tag = getTag(data);
 		const noteOpt = {
 			requireInteraction: (tag === TAG_MESSAGE),
-			body: data.m,
+			body: body,
 			icon: getIcon(data),
 			tag: tag,
 			timestamp: Date.now(),
