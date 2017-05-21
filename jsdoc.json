@@ -4,7 +4,7 @@
     "dictionaries": ["jsdoc", "closure"]
   },
   "opts": {
-    "destination": "./docs/gen",
+    "destination": "../Pushy-Clipboard.github.io/jsdoc",
     "access": "all",
     "recurse": true
   },

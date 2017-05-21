@@ -130,7 +130,8 @@ gulp.task('prodTest', function(callback) {
 // Generate JSDoc
 gulp.task('docs', function(cb) {
 	const config = require('./jsdoc.json');
-	gulp.src(['README.md', files.scripts, files.elements], {read: false})
+	gulp.src(['../Pushy-Clipboard.github.io/README.md',
+		files.scripts, files.elements], {read: false})
 		.pipe(plugins.jsdoc3(config, cb));
 });
 
