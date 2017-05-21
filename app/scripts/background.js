@@ -117,8 +117,6 @@ for this device.`;
 			_initializeData();
 			app.Notify.showMainTab();
 		} else if (details.reason === 'update') {
-			// extension updated
-			app.GA.event(app.GA.EVENT.UPDATED);
 			_updateData();
 			_initializeFirebase().then(() => {
 				return app.SW.update();
@@ -215,7 +213,7 @@ for this device.`;
 		const introClip =
 			new app.ClipItem(INTRO_TEXT, Date.now(), true,
 				false, app.Device.myName());
-		introClip.save();
+		introClip.save().catch((error) => {});
 
 		app.User.setInfo().catch((error) => {});
 	}
@@ -229,8 +227,13 @@ for this device.`;
 		// New items and removal of unused items can take place here
 		// when the version changes
 		const oldVersion = app.Utils.getInt('version');
-		if (oldVersion < 2) {
+
+		if (DATA_VERSION > oldVersion) {
+			// update version number
 			app.Utils.set('version', DATA_VERSION);
+		}
+
+		if (oldVersion < 2) {
 			// remove unused variables
 			localStorage.removeItem('lastEmail');
 			localStorage.removeItem('lastUid');
