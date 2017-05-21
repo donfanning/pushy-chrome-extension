@@ -138,7 +138,7 @@ app.Utils = (function() {
 		/**
 		 * JSON stringify and save a value to localStorage
 		 * @param {string} key - key to set value for
-		 * @param {Object|null} value - new value, if null remove item
+		 * @param {?Object} value - new value, if null remove item
 		 * @memberOf Utils
 		 */
 		set: function(key, value) {
@@ -151,12 +151,16 @@ app.Utils = (function() {
 
 		/**
 		 * Get integer value from localStorage
-		 * @param {string} key - key to get value for
-		 * @return {Integer} value as integer
+		 * @param {!string} key - key to get value for
+		 * @return {?int} value as integer
 		 * @memberOf Utils
 		 */
 		getInt: function(key) {
-			return parseInt(localStorage.getItem(key), 10);
+			let item = localStorage.getItem(key);
+			if (item !== null) {
+				item = parseInt(item, 10);
+			}
+			return item;
 		},
 
 		/**
