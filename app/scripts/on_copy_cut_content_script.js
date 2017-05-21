@@ -5,13 +5,14 @@
  * https://goo.gl/wFvBM1
  */
 
+/**
+ * Content script to monitor clipboard copy and cuts
+ * @namespace
+ */
 (function() {
 	'use strict';
 
-	/**
-	 * Content script to monitor clipboard copy and cuts
-	 * @namespace ContentScript
-	 */
+	new ExceptionHandler();
 
 	if (window.onMyCopy) {
 		window.removeEventListener('copy', window.onMyCopy);

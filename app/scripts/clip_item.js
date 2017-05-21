@@ -7,6 +7,8 @@
 (function(window) {
 	'use strict';
 
+	new ExceptionHandler();
+
 	/**
 	 * Create a new {@link ClipItem}
 	 * @constructor

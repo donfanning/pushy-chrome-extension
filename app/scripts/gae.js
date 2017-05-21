@@ -5,14 +5,16 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Handle communication with Google App Engine server using Endpoints
+ * @see https://cloud.google.com/appengine/docs/standard/java/endpoints/
+ * @namespace
+ */
 app.Gae = (function() {
 	'use strict';
 
-	/**
-	 * Handle communication with Google App Engine server using Endpoints
-	 * @see https://cloud.google.com/appengine/docs/standard/java/endpoints/
-	 * @namespace Gae
-	 */
+	new ExceptionHandler();
 
 	/**
 	 * Base path of real gae server
@@ -79,7 +81,6 @@ app.Gae = (function() {
 	}
 
 	return {
-
 		/**
 		 *  Root path to our gae server
 		 * @type {string}
@@ -180,6 +181,5 @@ app.Gae = (function() {
 				error: error.toString(),
 			}, () => {});
 		},
-
 	};
 })();

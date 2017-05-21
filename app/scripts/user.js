@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Manage the current user
+ * @namespace
+ */
 app.User = (function() {
 	'use strict';
 
-	/**
-	 * Manage the current user
-	 * @namespace User
-	 */
+	new ExceptionHandler();
 
 	const ERROR_ALREADY_SIGNED_IN = 'Already signed in';
 
@@ -101,7 +103,6 @@ app.User = (function() {
 	chrome.runtime.onMessage.addListener(_onChromeMessage);
 
 	return {
-
 		/**
 		 * SignIn with OAuth 2.0 and firebase
 		 * @return {Promise<void>}
@@ -255,7 +256,5 @@ app.User = (function() {
 				return Promise.resolve();
 			});
 		},
-
 	};
-
 })();

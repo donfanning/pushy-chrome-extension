@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * A list of remote {@link Device} objects we know about
+ *  @namespace
+ */
 app.Devices = (function() {
 	'use strict';
 
-	/**
-	 * A list of remote {@link Device} objects we know about
-	 *  @namespace Devices
-	 */
+	new ExceptionHandler();
 
 	/**
 	 * A Map of {@link Device} objects keyed by their unique names
@@ -117,7 +119,6 @@ app.Devices = (function() {
 	chrome.runtime.onMessage.addListener(_onChromeMessage);
 
 	return {
-
 		/**
 		 * Get an {@link Iterator} on the Devices
 		 * @return {Iterator.<Device>}
@@ -164,7 +165,5 @@ app.Devices = (function() {
 			_devices.clear();
 			_save();
 		},
-
 	};
-
 })();

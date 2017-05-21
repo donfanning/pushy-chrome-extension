@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Manage the clipboard
+ * @namespace
+ */
 app.CB = (function() {
 	'use strict';
 
-	/**
-	 * Manage the clipboard
-	 * @namespace CB
-	 */
+	new ExceptionHandler();
 
 	/**
 	 * Delay time for reading from clipboard
@@ -133,6 +135,5 @@ app.CB = (function() {
 			input.remove();
 		},
 	};
-
 })();
 

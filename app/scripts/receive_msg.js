@@ -9,8 +9,9 @@
 
 	/**
 	 * Handle incoming push messages
-	 * @namespace ReceiveMsg
+	 * @namespace app.ReceiveMsg
 	 */
+	new ExceptionHandler();
 
 	/**
 	 * Delay time for fcm message processing

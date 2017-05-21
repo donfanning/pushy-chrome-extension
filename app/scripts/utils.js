@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Misc. utility methods
+ * @namespace
+ */
 app.Utils = (function() {
 	'use strict';
 
-	/**
-	 * Misc. utility methods
-	 * @namespace Utils
-	 */
+	new ExceptionHandler();
 
 	const MIN_IN_DAY = 60 * 24;
 

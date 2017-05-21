@@ -5,14 +5,16 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Manage interaction with firebase and its Namespaces
+ * @see https://firebase.google.com/docs/web/setup
+ * @namespace
+ */
 app.Fb = (function() {
 	'use strict';
 
-	/**
-	 * Manage interaction with firebase and its Namespaces
-	 * @see https://firebase.google.com/docs/web/setup
-	 * @namespace Fb
-	 */
+	new ExceptionHandler();
 
 	/**
 	 * Error message for regToken
@@ -102,7 +104,6 @@ app.Fb = (function() {
 	}
 
 	return {
-
 		/**
 		 * Initialize the firebase libraries
 		 * @param {ServiceWorkerRegistration} swReg
@@ -153,7 +154,5 @@ app.Fb = (function() {
 				}
 			});
 		},
-
 	};
-
 })();

@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Handle RegistrationEndpoint tasks on the gae server
+ * @namespace
+ */
 app.Reg = (function() {
 	'use strict';
 
-	/**
-	 * Handle RegistrationEndpoint tasks on the gae server
-	 * @namespace Reg
-	 */
+	new ExceptionHandler();
 
 	/**
 	 * Base path of RegistrationEndpoint
@@ -82,7 +84,6 @@ app.Reg = (function() {
 	addEventListener('storage', _onStorageChanged, false);
 
 	return {
-
 		/**
 		 * Register {@link Device} with server
 		 * @return {Promise<void>}

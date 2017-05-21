@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Manage lifecycle of our {@link ServiceWorker}
+ * @namespace
+ */
 app.SW = (function() {
 	'use strict';
 
-	/**
-	 * Manage lifecycle of our {@link ServiceWorker}
-	 * @namespace SW
-	 */
+	new ExceptionHandler();
 
 	const ERROR_REG = 'Failed to register Service Worker: ';
 	const ERROR_UNREG = 'Failed to unregister Service Worker: ';
@@ -69,7 +71,6 @@ app.SW = (function() {
 	}
 
 	return {
-
 		/**
 		 * Initialize the {@link ServiceWorker} and firebase
 		 * @return {Promise<void>}
@@ -124,6 +125,5 @@ app.SW = (function() {
 			}
 			return Promise.resolve();
 		},
-
 	};
 })();

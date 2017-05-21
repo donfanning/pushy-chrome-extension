@@ -24,10 +24,7 @@
 
 <link rel="import" href="../my_icons.html">
 
-<script type="text/javascript" src="../../lib/linkify.min.js"></script>
-<script type="text/javascript" src="../../lib/linkify-element.min.js"></script>
-<script type="text/javascript" src="../../scripts/utils.js"></script>
-<script type="text/javascript" src="../../scripts/clip_item.js"></script>
+<script type="text/javascript" src="../../scripts/exception_handler.js"></script>
 
 <dom-module id="main-page">
 	<template>
@@ -209,6 +206,9 @@
 
 <script>
 'use strict';
+
+new ExceptionHandler();
+
 Polymer({
 
 	/**

@@ -19,6 +19,8 @@
 <link rel="import" href="../setting-dropdown/setting-dropdown.html">
 <link rel="import" href="../setting-text/setting-text.html">
 
+<script type="text/javascript" src="../../scripts/exception_handler.js"></script>
+
 <dom-module id="settings-page">
 	<style include="iron-flex iron-flex-alignment"></style>
 	<style include="shared-styles"></style>
@@ -111,6 +113,9 @@
 <script>
 (function(window) {
 	'use strict';
+
+	new ExceptionHandler();
+
 	const ERROR_REGISTER = 'Failed to register with server.';
 	const ERROR_UNREGISTER = 'Failed to unregister with server.';
 

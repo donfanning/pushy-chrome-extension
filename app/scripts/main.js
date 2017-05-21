@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Script for the main.html page
+ *  @namespace
+ */
 app.Main = (function() {
 	'use strict';
 
-	/**
-	 * Script for the main.html page
-	 *  @namespace Main
-	 */
+	new ExceptionHandler();
 
 	/**
 	 * Path to the extension in the Web Store
@@ -473,5 +475,4 @@ app.Main = (function() {
 
 	// listen for changes to highlighted tabs
 	chrome.tabs.onHighlighted.addListener(_onHighlighted);
-
 })();

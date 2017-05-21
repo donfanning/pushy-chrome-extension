@@ -24,7 +24,7 @@
 
 <link rel="import" href="../my_icons.html">
 
-<script type="text/javascript" src="../../scripts/utils.js"></script>
+<script type="text/javascript" src="../../scripts/exception_handler.js"></script>
 
 <dom-module id="signin-page">
 	<template>
@@ -142,19 +142,20 @@
 (function(window) {
 	'use strict';
 
+	new ExceptionHandler();
+
 	const ERROR_SIGN_IN = 'Failed to sign in.';
 	const ERROR_SIGN_OUT = 'Failed to sign out.';
 	const ERROR_PERMISSION =
 		'Notification permission is required to sign-in.';
-	const ERROR_BLOCKED_MESSAGE =
+	let ERROR_BLOCKED_MESSAGE =
 		`<p>You either blocked the request or the Chrome settings block
 		all notifications. If you want to sign-in, go to
 		"Chrome settings -> Show advanced settings...". Click on
 		"content settings...". In the notification area
 		make sure "Ask when a site wants to show notifications"
 		is selected. In the "Manage Exceptions" area allow this if
-		it is blocked:<br />&nbsp&nbsp&nbsp&nbsp
-		${app.Utils.getExtensionName()}/</p>`;
+		it is blocked:<br />&nbsp&nbsp&nbsp&nbsp`;
 	const ERROR_DEFAULT_MESSAGE =
 		'Display notification pop-up again?';
 	const ERROR_UNKNOWN_MESSAGE =
@@ -189,6 +190,11 @@
 				value: false,
 			},
 
+		},
+
+		ready: function() {
+			ERROR_BLOCKED_MESSAGE +=
+				`${app.Utils.getExtensionName()}</p >`;
 		},
 
 		onCurrentPage: function() {

@@ -5,13 +5,13 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Manage Google Analytics tracking
+ * @namespace
+ */
 app.GA = (function() {
 	'use strict';
-
-	/**
-	 * Manage Google Analytics tracking
-	 * @namespace GA
-	 */
 
 	/**
 	 * Tracking ID
@@ -85,7 +85,6 @@ app.GA = (function() {
 	window.addEventListener('load', _onLoad);
 
 	return {
-
 		EVENT: EVENT,
 
 		/**
@@ -101,16 +100,60 @@ app.GA = (function() {
 
 		/**
 		 * Send an event
-		 * @memberOf GA
-		 * @param {GAEvent} event
+		 * @param {GAEvent} event - the event type
+		 * @param {?string} [action=null] - override action
+		 * @memberOf app.GA
 		 */
-		event: function(event) {
+		event: function(event, action=null) {
 			if (event) {
-				ga('send', 'event', event.cat, event.act);
+				const act = action ? action : event.act;
+				ga('send', 'event', event.cat, act);
 			}
 		},
-	};
 
+		/**
+		 * Send an error
+		 * @param {string} message - the error message
+		 * @param {?string} [method=null] - the method name
+		 * @param {boolean} [fatal=false] - is error fatal
+		 * @memberOf app.GA
+		 */
+		error: function(message, method=null, fatal=false) {
+			let msg = 'ERROR ';
+			if (method) {
+				msg+= `Method: ${method} `;
+			}
+			if (message) {
+				msg += `Message: ${message}`;
+			}
+			ga('send', 'exception', {
+				'exDescription': msg,
+				'exFatal': fatal,
+			});
+			console.error(message);
+		},
+
+		/**
+		 * Send an exception
+		 * @param {string} message - the error message
+		 * @param {?string} [stack=null] - error stack
+		 * @memberOf app.GA
+		 */
+		exception: function(message, stack = null) {
+			let msg = 'EXCEPTION ';
+			if (message) {
+				msg += message;
+			}
+			if (stack) {
+				msg += `\n${stack}`;
+			}
+			ga('send', 'exception', {
+				'exDescription': msg,
+				'exFatal': true,
+			});
+			console.error(msg);
+		},
+	};
 })();
 
 

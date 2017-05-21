@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Send messages to the gae server MessagingEndpoint for delivery
+ * @namespace
+ */
 app.Msg = (function() {
 	'use strict';
 
-	/**
-	 * Send messages to the gae server MessagingEndpoint for delivery
-	 * @namespace Msg
-	 */
+	new ExceptionHandler();
 
 	/**
 	 * Base path of MessagingEndpoint
@@ -140,7 +142,6 @@ app.Msg = (function() {
 	}
 
 	return {
-
 		ACTION: ACTION,
 
 		/**

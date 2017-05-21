@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Manage the chrome.alarm
+ * @namespace
+ */
 app.Alarm = (function() {
 	'use strict';
 
-	/**
-	 * Manage the chrome.alarm
-	 * @namespace Alarm
-	 */
+	new ExceptionHandler();
 
 	/**
 	 * Alarm for cleaning up old {@link ClipItem} objects
@@ -91,9 +93,7 @@ app.Alarm = (function() {
 		deleteOldClipItems: function() {
 			app.ClipItem.deleteOld().catch((error) => {});
 		},
-
 	};
-
 })();
 
 

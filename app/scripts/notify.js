@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Handle display of notifications
+ *  @namespace
+ */
 app.Notify = (function() {
 	'use strict';
 
-	/**
-	 * Handle display of notifications
-	 *  @namespace Notify
-	 */
+	new ExceptionHandler();
 
 	/**
 	 * Send notification type

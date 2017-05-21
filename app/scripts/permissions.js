@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 window.app = window.app || {};
+
+/**
+ * Handle optional permissions
+ *  @namespace
+ */
 app.Permissions = (function() {
 	'use strict';
 
-	/**
-	 * Handle optional permissions
-	 *  @namespace Permissions
-	 */
+	new ExceptionHandler();
 
 	/** @memberOf Permissions */
 	const PERMISSIONS = ['tabs'];
@@ -26,7 +28,6 @@ app.Permissions = (function() {
 	const DENIED = 'denied';
 
 	return {
-
 		/** @memberOf Permissions */
 		NOT_SET: NOT_SET,
 		/** @memberOf Permissions */
@@ -156,5 +157,4 @@ app.Permissions = (function() {
 			}
 		},
 	};
-
 })();

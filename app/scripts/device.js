@@ -7,6 +7,8 @@
 (function(window) {
 	'use strict';
 
+	new ExceptionHandler();
+
 	/**
 	 * Creates a new Device instance.
 	 * @constructor

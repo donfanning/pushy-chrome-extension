@@ -7,6 +7,8 @@
 (function() {
 	'use strict';
 
+	new ExceptionHandler();
+
 	/**
 	 * The background script for the extension.<br>
 	 * Note: We can't be an Event Page because we use
@@ -259,5 +261,4 @@ for this device.`;
 
 	// Listen for changes to localStorage
 	addEventListener('storage', _onStorageChanged, false);
-
 })();
