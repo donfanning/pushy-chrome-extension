@@ -12,8 +12,6 @@
 (function() {
 	'use strict';
 
-	new ExceptionHandler();
-
 	if (window.onMyCopy) {
 		window.removeEventListener('copy', window.onMyCopy);
 		window.removeEventListener('cut', window.onMyCopy);
