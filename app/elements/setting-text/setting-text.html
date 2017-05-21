@@ -4,15 +4,16 @@
   ~ https://opensource.org/licenses/Apache-2.0
   ~ https://goo.gl/wFvBM1
   -->
-<link rel="import" href="../setting-base/setting-base.html">
-
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 
 <dom-module id="setting-text">
 	<style include="shared-styles"></style>
-	<style include="iron-flex iron-flex-alignment"></style>
 	<template>
 		<style>
 
@@ -39,63 +40,104 @@
 
 		</style>
 
-		<setting-base id="base"
-		              name="[[name]]" value="{{value}}" default-value="false"
-		              section-title="[[sectionTitle]]"
-		              noseparator="[[noseparator]]" disabled="[[disabled]]">
-			<paper-item class="center horizontal layout" tabindex="-1">
-				<paper-item-body class="flex" two-line>
-					<div class="setting-label" hidden$="[[!mainLabel]]">{{mainLabel}}</div>
-					<div class="setting-label" secondary hidden$="[[!secondaryLabel]]">{{secondaryLabel}}</div>
-				</paper-item-body>
-				<paper-input id="text" value="{{value}}" minlength="1" maxlength="{{maxLength}}"
-				             placeholder="{{placeholder}}" tabindex="0" disabled$="[[disabled]]"
-							 on-blur="_onBlur" on-keyup="_onKeyUp"></paper-input>
-			</paper-item>
-		</setting-base>
+		<div class="section-title setting-label" tabindex="-1" hidden$="[[!sectionTitle]]">{{sectionTitle}}</div>
+		<paper-item class="center horizontal layout" tabindex="-1">
+			<paper-item-body class="flex" two-line>
+				<div class="setting-label" hidden$="[[!mainLabel]]">{{mainLabel}}</div>
+				<div class="setting-label" secondary hidden$="[[!secondaryLabel]]">{{secondaryLabel}}</div>
+			</paper-item-body>
+			<paper-input id="text" value="{{value}}" minlength="1" maxlength="{{maxLength}}"
+			             placeholder="{{placeholder}}" tabindex="0" disabled$="[[disabled]]"
+			             on-blur="_onBlur" on-keyup="_onKeyUp"></paper-input>
+		</paper-item>
+		<hr hidden$="[[noseparator]]"/>
+		<iron-localstorage name="{{name}}" value="{{value}}" on-iron-localstorage-load-empty="_init"></iron-localstorage>
+
 	</template>
 </dom-module>
 
 <script>
-'use strict';
-Polymer({
-	is: 'setting-text',
+	'use strict';
 
-	properties: {
-		placeholder: {
-			type: String,
-			value: 'e.g. Text',
-			notify: true,
+	new ExceptionHandler();
+
+	Polymer({
+		is: 'setting-text',
+
+		hostAttributes: {
+			role: 'group',
+			tabIndex: -1,
 		},
 
-		maxLength: {
-			type: Number,
-			value: '16',
-			notify: true,
+		properties: {
+
+			name: {
+				type: String,
+				value: 'store',
+			},
+
+			value: {
+				type: String,
+				value: '',
+				notify: true,
+			},
+
+			placeholder: {
+				type: String,
+				value: 'e.g. Text',
+				notify: true,
+			},
+
+			maxLength: {
+				type: Number,
+				value: '16',
+				notify: true,
+			},
+
+			mainLabel: {
+				type: String,
+				value: '',
+			},
+
+			secondaryLabel: {
+				type: String,
+				value: '',
+			},
+
+			sectionTitle: {
+				type: String,
+				value: '',
+			},
+
+			disabled: {
+				type: Boolean,
+				value: false,
+			},
+
+			noseparator: {
+				type: Boolean,
+				value: false,
+			},
+
 		},
 
-		mainLabel: {
-			type: String,
-			value: '',
-		},
-
-		secondaryLabel: {
-			type: String,
-			value: '',
-		},
-	},
-
-	// fire event when input loses focus
-	_onBlur: function() {
-		this.fire('setting-text-changed', {value: this.value});
-	},
-
-	// fire event when Enter is pressed in input
-	_onKeyUp: function(event) {
-		// check if 'enter' was pressed
-		if (event.keyCode === 13) {
+		// fire event when input loses focus
+		_onBlur: function() {
 			this.fire('setting-text-changed', {value: this.value});
-		}
-	},
-});
+		},
+
+		// fire event when Enter is pressed in input
+		_onKeyUp: function(event) {
+			// check if 'enter' was pressed
+			if (event.keyCode === 13) {
+				this.fire('setting-text-changed', {value: this.value});
+			}
+		},
+
+		// initialize value if it is not in local storage
+		_init: function() {
+			this.set('value', '');
+		},
+
+	});
 </script>
