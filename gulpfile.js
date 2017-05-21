@@ -7,6 +7,7 @@ const base = {
 	dist: 'dist/',
 	dev: 'dev/',
 	store: 'store/',
+	docs: 'docs/',
 };
 const path = {
 	scripts: `${base.src}scripts/`,
@@ -16,6 +17,7 @@ const path = {
 	images: `${base.src}images/`,
 	assets: `${base.src}assets/`,
 	lib: `${base.src}lib/`,
+	locales: `${base.src}locales/`,
 	bower: `${base.src}bower_components/`,
 };
 const files = {
@@ -27,6 +29,7 @@ const files = {
 	images: `${path.images}*.*`,
 	assets: `${path.assets}*.*`,
 	lib: `${path.lib}**/*.*`,
+	locales: `${path.lib}**/*.*`,
 	bower: [
 		`${path.bower}**/*`,
 		`!${path.bower}**/test/*`,
@@ -66,13 +69,16 @@ const plugins = require('gulp-load-plugins')({
 	replaceString: /\bgulp[\-.]/,
 });
 
-// const regex = new RegExp('^(.*?)' + base.app + '\\\\', 'g');
+/**
+ * regex to remove path from filename
+ * @const
+ * @type {RegExp}
+ */
 const regex = new RegExp(`^(.*?)${base.app}\\\\`, 'g');
 
 /**
  * Output filenames that changed
- *
- * @param {Event} event
+ * @param {Event} event - change event
  */
 function onChange(event) {
 	gutil.log('File', gutil.colors.cyan(event.path.replace(regex, '')),
@@ -84,7 +90,7 @@ gulp.task('default', ['watch']);
 
 // track changes in development
 gulp.task('watch', ['manifest', 'scripts', 'html', 'styles', 'elements',
-		'images', 'assets', 'lib'],
+		'images', 'assets', 'lib', 'locales'],
 	function() {
 		gulp.watch(files.manifest, ['manifest']).on('change', onChange);
 		gulp.watch([files.scripts, 'gulpfile.js', '.eslintrc.js',
@@ -95,13 +101,14 @@ gulp.task('watch', ['manifest', 'scripts', 'html', 'styles', 'elements',
 		gulp.watch(files.images, ['images']).on('change', onChange);
 		gulp.watch(files.assets, ['assets']).on('change', onChange);
 		gulp.watch(files.lib, ['lib']).on('change', onChange);
+		gulp.watch(files.locales, ['locales']).on('change', onChange);
 	});
 
 // Development build
 gulp.task('dev', function(callback) {
 	isProd = false;
 	runSequence('clean', ['bower', 'manifest', 'html', 'scripts', 'styles',
-		'elements', 'images', 'assets', 'lib'], callback);
+		'elements', 'images', 'assets', 'lib', 'locales'], callback);
 });
 
 // Production build
@@ -109,7 +116,7 @@ gulp.task('prod', function(callback) {
 	isProd = true;
 	isProdTest = false;
 	runSequence('clean', ['manifest', 'html', 'scripts', 'styles', 'vulcanize',
-		'images', 'assets', 'lib'], 'zip', callback);
+		'images', 'assets', 'lib', 'locales', 'docs'], 'zip', callback);
 });
 
 // Production test build
@@ -117,7 +124,25 @@ gulp.task('prodTest', function(callback) {
 	isProd = true;
 	isProdTest = true;
 	runSequence('clean', ['manifest', 'html', 'scripts', 'styles', 'vulcanize',
-		'images', 'assets', 'lib'], 'zip', callback);
+		'images', 'assets', 'lib', 'locales'], 'zip', callback);
+});
+
+// Generate JSDoc
+gulp.task('docs', function(cb) {
+	const config = require('./jsdoc.json');
+	gulp.src(['README.md', files.scripts, files.elements], {read: false})
+		.pipe(plugins.jsdoc3(config, cb));
+});
+
+// polylint elements
+gulp.task('polylint', function() {
+	return gulp.src([files.elements])
+		.pipe(plugins.polylint({noRecursion: true}))
+		.pipe(plugins.polylint.reporter(plugins.polylint.reporter.stylishlike))
+		.pipe(plugins.polylint.reporter.fail({
+			buffer: true,
+			ignoreWarnings: false,
+		}));
 });
 
 // clean output directories
@@ -161,7 +186,7 @@ gulp.task('scripts', ['lintjs'], function() {
 	return gulp.src([files.scripts, `${base.src}*.js`], {base: '.'})
 		.pipe(plugins.changed(isProd ? base.dist : base.dev))
 		.pipe(isProd ? minifier(minifierOpts,
-				uglifyjs).on('error', gutil.log) : gutil.noop())
+			uglifyjs).on('error', gutil.log) : gutil.noop())
 		.pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
@@ -209,6 +234,13 @@ gulp.task('assets', function() {
 // lib
 gulp.task('lib', function() {
 	return gulp.src(files.lib, {base: '.'})
+		.pipe(plugins.changed(isProd ? base.dist : base.dev))
+		.pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+});
+
+// locales
+gulp.task('locales', function() {
+	return gulp.src(files.locales, {base: '.'})
 		.pipe(plugins.changed(isProd ? base.dist : base.dev))
 		.pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });

@@ -37,7 +37,7 @@ app.Utils = (function() {
 		MILLIS_IN_DAY: MILLIS_IN_DAY,
 
 		/** Get the extension's name
-		 * @return {string}
+		 * @returns {string} name of extension
 		 * @memberOf Utils
 		 */
 		getExtensionName: function() {
@@ -46,7 +46,7 @@ app.Utils = (function() {
 
 		/**
 		 * Get the Extension version
-		 * @return {string} Extension version
+		 * @returns {string} Extension version
 		 * @memberOf Utils
 		 */
 		getVersion: function() {
@@ -57,7 +57,7 @@ app.Utils = (function() {
 		/**
 		 * Get the major Chrome version
 		 * @see https://goo.gl/2ITMNO
-		 * @return {int} Chrome major version
+		 * @returns {int} Chrome major version
 		 * @memberOf Utils
 		 */
 		getChromeVersion: function() {
@@ -68,7 +68,7 @@ app.Utils = (function() {
 		/**
 		 * Get the full Chrome version
 		 * @see https://goo.gl/2ITMNO
-		 * @return {string} Chrome version
+		 * @returns {string} Chrome version
 		 * @memberOf Utils
 		 */
 		getFullChromeVersion: function() {
@@ -78,7 +78,7 @@ app.Utils = (function() {
 
 		/**
 		 * Get the OS as a human readable string
-		 * @return {Promise.<string>} OS name
+		 * @returns {Promise.<string>} OS name
 		 * @memberOf Utils
 		 */
 		getPlatformOS: function() {
@@ -115,7 +115,7 @@ app.Utils = (function() {
 		/**
 		 * Get a JSON parsed value from localStorage
 		 * @param {string} key - key to get value for
-		 * @return {JSON|null} JSON object, null if key does not exist
+		 * @returns {JSON|null} JSON object, null if key does not exist
 		 * @memberOf Utils
 		 */
 		get: function(key) {
@@ -143,7 +143,7 @@ app.Utils = (function() {
 		/**
 		 * Get integer value from localStorage
 		 * @param {!string} key - key to get value for
-		 * @return {?int} value as integer
+		 * @returns {?int} value as integer
 		 * @memberOf Utils
 		 */
 		getInt: function(key) {
@@ -156,7 +156,7 @@ app.Utils = (function() {
 
 		/**
 		 * Are we saving clipboard contents
-		 * @return {boolean} true if enabled
+		 * @returns {boolean} true if enabled
 		 * @memberOf Utils
 		 */
 		isMonitorClipboard: function() {
@@ -165,7 +165,7 @@ app.Utils = (function() {
 
 		/**
 		 * Has user enabled pushing to {@link Devices}
-		 * @return {boolean} true if enabled
+		 * @returns {boolean} true if enabled
 		 * @memberOf Utils
 		 */
 		allowPush: function() {
@@ -174,7 +174,7 @@ app.Utils = (function() {
 
 		/**
 		 * Has user enabled autoSend option
-		 * @return {boolean} true if enabled
+		 * @returns {boolean} true if enabled
 		 * @memberOf Utils
 		 */
 		isAutoSend: function() {
@@ -183,7 +183,7 @@ app.Utils = (function() {
 
 		/**
 		 * Has user enabled receiving from {@link Devices}
-		 * @return {boolean} true if enabled
+		 * @returns {boolean} true if enabled
 		 * @memberOf Utils
 		 */
 		allowReceive: function() {
@@ -192,7 +192,7 @@ app.Utils = (function() {
 
 		/**
 		 * Are we signed in
-		 * @return {boolean} true if signed in
+		 * @returns {boolean} true if signed in
 		 * @memberOf Utils
 		 */
 		isSignedIn: function() {
@@ -201,7 +201,7 @@ app.Utils = (function() {
 
 		/**
 		 * Are we registered with fcm
-		 * @return {boolean} true if registered
+		 * @returns {boolean} true if registered
 		 * @memberOf Utils
 		 */
 		isRegistered: function() {
@@ -210,7 +210,7 @@ app.Utils = (function() {
 
 		/**
 		 * Are we not registered with fcm
-		 * @return {boolean} true if not registered
+		 * @returns {boolean} true if not registered
 		 * @memberOf Utils
 		 */
 		notRegistered: function() {
@@ -232,7 +232,7 @@ app.Utils = (function() {
 		/**
 		 * Determine if a String is null or whitespace only
 		 * @param {string} str - string to check
-		 * @return {boolean} true if str is whitespace (or null)
+		 * @returns {boolean} true if str is whitespace (or null)
 		 * @memberOf Utils
 		 */
 		isWhiteSpace: function(str) {
@@ -242,7 +242,7 @@ app.Utils = (function() {
 		/**
 		 * Get a date string in time ago format
 		 * @param {int} time - time since epoch in millis
-		 * @return {string} Relative time format
+		 * @returns {string} Relative time format
 		 * @memberOf Utils
 		 */
 		getRelativeTime: function(time) {
@@ -253,7 +253,7 @@ app.Utils = (function() {
 		/**
 		 * Get a random string of the given length
 		 * @param {int|null} len - length of generated string, 8 if null
-		 * @return {string} a random string
+		 * @returns {string} a random string
 		 * @memberOf Utils
 		 *
 		 */

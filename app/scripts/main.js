@@ -45,7 +45,7 @@ app.Main = (function() {
 
 	/**
 	 * Auto-binding template
-	 * @type {object}
+	 * @type {Object}
 	 * @memberOf Main
 	 */
 	const t = document.querySelector('#t');
@@ -54,7 +54,7 @@ app.Main = (function() {
 	 * Manage an html page that is inserted on demand<br>
 	 * May also be a url link to external site
 	 * @typedef page
-	 * @type {object}
+	 * @type {Object}
 	 * @property {string} label - label for Nav menu
 	 * @property {string} route - element name route to page
 	 * @property {string} icon - icon for Nav Menu
@@ -175,7 +175,7 @@ app.Main = (function() {
 	
 	/**
 	 * Event: navigation menu selected
-	 * @param {Event} event
+	 * @param {Event} event - event
 	 * @memberOf Main
 	 */
 	t.onNavMenuItemTapped = function(event) {
@@ -203,7 +203,7 @@ app.Main = (function() {
 
 	/**
 	 * Event: display error dialog
-	 * @param {Event} event
+	 * @param {Event} event - event
 	 * @memberOf Main
 	 */
 	t.onShowErrorDialog = function(event) {
@@ -235,6 +235,7 @@ app.Main = (function() {
 			if (granted) {
 				app.Permissions.injectContentScripts();
 			}
+			return Promise.resolve();
 		}).catch(() => {});
 	};
 
@@ -249,7 +250,7 @@ app.Main = (function() {
 	/**
 	 * Computed Binding: Determine if avatar should be visible
 	 * @param {string} avatar - photo url
-	 * @return {string} display type
+	 * @returns {string} display type
 	 * @memberOf Main
 	 */
 	t.computeAvatarDisplay = function(avatar) {
@@ -265,8 +266,8 @@ app.Main = (function() {
 	 * Event: Fired when a message is sent from either an extension process<br>
 	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
 	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
-	 * @param {object} request - details for the message
-	 * @param {object} sender - MessageSender object
+	 * @param {Object} request - details for the message
+	 * @param {Object} sender - MessageSender object
 	 * @param {function} response - function to call once after processing
 	 * @private
 	 * @memberOf Main
@@ -289,8 +290,8 @@ app.Main = (function() {
 	/**
 	 * Event: Fired when item in localStorage changes
 	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
-	 * @param {event} event
-	 * @param {string} event.key
+	 * @param {Event} event - storage event
+	 * @param {string} event.key - value that changed
 	 * @private
 	 * @memberOf Main
 	 */
@@ -305,7 +306,7 @@ app.Main = (function() {
 	/**
 	 * Event: Fired when the highlighted or selected tabs in a window changes.
 	 * @see https://developer.chrome.com/extensions/tabs#event-onHighlighted
-	 * @param {object} highlightInfo
+	 * @param {Object} highlightInfo - info
 	 * @private
 	 * @memberOf Main
 	 */
@@ -346,7 +347,7 @@ app.Main = (function() {
 	/**
 	 * Get the index into the {@link Main.pages} array
 	 * @param {string} name - {@link Main.page} route
-	 * @return {int} index into array
+	 * @returns {int} index into array
 	 * @private
 	 * @memberOf Main
 	 */
@@ -358,7 +359,7 @@ app.Main = (function() {
 
 	/**
 	 * Show the signin page
-	 * @param {int} index
+	 * @param {int} index - index into {@link Main.pages}
 	 * @private
 	 * @memberOf Main
 	 */
@@ -375,7 +376,7 @@ app.Main = (function() {
 
 	/**
 	 * Show the devices page
-	 * @param {int} index
+	 * @param {int} index -  - index into {@link Main.pages}
 	 * @private
 	 * @memberOf Main
 	 */
@@ -392,7 +393,7 @@ app.Main = (function() {
 
 	/**
 	 * Show the settings page
-	 * @param {int} index
+	 * @param {int} index - index into {@link Main.pages}
 	 * @private
 	 * @memberOf Main
 	 */
@@ -408,17 +409,8 @@ app.Main = (function() {
 	}
 
 	/**
-	 * Show the permissions dialog
-	 * @private
-	 * @memberOf Main
-	 */
-	function _showPermissionsDialog() {
-		t.$.permissionsDialog.open();
-	}
-
-	/**
 	 * Show the help page
-	 * @param {int} index
+	 * @param {int} index - index into {@link Main.pages}
 	 * @private
 	 * @memberOf Main
 	 */
@@ -431,6 +423,15 @@ app.Main = (function() {
 		}
 		t.route = t.pages[index].route;
 		_scrollPageToTop();
+	}
+
+	/**
+	 * Show the permissions dialog
+	 * @private
+	 * @memberOf Main
+	 */
+	function _showPermissionsDialog() {
+		t.$.permissionsDialog.open();
 	}
 
 	/**

@@ -79,7 +79,7 @@
 	/**
 	 * Get the name of the Device who sent the message
 	 * @param {GaeMsg} data  - message object
-	 * @return {string} device name
+	 * @returns {string} device name
 	 * @memberOf ServiceWorker
 	 */
 	function getDeviceName(data) {
@@ -95,7 +95,7 @@
 	/**
 	 * Get the tag for the notification
 	 * @param {GaeMsg} data - message object
-	 * @return {string} notification tag
+	 * @returns {string} notification tag
 	 * @memberOf ServiceWorker
 	 */
 	function getTag(data) {
@@ -109,7 +109,7 @@
 	/**
 	 * Get the icon for the notification
 	 * @param {GaeMsg} data - message object
-	 * @return {string} path to icon
+	 * @returns {string} path to icon
 	 * @memberOf ServiceWorker
 	 */
 	function getIcon(data) {
@@ -125,7 +125,7 @@
 	/**
 	 * Send any data attached to a notification to the extension
 	 * @param {GaeMsg[]} dataArray - possible array of {@link GaeMsg} objects
-	 * @return {Promise<void>} always resolves
+	 * @returns {Promise<void>} always resolves
 	 */
 	function processNotificationData(dataArray) {
 		if (dataArray instanceof Array) {
@@ -139,7 +139,7 @@
 	 * Send fake GET request so extension can intercept it and get the payload
 	 * @see https://bugs.chromium.org/p/chromium/issues/detail?id=452942
 	 * @param {GaeMsg[]} dataArray Array of {@link GaeMsg} objects
-	 * @return {Promise<void>} fails if extension successfully canceled request
+	 * @returns {Promise<void>} fails if extension successfully canceled request
 	 * @memberOf ServiceWorker
 	 */
 	function doFakeFetch(dataArray) {
@@ -277,6 +277,7 @@
 					// create new tab
 					return clients.openWindow(url);
 				}
+				return Promise.resolve();
 			}).catch(() => {});
 		});
 

@@ -37,7 +37,7 @@ app.Permissions = (function() {
 
 		/**
 		 * Has use made choice on permissions
-		 * @return {boolean} true if allowed or denied
+		 * @returns {boolean} true if allowed or denied
 		 * @memberOf Permissions
 		 */
 		notSet: function() {
@@ -46,7 +46,7 @@ app.Permissions = (function() {
 
 		/**
 		 * Has the user allowed the optional permissions
-		 * @return {boolean} true if allowed
+		 * @returns {boolean} true if allowed
 		 * @memberOf Permissions
 		 */
 		isAllowed: function() {
@@ -55,7 +55,7 @@ app.Permissions = (function() {
 
 		/**
 		 * Prompt for the optional permissions
-		 * @return {Promise<boolean>} true if permission granted
+		 * @returns {Promise<boolean>} true if permission granted
 		 * @memberOf Permissions
 		 */
 		request: function() {
@@ -78,7 +78,7 @@ app.Permissions = (function() {
 
 		/**
 		 * Determine if we have the optional permissions
-		 * @return {Promise<boolean>} true if we have permissions
+		 * @returns {Promise<boolean>} true if we have permissions
 		 * @memberOf Permissions
 		 */
 		contains: function() {
@@ -91,7 +91,7 @@ app.Permissions = (function() {
 
 		/**
 		 * Remove the optional permissions
-		 * @return {Promise<boolean>} true if removed
+		 * @returns {Promise<boolean>} true if removed
 		 * @memberOf Permissions
 		 */
 		remove: function() {

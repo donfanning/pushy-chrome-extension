@@ -25,7 +25,7 @@ app.Devices = (function() {
 	/**
 	 * Convert Map to Object
 	 * @param {Map} map - a Map
-	 * @return {Object} as Object
+	 * @returns {Object} as Object
 	 * @private
 	 * @memberOf Devices
 	 */
@@ -88,10 +88,10 @@ app.Devices = (function() {
 	 * Event: Fired when a message is sent from either an extension process<br>
 	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
 	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
-	 * @param {object} request - details for the message
-	 * @param {object} sender - MessageSender object
+	 * @param {Object} request - details for the message
+	 * @param {Object} sender - MessageSender object
 	 * @param {function} response - function to call once after processing
-	 * @return {boolean} true if asynchronous
+	 * @returns {boolean} true if asynchronous
 	 * @private
 	 * @memberOf Devices
 	 */
@@ -121,7 +121,7 @@ app.Devices = (function() {
 	return {
 		/**
 		 * Get an {@link Iterator} on the Devices
-		 * @return {Iterator.<Device>}
+		 * @returns {Iterator.<Device>} Iterator
 		 * @memberOf Devices
 		 */
 		entries: function() {
@@ -149,7 +149,7 @@ app.Devices = (function() {
 
 		/**
 		 * Remove a {@link Device} with the given unique name
-		 * @param {String} uniqueName - Name of Device to remove
+		 * @param {string} uniqueName - Name of Device to remove
 		 * @memberOf Devices
 		 */
 		removeByName: function(uniqueName) {

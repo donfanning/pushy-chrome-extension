@@ -359,7 +359,7 @@ Polymer({
 
 	/**
 	 * Event: iron-selector selectable items changed
-	 * @param {event} event
+	 * @param {event} event - event
 	 * @private
 	 */
 	_onSelectableChanged: function(event) {
@@ -382,7 +382,7 @@ Polymer({
 
 	/**
 	 * Event: Toggle checked state of a list row
-	 * @param {event} event
+	 * @param {event} event - event
 	 * @private
 	 */
 	_onCheckedTapped: function(event) {
@@ -397,7 +397,7 @@ Polymer({
 
 	/**
 	 * Event: Copy list row to clipboard
-	 * @param {event} event
+	 * @param {event} event - event
 	 * @private
 	 */
 	_onCopyTapped: function(event) {
@@ -429,7 +429,7 @@ Polymer({
 
 	/**
 	 * Event: Toggle favorite state of {@link ListItem}
-	 * @param {event} event
+	 * @param {event} event - event
 	 * @private
 	 */
 	_onFavTapped: function(event) {
@@ -464,7 +464,7 @@ Polymer({
 	/**
 	 * Computed Binding
 	 * @param {boolean} isTrue - true if fav
-	 * @return {string} Favorite icon style
+	 * @returns {string} Favorite icon style
 	 * @private
 	 */
 	_computeFavIcon: function(isTrue) {
@@ -474,7 +474,7 @@ Polymer({
 	/**
 	 * Computed Binding
 	 * @param {boolean} isTrue - true if fav
-	 * @return {string} Favorite icon color
+	 * @returns {string} Favorite icon color
 	 * @private
 	 */
 	_computeFavColor: function(isTrue) {
@@ -484,7 +484,7 @@ Polymer({
 	/**
 	 * Computed Binding
 	 * @param {boolean} isTrue - true if fav
-	 * @return {string} fav filter menu icon color
+	 * @returns {string} fav filter menu icon color
 	 * @private
 	 */
 	_computeFavMenuColor: function(isTrue) {
@@ -494,7 +494,7 @@ Polymer({
 	/**
 	 * Computed Binding
 	 * @param {int} date - from epoch in millis
-	 * @return {string} Date as relative from now
+	 * @returns {string} Date as relative from now
 	 * @private
 	 */
 	_computeDate: function(date) {
@@ -504,7 +504,7 @@ Polymer({
 	/**
 	 * Computed Binding
 	 * @param {boolean} isFilter - true if filtering by fav
-	 * @return {string} tooltip text of what toggling would be
+	 * @returns {string} tooltip text of what toggling would be
 	 * @private
 	 */
 	_computeFavToolTip: function(isFilter) {
@@ -531,6 +531,7 @@ Polymer({
 
 			this.$.ironSelector.selectIndex(0);
 			this.$.clipList.scrollTop = 0;
+			return Promise.resolve();
 		}).catch(() => {});
 	},
 
@@ -561,6 +562,7 @@ Polymer({
 				if (isEmpty) {
 					this._updateView();
 				}
+				return Promise.resolve();
 			}).catch(() => {});
 		}
 	},
@@ -633,7 +635,7 @@ Polymer({
 	/**
 	 * Get position of {@link ListItem} with given text
 	 * @param {string} clipText - text to find
-	 * @return {int} position in array, -1 if not found
+	 * @returns {int} position in array, -1 if not found
 	 */
 	_getListItemPos: function(clipText) {
 		let pos = -1;
@@ -650,7 +652,7 @@ Polymer({
 	 * Sort list by date
 	 * @param {ListItem} listItemA - row to compare
 	 * @param {ListItem} listItemB - next row to compare
-	 * @return {int} difference in dates
+	 * @returns {int} difference in dates
 	 * @private
 	 */
 	_sortByDate: function(listItemA, listItemB) {
@@ -660,7 +662,7 @@ Polymer({
 	/**
 	 * Filter list by favorites only
 	 * @param {ListItem} listItem - row to check
-	 * @return {boolean} true if row is favorite
+	 * @returns {boolean} true if row is favorite
 	 * @private
 	 */
 	_filterByFav: function(listItem) {

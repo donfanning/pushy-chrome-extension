@@ -61,7 +61,7 @@
 
 	/**
 	 * Get a String that uniquely (hopefully) determines this {@link Device}
-	 * @return {string} unique name
+	 * @returns {string} unique name
 	 */
 	Device.prototype.getUniqueName = function() {
 		return `${this.model} - ${this.sn} - ${this.os}`;
@@ -69,7 +69,7 @@
 
 	/**
 	 * Get name suitable for display
-	 * @return {string} descriptive name of {@link Device}
+	 * @returns {string} descriptive name of {@link Device}
 	 */
 	Device.prototype.getName = function() {
 		let name = this.nickname;
@@ -81,7 +81,7 @@
 
 	/**
 	 * Determine if this is our {@link Device}
-	 * @return {boolean} true if this is our {@link Device}
+	 * @returns {boolean} true if this is our {@link Device}
 	 */
 	Device.prototype.isMe = function() {
 		return (this.getUniqueName() === Device.myUniqueName());
@@ -89,7 +89,7 @@
 
 	/**
 	 * Get unique name of our {@link Device}
-	 * @return {string} unique name
+	 * @returns {string} unique name
 	 */
 	Device.myUniqueName = function() {
 		return `${Device.myModel()} - ${Device.mySN()} - ${Device.myOS()}`;
@@ -97,7 +97,7 @@
 
 	/**
 	 * Get display name of our {@link Device}
-	 * @return {string} display name
+	 * @returns {string} display name
 	 */
 	Device.myName = function() {
 		let name = Device.myNickname();
@@ -109,7 +109,7 @@
 
 	/**
 	 * Get model name of our {@link Device}
-	 * @return {string} model name
+	 * @returns {string} model name
 	 */
 	Device.myModel = function() {
 		return 'Chrome';
@@ -117,7 +117,7 @@
 
 	/**
 	 * Get serial number of our {@link Device}
-	 * @return {string} serial number
+	 * @returns {string} serial number
 	 */
 	Device.mySN = function() {
 		return app.Utils.get('deviceSN');
@@ -125,7 +125,7 @@
 
 	/**
 	 * Get operating system of our {@link Device}
-	 * @return {string} operating system
+	 * @returns {string} operating system
 	 */
 	Device.myOS = function() {
 		return app.Utils.get('os');
@@ -133,7 +133,7 @@
 
 	/**
 	 * Get os version of our {@link Device}
-	 * @return {string} operating system version
+	 * @returns {string} operating system version
 	 */
 	Device.myVersion = function() {
 		return app.Utils.getChromeVersion();
@@ -141,7 +141,7 @@
 
 	/**
 	 * Get nickname of our {@link Device}
-	 * @return {string} nickname
+	 * @returns {string} nickname
 	 */
 	Device.myNickname = function() {
 		return app.Utils.get('deviceNickname');

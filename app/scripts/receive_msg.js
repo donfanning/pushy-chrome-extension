@@ -26,7 +26,7 @@
 	/**
 	 * Get new {@link Device} from {@link GaeMsg}
 	 * @param {GaeMsg} data - push data
-	 * @return {Device}
+	 * @returns {Device} a {@link app.Device}
 	 * @private
 	 * @memberOf ReceiveMsg
 	 */
@@ -89,8 +89,8 @@
 	 * Event: Fired when a Web request is about to occur.
 	 * Capture the Service Worker request and process messages
 	 * @see https://goo.gl/4j4RtY
-	 * @param {object} details - details on the request
-	 * @return {object} cancel the request
+	 * @param {Object} details - details on the request
+	 * @returns {Object} cancel the request
 	 * @private
 	 * @memberOf ReceiveMsg
 	 */

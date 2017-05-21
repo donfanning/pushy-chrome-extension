@@ -62,6 +62,7 @@ app.CB = (function() {
 				app.Device.myName()).then((clipItem) => {
 				// send to our devices
 				_sendLocalClipItem(clipItem);
+				return null;
 			}).catch((error) => {});
 
 		}, WAIT_MILLIS);
@@ -72,10 +73,10 @@ app.CB = (function() {
 	 * Event: Fired when a message is sent from either an extension process<br>
 	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
 	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
-	 * @param {object} request - details for the message
-	 * @param {object} sender - MessageSender object
+	 * @param {Object} request - details for the message
+	 * @param {Object} sender - MessageSender object
 	 * @param {function} response - function to call once after processing
-	 * @return {boolean} true if asynchronous
+	 * @returns {boolean} true if asynchronous
 	 * @private
 	 * @memberOf CB
 	 */
@@ -105,7 +106,7 @@ app.CB = (function() {
 	return {
 		/**
 		 * Get the text from the clipboard
-		 * @return {string} text from clipboard
+		 * @returns {string} text from clipboard
 		 * @memberOf CB
 		 */
 		getTextFromClipboard: function() {

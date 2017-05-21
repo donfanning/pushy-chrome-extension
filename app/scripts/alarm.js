@@ -28,7 +28,7 @@ app.Alarm = (function() {
 	/**
 	 * Event: Fired when an alarm has elapsed.
 	 * @see https://developer.chrome.com/apps/alarms#event-onAlarm
-	 * @param {object} alarm - details on alarm
+	 * @param {Object} alarm - details on alarm
 	 * @private
 	 * @memberOf Alarm
 	 */
@@ -41,7 +41,7 @@ app.Alarm = (function() {
 	/**
 	 * Event: Fired when item in localStorage changes
 	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
-	 * @param {Event} event
+	 * @param {Event} event - storage event
 	 * @param {string} event.key - storage item that changed
 	 * @private
 	 * @memberOf Alarm

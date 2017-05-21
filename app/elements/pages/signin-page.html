@@ -215,7 +215,8 @@
 					this.set('signInDisabled', false);
 					this._checkPermissions();
 				}
-			});
+				return Promise.resolve();
+			}).catch(() => {});
 		},
 
 		/**
@@ -239,10 +240,11 @@
 					// granted
 					this.set('signInDisabled', false);
 				}
-			}).catch((error) => {
+				return Promise.resolve();
+			}).catch((err) => {
 				// something went wrong
 				this._showDialog(ERROR_PERMISSION,
-					ERROR_UNKNOWN_MESSAGE + error, false);
+					ERROR_UNKNOWN_MESSAGE + err, false);
 			});
 		},
 

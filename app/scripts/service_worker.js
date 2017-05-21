@@ -39,7 +39,7 @@ app.SW = (function() {
 	/**
 	 * Register the Service Worker
 	 * Note: This can be called if already registered
-	 * @return {Promise<ServiceWorkerRegistration>}
+	 * @returns {Promise<Object>} service worker
 	 * @private
 	 * @memberOf SW
 	 */
@@ -55,7 +55,7 @@ app.SW = (function() {
 
 	/**
 	 * Unsubscribe from push notifications
-	 * @return {Promise.<void>}
+	 * @returns {Promise<void>} void
 	 * @private
 	 * @memberOf SW
 	 */
@@ -73,7 +73,7 @@ app.SW = (function() {
 	return {
 		/**
 		 * Initialize the {@link ServiceWorker} and firebase
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf SW
 		 */
 		initialize: function() {
@@ -92,7 +92,7 @@ app.SW = (function() {
 
 		/**
 		 * Unregister the Service Worker
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf SW
 		 */
 		unregister: function() {
@@ -116,7 +116,7 @@ app.SW = (function() {
 
 		/**
 		 * Update the Service Worker
-		 * @return {Promise<void>} always resolves
+		 * @returns {Promise<void>} void always resolves
 		 * @memberOf SW
 		 */
 		update: function() {

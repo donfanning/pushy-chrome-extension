@@ -68,7 +68,7 @@ app.Gae = (function() {
 	 * Retry call to Endpoint with new token
 	 * @param {string} url - server Endpoint
 	 * @param {string} token - authorization token
-	 * @return {Promise.<void>}
+	 * @returns {Promise.<void>} void
 	 * @private
 	 * @memberOf Gae
 	 */
@@ -94,7 +94,7 @@ app.Gae = (function() {
 		 * @param {string} token - authorization token
 		 * @param {boolean} retryNewToken - if true,
 		 * retry with new token on error
-		 * @return {Promise.<void>}
+		 * @returns {Promise.<void>} void
 		 * @memberOf Gae
 		 */
 		doPost: function(url, token, retryNewToken = false) {
@@ -115,8 +115,8 @@ app.Gae = (function() {
 			/**
 			 * Fetch with exponential back-off
 			 * @param {string} url - server Endpoint
-			 * @param {object} init
-			 * @return {Promise.<void>}
+			 * @param {Object} init - fetch options
+			 * @returns {Promise.<void>} void
 			 * @memberOf Gae
 			 */
 			function _fetch(url, init) {
@@ -131,6 +131,7 @@ app.Gae = (function() {
 						// temporary network issue, retry with back-off
 						attempts++;
 						const delay = (Math.pow(2, attempts) - 1) * DELAY_TIME;
+						// eslint-disable-next-line promise/avoid-new
 						return new Promise(() => {
 							setTimeout(() => {
 								return _fetch(url, init);
@@ -157,7 +158,7 @@ app.Gae = (function() {
 		/**
 		 * Convert text to JSON
 		 * @param {string} text - text to parse
-		 * @return {JSON|null} parsed text, null if not valid JSON
+		 * @returns {JSON|null} parsed text, null if not valid JSON
 		 * @memberOf Gae
 		 */
 		getJSON: function(text) {

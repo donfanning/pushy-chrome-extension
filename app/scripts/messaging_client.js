@@ -86,7 +86,7 @@ app.Msg = (function() {
 	 * Get the data packet we will send
 	 * @param {string} action - message type
 	 * @param {string} body - message body
-	 * @return {GaeMsg} data packet
+	 * @returns {GaeMsg} data packet
 	 * @private
 	 * @memberOf Msg
 	 */
@@ -99,7 +99,7 @@ app.Msg = (function() {
 
 	/**
 	 * Get portion of {@link Device} sent in message
-	 * @return {{}} Subset of {@link Device} info as object literal
+	 * @returns {{}} Subset of {@link Device} info as object literal
 	 * @memberOf Msg
 	 */
 	function _getDevice() {
@@ -115,7 +115,7 @@ app.Msg = (function() {
 	 * Send message to server for delivery to our {@link Devices}
 	 * @param {GaeMsg} data - data packet
 	 * @param {boolean} notify - display notification if true
-	 * @return {Promise<void>}
+	 * @returns {Promise<void>} void
 	 * @private
 	 * @memberOf Msg
 	 */
@@ -147,7 +147,7 @@ app.Msg = (function() {
 		/**
 		 * Send clipboard contents as represented by a {@link ClipItem}
 		 * @param {ClipItem} clipItem - contents of clipboard
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf Msg
 		 */
 		sendClipItem: function(clipItem) {
@@ -168,7 +168,7 @@ app.Msg = (function() {
 
 		/**
 		 * Send message for adding our {@link Device}
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf Msg
 		 */
 		sendDeviceAdded: function() {
@@ -178,7 +178,7 @@ app.Msg = (function() {
 
 		/**
 		 * Send message for removing our {@link Device}
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf Msg
 		 */
 		sendDeviceRemoved: function() {
@@ -188,7 +188,7 @@ app.Msg = (function() {
 
 		/**
 		 * Ping our {@link Devices}
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf Msg
 		 */
 		sendPing: function() {
@@ -199,7 +199,7 @@ app.Msg = (function() {
 		/**
 		 * Respond to a ping from one of our {@link Devices}
 		 * @param {string} srcRegId - source of ping
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf Msg
 		 */
 		sendPingResponse: function(srcRegId) {

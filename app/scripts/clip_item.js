@@ -30,7 +30,7 @@
 	/**
 	 * The Dexie database
 	 * @see http://dexie.org/
-	 * @type {object}
+	 * @type {Object}
 	 * @private
 	 * @memberOf ClipItem
 	 */
@@ -63,7 +63,7 @@
 
 	/**
 	 * Get fav
-	 * @return {boolean} fav
+	 * @returns {boolean} fav
 	 */
 	ClipItem.prototype.getFav = function() {
 		return this.fav;
@@ -87,7 +87,7 @@
 
 	/**
 	 * Save ourselves to storage
-	 * @return {Promise<string>} primary key it was stored under
+	 * @returns {Promise<string>} primary key it was stored under
 	 */
 	ClipItem.prototype.save = function() {
 		if (app.Utils.isWhiteSpace(this.text)) {
@@ -98,7 +98,7 @@
 
 	/**
 	 * Determine if {@link ClipItem} text exists in storage
-	 * @return {Promise<boolean>} true if text exists
+	 * @returns {Promise<boolean>} true if text exists
 	 */
 	ClipItem.prototype.exists = function() {
 		return _db.clipItems.get(this.text).then((item) => {
@@ -113,7 +113,7 @@
 	 * @param {boolean} fav - true if this has been marked as a favorite
 	 * @param {boolean} remote - true if this came from a device other than ours
 	 * @param {string} device - A String representing the source device
-	 * @return {Promise<ClipItem>} A new {@link ClipItem}
+	 * @returns {Promise<ClipItem>} A new {@link ClipItem}
 	 */
 	ClipItem.add = function(text, date, fav, remote, device) {
 		let updated;
@@ -135,7 +135,7 @@
 	/**
 	 * Remove the given keys from storage
 	 * @param {string[]} keys - array of keys to delete
-	 * @return {Promise<void>}
+	 * @returns {Promise<void>} void
 	 */
 	ClipItem.remove = function(keys) {
 		return _db.clipItems.bulkDelete(keys);
@@ -143,7 +143,7 @@
 
 	/**
 	 * Return true is there are no stored {@link ClipItem} objects
-	 * @return {Promise<boolean>} true if no {@link ClipItem} objects
+	 * @returns {Promise<boolean>} true if no {@link ClipItem} objects
 	 */
 	ClipItem.isEmpty = function() {
 		return _db.clipItems.count().then((count) => {
@@ -153,7 +153,7 @@
 
 	/**
 	 * Return all the {@link ClipItem} objects from storage
-	 * @return {Promise<Array>} Array of {@link ClipItem} objects
+	 * @returns {Promise<Array>} Array of {@link ClipItem} objects
 	 */
 	ClipItem.loadAll = function() {
 		return _db.clipItems.toArray();
@@ -161,7 +161,7 @@
 
 	/**
 	 * Delete items older than the storageDuration setting
-	 * @return {Promise<boolean>} true if items were deleted
+	 * @returns {Promise<boolean>} true if items were deleted
 	 */
 	ClipItem.deleteOld = function() {
 		const durIndex = app.Utils.getInt('storageDuration');
@@ -184,7 +184,7 @@
 	/**
 	 * Delete non-favorite {@link ClipItem} objects older than the given time
 	 * @param {int} time - time in millis since epoch
-	 * @return {Promise<boolean>} true if items were deleted
+	 * @returns {Promise<boolean>} true if items were deleted
 	 * @private
 	 */
 	ClipItem._deleteOlderThan = function(time) {

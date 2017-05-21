@@ -49,7 +49,7 @@ app.Fb = (function() {
 	/**
 	 * Initialize firebase and its Namespaces
 	 * @param {ServiceWorkerRegistration} swReg - use own ServiceWorker
-	 * @return {Promise.<void>}
+	 * @returns {Promise.<void>} void
 	 * @private
 	 * @memberOf Fb
 	 */
@@ -72,13 +72,13 @@ app.Fb = (function() {
 
 			// Callback fired if Instance ID token is updated.
 			_messaging.onTokenRefresh(_refreshRegToken);
-
+			return Promise.resolve();
 		});
 	}
 
 	/**
 	 * Delete firebase.app if it exists
-	 * @return {Promise.<void>}
+	 * @returns {Promise.<void>} void
 	 * @private
 	 * @memberOf Fb
 	 */
@@ -99,6 +99,8 @@ app.Fb = (function() {
 		_messaging.getToken().then((refreshedToken) => {
 			if (app.Utils.isSignedIn()) {
 				return app.Reg.register(refreshedToken);
+			} else {
+				return Promise.resolve();
 			}
 		}).catch((error) => {});
 	}
@@ -106,8 +108,8 @@ app.Fb = (function() {
 	return {
 		/**
 		 * Initialize the firebase libraries
-		 * @param {ServiceWorkerRegistration} swReg
-		 * @return {Promise<void>}
+		 * @param {ServiceWorkerRegistration} swReg - service worker
+		 * @returns {Promise<void>} void
 		 * @memberOf Fb
 		 */
 		initialize: function(swReg) {
@@ -117,7 +119,7 @@ app.Fb = (function() {
 		/**
 		 * SignIn to firebase
 		 * @param {string} token - token
-		 * @return {Promise<object>} The current firebase user
+		 * @returns {Promise<Object>} The current firebase user
 		 * @memberOf Fb
 		 */
 		signIn: function(token) {
@@ -131,7 +133,7 @@ app.Fb = (function() {
 
 		/**
 		 * Unregister Service Worker and sign-out of firebase
-		 * @return {Promise<void>} An {@link Error} on reject
+		 * @returns {Promise<void>} An {@link Error} on reject
 		 * @memberOf Fb
 		 */
 		signOut: function() {
@@ -142,7 +144,7 @@ app.Fb = (function() {
 
 		/**
 		 * Get the registration token for fcm
-		 * @return {Promise<token>} A registration token for fcm
+		 * @returns {Promise<token>} A registration token for fcm
 		 * @memberOf Fb
 		 */
 		getRegToken: function() {

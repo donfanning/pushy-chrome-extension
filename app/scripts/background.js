@@ -93,7 +93,7 @@ for this device.`;
 	 * when the extension is updated to a new version,<br />
 	 * and when Chrome is updated to a new version.
 	 * @see https://developer.chrome.com/extensions/runtime#event-onInstalled
-	 * @param {object} details - type of event
+	 * @param {Object} details - type of event
 	 * @private
 	 * @memberOf Background
 	 */
@@ -104,7 +104,8 @@ for this device.`;
 			// save OS
 			app.Utils.getPlatformOS().then((os) => {
 				app.Utils.set('os', os);
-			});
+				return null;
+			}).catch(() => {});
 			_initializeData();
 			app.Notify.showMainTab();
 		} else if (details.reason === 'update') {
@@ -149,16 +150,17 @@ for this device.`;
 		// Persist
 		app.ClipItem.add(text, Date.now(), false,
 			false, app.Device.myName()).then((clipItem) => {
-			app.Msg.sendClipItem(clipItem).catch((error) => {
+			// eslint-disable-next-line promise/no-nesting
+			return app.Msg.sendClipItem(clipItem).catch((error) => {
 				app.Gae.sendMessageFailed(error);
 			});
-		}).catch((error) => {});
+		}).catch((err) => {});
 	}
 
 	/**
 	 * Event: Fired when a tab is updated.
 	 * @see https://developer.chrome.com/extensions/tabs#event-onUpdated
-	 * @param {int} tabId
+	 * @param {int} tabId - id of tab
 	 * @private
 	 * @memberOf Background
 	 */
@@ -169,7 +171,7 @@ for this device.`;
 	/**
 	 * Event: Fired when item in localStorage changes
 	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
-	 * @param {Event} event
+	 * @param {Event} event - storage event
 	 * @param {string} event.key - storage item that changed
 	 * @private
 	 * @memberOf Background
@@ -235,7 +237,7 @@ for this device.`;
 
 	/**
 	 * Initialize firebase and Service Worker if signed in
-	 * @return {Promise<void>}
+	 * @returns {Promise<void>} void
 	 * @private
 	 * @memberOf Background
 	 */

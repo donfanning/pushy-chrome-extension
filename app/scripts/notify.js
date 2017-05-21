@@ -44,7 +44,7 @@ app.Notify = (function() {
 	/**
 	 * Get the icon for the notification
 	 * @param {GaeMsg} data message object
-	 * @return {String|null} path to icon, null for
+	 * @returns {?string} path to icon, null for
 	 * actions without notifications (ping)
 	 * @memberOf Notify
 	 */
@@ -121,7 +121,7 @@ app.Notify = (function() {
 
 		/**
 		 * Determine if send notifications are enabled
-		 * @return {Boolean} true if enabled
+		 * @returns {boolean} true if enabled
 		 * @memberOf Notify
 		 */
 		onSend: function() {

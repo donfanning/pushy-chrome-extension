@@ -21,7 +21,7 @@ app.User = (function() {
 	 * Event: Fired when signin state changes for an account on the user's
 	 *     profile.
 	 * @see https://developer.chrome.com/apps/identity#event-onSignInChanged
-	 * @param {object} account - chrome AccountInfo
+	 * @param {Object} account - chrome AccountInfo
 	 * @param {boolean} signedIn - true if signedIn
 	 * @private
 	 * @memberOf User
@@ -44,10 +44,10 @@ app.User = (function() {
 	 * Event: Fired when a message is sent from either an extension process<br>
 	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
 	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
-	 * @param {object} request - details for the message
-	 * @param {object} sender - MessageSender object
+	 * @param {Object} request - details for the message
+	 * @param {Object} sender - MessageSender object
 	 * @param {function} response - function to call once after processing
-	 * @return {boolean} true if asynchronous
+	 * @returns {boolean} true if asynchronous
 	 * @private
 	 * @memberOf User
 	 */
@@ -59,8 +59,10 @@ app.User = (function() {
 			ret = true; // async
 			app.User.addAccess().then(() => {
 				response({message: 'ok'});
+				return Promise.resolve();
 			}).catch((error) => {
 				app.User.removeAccess().then(() => {
+					return Promise.resolve();
 				}).catch(() => {
 					_setSignIn(false);
 					app.Utils.set('registered', false);
@@ -72,6 +74,7 @@ app.User = (function() {
 			ret = true;  // async
 			app.User.removeAccess().then(() => {
 				response({message: 'ok'});
+				return Promise.resolve();
 			}).catch((error) => {
 				response({message: 'error', error: error.toString()});
 			});
@@ -105,7 +108,7 @@ app.User = (function() {
 	return {
 		/**
 		 * SignIn with OAuth 2.0 and firebase
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf User
 		 */
 		signIn: function() {
@@ -126,7 +129,7 @@ app.User = (function() {
 
 		/**
 		 * Sign-out of firebase
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf User
 		 */
 		signOut: function() {
@@ -143,14 +146,14 @@ app.User = (function() {
 
 		/**
 		 * Sign in and register {@link Device}
-		 * @return {Promise.<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf User
 		 */
 		addAccess: function() {
 
 			/**
 			 * Cleanup if user signed-out of Browser
-			 * @return {Promise.<void>}
+			 * @returns {Promise<void>} void
 			 * @memberOf User
 			 */
 			function ifCleanup() {
@@ -173,7 +176,7 @@ app.User = (function() {
 
 		/**
 		 * Unregister {@link Device} and sign out
-		 * @return {Promise.<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf User
 		 */
 		removeAccess: function() {
@@ -191,7 +194,7 @@ app.User = (function() {
 		 * Get an OAuth2.0 token
 		 * @see https://developer.chrome.com/apps/identity#method-getAuthToken
 		 * @param {boolean} retry - if true, retry with new token on error
-		 * @return {Promise<token>} An access token
+		 * @returns {Promise<token>} An access token
 		 * @memberOf User
 		 */
 		getAuthToken: function(retry) {
@@ -223,7 +226,7 @@ app.User = (function() {
 
 		/**
 		 * Cleanup after user signs out of Browser
-		 * @return {Promise.<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf User
 		 */
 		cleanup: function() {
@@ -235,7 +238,7 @@ app.User = (function() {
 		/**
 		 * Remove Auth token from cache
 		 * @param {string} token - Auth token
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf User
 		 */
 		removeCachedAuthToken: function(token) {
@@ -245,7 +248,7 @@ app.User = (function() {
 
 		/**
 		 * Persist info on current Browser user (may be no-one)
-		 * @return {Promise.<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf User
 		 */
 		setInfo: function() {

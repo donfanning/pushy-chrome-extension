@@ -31,7 +31,7 @@ app.Reg = (function() {
 	 * Send request to server Endpoint
 	 * @param {string} url - Endpoint path
 	 * @param {string} errorPrefix - text prefix to add to Error on reject
-	 * @return {Promise<void>}
+	 * @returns {Promise<void>} void
 	 * @private
 	 * @memberOf Reg
 	 */
@@ -48,7 +48,7 @@ app.Reg = (function() {
 	/**
 	 * Event: Fired when item in localStorage changes
 	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
-	 * @param {Event} event
+	 * @param {Event} event - storage event
 	 * @param {string} event.key - storage item that changed
 	 * @private
 	 * @memberOf Reg
@@ -86,7 +86,7 @@ app.Reg = (function() {
 	return {
 		/**
 		 * Register {@link Device} with server
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf Reg
 		 */
 		register: function() {
@@ -106,7 +106,7 @@ app.Reg = (function() {
 
 		/**
 		 * Unregister {@link Device} with server
-		 * @return {Promise<void>}
+		 * @returns {Promise<void>} void
 		 * @memberOf Reg
 		 */
 		unregister: function() {
