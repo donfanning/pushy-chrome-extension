@@ -7,7 +7,7 @@
 
 /**
  * Content script to monitor clipboard copy and cuts
- * @namespace
+ * @namespace ContentScript
  */
 (function() {
 	'use strict';

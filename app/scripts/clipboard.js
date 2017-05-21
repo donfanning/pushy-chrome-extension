@@ -20,7 +20,7 @@ app.CB = (function() {
 	 * @type {int}
 	 * @default
 	 * @private
-	 * @memberOf CB
+	 * @memberOf app.CB
 	 */
 	const WAIT_MILLIS = 250;
 
@@ -28,7 +28,7 @@ app.CB = (function() {
 	 * Send local {@link ClipItem} push notification if enabled
 	 * @param {ClipItem} clipItem - {@link ClipItem} to send
 	 * @private
-	 * @memberOf CB
+	 * @memberOf app.CB
 	 */
 	function _sendLocalClipItem(clipItem) {
 		if (!clipItem.remote && app.Utils.isAutoSend()) {
@@ -42,7 +42,7 @@ app.CB = (function() {
 	/**
 	 * Add a new {@link ClipItem} from the Clipboard contents
 	 * @private
-	 * @memberOf CB
+	 * @memberOf app.CB
 	 */
 	function _addClipItemFromClipboard() {
 		if (!app.Utils.isMonitorClipboard()) {
@@ -78,7 +78,7 @@ app.CB = (function() {
 	 * @param {function} response - function to call once after processing
 	 * @returns {boolean} true if asynchronous
 	 * @private
-	 * @memberOf CB
+	 * @memberOf app.CB
 	 */
 	function _onChromeMessage(request, sender, response) {
 		let ret = false;
@@ -107,7 +107,7 @@ app.CB = (function() {
 		/**
 		 * Get the text from the clipboard
 		 * @returns {string} text from clipboard
-		 * @memberOf CB
+		 * @memberOf app.CB
 		 */
 		getTextFromClipboard: function() {
 			const input = document.createElement('textArea');
@@ -124,7 +124,7 @@ app.CB = (function() {
 		/**
 		 * Copy the given text to the clipboard
 		 * @param {string} text - text to copy
-		 * @memberOf CB
+		 * @memberOf app.CB
 		 */
 		copyToClipboard: function(text) {
 			const input = document.createElement('textArea');

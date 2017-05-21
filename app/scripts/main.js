@@ -6,13 +6,13 @@
  */
 window.app = window.app || {};
 
-/**
- * Script for the main.html page
- *  @namespace
- */
-app.Main = (function() {
+(function() {
 	'use strict';
 
+	/**
+	 * Script for the main.html page
+	 *  @namespace Main
+	 */
 	new ExceptionHandler();
 
 	/**
@@ -172,7 +172,7 @@ app.Main = (function() {
 		// check for permissions
 		_checkPermissions();
 	});
-	
+
 	/**
 	 * Event: navigation menu selected
 	 * @param {Event} event - event

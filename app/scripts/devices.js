@@ -18,7 +18,7 @@ app.Devices = (function() {
 	/**
 	 * A Map of {@link Device} objects keyed by their unique names
 	 * @type {Map}
-	 * @memberOf Devices
+	 * @memberOf app.Devices
 	 */
 	let _devices = new Map();
 
@@ -27,7 +27,7 @@ app.Devices = (function() {
 	 * @param {Map} map - a Map
 	 * @returns {Object} as Object
 	 * @private
-	 * @memberOf Devices
+	 * @memberOf app.Devices
 	 */
 	function _mapToObj(map) {
 		let obj = Object.create(null);
@@ -42,7 +42,7 @@ app.Devices = (function() {
 	/**
 	 * Get the {@link Device} objects from localStorage
 	 * @private
-	 * @memberOf Devices
+	 * @memberOf app.Devices
 	 */
 	function _load() {
 		_devices = new Map();
@@ -63,7 +63,7 @@ app.Devices = (function() {
 	/**
 	 * Save the {@link Device} objects to localStorage
 	 * @private
-	 * @memberOf Devices
+	 * @memberOf app.Devices
 	 */
 	function _save() {
 		app.Utils.set('devices', _mapToObj(_devices));
@@ -77,7 +77,7 @@ app.Devices = (function() {
 	 * Event: called when document and resources are loaded<br />
 	 * Load the {@link Device} objects from localStorage
 	 * @private
-	 * @memberOf Devices
+	 * @memberOf app.Devices
 	 */
 	function _onLoad() {
 		_load();
@@ -93,7 +93,7 @@ app.Devices = (function() {
 	 * @param {function} response - function to call once after processing
 	 * @returns {boolean} true if asynchronous
 	 * @private
-	 * @memberOf Devices
+	 * @memberOf app.Devices
 	 */
 	function _onChromeMessage(request, sender, response) {
 		let ret = false;
@@ -122,7 +122,7 @@ app.Devices = (function() {
 		/**
 		 * Get an {@link Iterator} on the Devices
 		 * @returns {Iterator.<Device>} Iterator
-		 * @memberOf Devices
+		 * @memberOf app.Devices
 		 */
 		entries: function() {
 			return _devices.entries();
@@ -131,7 +131,7 @@ app.Devices = (function() {
 		/**
 		 * Add a new {@link Device}
 		 * @param {Device} device - {@link Device} to add
-		 * @memberOf Devices
+		 * @memberOf app.Devices
 		 */
 		add: function(device) {
 			_devices.set(device.getUniqueName(), device);
@@ -141,7 +141,7 @@ app.Devices = (function() {
 		/**
 		 * Remove a {@link Device}
 		 * @param {Device} device - {@link Device} to remove
-		 * @memberOf Devices
+		 * @memberOf app.Devices
 		 */
 		remove: function(device) {
 			this.removeByName(device.getUniqueName());
@@ -150,7 +150,7 @@ app.Devices = (function() {
 		/**
 		 * Remove a {@link Device} with the given unique name
 		 * @param {string} uniqueName - Name of Device to remove
-		 * @memberOf Devices
+		 * @memberOf app.Devices
 		 */
 		removeByName: function(uniqueName) {
 			_devices.delete(uniqueName);
@@ -159,7 +159,7 @@ app.Devices = (function() {
 
 		/**
 		 * Remove all {@link Device} objects
-		 * @memberOf Devices
+		 * @memberOf app.Devices
 		 */
 		clear: function() {
 			_devices.clear();

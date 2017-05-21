@@ -9,7 +9,7 @@
 
 	/**
 	 * Handle incoming push messages
-	 * @namespace app.ReceiveMsg
+	 * @namespace ReceiveMsg
 	 */
 	new ExceptionHandler();
 
@@ -24,9 +24,9 @@
 	const MESSAGE_WAIT_MILLIS = 500;
 
 	/**
-	 * Get new {@link Device} from {@link GaeMsg}
+	 * Get new {@link Device} from {@link app.GaeMsg}
 	 * @param {GaeMsg} data - push data
-	 * @returns {Device} a {@link app.Device}
+	 * @returns {Device} a {@link Device}
 	 * @private
 	 * @memberOf ReceiveMsg
 	 */

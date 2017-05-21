@@ -24,7 +24,7 @@ app.Utils = (function() {
 		 * Number of minutes in a day
 		 * @const
 		 * @type {int}
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		MIN_IN_DAY: MIN_IN_DAY,
 
@@ -32,13 +32,13 @@ app.Utils = (function() {
 		 * Number of milliseconds a in day
 		 * @const
 		 * @type {int}
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		MILLIS_IN_DAY: MILLIS_IN_DAY,
 
 		/** Get the extension's name
 		 * @returns {string} name of extension
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		getExtensionName: function() {
 			return `chrome-extension://${chrome.runtime.id}`;
@@ -47,7 +47,7 @@ app.Utils = (function() {
 		/**
 		 * Get the Extension version
 		 * @returns {string} Extension version
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		getVersion: function() {
 			const manifest = chrome.runtime.getManifest();
@@ -58,7 +58,7 @@ app.Utils = (function() {
 		 * Get the major Chrome version
 		 * @see https://goo.gl/2ITMNO
 		 * @returns {int} Chrome major version
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		getChromeVersion: function() {
 			const raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
@@ -69,7 +69,7 @@ app.Utils = (function() {
 		 * Get the full Chrome version
 		 * @see https://goo.gl/2ITMNO
 		 * @returns {string} Chrome version
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		getFullChromeVersion: function() {
 			const raw = navigator.userAgent;
@@ -79,7 +79,7 @@ app.Utils = (function() {
 		/**
 		 * Get the OS as a human readable string
 		 * @returns {Promise.<string>} OS name
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		getPlatformOS: function() {
 			const chromep = new ChromePromise();
@@ -116,7 +116,7 @@ app.Utils = (function() {
 		 * Get a JSON parsed value from localStorage
 		 * @param {string} key - key to get value for
 		 * @returns {JSON|null} JSON object, null if key does not exist
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		get: function(key) {
 			let item = localStorage.getItem(key);
@@ -130,7 +130,7 @@ app.Utils = (function() {
 		 * JSON stringify and save a value to localStorage
 		 * @param {string} key - key to set value for
 		 * @param {?Object} value - new value, if null remove item
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		set: function(key, value) {
 			if (value !== null) {
@@ -144,7 +144,7 @@ app.Utils = (function() {
 		 * Get integer value from localStorage
 		 * @param {!string} key - key to get value for
 		 * @returns {?int} value as integer
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		getInt: function(key) {
 			let item = localStorage.getItem(key);
@@ -157,16 +157,16 @@ app.Utils = (function() {
 		/**
 		 * Are we saving clipboard contents
 		 * @returns {boolean} true if enabled
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		isMonitorClipboard: function() {
 			return app.Utils.get('monitorClipboard');
 		},
 
 		/**
-		 * Has user enabled pushing to {@link Devices}
+		 * Has user enabled pushing to {@link app.Devices}
 		 * @returns {boolean} true if enabled
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		allowPush: function() {
 			return app.Utils.get('allowPush');
@@ -175,16 +175,16 @@ app.Utils = (function() {
 		/**
 		 * Has user enabled autoSend option
 		 * @returns {boolean} true if enabled
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		isAutoSend: function() {
 			return app.Utils.get('autoSend');
 		},
 
 		/**
-		 * Has user enabled receiving from {@link Devices}
+		 * Has user enabled receiving from {@link app.Devices}
 		 * @returns {boolean} true if enabled
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		allowReceive: function() {
 			return app.Utils.get('allowReceive');
@@ -193,7 +193,7 @@ app.Utils = (function() {
 		/**
 		 * Are we signed in
 		 * @returns {boolean} true if signed in
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		isSignedIn: function() {
 			return this.get('signedIn');
@@ -202,7 +202,7 @@ app.Utils = (function() {
 		/**
 		 * Are we registered with fcm
 		 * @returns {boolean} true if registered
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		isRegistered: function() {
 			return this.get('registered');
@@ -211,7 +211,7 @@ app.Utils = (function() {
 		/**
 		 * Are we not registered with fcm
 		 * @returns {boolean} true if not registered
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		notRegistered: function() {
 			return !this.isRegistered();
@@ -219,7 +219,7 @@ app.Utils = (function() {
 
 		/**
 		 * Set the badge displayed on the extension icon
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		setBadgeText: function() {
 			let text = '';
@@ -233,7 +233,7 @@ app.Utils = (function() {
 		 * Determine if a String is null or whitespace only
 		 * @param {string} str - string to check
 		 * @returns {boolean} true if str is whitespace (or null)
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		isWhiteSpace: function(str) {
 			return (!str || str.length === 0 || /^\s*$/.test(str));
@@ -243,7 +243,7 @@ app.Utils = (function() {
 		 * Get a date string in time ago format
 		 * @param {int} time - time since epoch in millis
 		 * @returns {string} Relative time format
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 */
 		getRelativeTime: function(time) {
 			return `${moment(time).fromNow()}, ` +
@@ -254,7 +254,7 @@ app.Utils = (function() {
 		 * Get a random string of the given length
 		 * @param {int|null} len - length of generated string, 8 if null
 		 * @returns {string} a random string
-		 * @memberOf Utils
+		 * @memberOf app.Utils
 		 *
 		 */
 		randomString: function(len) {

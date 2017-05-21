@@ -21,7 +21,7 @@ app.Notify = (function() {
 	 * @default
 	 * @const
 	 * @private
-	 * @memberOf Notify
+	 * @memberOf app.Notify
 	 */
 	const NOTIFY_SEND = 'CLIP_MAN_SEND';
 
@@ -33,7 +33,7 @@ app.Notify = (function() {
 	 * @const
 	 * @default
 	 * @private
-	 * @memberOf Notify
+	 * @memberOf app.Notify
 	 */
 	const ICON = {
 		LOCAL_COPY: '/images/ic_local_copy.png',
@@ -46,7 +46,7 @@ app.Notify = (function() {
 	 * @param {GaeMsg} data message object
 	 * @returns {?string} path to icon, null for
 	 * actions without notifications (ping)
-	 * @memberOf Notify
+	 * @memberOf app.Notify
 	 */
 	function _getIcon(data) {
 		let path = '';
@@ -66,7 +66,7 @@ app.Notify = (function() {
 	 * @see https://developer.chrome.com/apps/notifications#event-onClicked
 	 * @param {string} id - notification type
 	 * @private
-	 * @memberOf Notify
+	 * @memberOf app.Notify
 	 */
 	function _onNotificationClicked(id) {
 		app.Notify.showMainTab();
@@ -79,7 +79,7 @@ app.Notify = (function() {
 	return {
 		/**
 		 * Send notification type
-		 * @memberOf Notify
+		 * @memberOf app.Notify
 		 */
 		NOTIFY_SEND: NOTIFY_SEND,
 
@@ -87,7 +87,7 @@ app.Notify = (function() {
 		 * Create and display a notification
 		 * @param {string} type - notification type (send or receive)
 		 * @param {GaeMsg} data - message data
-		 * @memberOf Notify
+		 * @memberOf app.Notify
 		 */
 		create: function(type, data) {
 			const options = {
@@ -122,7 +122,7 @@ app.Notify = (function() {
 		/**
 		 * Determine if send notifications are enabled
 		 * @returns {boolean} true if enabled
-		 * @memberOf Notify
+		 * @memberOf app.Notify
 		 */
 		onSend: function() {
 			const notify = app.Utils.get('notify');
@@ -133,7 +133,7 @@ app.Notify = (function() {
 		/**
 		 * Send message to the main tab to focus it. If not found, create it
 		 * @private
-		 * @memberOf Notify
+		 * @memberOf app.Notify
 		 */
 		showMainTab: function() {
 			chrome.runtime.sendMessage({

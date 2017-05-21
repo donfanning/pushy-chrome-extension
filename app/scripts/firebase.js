@@ -20,7 +20,7 @@ app.Fb = (function() {
 	 * Error message for regToken
 	 * @type {string}
 	 * @default
-	 * @memberOf Fb
+	 * @memberOf app.Fb
 	 */
 	const ERROR_TOKEN =
 		'Failed to obtain messaging token.\n';
@@ -28,21 +28,21 @@ app.Fb = (function() {
 	/**
 	 * Firebase app
 	 * @private
-	 * @memberOf Fb
+	 * @memberOf app.Fb
 	 */
 	let _app = null;
 
 	/**
 	 * Firebase messaging Namespace
 	 * @private
-	 * @memberOf Fb
+	 * @memberOf app.Fb
 	 */
 	let _messaging;
 
 	/**
 	 * Firebase auth Namespace
 	 * @private
-	 * @memberOf Fb
+	 * @memberOf app.Fb
 	 */
 	let _auth;
 
@@ -51,7 +51,7 @@ app.Fb = (function() {
 	 * @param {ServiceWorkerRegistration} swReg - use own ServiceWorker
 	 * @returns {Promise.<void>} void
 	 * @private
-	 * @memberOf Fb
+	 * @memberOf app.Fb
 	 */
 	function _initializeFirebase(swReg) {
 		const config = {
@@ -80,7 +80,7 @@ app.Fb = (function() {
 	 * Delete firebase.app if it exists
 	 * @returns {Promise.<void>} void
 	 * @private
-	 * @memberOf Fb
+	 * @memberOf app.Fb
 	 */
 	function _deleteFirebaseApp() {
 		if (_app) {
@@ -93,7 +93,7 @@ app.Fb = (function() {
 	/**
 	 * Refresh the regToken when firebase changes it
 	 * @private
-	 * @memberOf Fb
+	 * @memberOf app.Fb
 	 */
 	function _refreshRegToken() {
 		_messaging.getToken().then((refreshedToken) => {
@@ -110,7 +110,7 @@ app.Fb = (function() {
 		 * Initialize the firebase libraries
 		 * @param {ServiceWorkerRegistration} swReg - service worker
 		 * @returns {Promise<void>} void
-		 * @memberOf Fb
+		 * @memberOf app.Fb
 		 */
 		initialize: function(swReg) {
 			return _initializeFirebase(swReg);
@@ -120,7 +120,7 @@ app.Fb = (function() {
 		 * SignIn to firebase
 		 * @param {string} token - token
 		 * @returns {Promise<Object>} The current firebase user
-		 * @memberOf Fb
+		 * @memberOf app.Fb
 		 */
 		signIn: function(token) {
 			return app.SW.initialize().then(() => {
@@ -133,8 +133,8 @@ app.Fb = (function() {
 
 		/**
 		 * Unregister Service Worker and sign-out of firebase
-		 * @returns {Promise<void>} An {@link Error} on reject
-		 * @memberOf Fb
+		 * @returns {Promise<void>} Error on reject
+		 * @memberOf app.Fb
 		 */
 		signOut: function() {
 			return app.SW.unregister().then(() => {
@@ -145,7 +145,7 @@ app.Fb = (function() {
 		/**
 		 * Get the registration token for fcm
 		 * @returns {Promise<token>} A registration token for fcm
-		 * @memberOf Fb
+		 * @memberOf app.Fb
 		 */
 		getRegToken: function() {
 			return _messaging.getToken().then((token) => {

@@ -19,7 +19,7 @@ app.GA = (function() {
 	 * @const
 	 * @default
 	 * @private
-	 * @memberOf GA
+	 * @memberOf app.GA
 	 */
 	const TRACKING_ID = 'UA-61314754-3';
 
@@ -40,7 +40,7 @@ app.GA = (function() {
 	 * @property {GAEvent} REGISTERED - {@link Device} registered
 	 * @property {GAEvent} UNREGISTERED - {@link Device} unregistered
 	 * @const
-	 * @memberOf GA
+	 * @memberOf app.GA
 	 */
 	const EVENT = {
 		INSTALLED: {cat: 'extension', act: 'installed'},
@@ -55,7 +55,7 @@ app.GA = (function() {
 	 * Event: called when document and resources are loaded<br />
 	 * Initialize Google Analytics
 	 * @private
-	 * @memberOf GA
+	 * @memberOf app.GA
 	 */
 	function _onLoad() {
 		// Standard Google Universal Analytics code
@@ -89,7 +89,7 @@ app.GA = (function() {
 
 		/**
 		 * Send a page
-		 * @memberOf GA
+		 * @memberOf app.GA
 		 * @param {string} page - page path
 		 */
 		page: function(page) {

@@ -20,7 +20,7 @@ app.Reg = (function() {
 	 * @type string
 	 * @const
 	 * @private
-	 * @memberOf Reg
+	 * @memberOf app.Reg
 	 */
 	const URL_BASE = `${app.Gae.GAE_ROOT}/registration/v1/`;
 
@@ -33,7 +33,7 @@ app.Reg = (function() {
 	 * @param {string} errorPrefix - text prefix to add to Error on reject
 	 * @returns {Promise<void>} void
 	 * @private
-	 * @memberOf Reg
+	 * @memberOf app.Reg
 	 */
 	function _doCommand(url, errorPrefix) {
 		return app.User.getAuthToken(true).then((token) => {
@@ -51,7 +51,7 @@ app.Reg = (function() {
 	 * @param {Event} event - storage event
 	 * @param {string} event.key - storage item that changed
 	 * @private
-	 * @memberOf Reg
+	 * @memberOf app.Reg
 	 */
 	function _onStorageChanged(event) {
 		if (event.key === 'allowReceive') {
@@ -87,7 +87,7 @@ app.Reg = (function() {
 		/**
 		 * Register {@link Device} with server
 		 * @returns {Promise<void>} void
-		 * @memberOf Reg
+		 * @memberOf app.Reg
 		 */
 		register: function() {
 			if (app.Utils.isRegistered() || !app.Utils.allowReceive()) {
@@ -107,7 +107,7 @@ app.Reg = (function() {
 		/**
 		 * Unregister {@link Device} with server
 		 * @returns {Promise<void>} void
-		 * @memberOf Reg
+		 * @memberOf app.Reg
 		 */
 		unregister: function() {
 			if (app.Utils.notRegistered()) {

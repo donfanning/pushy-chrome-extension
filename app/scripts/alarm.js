@@ -21,7 +21,7 @@ app.Alarm = (function() {
 	 * @const
 	 * @default
 	 * @private
-	 * @memberOf Alarm
+	 * @memberOf app.Alarm
 	 */
 	const ALARM_STORAGE = 'storage';
 
@@ -30,7 +30,7 @@ app.Alarm = (function() {
 	 * @see https://developer.chrome.com/apps/alarms#event-onAlarm
 	 * @param {Object} alarm - details on alarm
 	 * @private
-	 * @memberOf Alarm
+	 * @memberOf app.Alarm
 	 */
 	function _onAlarm(alarm) {
 		if (alarm.name === ALARM_STORAGE) {
@@ -44,7 +44,7 @@ app.Alarm = (function() {
 	 * @param {Event} event - storage event
 	 * @param {string} event.key - storage item that changed
 	 * @private
-	 * @memberOf Alarm
+	 * @memberOf app.Alarm
 	 */
 	function _onStorageChanged(event) {
 		if (event.key === 'storageDuration') {
@@ -65,7 +65,7 @@ app.Alarm = (function() {
 	return {
 		/**
 		 * Set the repeating alarms
-		 * @memberOf Alarm
+		 * @memberOf app.Alarm
 		 */
 		updateAlarms: function() {
 			const durationType = app.Utils.getInt('storageDuration');
@@ -88,7 +88,7 @@ app.Alarm = (function() {
 		/**
 		 * Delete {@link ClipItem} objects older than the
 		 * storageDuration setting
-		 * @memberOf Alarm
+		 * @memberOf app.Alarm
 		 */
 		deleteOldClipItems: function() {
 			app.ClipItem.deleteOld().catch((error) => {});

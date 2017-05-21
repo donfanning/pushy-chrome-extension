@@ -25,14 +25,14 @@ app.SW = (function() {
 	 * @const
 	 * @default
 	 * @private
-	 * @memberOf SW
+	 * @memberOf app.SW
 	 */
 	const SERVICE_WORKER = '../scripts/sw.js';
 
 	/**
 	 * Our ServiceWorkerRegistration object
 	 * @private
-	 * @memberOf SW
+	 * @memberOf app.SW
 	 */
 	let _swRegistration = null;
 
@@ -41,7 +41,7 @@ app.SW = (function() {
 	 * Note: This can be called if already registered
 	 * @returns {Promise<Object>} service worker
 	 * @private
-	 * @memberOf SW
+	 * @memberOf app.SW
 	 */
 	function _register() {
 		return navigator.serviceWorker.register(SERVICE_WORKER)
@@ -57,7 +57,7 @@ app.SW = (function() {
 	 * Unsubscribe from push notifications
 	 * @returns {Promise<void>} void
 	 * @private
-	 * @memberOf SW
+	 * @memberOf app.SW
 	 */
 	function _unsubscribePush() {
 		return _swRegistration.pushManager.getSubscription()
@@ -74,7 +74,7 @@ app.SW = (function() {
 		/**
 		 * Initialize the {@link ServiceWorker} and firebase
 		 * @returns {Promise<void>} void
-		 * @memberOf SW
+		 * @memberOf app.SW
 		 */
 		initialize: function() {
 			if (_swRegistration) {
@@ -93,7 +93,7 @@ app.SW = (function() {
 		/**
 		 * Unregister the Service Worker
 		 * @returns {Promise<void>} void
-		 * @memberOf SW
+		 * @memberOf app.SW
 		 */
 		unregister: function() {
 			if (!_swRegistration) {
@@ -117,7 +117,7 @@ app.SW = (function() {
 		/**
 		 * Update the Service Worker
 		 * @returns {Promise<void>} void always resolves
-		 * @memberOf SW
+		 * @memberOf app.SW
 		 */
 		update: function() {
 			if (_swRegistration) {

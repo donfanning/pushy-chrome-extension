@@ -222,7 +222,7 @@ Polymer({
 
 		/**
 		 * Item in the main list
-		 * @typedef {Object} ListItem
+		 * @typedef {Object} MainPage.ListItem
 		 * @property {boolean} checked - true if selected
 		 * @property {ClipItem} clipItem - {@link ClipItem}
 		 * @memberOf MainPage
@@ -428,7 +428,7 @@ Polymer({
 	},
 
 	/**
-	 * Event: Toggle favorite state of {@link ListItem}
+	 * Event: Toggle favorite state of {@link MainPage.ListItem}
 	 * @param {event} event - event
 	 * @private
 	 */
@@ -602,7 +602,7 @@ Polymer({
 	},
 
 	/**
-	 * Add or update {@link ListItem} in {@link listItems}
+	 * Add or update {@link MainPage.ListItem}
 	 * @param {Object} request - Chrome message request
 	 */
 	_addListItem(request) {
@@ -633,7 +633,7 @@ Polymer({
 	},
 
 	/**
-	 * Get position of {@link ListItem} with given text
+	 * Get position of {@link MainPage.ListItem} with given text
 	 * @param {string} clipText - text to find
 	 * @returns {int} position in array, -1 if not found
 	 */
@@ -726,6 +726,6 @@ Polymer({
 		// linkify it - creates element children
 		linkifyElement(el);
 	},
-	
+
 });
 </script>

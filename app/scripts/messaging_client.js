@@ -19,7 +19,7 @@ app.Msg = (function() {
 	 * Base path of MessagingEndpoint
 	 * @const
 	 * @private
-	 * @memberOf Msg
+	 * @memberOf app.Msg
 	 */
 	const URL_BASE = `${app.Gae.GAE_ROOT}/messaging/v1/send/`;
 
@@ -28,7 +28,7 @@ app.Msg = (function() {
 	 * @const
 	 * @default
 	 * @private
-	 * @memberOf Msg
+	 * @memberOf app.Msg
 	 */
 	const MAX_MSG_LEN = 4096;
 
@@ -41,7 +41,7 @@ app.Msg = (function() {
 	 * DEVICE_REMOVED: string}}
 	 * @const
 	 * @default
-	 * @memberOf Msg
+	 * @memberOf app.Msg
 	 */
 	const ACTION = {
 		MESSAGE: 'm',
@@ -60,7 +60,7 @@ app.Msg = (function() {
 	 * @const
 	 * @default
 	 * @private
-	 * @memberOf Msg
+	 * @memberOf app.Msg
 	 */
 	const BODY = {
 		PING: 'Contacting other devices...',
@@ -88,7 +88,7 @@ app.Msg = (function() {
 	 * @param {string} body - message body
 	 * @returns {GaeMsg} data packet
 	 * @private
-	 * @memberOf Msg
+	 * @memberOf app.Msg
 	 */
 	function _getData(action, body) {
 		const msg = _getDevice();
@@ -100,7 +100,7 @@ app.Msg = (function() {
 	/**
 	 * Get portion of {@link Device} sent in message
 	 * @returns {{}} Subset of {@link Device} info as object literal
-	 * @memberOf Msg
+	 * @memberOf app.Msg
 	 */
 	function _getDevice() {
 		return {
@@ -117,7 +117,7 @@ app.Msg = (function() {
 	 * @param {boolean} notify - display notification if true
 	 * @returns {Promise<void>} void
 	 * @private
-	 * @memberOf Msg
+	 * @memberOf app.Msg
 	 */
 	function _sendMessage(data, notify) {
 		if (!app.Utils.isSignedIn() || !app.Utils.allowPush()) {
@@ -148,7 +148,7 @@ app.Msg = (function() {
 		 * Send clipboard contents as represented by a {@link ClipItem}
 		 * @param {ClipItem} clipItem - contents of clipboard
 		 * @returns {Promise<void>} void
-		 * @memberOf Msg
+		 * @memberOf app.Msg
 		 */
 		sendClipItem: function(clipItem) {
 			if (app.Utils.isWhiteSpace(clipItem.text)) {
@@ -169,7 +169,7 @@ app.Msg = (function() {
 		/**
 		 * Send message for adding our {@link Device}
 		 * @returns {Promise<void>} void
-		 * @memberOf Msg
+		 * @memberOf app.Msg
 		 */
 		sendDeviceAdded: function() {
 			const data = _getData(ACTION.DEVICE_ADDED, BODY.DEVICE_ADDED);
@@ -179,7 +179,7 @@ app.Msg = (function() {
 		/**
 		 * Send message for removing our {@link Device}
 		 * @returns {Promise<void>} void
-		 * @memberOf Msg
+		 * @memberOf app.Msg
 		 */
 		sendDeviceRemoved: function() {
 			const data = _getData(ACTION.DEVICE_REMOVED, BODY.DEVICE_REMOVED);
@@ -187,9 +187,9 @@ app.Msg = (function() {
 		},
 
 		/**
-		 * Ping our {@link Devices}
+		 * Ping our {@link app.Devices}
 		 * @returns {Promise<void>} void
-		 * @memberOf Msg
+		 * @memberOf app.Msg
 		 */
 		sendPing: function() {
 			const data = _getData(ACTION.PING, BODY.PING);
@@ -197,10 +197,10 @@ app.Msg = (function() {
 		},
 
 		/**
-		 * Respond to a ping from one of our {@link Devices}
+		 * Respond to a ping from one of our {@link app.Devices}
 		 * @param {string} srcRegId - source of ping
 		 * @returns {Promise<void>} void
-		 * @memberOf Msg
+		 * @memberOf app.Msg
 		 */
 		sendPingResponse: function(srcRegId) {
 			const data = _getData(ACTION.PING_RESPONSE, BODY.PING_RESPONSE);

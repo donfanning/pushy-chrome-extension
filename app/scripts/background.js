@@ -183,7 +183,7 @@ for this device.`;
 	}
 
 	/**
-	 * Save the {@link DEF_VALUES} array to localStorage
+	 * Save the {@link Background.DEF_VALUES} array to localStorage
 	 * @private
 	 * @memberOf Background
 	 */

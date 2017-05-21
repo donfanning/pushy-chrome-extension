@@ -24,7 +24,7 @@ app.User = (function() {
 	 * @param {Object} account - chrome AccountInfo
 	 * @param {boolean} signedIn - true if signedIn
 	 * @private
-	 * @memberOf User
+	 * @memberOf app.User
 	 */
 	function _onSignInChanged(account, signedIn) {
 		const uid = app.Utils.get('uid');
@@ -49,7 +49,7 @@ app.User = (function() {
 	 * @param {function} response - function to call once after processing
 	 * @returns {boolean} true if asynchronous
 	 * @private
-	 * @memberOf User
+	 * @memberOf app.User
 	 */
 	function _onChromeMessage(request, sender, response) {
 		let ret = false;
@@ -109,7 +109,7 @@ app.User = (function() {
 		/**
 		 * SignIn with OAuth 2.0 and firebase
 		 * @returns {Promise<void>} void
-		 * @memberOf User
+		 * @memberOf app.User
 		 */
 		signIn: function() {
 			if (app.Utils.isSignedIn()) {
@@ -130,7 +130,7 @@ app.User = (function() {
 		/**
 		 * Sign-out of firebase
 		 * @returns {Promise<void>} void
-		 * @memberOf User
+		 * @memberOf app.User
 		 */
 		signOut: function() {
 			if (!app.Utils.isSignedIn()) {
@@ -147,14 +147,14 @@ app.User = (function() {
 		/**
 		 * Sign in and register {@link Device}
 		 * @returns {Promise<void>} void
-		 * @memberOf User
+		 * @memberOf app.User
 		 */
 		addAccess: function() {
 
 			/**
 			 * Cleanup if user signed-out of Browser
 			 * @returns {Promise<void>} void
-			 * @memberOf User
+			 * @memberOf app.User
 			 */
 			function ifCleanup() {
 				if (app.Utils.get('needsCleanup')) {
@@ -177,7 +177,7 @@ app.User = (function() {
 		/**
 		 * Unregister {@link Device} and sign out
 		 * @returns {Promise<void>} void
-		 * @memberOf User
+		 * @memberOf app.User
 		 */
 		removeAccess: function() {
 			return app.Msg.sendDeviceRemoved().then(() => {
@@ -195,7 +195,7 @@ app.User = (function() {
 		 * @see https://developer.chrome.com/apps/identity#method-getAuthToken
 		 * @param {boolean} retry - if true, retry with new token on error
 		 * @returns {Promise<token>} An access token
-		 * @memberOf User
+		 * @memberOf app.User
 		 */
 		getAuthToken: function(retry) {
 			// If signed in, first try to get token non-interactively.
@@ -227,7 +227,7 @@ app.User = (function() {
 		/**
 		 * Cleanup after user signs out of Browser
 		 * @returns {Promise<void>} void
-		 * @memberOf User
+		 * @memberOf app.User
 		 */
 		cleanup: function() {
 			return app.User.getAuthToken(false).then((token) => {
@@ -239,7 +239,7 @@ app.User = (function() {
 		 * Remove Auth token from cache
 		 * @param {string} token - Auth token
 		 * @returns {Promise<void>} void
-		 * @memberOf User
+		 * @memberOf app.User
 		 */
 		removeCachedAuthToken: function(token) {
 			const chromep = new ChromePromise();
@@ -249,7 +249,7 @@ app.User = (function() {
 		/**
 		 * Persist info on current Browser user (may be no-one)
 		 * @returns {Promise<void>} void
-		 * @memberOf User
+		 * @memberOf app.User
 		 */
 		setInfo: function() {
 			const chromep = new ChromePromise();

@@ -15,30 +15,30 @@ app.Permissions = (function() {
 
 	new ExceptionHandler();
 
-	/** @memberOf Permissions */
+	/** @memberOf app.Permissions */
 	const PERMISSIONS = ['tabs'];
-	/** @memberOf Permissions */
+	/** @memberOf app.Permissions */
 	const ORIGINS = ['http://*/*', 'https://*/*'];
 
-	/** @memberOf Permissions */
+	/** @memberOf app.Permissions */
 	const NOT_SET = 'notSet';
-	/** @memberOf Permissions */
+	/** @memberOf app.Permissions */
 	const ALLOWED = 'allowed';
-	/** @memberOf Permissions */
+	/** @memberOf app.Permissions */
 	const DENIED = 'denied';
 
 	return {
-		/** @memberOf Permissions */
+		/** @memberOf app.Permissions */
 		NOT_SET: NOT_SET,
-		/** @memberOf Permissions */
+		/** @memberOf app.Permissions */
 		ALLOWED: ALLOWED,
-		/** @memberOf Permissions */
+		/** @memberOf app.Permissions */
 		DENIED: DENIED,
 
 		/**
 		 * Has use made choice on permissions
 		 * @returns {boolean} true if allowed or denied
-		 * @memberOf Permissions
+		 * @memberOf app.Permissions
 		 */
 		notSet: function() {
 			return app.Utils.get('permissions') === NOT_SET;
@@ -47,7 +47,7 @@ app.Permissions = (function() {
 		/**
 		 * Has the user allowed the optional permissions
 		 * @returns {boolean} true if allowed
-		 * @memberOf Permissions
+		 * @memberOf app.Permissions
 		 */
 		isAllowed: function() {
 			return app.Utils.get('permissions') === ALLOWED;
@@ -56,7 +56,7 @@ app.Permissions = (function() {
 		/**
 		 * Prompt for the optional permissions
 		 * @returns {Promise<boolean>} true if permission granted
-		 * @memberOf Permissions
+		 * @memberOf app.Permissions
 		 */
 		request: function() {
 			const chromep = new ChromePromise();
@@ -79,7 +79,7 @@ app.Permissions = (function() {
 		/**
 		 * Determine if we have the optional permissions
 		 * @returns {Promise<boolean>} true if we have permissions
-		 * @memberOf Permissions
+		 * @memberOf app.Permissions
 		 */
 		contains: function() {
 			const chromep = new ChromePromise();
@@ -92,7 +92,7 @@ app.Permissions = (function() {
 		/**
 		 * Remove the optional permissions
 		 * @returns {Promise<boolean>} true if removed
-		 * @memberOf Permissions
+		 * @memberOf app.Permissions
 		 */
 		remove: function() {
 			app.Utils.set('permissions', app.Permissions.DENIED);
@@ -114,7 +114,7 @@ app.Permissions = (function() {
 		/**
 		 * Inject our script into all tabs that match
 		 * @private
-		 * @memberOf Permissions
+		 * @memberOf app.Permissions
 		 */
 		injectContentScripts: function() {
 			// noinspection JSCheckFunctionSignatures
@@ -140,7 +140,7 @@ app.Permissions = (function() {
 		 * Inject our script into the given tab
 		 * @param {int} tabId - tab to inject
 		 * @private
-		 * @memberOf Permissions
+		 * @memberOf app.Permissions
 		 */
 		injectContentScript: function(tabId) {
 			if (app.Permissions.isAllowed()) {

@@ -21,7 +21,7 @@ app.Gae = (function() {
 	 * @const
 	 * @default
 	 * @private
-	 * @memberOf Gae
+	 * @memberOf app.Gae
 	 */
 	const GAE_ROOT_REMOTE = 'https://clip-man.appspot.com/_ah/api';
 
@@ -31,7 +31,7 @@ app.Gae = (function() {
 	 * @const
 	 * @default
 	 * @private
-	 * @memberOf Gae
+	 * @memberOf app.Gae
 	 */
 	// eslint-disable-next-line no-unused-vars
 	const GAE_ROOT_LOCAL = 'http://localhost:8080/_ah/api';
@@ -44,7 +44,7 @@ app.Gae = (function() {
 	 * @const
 	 * @default
 	 * @private
-	 * @memberOf Gae
+	 * @memberOf app.Gae
 	 */
 	const MAX_ATTEMPTS = 4;
 
@@ -53,7 +53,7 @@ app.Gae = (function() {
 	 * @const
 	 * @default
 	 * @private
-	 * @memberOf Gae
+	 * @memberOf app.Gae
 	 */
 	const DELAY_TIME = 1000;
 
@@ -70,7 +70,7 @@ app.Gae = (function() {
 	 * @param {string} token - authorization token
 	 * @returns {Promise.<void>} void
 	 * @private
-	 * @memberOf Gae
+	 * @memberOf app.Gae
 	 */
 	function _retryPost(url, token) {
 		return app.User.removeCachedAuthToken(token).then(() => {
@@ -84,7 +84,7 @@ app.Gae = (function() {
 		/**
 		 *  Root path to our gae server
 		 * @type {string}
-		 * @memberOf Gae
+		 * @memberOf app.Gae
 		 */
 		GAE_ROOT: GAE_ROOT,
 
@@ -95,7 +95,7 @@ app.Gae = (function() {
 		 * @param {boolean} retryNewToken - if true,
 		 * retry with new token on error
 		 * @returns {Promise.<void>} void
-		 * @memberOf Gae
+		 * @memberOf app.Gae
 		 */
 		doPost: function(url, token, retryNewToken = false) {
 			const headers = {
@@ -117,7 +117,7 @@ app.Gae = (function() {
 			 * @param {string} url - server Endpoint
 			 * @param {Object} init - fetch options
 			 * @returns {Promise.<void>} void
-			 * @memberOf Gae
+			 * @memberOf app.Gae
 			 */
 			function _fetch(url, init) {
 				return fetch(url, init).then((response) => {
@@ -159,7 +159,7 @@ app.Gae = (function() {
 		 * Convert text to JSON
 		 * @param {string} text - text to parse
 		 * @returns {JSON|null} parsed text, null if not valid JSON
-		 * @memberOf Gae
+		 * @memberOf app.Gae
 		 */
 		getJSON: function(text) {
 			let response;
@@ -174,7 +174,7 @@ app.Gae = (function() {
 		/**
 		 * Notify listeners that send message failed
 		 * @param {Error} error - what caused the failure
-		 * @memberOf Gae
+		 * @memberOf app.Gae
 		 */
 		sendMessageFailed: function(error) {
 			chrome.runtime.sendMessage({
