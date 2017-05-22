@@ -54,7 +54,7 @@
 		<paper-item class="center horizontal layout" tabindex="-1">
 			<div class="setting-label flex">{{label}}</div>
 			<paper-dropdown-menu disabled$="[[disabled]]" noink no-label-float>
-				<paper-menu class="dropdown-content" selected="{{value}}">
+				<paper-menu class="dropdown-content" selected="{{value}}" on-iron-select="_onItemSelected">
 					<template is="dom-repeat" items="[[items]]">
 						<paper-item>[[item]]</paper-item>
 					</template>
@@ -107,6 +107,13 @@
 				type: Boolean,
 				value: false,
 			},
+		},
+
+		/**
+		 * Event: menu item selected
+		 */
+		_onItemSelected: function() {
+			app.GA.event(app.GA.EVENT.MENU, `${this.name}: ${this.value}`);
 		},
 
 		/**

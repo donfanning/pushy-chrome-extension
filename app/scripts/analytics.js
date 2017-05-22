@@ -76,6 +76,12 @@ app.GA = (function() {
 			eventLabel: '',
 			noInteraction: false,
 		},
+		TEXT: {
+			eventCategory: 'ui',
+			eventAction: 'textChanged',
+			eventLabel: '',
+			noInteraction: false,
+		},
 		SENT: {
 			eventCategory: 'message',
 			eventAction: 'sent',

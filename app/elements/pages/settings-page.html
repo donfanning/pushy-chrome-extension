@@ -123,9 +123,9 @@
 	app.SettingsPageFactory = Polymer({
 		is: 'settings-page',
 
-		listeners: {
-			'setting-text-changed': '_onNicknameChanged',
-		},
+//		listeners: {
+//			'setting-text-changed': '_onNicknameChanged',
+//		},
 
 		ready: function() {
 			// listen for chrome messages
@@ -156,11 +156,11 @@
 		 * Event: {@link Device} nickname changed
 		 * @private
 		 */
-		_onNicknameChanged: function() {
-			chrome.runtime.sendMessage({
-				message: 'ping',
-			}, () => {});
-		},
+//		_onNicknameChanged: function() {
+//			chrome.runtime.sendMessage({
+//				message: 'ping',
+//			}, () => {});
+//		},
 
 	});
 })(window);
