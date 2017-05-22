@@ -24,7 +24,7 @@
 	const MESSAGE_WAIT_MILLIS = 500;
 
 	/**
-	 * Get new {@link Device} from {@link app.GaeMsg}
+	 * Get new {@link Device} from {@link GaeMsg}
 	 * @param {GaeMsg} data - push data
 	 * @returns {Device} a {@link Device}
 	 * @private
@@ -61,17 +61,18 @@
 			app.Devices.add(device);
 			const fav = (data.fav === '1');
 			// persist
-			app.ClipItem
-				.add(data.m, Date.now(), fav, true, device.getName())
-				.catch(() => {});
+			app.ClipItem.add(data.m, Date.now(), fav, true, device.getName())
+				.catch((err) => {
+					app.GA.error(err.message, 'ReceiveMsg._process');
+				});
 			// save to clipboard
 			app.CB.copyToClipboard(data.m);
 		} else if (data.act === app.Msg.ACTION.PING) {
 			// we were pinged
 			app.Devices.add(device);
 			// respond to ping
-			app.Msg.sendPingResponse(data.srcRegId).catch((error) => {
-				app.Gae.sendMessageFailed(error);
+			app.Msg.sendPingResponse(data.srcRegId).catch((err) => {
+				app.Gae.sendMessageFailed(err);
 			});
 		} else if (data.act === app.Msg.ACTION.PING_RESPONSE) {
 			// someone is around

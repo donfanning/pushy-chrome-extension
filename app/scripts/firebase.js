@@ -102,7 +102,9 @@ app.Fb = (function() {
 			} else {
 				return Promise.resolve();
 			}
-		}).catch((error) => {});
+		}).catch((err) => {
+			app.GA.error(err.message, 'Fb._refreshRegToken');
+		});
 	}
 
 	return {

@@ -408,7 +408,9 @@ Polymer({
 		clipItem.setDate(date);
 		clipItem.setRemote(remote);
 		// persist value
-		clipItem.save().catch(() => {});
+		clipItem.save().catch((err) => {
+			app.GA.error(err.message, 'Main._onCopyTapped');
+		});
 
 		const pos = this.listItems.indexOf(listItem);
 		this.set(`listItems.${pos}.clipItem.date`, date);
@@ -437,7 +439,9 @@ Polymer({
 		const clipItem = listItem.clipItem;
 		const fav = !clipItem.getFav();
 		clipItem.setFav(fav);
-		clipItem.save().catch(() => {});
+		clipItem.save().catch((err) => {
+			app.GA.error(err.message, 'Main._onFavTapped');
+		});
 
 		const pos = this.listItems.indexOf(listItem);
 		this.set(`listItems.${pos}.clipItem.fav`, fav);
@@ -532,7 +536,9 @@ Polymer({
 			this.$.ironSelector.selectIndex(0);
 			this.$.clipList.scrollTop = 0;
 			return Promise.resolve();
-		}).catch(() => {});
+		}).catch((err) => {
+			app.GA.error(err.message, 'Main._loadClipItems');
+		});
 	},
 
 	/**
@@ -563,7 +569,9 @@ Polymer({
 					this._updateView();
 				}
 				return Promise.resolve();
-			}).catch(() => {});
+			}).catch((err) => {
+				app.GA.error(err.message, 'Main._deleteSelectedRows');
+			});
 		}
 	},
 

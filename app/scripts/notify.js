@@ -132,7 +132,6 @@ app.Notify = (function() {
 
 		/**
 		 * Send message to the main tab to focus it. If not found, create it
-		 * @private
 		 * @memberOf app.Notify
 		 */
 		showMainTab: function() {

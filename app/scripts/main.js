@@ -240,8 +240,7 @@ window.app = window.app || {};
 			}
 			return Promise.resolve();
 		}).catch((err) => {
-			app.GA.event(app.GA.EVENT.ERROR, err.message,
-				'Main.onAcceptPermissionsClicked');
+			app.GA.error(err.message, 'Main.onAcceptPermissionsClicked');
 		});
 	};
 
@@ -251,8 +250,7 @@ window.app = window.app || {};
 	 */
 	t.onDenyPermissionsClicked = function() {
 		app.Permissions.remove().catch((err) => {
-			app.GA.event(app.GA.EVENT.ERROR, err.message,
-				'Main.onDenyPermissionsClicked');
+			app.GA.error(err.message, 'Main.onDenyPermissionsClicked');
 		});
 	};
 

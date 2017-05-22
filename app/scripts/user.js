@@ -36,7 +36,9 @@ app.User = (function() {
 			app.Fb.signOut();
 
 		}
-		app.User.setInfo().catch((error) => {});
+		app.User.setInfo().catch((err) => {
+			app.GA.error(err.message, 'User._onSignInChanged');
+		});
 	}
 
 	// noinspection JSUnusedLocalSymbols
@@ -60,14 +62,16 @@ app.User = (function() {
 			app.User.addAccess().then(() => {
 				response({message: 'ok'});
 				return Promise.resolve();
-			}).catch((error) => {
+			}).catch((err) => {
+				app.GA.error(err.message, 'User._onChromeMessage');
 				app.User.removeAccess().then(() => {
 					return Promise.resolve();
-				}).catch(() => {
+				}).catch((err) => {
+					app.GA.error(err.message, 'User._onChromeMessage');
 					_setSignIn(false);
 					app.Utils.set('registered', false);
 				});
-				response({message: 'error', error: error.toString()});
+				response({message: 'error', error: err.toString()});
 			});
 		} else if (request.message === 'signOut') {
 			// try to signOut a user
@@ -75,8 +79,9 @@ app.User = (function() {
 			app.User.removeAccess().then(() => {
 				response({message: 'ok'});
 				return Promise.resolve();
-			}).catch((error) => {
-				response({message: 'error', error: error.toString()});
+			}).catch((err) => {
+				app.GA.error(err.message, 'User._onChromeMessage');
+				response({message: 'error', error: err.toString()});
 			});
 		}
 		return ret;

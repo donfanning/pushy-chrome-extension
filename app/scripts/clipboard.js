@@ -33,8 +33,8 @@ app.CB = (function() {
 	function _sendLocalClipItem(clipItem) {
 		if (!clipItem.remote && app.Utils.isAutoSend()) {
 			// send to our devices
-			app.Msg.sendClipItem(clipItem).catch((error) => {
-				app.Gae.sendMessageFailed(error);
+			app.Msg.sendClipItem(clipItem).catch((err) => {
+				app.Gae.sendMessageFailed(err);
 			});
 		}
 	}
@@ -63,7 +63,9 @@ app.CB = (function() {
 				// send to our devices
 				_sendLocalClipItem(clipItem);
 				return null;
-			}).catch((error) => {});
+			}).catch((err) => {
+				app.GA.error(err.message, 'CB._addClipItemFromClipboard');
+			});
 
 		}, WAIT_MILLIS);
 	}

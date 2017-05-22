@@ -40,8 +40,8 @@ app.Reg = (function() {
 			return app.Gae.doPost(url, token, true);
 		}).then(() => {
 			return Promise.resolve();
-		}).catch((error) => {
-			throw new Error(errorPrefix + error);
+		}).catch((err) => {
+			throw new Error(errorPrefix + err);
 		});
 	}
 
@@ -58,20 +58,22 @@ app.Reg = (function() {
 			const allowReceive = app.Utils.allowReceive();
 			if (allowReceive) {
 				// user wants to receive messages now
-				app.Reg.register().catch((error) => {
+				app.Reg.register().catch((err) => {
+					app.GA.error(err.message, 'Reg._onStorageChanged');
 					app.Utils.set('allowReceive', !allowReceive);
 					chrome.runtime.sendMessage({
 						message: 'registerFailed',
-						error: error.toString(),
+						error: err.toString(),
 					}, () => {});
 				});
 			} else {
 				// user no longer wants to receive messages
-				app.Reg.unregister().catch((error) => {
+				app.Reg.unregister().catch((err) => {
+					app.GA.error(err.message, 'Reg._onStorageChanged');
 					app.Utils.set('allowReceive', !allowReceive);
 					chrome.runtime.sendMessage({
 						message: 'unregisterFailed',
-						error: error.toString(),
+						error: err.toString(),
 					}, () => {});
 				});
 			}

@@ -13,7 +13,7 @@
 	 * The background script for the extension.<br>
 	 * Note: We can't be an Event Page because we use
 	 * the chrome.webRequest API
-	 * @namespace Background
+	 * @namespace BG
 	 */
 
 	/**
@@ -22,7 +22,7 @@
 	 * @default
 	 * @const
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	const DATA_VERSION = 2;
 
@@ -37,7 +37,7 @@
 	 * registered: boolean}}
 	 * @const
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	const DEF_VALUES = {
 		'version': DATA_VERSION,
@@ -68,7 +68,7 @@
 	 * @default
 	 * @const
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	const INTRO_TEXT =
 		`A clipboard manager with push notifications.
@@ -95,7 +95,7 @@ for this device.`;
 	 * @see https://developer.chrome.com/extensions/runtime#event-onInstalled
 	 * @param {Object} details - type of event
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	function _onInstalled(details) {
 		if (details.reason === 'install') {
@@ -105,14 +105,18 @@ for this device.`;
 			app.Utils.getPlatformOS().then((os) => {
 				app.Utils.set('os', os);
 				return null;
-			}).catch(() => {});
+			}).catch((err) => {
+				app.GA.error(err.message, 'BG._onInstalled');
+			});
 			_initializeData();
 			app.Notify.showMainTab();
 		} else if (details.reason === 'update') {
 			_updateData();
 			_initializeFirebase().then(() => {
 				return app.SW.update();
-			}).catch((error) => {});
+			}).catch((err) => {
+				app.GA.error(err.message, 'BG._onInstalled');
+			});
 		}
 		app.Utils.setBadgeText();
 		app.Alarm.updateAlarms();
@@ -124,13 +128,15 @@ for this device.`;
 	 * starts up
 	 * @see https://developer.chrome.com/extensions/runtime#event-onStartup
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	function _onStartup() {
 		app.GA.page('/background.html');
 		app.Alarm.updateAlarms();
 		app.Alarm.deleteOldClipItems();
-		_initializeFirebase().catch((error) => {});
+		_initializeFirebase().catch((err) => {
+			app.GA.error(err.message, 'BG._onStartup');
+		});
 		app.Utils.setBadgeText();
 	}
 
@@ -138,7 +144,7 @@ for this device.`;
 	 * Event: Fired when a browser action icon is clicked.
 	 * @see https://goo.gl/abVwKu
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	function _onIconClicked() {
 		// get the clipboard contents
@@ -151,10 +157,12 @@ for this device.`;
 		app.ClipItem.add(text, Date.now(), false,
 			false, app.Device.myName()).then((clipItem) => {
 			// eslint-disable-next-line promise/no-nesting
-			return app.Msg.sendClipItem(clipItem).catch((error) => {
-				app.Gae.sendMessageFailed(error);
+			return app.Msg.sendClipItem(clipItem).catch((err) => {
+				app.Gae.sendMessageFailed(err);
 			});
-		}).catch((err) => {});
+		}).catch((err) => {
+			app.GA.error(err.message, 'BG._onIconClicked');
+		});
 	}
 
 	/**
@@ -162,7 +170,7 @@ for this device.`;
 	 * @see https://developer.chrome.com/extensions/tabs#event-onUpdated
 	 * @param {int} tabId - id of tab
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	function _onTabUpdated(tabId) {
 		app.Permissions.injectContentScript(tabId);
@@ -174,7 +182,7 @@ for this device.`;
 	 * @param {Event} event - storage event
 	 * @param {string} event.key - storage item that changed
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	function _onStorageChanged(event) {
 		if ((event.key === 'allowPush') || (event.key === 'signedIn')) {
@@ -185,7 +193,7 @@ for this device.`;
 	/**
 	 * Save the {@link Background.DEF_VALUES} array to localStorage
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	function _saveDefaults() {
 		Object.keys(DEF_VALUES).forEach(function(key) {
@@ -198,7 +206,7 @@ for this device.`;
 	/**
 	 * Initialize the data saved in localStorage
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	function _initializeData() {
 		_saveDefaults();
@@ -206,15 +214,19 @@ for this device.`;
 		const introClip =
 			new app.ClipItem(INTRO_TEXT, Date.now(), true,
 				false, app.Device.myName());
-		introClip.save().catch((error) => {});
+		introClip.save().catch((err) => {
+			app.GA.error(err.message, 'BG._initializeData');
+		});
 
-		app.User.setInfo().catch((error) => {});
+		app.User.setInfo().catch((err) => {
+			app.GA.error(err.message, 'BG._initializeData');
+		});
 	}
 
 	/**
 	 * Update the data saved in localStorage
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	function _updateData() {
 		// New items and removal of unused items can take place here
@@ -239,11 +251,13 @@ for this device.`;
 	 * Initialize firebase and Service Worker if signed in
 	 * @returns {Promise<void>} void
 	 * @private
-	 * @memberOf Background
+	 * @memberOf BG
 	 */
 	function _initializeFirebase() {
 		if (app.Utils.isSignedIn()) {
-			return app.SW.initialize().catch((error) => {});
+			return app.SW.initialize().catch((err) => {
+				app.GA.error(err.message, 'BG._initializeFirebase');
+			});
 		} else {
 			return Promise.resolve();
 		}

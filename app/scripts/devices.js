@@ -101,8 +101,8 @@ app.Devices = (function() {
 		if (request.message === 'removeDevice') {
 			app.Devices.removeByName(request.deviceName);
 		} else if (request.message === 'ping') {
-			app.Msg.sendPing().catch((error) => {
-				app.Gae.sendMessageFailed(error);
+			app.Msg.sendPing().catch((err) => {
+				app.Gae.sendMessageFailed(err);
 			});
 		}
 		return ret;

@@ -48,8 +48,8 @@ app.SW = (function() {
 			.then((swReg) => {
 				_swRegistration = swReg;
 				return Promise.resolve(_swRegistration);
-			}).catch((error) => {
-				return Promise.reject(new Error(ERROR_REG + error.message));
+			}).catch((err) => {
+				return Promise.reject(new Error(ERROR_REG + err.message));
 			});
 	}
 
@@ -85,8 +85,8 @@ app.SW = (function() {
 				return app.Fb.initialize(swReg);
 			}).then(() => {
 				return Promise.resolve();
-			}).catch((error) => {
-				return Promise.reject(new Error(ERROR_REG + error.message));
+			}).catch((err) => {
+				return Promise.reject(new Error(ERROR_REG + err.message));
 			});
 		},
 
@@ -109,8 +109,8 @@ app.SW = (function() {
 					_swRegistration = null;
 					return Promise.resolve();
 				}
-			}).catch((error) => {
-				return Promise.reject(new Error(ERROR_UNREG + error.message));
+			}).catch((err) => {
+				return Promise.reject(new Error(ERROR_UNREG + err.message));
 			});
 		},
 

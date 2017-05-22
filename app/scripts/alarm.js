@@ -91,7 +91,9 @@ app.Alarm = (function() {
 		 * @memberOf app.Alarm
 		 */
 		deleteOldClipItems: function() {
-			app.ClipItem.deleteOld().catch((error) => {});
+			app.ClipItem.deleteOld().catch((err) => {
+				app.GA.error(err.message, 'Alarm.deleteOldClipItems');
+			});
 		},
 	};
 })();

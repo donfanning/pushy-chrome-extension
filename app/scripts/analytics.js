@@ -41,7 +41,6 @@ app.GA = (function() {
 	 * @property {GAEvent} RECEIVED - message received
 	 * @property {GAEvent} REGISTERED - {@link Device} registered
 	 * @property {GAEvent} UNREGISTERED - {@link Device} unregistered
-	 * @property {GAEvent} ERROR - an error
 	 * @const
 	 * @memberOf app.GA
 	 */
@@ -82,6 +81,12 @@ app.GA = (function() {
 			eventLabel: '',
 			noInteraction: false,
 		},
+		BUTTON: {
+			eventCategory: 'ui',
+			eventAction: 'buttonClicked',
+			eventLabel: '',
+			noInteraction: false,
+		},
 		SENT: {
 			eventCategory: 'message',
 			eventAction: 'sent',
@@ -105,12 +110,6 @@ app.GA = (function() {
 			eventAction: 'unregistered',
 			eventLabel: '',
 			noInteraction: false,
-		},
-		ERROR: {
-			eventCategory: 'error',
-			eventAction: 'unknownMethod',
-			eventLabel: '',
-			noInteraction: true,
 		},
 	};
 
@@ -180,6 +179,25 @@ app.GA = (function() {
 				ev.eventAction = action ? action : ev.eventAction;
 				ga('send', ev);
 			}
+		},
+
+		/**
+		 * Send an error
+		 * @param {?string} [label=null] - override label
+		 * @param {?string} [action=null] - override action
+		 * @memberOf app.GA
+		 */
+		error: function(label=null, action=null) {
+			const ev = {
+				eventCategory: 'error',
+				eventAction: 'unknownMethod',
+				eventLabel: '',
+				noInteraction: true,
+			};
+			ev.hitType = 'event';
+			ev.eventLabel = label ? label : ev.eventLabel;
+			ev.eventAction = action ? action : ev.eventAction;
+			ga('send', ev);
 		},
 
 		/**
