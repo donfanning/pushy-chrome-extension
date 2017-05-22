@@ -42,39 +42,45 @@
 		<paper-card class="page-content" heading="Help & feedback">
 			<div class="card-content">
 				<setting-link section-title="Feedback (English only, please)"
-				              noseparator
 				              label="Question"
+				              name="questionMail"
 				              icon="myicons:mail"
 				              url="mailto:pushyclipboard%40gmail.com?subject=Question&body=[[_computeEmailBody()]]"></setting-link>
 				<setting-link label="Bug report"
-				              noseparator
+				              name="bugMail"
 				              icon="myicons:mail"
 				              url="mailto:pushyclipboard%40gmail.com?subject=Bug%20report&body=[[_computeEmailBody()]]"></setting-link>
 				<setting-link label="Feature request"
-				              noseparator
+				              name="featureMail"
 				              icon="myicons:mail"
 				              url="mailto:pushyclipboard%40gmail.com?subject=Feature%20request&body=[[_computeEmailBody()]]"></setting-link>
 				<setting-link label="General feedback"
-				              noseparator
+				              name="feedbackMail"
 				              icon="myicons:mail"
 				              url="mailto:pushyclipboard%40gmail.com?subject=General%20feedback"></setting-link>
-				<setting-link label="Submit Github issue"
+				<setting-link label="Submit Github issue (requires account)"
+				              name="submitGitHubIssue"
+				              noseparator
 				              icon="myicons:github"
 				              url="https://github.com/Pushy-Clipboard/pushy-chrome-extension/issues/new"></setting-link>
+
+				<hr />
+
 				<setting-link section-title="Help"
-				              noseparator
+				              name="documentation"
 				              label="User documentation"
 				              icon="myicons:info"
 				              url="https://pushy-clipboard.github.io/documentation.html"></setting-link>
 				<setting-link label="Release notes"
-				              noseparator
+				              name="releaseNotes"
 				              icon="myicons:github"
 				              url="https://github.com/Pushy-Clipboard/pushy-chrome-extension/releases/tag/v[[_computeVersion()]]"></setting-link>
 				<setting-link label="Open source licenses"
-				              noseparator
+				              name="licenses"
 				              icon="myicons:github"
 				              url="https://github.com/Pushy-Clipboard/pushy-chrome-extension/blob/master/LICENSES.md"></setting-link>
 				<setting-link label="Source code"
+				              name="sourceCode"
 				              noseparator
 				              icon="myicons:github"
 				              url="https://github.com/Pushy-Clipboard/pushy-chrome-extension"></setting-link>

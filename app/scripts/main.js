@@ -185,6 +185,9 @@ window.app = window.app || {};
 		prevRoute = t.route;
 
 		const idx = _getPageIdx(event.currentTarget.id);
+
+		app.GA.event(app.GA.EVENT.MENU, t.pages[idx].route);
+
 		if (!t.pages[idx].obj) {
 			// some pages are just pages
 			t.route = t.pages[idx].route;
@@ -236,7 +239,10 @@ window.app = window.app || {};
 				app.Permissions.injectContentScripts();
 			}
 			return Promise.resolve();
-		}).catch(() => {});
+		}).catch((err) => {
+			app.GA.event(app.GA.EVENT.ERROR, err.message,
+				'Main.onAcceptPermissionsClicked');
+		});
 	};
 
 	/**
@@ -244,7 +250,10 @@ window.app = window.app || {};
 	 * @memberOf Main
 	 */
 	t.onDenyPermissionsClicked = function() {
-		app.Permissions.remove().catch(() => {});
+		app.Permissions.remove().catch((err) => {
+			app.GA.event(app.GA.EVENT.ERROR, err.message,
+				'Main.onDenyPermissionsClicked');
+		});
 	};
 
 	/**

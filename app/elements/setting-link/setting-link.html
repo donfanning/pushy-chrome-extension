@@ -80,6 +80,11 @@
 		is: 'setting-link',
 
 		properties: {
+			name: {
+				type: String,
+				value: 'unknown',
+			},
+
 			label: {
 				type: String,
 				value: '',
@@ -116,6 +121,7 @@
 		 * @private
 		 */
 		_onLinkTapped: function() {
+			app.GA.event(app.GA.EVENT.LINK, this.name);
 			chrome.tabs.create({url: this.url});
 		},
 	});

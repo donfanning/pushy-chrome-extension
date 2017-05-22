@@ -15,6 +15,8 @@ app.Permissions = (function() {
 
 	new ExceptionHandler();
 
+	const chromep = new ChromePromise();
+
 	/** @memberOf app.Permissions */
 	const PERMISSIONS = ['tabs'];
 	/** @memberOf app.Permissions */
@@ -59,20 +61,24 @@ app.Permissions = (function() {
 		 * @memberOf app.Permissions
 		 */
 		request: function() {
-			const chromep = new ChromePromise();
+			// if promise chain
+			const ifGranted = function(isTrue) {
+				if (isTrue) {
+					app.Utils.set('permissions', app.Permissions.ALLOWED);
+					return Promise.resolve(isTrue);
+				} else {
+					// remove if it has been previously granted
+					return app.Permissions.remove().then(() => {
+						return Promise.resolve(isTrue);
+					});
+				}
+			};
+
 			return chromep.permissions.request({
 				permissions: PERMISSIONS,
 				origins: ORIGINS,
 			}).then((granted) => {
-				if (granted) {
-					app.Utils.set('permissions', app.Permissions.ALLOWED);
-					return Promise.resolve(granted);
-				} else {
-					// remove if it has been previously granted
-					return app.Permissions.remove().then(() => {
-						return Promise.resolve(false);
-					});
-				}
+				return ifGranted(granted);
 			});
 		},
 
@@ -82,7 +88,6 @@ app.Permissions = (function() {
 		 * @memberOf app.Permissions
 		 */
 		contains: function() {
-			const chromep = new ChromePromise();
 			return chromep.permissions.contains({
 				permissions: PERMISSIONS,
 				origins: ORIGINS,
@@ -95,25 +100,31 @@ app.Permissions = (function() {
 		 * @memberOf app.Permissions
 		 */
 		remove: function() {
-			app.Utils.set('permissions', app.Permissions.DENIED);
-			const chromep = new ChromePromise();
-			return app.Permissions.contains().then((contains) => {
-				if (contains) {
+			// if promise chain
+			const ifContains = function(isTrue) {
+				if (isTrue) {
+					// remove permission
 					return chromep.permissions.remove({
 						permissions: PERMISSIONS,
-						origins: ORIGINS,
 					}).then((removed) => {
+						if (removed) {
+							app.Utils.set('permissions',
+								app.Permissions.DENIED);
+						}
 						return Promise.resolve(removed);
 					});
 				} else {
-					return Promise.resolve(false);
+					return Promise.resolve(isTrue);
 				}
+			};
+
+			return app.Permissions.contains().then((contains) => {
+				return ifContains(contains);
 			});
 		},
 
 		/**
 		 * Inject our script into all tabs that match
-		 * @private
 		 * @memberOf app.Permissions
 		 */
 		injectContentScripts: function() {
@@ -139,7 +150,6 @@ app.Permissions = (function() {
 		/**
 		 * Inject our script into the given tab
 		 * @param {int} tabId - tab to inject
-		 * @private
 		 * @memberOf app.Permissions
 		 */
 		injectContentScript: function(tabId) {
