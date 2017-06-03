@@ -38,8 +38,11 @@ const files = {
 };
 
 // command options
-const minifierOpts = {
-	preserveComments: 'license',
+const minifyOpts = {
+	output: {
+		beautify: true,
+		comments: '/Copyright/',
+	},
 };
 const crisperOpts = {
 	scriptInHead: false,
@@ -60,8 +63,9 @@ const del = require('del');
 const runSequence = require('run-sequence');
 const gutil = require('gulp-util');
 // for ECMA6
-const uglifyjs = require('uglify-js-harmony');
-const minifier = require('gulp-uglify/minifier');
+const uglifyjs = require('uglify-es');
+const composer = require('gulp-uglify/composer');
+const minify = composer(uglifyjs, console);
 
 // load the rest
 const plugins = require('gulp-load-plugins')({
@@ -186,8 +190,8 @@ gulp.task('lintjs', function() {
 gulp.task('scripts', ['lintjs'], function() {
 	return gulp.src([files.scripts, `${base.src}*.js`], {base: '.'})
 		.pipe(plugins.changed(isProd ? base.dist : base.dev))
-		.pipe(isProd ? minifier(minifierOpts,
-			uglifyjs).on('error', gutil.log) : gutil.noop())
+		.pipe(isProd ? minify(minifyOpts)
+			.on('error', gutil.log) : gutil.noop())
 		.pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
@@ -252,8 +256,7 @@ gulp.task('vulcanize', function() {
 		.pipe(plugins.vulcanize(vulcanizeOpts))
 		.pipe(plugins.crisper(crisperOpts))
 		.pipe(plugins.if('*.html', plugins.minifyInline()))
-		.pipe(plugins.if('*.js',
-			minifier(minifierOpts, uglifyjs).on('error', gutil.log)))
+		.pipe(plugins.if('*.js', minify(minifyOpts).on('error', gutil.log)))
 		.pipe(gulp.dest(base.dist));
 });
 
