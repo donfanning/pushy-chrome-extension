@@ -23,19 +23,19 @@ const path = {
 	images: `${base.src}images/`,
 	assets: `${base.src}assets/`,
 	lib: `${base.src}lib/`,
-	locales: `${base.src}locales/`,
+	locales: `${base.src}_locales/`,
 	bower: `${base.src}bower_components/`,
 };
 const files = {
 	manifest: `${base.src}manifest.json`,
-	scripts: `${path.scripts}**/*.*`,
+	scripts: `${path.scripts}**/*.js`,
 	html: `${path.html}*.*`,
 	styles: `${path.styles}**/*.*`,
-	elements: `${path.elements}**/*.*`,
+	elements: `${path.elements}**/*.html`,
 	images: `${path.images}*.*`,
 	assets: `${path.assets}*.*`,
 	lib: `${path.lib}**/*.*`,
-	locales: `${path.lib}**/*.*`,
+	locales: `${path.locales}**/*.*`,
 	bower: [
 		`${path.bower}**/*`,
 		`!${path.bower}**/test/*`,
@@ -99,9 +99,10 @@ function onChange(event) {
 gulp.task('default', ['watch']);
 
 // track changes in development
-gulp.task('watch', ['manifest', 'scripts', 'html', 'styles', 'elements',
-		'images', 'assets', 'lib', 'locales'],
+gulp.task('watch', ['bower', 'manifest', 'scripts', 'html', 'styles',
+		'elements', 'images', 'assets', 'lib', 'locales'],
 	function() {
+		gulp.watch(files.bower, ['bower']).on('change', onChange);
 		gulp.watch(files.manifest, ['manifest']).on('change', onChange);
 		gulp.watch([files.scripts, 'gulpfile.js', '.eslintrc.js',
 				`${base.src}*.js`], ['scripts']).on('change', onChange);
@@ -140,8 +141,8 @@ gulp.task('prodTest', function(callback) {
 // Generate JSDoc
 gulp.task('docs', function(cb) {
 	const config = require('./jsdoc.json');
-	gulp.src(['../Pushy-Clipboard.github.io/README.md',
-		files.scripts, files.elements], {read: false})
+	const README = '../Pushy-Clipboard.github.io/README.md';
+	gulp.src([README, files.scripts, files.elements], {read: false})
 		.pipe(plugins.jsdoc3(config, cb));
 });
 
