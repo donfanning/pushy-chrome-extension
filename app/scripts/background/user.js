@@ -46,7 +46,7 @@ app.User = (function() {
 	 * Event: Fired when a message is sent from either an extension process<br>
 	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
 	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
-	 * @param {Object} request - details for the message
+	 * @param {app.MyCMsg.Message} request - details for the
 	 * @param {Object} sender - MessageSender object
 	 * @param {function} response - function to call once after processing
 	 * @returns {boolean} true if asynchronous
@@ -56,7 +56,7 @@ app.User = (function() {
 	function _onChromeMessage(request, sender, response) {
 		let ret = false;
 
-		if (request.message === 'signIn') {
+		if (request.message === app.MyCMsg.SIGN_IN.message) {
 			// try to signIn a user
 			ret = true; // async
 			app.User.addAccess().then(() => {
@@ -73,7 +73,7 @@ app.User = (function() {
 				});
 				response({message: 'error', error: err.toString()});
 			});
-		} else if (request.message === 'signOut') {
+		} else if (request.message === app.MyCMsg.SIGN_OUT.message) {
 			// try to signOut a user
 			ret = true;  // async
 			app.User.removeAccess().then(() => {
@@ -108,7 +108,7 @@ app.User = (function() {
 	/**
 	 * Listen for Chrome messages
 	 */
-	chrome.runtime.onMessage.addListener(_onChromeMessage);
+	app.CMsg.listen(_onChromeMessage);
 
 	return {
 		/**

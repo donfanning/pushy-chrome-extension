@@ -61,20 +61,20 @@ app.Reg = (function() {
 				app.Reg.register().catch((err) => {
 					app.GA.error(err.message, 'Reg._onStorageChanged');
 					app.Storage.set('allowReceive', !allowReceive);
-					chrome.runtime.sendMessage({
-						message: 'registerFailed',
-						error: err.toString(),
-					}, () => {});
+					const msg = app.MyCMsg.REGISTER_FAILED;
+					msg.error = err.toString();
+					// eslint-disable-next-line promise/no-nesting
+					app.CMsg.send(msg).catch(() => {});
 				});
 			} else {
 				// user no longer wants to receive messages
 				app.Reg.unregister().catch((err) => {
 					app.GA.error(err.message, 'Reg._onStorageChanged');
 					app.Storage.set('allowReceive', !allowReceive);
-					chrome.runtime.sendMessage({
-						message: 'unregisterFailed',
-						error: err.toString(),
-					}, () => {});
+					const msg = app.MyCMsg.UNREGISTER_FAILED;
+					msg.error = err.toString();
+					// eslint-disable-next-line promise/no-nesting
+					app.CMsg.send(msg).catch(() => {});
 				});
 			}
 		}

@@ -114,11 +114,11 @@
 
 		ready: function() {
 			// listen for chrome messages
-			chrome.runtime.onMessage.addListener(function(request) {
-				if (request.message === 'devicesChanged') {
+			chrome.runtime.onMessage.addListener((request) => {
+				if (request.message === app.MyCMsg.DEVICES_CHANGED.message) {
 					this._loadDevices();
 				}
-			}.bind(this));
+			});
 			this._loadDevices();
 		},
 
@@ -152,10 +152,9 @@
 
 		_onDeleteTapped: function(event) {
 			const device = event.model.device;
-			chrome.runtime.sendMessage({
-				message: 'removeDevice',
-				deviceName: device.getUniqueName(),
-			}, () => {});
+			const msg = app.JSONUtils.shallowCopy(app.MyCMsg.REMOVE_DEVICE);
+			msg.item = device.getUniqueName();
+			app.CMsg.send(msg).catch(() => {});
 		},
 
 		_onFabTapped: function() {
@@ -167,9 +166,7 @@
 		},
 
 		_ping: function() {
-			chrome.runtime.sendMessage({
-				message: 'ping',
-			}, () => {});
+			app.CMsg.send(app.MyCMsg.PING).catch(() => {});
 		},
 
 	});

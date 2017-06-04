@@ -135,13 +135,10 @@ app.Notify = (function() {
 		 * @memberOf app.Notify
 		 */
 		showMainTab: function() {
-			chrome.runtime.sendMessage({
-				message: 'highlightTab',
-			}, (response) => {
-				if (!response) {
-					// no one listening, create it
-					chrome.tabs.create({url: '../html/main.html'});
-				}
+			// send message to the main tab to focus it.
+			app.CMsg.send(app.MyCMsg.HIGHLIGHT).catch(() => {
+				// no one listening, create it
+				chrome.tabs.create({url: '../html/main.html'});
 			});
 		},
 	};

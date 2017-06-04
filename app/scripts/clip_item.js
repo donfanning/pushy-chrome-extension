@@ -123,11 +123,11 @@
 			return clipItem.save();
 		}).then(() => {
 			// let listeners know a ClipItem was added or updated
-			chrome.runtime.sendMessage({
-				message: 'clipAdded',
-				clipItem: clipItem,
-				updated: updated,
-			}, (response) => {});
+			const msg = app.MyCMsg.CLIP_ADDED;
+			msg.item = clipItem;
+			msg.updated = updated;
+			// eslint-disable-next-line promise/no-nesting
+			app.CMsg.send(msg).catch(() => {});
 			return Promise.resolve(clipItem);
 		});
 	};

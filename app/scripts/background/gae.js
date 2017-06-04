@@ -178,10 +178,9 @@ app.Gae = (function() {
 		 */
 		sendMessageFailed: function(err) {
 			app.GA.error(err, 'GAE.sendMessageFailed');
-			chrome.runtime.sendMessage({
-				message: 'sendMessageFailed',
-				error: err.toString(),
-			}, () => {});
+			const msg = app.MyCMsg.MSG_FAILED;
+			msg.error = err.toString();
+			app.CMsg.send(msg).catch(() => {});
 		},
 	};
 })();

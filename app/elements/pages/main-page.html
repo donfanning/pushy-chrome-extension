@@ -276,13 +276,11 @@ Polymer({
 		document.addEventListener('copy', this._onCopy, true);
 
 		// listen for chrome messages
-		chrome.runtime.onMessage.addListener(function(request) {
-			if (request.message === 'clipAdded') {
+		chrome.runtime.onMessage.addListener((request) => {
+			if (request.message === app.MyCMsg.CLIP_ADDED.message) {
 				this._addListItem(request);
-			} else if (request.message === 'clipsDeleted') {
-				this._loadClipItems();
 			}
-		}.bind(this));
+		});
 	},
 
 	/**
@@ -423,10 +421,9 @@ Polymer({
 		this._selectFirst();
 
 		// copy to clipboard
-		chrome.runtime.sendMessage({
-			message: 'copyToClipboard',
-			clipItem: clipItem,
-		}, () => {});
+		const msg = app.JSONUtils.shallowCopy(app.MyCMsg.COPY_TO_CLIPBOARD);
+		msg.item = clipItem;
+		app.CMsg.send(msg).catch(() => {});
 	},
 
 	/**
@@ -452,9 +449,7 @@ Polymer({
 	 * @private
 	 */
 	_onCopy: function() {
-		chrome.runtime.sendMessage({
-			message: 'copiedToClipboard',
-		}, () => {});
+		app.CMsg.send(app.MyCMsg.COPIED_TO_CLIPBOARD).catch(() => {});
 	},
 
 	/**
@@ -611,10 +606,10 @@ Polymer({
 
 	/**
 	 * Add or update {@link MainPage.ListItem}
-	 * @param {Object} request - Chrome message request
+	 * @param {app.MyCMsg.Message} request - Chrome message request
 	 */
 	_addListItem(request) {
-		const clip = request.clipItem;
+		const clip = request.item;
 		const updated = request.updated;
 		if (updated) {
 			// clip text already existed, update it

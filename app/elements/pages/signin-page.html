@@ -256,13 +256,14 @@
 		 * @private
 		 */
 		_signIn: function() {
-			chrome.runtime.sendMessage({message: 'signIn'}, (response) => {
+			app.CMsg.send(app.MyCMsg.SIGN_IN).then((response) => {
 				if (response.message === 'error') {
 					app.GA.error(response.error, 'SignInPage._signIn');
 					this._showDialog(ERROR_SIGN_IN, response.error, false);
 				}
 				this.set('waiting', false);
-			});
+				return Promise.resolve();
+			}).catch(() => {});
 		},
 
 		/**
@@ -270,13 +271,14 @@
 		 * @private
 		 */
 		_signOut: function() {
-			chrome.runtime.sendMessage({message: 'signOut'}, (response) => {
+			app.CMsg.send(app.MyCMsg.SIGN_OUT).then((response) => {
 				if (response.message === 'error') {
 					app.GA.error(response.error, 'SignInPage._signOut');
 					this._showDialog(ERROR_SIGN_OUT, response.error, false);
 				}
 				this.set('waiting', false);
-			});
+				return Promise.resolve();
+			}).catch(() => {});
 		},
 
 		_showDialog: function(title, text, confirmButton) {

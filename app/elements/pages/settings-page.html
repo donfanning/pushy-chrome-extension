@@ -123,17 +123,14 @@
 	app.SettingsPageFactory = Polymer({
 		is: 'settings-page',
 
-//		listeners: {
-//			'setting-text-changed': '_onNicknameChanged',
-//		},
-
 		ready: function() {
 			// listen for chrome messages
 			chrome.runtime.onMessage.addListener((request) => {
-				if (request.message === 'registerFailed') {
+				if (request.message === app.MyCMsg.REGISTER_FAILED.message) {
 					const error = request.error;
 					this._showDialog(ERROR_REGISTER, error.toString());
-				} else if (request.message === 'unregisterFailed') {
+				} else if (request.message ===
+							app.MyCMsg.UNREGISTER_FAILED.message) {
 					const error = request.error;
 					this._showDialog(ERROR_UNREGISTER, error.toString());
 				}
@@ -151,17 +148,6 @@
 			this.$.dialogText.innerHTML = text;
 			this.$.errorDialog.open();
 		},
-
-//		/**
-//		 * Event: {@link Device} nickname changed
-//		 * @private
-//		 */
-//		_onNicknameChanged: function() {
-//			chrome.runtime.sendMessage({
-//				message: 'ping',
-//			}, () => {});
-//		},
-
 	});
 })(window);
 </script>

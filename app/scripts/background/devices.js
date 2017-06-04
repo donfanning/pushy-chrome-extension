@@ -68,9 +68,7 @@ app.Devices = (function() {
 	function _save() {
 		app.Storage.set('devices', _mapToObj(_devices));
 		// let listeners know we changed
-		chrome.runtime.sendMessage({
-			message: 'devicesChanged',
-		}, (response) => {});
+		app.CMsg.send(app.MyCMsg.DEVICES_CHANGED).catch(() => {});
 	}
 
 	/**
@@ -88,7 +86,7 @@ app.Devices = (function() {
 	 * Event: Fired when a message is sent from either an extension process<br>
 	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
 	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
-	 * @param {Object} request - details for the message
+	 * @param {app.MyCMsg.Message} request - details for the message
 	 * @param {Object} sender - MessageSender object
 	 * @param {function} response - function to call once after processing
 	 * @returns {boolean} true if asynchronous
@@ -98,9 +96,9 @@ app.Devices = (function() {
 	function _onChromeMessage(request, sender, response) {
 		let ret = false;
 
-		if (request.message === 'removeDevice') {
-			app.Devices.removeByName(request.deviceName);
-		} else if (request.message === 'ping') {
+		if (request.message === app.MyCMsg.REMOVE_DEVICE.message) {
+			app.Devices.removeByName(request.item);
+		} else if (request.message === app.MyCMsg.PING.message) {
 			app.Msg.sendPing().catch((err) => {
 				app.Gae.sendMessageFailed(err);
 			});
@@ -116,7 +114,7 @@ app.Devices = (function() {
 	/**
 	 * Listen for Chrome messages
 	 */
-	chrome.runtime.onMessage.addListener(_onChromeMessage);
+	app.CMsg.listen(_onChromeMessage);
 
 	return {
 		/**

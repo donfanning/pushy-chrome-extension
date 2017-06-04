@@ -169,7 +169,7 @@ window.app = window.app || {};
 		const idx = _getPageIdx('page-devices');
 		t.pages[idx].disabled = !app.MyData.isSignedIn();
 		// listen for Chrome messages
-		chrome.runtime.onMessage.addListener(_onChromeMessage);
+		app.CMsg.listen(_onChromeMessage);
 		// check for permissions
 		_checkPermissions();
 	});
@@ -274,21 +274,24 @@ window.app = window.app || {};
 	 * Event: Fired when a message is sent from either an extension process<br>
 	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
 	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
-	 * @param {Object} request - details for the message
+	 * @param {app.MyCMsg.Message} request - details for the
 	 * @param {Object} sender - MessageSender object
 	 * @param {function} response - function to call once after processing
 	 * @private
 	 * @memberOf Main
 	 */
 	function _onChromeMessage(request, sender, response) {
-		if (request.message === 'highlightTab') {
-			// highlight ourselves and tell the sender we are here
-			// noinspection JSCheckFunctionSignatures
-			chrome.tabs.getCurrent((tab) => {
-				chrome.tabs.update(tab.id, {'highlighted': true});
+		if (request.message === app.MyCMsg.HIGHLIGHT.message) {
+			// highlight ourselves and let the sender know we are here
+			const chromep = new ChromePromise();
+			chromep.tabs.getCurrent().then((t) => {
+				chrome.tabs.update(t.id, {'highlighted': true});
+				return null;
+			}).catch((err) => {
+				app.GA.error(err.message, 'chromep.tabs.getCurrent');
 			});
-			response({message: 'OK'});
-		} else if (request.message === 'sendMessageFailed') {
+			response(JSON.stringify({message: 'OK'}));
+		} else if (request.message === app.MyCMsg.MSG_FAILED.message) {
 			t.dialogTitle = 'Failed to send push notification';
 			t.dialogText = request.error;
 			t.$.errorDialog.open();
