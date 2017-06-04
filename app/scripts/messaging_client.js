@@ -120,7 +120,7 @@ app.Msg = (function() {
 	 * @memberOf app.Msg
 	 */
 	function _sendMessage(data, notify) {
-		if (!app.Utils.isSignedIn() || !app.Utils.allowPush()) {
+		if (!app.MyData.isSignedIn() || !app.MyData.allowPush()) {
 			return Promise.resolve();
 		}
 

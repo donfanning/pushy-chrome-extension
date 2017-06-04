@@ -28,7 +28,7 @@ app.User = (function() {
 	 */
 	function _onSignInChanged(account, signedIn) {
 		const uid = app.Storage.get('uid');
-		if (app.Utils.isSignedIn() && !signedIn && (account.id === uid)) {
+		if (app.MyData.isSignedIn() && !signedIn && (account.id === uid)) {
 			// our user signed out of Chrome while we were signed in
 			app.Storage.set('needsCleanup', true);
 			_setSignIn(false);
@@ -117,7 +117,7 @@ app.User = (function() {
 		 * @memberOf app.User
 		 */
 		signIn: function() {
-			if (app.Utils.isSignedIn()) {
+			if (app.MyData.isSignedIn()) {
 				return Promise.reject(new Error(ERROR_ALREADY_SIGNED_IN));
 			}
 
@@ -138,7 +138,7 @@ app.User = (function() {
 		 * @memberOf app.User
 		 */
 		signOut: function() {
-			if (!app.Utils.isSignedIn()) {
+			if (!app.MyData.isSignedIn()) {
 				return Promise.resolve();
 			}
 
@@ -205,7 +205,7 @@ app.User = (function() {
 		getAuthToken: function(retry) {
 			// If signed in, first try to get token non-interactively.
 			// If it fails, probably means token has expired or is invalid.
-			const interactive = !app.Utils.isSignedIn();
+			const interactive = !app.MyData.isSignedIn();
 
 			const chromep = new ChromePromise();
 			return chromep.identity.getAuthToken({

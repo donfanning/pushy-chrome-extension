@@ -55,7 +55,7 @@ app.Reg = (function() {
 	 */
 	function _onStorageChanged(event) {
 		if (event.key === 'allowReceive') {
-			const allowReceive = app.Utils.allowReceive();
+			const allowReceive = app.MyData.allowReceive();
 			if (allowReceive) {
 				// user wants to receive messages now
 				app.Reg.register().catch((err) => {
@@ -92,7 +92,7 @@ app.Reg = (function() {
 		 * @memberOf app.Reg
 		 */
 		register: function() {
-			if (app.Utils.isRegistered() || !app.Utils.allowReceive()) {
+			if (app.MyData.isRegistered() || !app.MyData.allowReceive()) {
 				return Promise.resolve();
 			}
 
@@ -112,7 +112,7 @@ app.Reg = (function() {
 		 * @memberOf app.Reg
 		 */
 		unregister: function() {
-			if (app.Utils.notRegistered()) {
+			if (app.MyData.notRegistered()) {
 				return Promise.resolve();
 			}
 

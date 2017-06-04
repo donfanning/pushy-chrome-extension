@@ -113,75 +113,12 @@ app.Utils = (function() {
 		},
 
 		/**
-		 * Are we saving clipboard contents
-		 * @returns {boolean} true if enabled
-		 * @memberOf app.Utils
-		 */
-		isMonitorClipboard: function() {
-			return app.Storage.getBool('monitorClipboard');
-		},
-
-		/**
-		 * Has user enabled pushing to {@link app.Devices}
-		 * @returns {boolean} true if enabled
-		 * @memberOf app.Utils
-		 */
-		allowPush: function() {
-			return app.Storage.getBool('allowPush');
-		},
-
-		/**
-		 * Has user enabled autoSend option
-		 * @returns {boolean} true if enabled
-		 * @memberOf app.Utils
-		 */
-		isAutoSend: function() {
-			return app.Storage.getBool('autoSend');
-		},
-
-		/**
-		 * Has user enabled receiving from {@link app.Devices}
-		 * @returns {boolean} true if enabled
-		 * @memberOf app.Utils
-		 */
-		allowReceive: function() {
-			return app.Storage.getBool('allowReceive');
-		},
-
-		/**
-		 * Are we signed in
-		 * @returns {boolean} true if signed in
-		 * @memberOf app.Utils
-		 */
-		isSignedIn: function() {
-			return app.Storage.getBool('signedIn');
-		},
-
-		/**
-		 * Are we registered with fcm
-		 * @returns {boolean} true if registered
-		 * @memberOf app.Utils
-		 */
-		isRegistered: function() {
-			return app.Storage.getBool('registered');
-		},
-
-		/**
-		 * Are we not registered with fcm
-		 * @returns {boolean} true if not registered
-		 * @memberOf app.Utils
-		 */
-		notRegistered: function() {
-			return !this.isRegistered();
-		},
-
-		/**
 		 * Set the badge displayed on the extension icon
 		 * @memberOf app.Utils
 		 */
 		setBadgeText: function() {
 			let text = '';
-			if (app.Utils.isSignedIn() && app.Utils.allowPush()) {
+			if (app.MyData.isSignedIn() && app.MyData.allowPush()) {
 				text = 'SEND';
 			}
 			chrome.browserAction.setBadgeText({text: text});

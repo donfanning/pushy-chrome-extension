@@ -97,7 +97,7 @@ app.Fb = (function() {
 	 */
 	function _refreshRegToken() {
 		_messaging.getToken().then((refreshedToken) => {
-			if (app.Utils.isSignedIn()) {
+			if (app.MyData.isSignedIn()) {
 				return app.Reg.register(refreshedToken);
 			} else {
 				return Promise.resolve();
