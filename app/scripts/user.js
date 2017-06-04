@@ -162,7 +162,7 @@ app.User = (function() {
 			 * @memberOf app.User
 			 */
 			function ifCleanup() {
-				if (app.Storage.get('needsCleanup')) {
+				if (app.Storage.getBool('needsCleanup')) {
 					app.Storage.set('needsCleanup', false);
 					return app.User.cleanup();
 				} else {

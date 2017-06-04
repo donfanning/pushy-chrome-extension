@@ -125,8 +125,8 @@ app.Notify = (function() {
 		 * @memberOf app.Notify
 		 */
 		onSend: function() {
-			const notify = app.Storage.get('notify');
-			const notifyOnSend = app.Storage.get('notifyOnSend');
+			const notify = app.Storage.getBool('notify');
+			const notifyOnSend = app.Storage.getBool('notifyOnSend');
 			return notify && notifyOnSend;
 		},
 

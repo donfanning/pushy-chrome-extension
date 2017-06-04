@@ -118,7 +118,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		isMonitorClipboard: function() {
-			return app.Storage.get('monitorClipboard');
+			return app.Storage.getBool('monitorClipboard');
 		},
 
 		/**
@@ -127,7 +127,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		allowPush: function() {
-			return app.Storage.get('allowPush');
+			return app.Storage.getBool('allowPush');
 		},
 
 		/**
@@ -136,7 +136,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		isAutoSend: function() {
-			return app.Storage.get('autoSend');
+			return app.Storage.getBool('autoSend');
 		},
 
 		/**
@@ -145,7 +145,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		allowReceive: function() {
-			return app.Storage.get('allowReceive');
+			return app.Storage.getBool('allowReceive');
 		},
 
 		/**
@@ -154,7 +154,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		isSignedIn: function() {
-			return app.Storage.get('signedIn');
+			return app.Storage.getBool('signedIn');
 		},
 
 		/**
@@ -163,7 +163,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		isRegistered: function() {
-			return app.Storage.get('registered');
+			return app.Storage.getBool('registered');
 		},
 
 		/**
