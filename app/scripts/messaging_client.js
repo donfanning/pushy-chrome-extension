@@ -127,7 +127,7 @@ app.Msg = (function() {
 		let url;
 		return app.Fb.getRegToken().then((regId) => {
 			const json = encodeURIComponent(JSON.stringify(data));
-			const highPriority = app.Utils.get('highPriority');
+			const highPriority = app.Storage.get('highPriority');
 			url = `${URL_BASE}${regId}/${json}/${highPriority}`;
 			return app.User.getAuthToken(true);
 		}).then((token) => {

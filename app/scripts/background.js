@@ -103,7 +103,7 @@ for this device.`;
 			app.GA.event(app.GA.EVENT.INSTALLED);
 			// save OS
 			app.Utils.getPlatformOS().then((os) => {
-				app.Utils.set('os', os);
+				app.Storage.set('os', os);
 				return null;
 			}).catch((err) => {
 				app.GA.error(err.message, 'BG._onInstalled');
@@ -197,8 +197,8 @@ for this device.`;
 	 */
 	function _saveDefaults() {
 		Object.keys(DEF_VALUES).forEach(function(key) {
-			if (app.Utils.get(key) === null) {
-				app.Utils.set(key, DEF_VALUES[key]);
+			if (app.Storage.get(key) === null) {
+				app.Storage.set(key, DEF_VALUES[key]);
 			}
 		});
 	}
@@ -231,11 +231,11 @@ for this device.`;
 	function _updateData() {
 		// New items and removal of unused items can take place here
 		// when the version changes
-		const oldVersion = app.Utils.getInt('version');
+		const oldVersion = app.Storage.getInt('version');
 
 		if (DATA_VERSION > oldVersion) {
 			// update version number
-			app.Utils.set('version', DATA_VERSION);
+			app.Storage.set('version', DATA_VERSION);
 		}
 
 		if (oldVersion < 2) {

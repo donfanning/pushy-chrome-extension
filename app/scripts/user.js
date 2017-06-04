@@ -27,12 +27,12 @@ app.User = (function() {
 	 * @memberOf app.User
 	 */
 	function _onSignInChanged(account, signedIn) {
-		const uid = app.Utils.get('uid');
+		const uid = app.Storage.get('uid');
 		if (app.Utils.isSignedIn() && !signedIn && (account.id === uid)) {
 			// our user signed out of Chrome while we were signed in
-			app.Utils.set('needsCleanup', true);
+			app.Storage.set('needsCleanup', true);
 			_setSignIn(false);
-			app.Utils.set('registered', false);
+			app.Storage.set('registered', false);
 			app.Fb.signOut();
 
 		}
@@ -69,7 +69,7 @@ app.User = (function() {
 				}).catch((err) => {
 					app.GA.error(err.message, 'User._onChromeMessage');
 					_setSignIn(false);
-					app.Utils.set('registered', false);
+					app.Storage.set('registered', false);
 				});
 				response({message: 'error', error: err.toString()});
 			});
@@ -93,10 +93,10 @@ app.User = (function() {
 	 * @private
 	 */
 	function _setSignIn(val) {
-		app.Utils.set('signedIn', val);
+		app.Storage.set('signedIn', val);
 		app.Utils.setBadgeText();
 		if (!val) {
-			app.Utils.set('photoURL', '');
+			app.Storage.set('photoURL', '');
 		}
 	}
 
@@ -126,7 +126,7 @@ app.User = (function() {
 			}).then((user) => {
 				_setSignIn(true);
 				if (!app.Utils.isWhiteSpace(user.photoURL)) {
-					app.Utils.set('photoURL', user.photoURL);
+					app.Storage.set('photoURL', user.photoURL);
 				}
 				return Promise.resolve();
 			});
@@ -162,8 +162,8 @@ app.User = (function() {
 			 * @memberOf app.User
 			 */
 			function ifCleanup() {
-				if (app.Utils.get('needsCleanup')) {
-					app.Utils.set('needsCleanup', false);
+				if (app.Storage.get('needsCleanup')) {
+					app.Storage.set('needsCleanup', false);
 					return app.User.cleanup();
 				} else {
 					return Promise.resolve();
@@ -259,8 +259,8 @@ app.User = (function() {
 		setInfo: function() {
 			const chromep = new ChromePromise();
 			return chromep.identity.getProfileUserInfo().then((user) => {
-				app.Utils.set('email', user.email);
-				app.Utils.set('uid', user.id);
+				app.Storage.set('email', user.email);
+				app.Storage.set('uid', user.id);
 				return Promise.resolve();
 			});
 		},

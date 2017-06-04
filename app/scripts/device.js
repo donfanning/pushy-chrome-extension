@@ -120,7 +120,7 @@
 	 * @returns {string} serial number
 	 */
 	Device.mySN = function() {
-		return app.Utils.get('deviceSN');
+		return app.Storage.get('deviceSN');
 	};
 
 	/**
@@ -128,7 +128,7 @@
 	 * @returns {string} operating system
 	 */
 	Device.myOS = function() {
-		return app.Utils.get('os');
+		return app.Storage.get('os');
 	};
 
 	/**
@@ -144,7 +144,7 @@
 	 * @returns {string} nickname
 	 */
 	Device.myNickname = function() {
-		return app.Utils.get('deviceNickname');
+		return app.Storage.get('deviceNickname');
 	};
 
 	window.app = window.app || {};

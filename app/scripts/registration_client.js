@@ -60,7 +60,7 @@ app.Reg = (function() {
 				// user wants to receive messages now
 				app.Reg.register().catch((err) => {
 					app.GA.error(err.message, 'Reg._onStorageChanged');
-					app.Utils.set('allowReceive', !allowReceive);
+					app.Storage.set('allowReceive', !allowReceive);
 					chrome.runtime.sendMessage({
 						message: 'registerFailed',
 						error: err.toString(),
@@ -70,7 +70,7 @@ app.Reg = (function() {
 				// user no longer wants to receive messages
 				app.Reg.unregister().catch((err) => {
 					app.GA.error(err.message, 'Reg._onStorageChanged');
-					app.Utils.set('allowReceive', !allowReceive);
+					app.Storage.set('allowReceive', !allowReceive);
 					chrome.runtime.sendMessage({
 						message: 'unregisterFailed',
 						error: err.toString(),
@@ -101,7 +101,7 @@ app.Reg = (function() {
 				return _doCommand(url, ERROR_REGISTER);
 			}).then(() => {
 				app.GA.event(app.GA.EVENT.REGISTERED);
-				app.Utils.set('registered', true);
+				app.Storage.set('registered', true);
 				return Promise.resolve();
 			});
 		},
@@ -121,7 +121,7 @@ app.Reg = (function() {
 				return _doCommand(url, ERROR_UNREGISTER);
 			}).then(() => {
 				app.GA.event(app.GA.EVENT.UNREGISTERED);
-				app.Utils.set('registered', false);
+				app.Storage.set('registered', false);
 				return Promise.resolve();
 			});
 		},

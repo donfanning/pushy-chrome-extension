@@ -68,7 +68,7 @@ app.Alarm = (function() {
 		 * @memberOf app.Alarm
 		 */
 		updateAlarms: function() {
-			const durationType = app.Utils.getInt('storageDuration');
+			const durationType = app.Storage.getInt('storageDuration', 2);
 			if (durationType === 4) {
 				// until room is needed
 				chrome.alarms.clear(ALARM_STORAGE);

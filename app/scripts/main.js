@@ -13,6 +13,7 @@ window.app = window.app || {};
 	 * Script for the main.html page
 	 *  @namespace Main
 	 */
+
 	new ExceptionHandler();
 
 	/**
@@ -58,7 +59,7 @@ window.app = window.app || {};
 	 * @property {string} label - label for Nav menu
 	 * @property {string} route - element name route to page
 	 * @property {string} icon - icon for Nav Menu
-	 * @property {object|null} obj - something to be done when selected
+	 * @property {?Object|Function} obj - something to be done when selected
 	 * @property {boolean} ready - true if html is inserted
 	 * @property {boolean} disabled - disabled state of Nav menu
 	 * @property {boolean} divider - true for divider before item
@@ -127,7 +128,7 @@ window.app = window.app || {};
 	 * @type {string}
 	 * @memberOf Main
 	 */
-	t.avatar = app.Utils.get('photoURL');
+	t.avatar = app.Storage.get('photoURL');
 
 	/**
 	 * Previous route
@@ -306,7 +307,7 @@ window.app = window.app || {};
 		if(event.key === 'signedIn') {
 			_setDevicesState();
 		} else if(event.key === 'photoURL') {
-			t.avatar = app.Utils.get('photoURL');
+			t.avatar = app.Storage.get('photoURL');
 		}
 	}
 
@@ -346,7 +347,7 @@ window.app = window.app || {};
 	 * @private
 	 */
 	function _checkPermissions() {
-		if (app.Utils.get('permissions') === app.Permissions.NOT_SET) {
+		if (app.Storage.get('permissions') === app.Permissions.NOT_SET) {
 			_showPermissionsDialog();
 		}
 	}

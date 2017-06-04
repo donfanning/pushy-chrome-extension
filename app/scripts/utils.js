@@ -113,54 +113,12 @@ app.Utils = (function() {
 		},
 
 		/**
-		 * Get a JSON parsed value from localStorage
-		 * @param {string} key - key to get value for
-		 * @returns {JSON|null} JSON object, null if key does not exist
-		 * @memberOf app.Utils
-		 */
-		get: function(key) {
-			let item = localStorage.getItem(key);
-			if (item !== null) {
-				item = JSON.parse(item);
-			}
-			return item;
-		},
-
-		/**
-		 * JSON stringify and save a value to localStorage
-		 * @param {string} key - key to set value for
-		 * @param {?Object} value - new value, if null remove item
-		 * @memberOf app.Utils
-		 */
-		set: function(key, value) {
-			if (value !== null) {
-				localStorage.setItem(key, JSON.stringify(value));
-			} else {
-				localStorage.removeItem(key);
-			}
-		},
-
-		/**
-		 * Get integer value from localStorage
-		 * @param {!string} key - key to get value for
-		 * @returns {?int} value as integer
-		 * @memberOf app.Utils
-		 */
-		getInt: function(key) {
-			let item = localStorage.getItem(key);
-			if (item !== null) {
-				item = parseInt(item, 10);
-			}
-			return item;
-		},
-
-		/**
 		 * Are we saving clipboard contents
 		 * @returns {boolean} true if enabled
 		 * @memberOf app.Utils
 		 */
 		isMonitorClipboard: function() {
-			return app.Utils.get('monitorClipboard');
+			return app.Storage.get('monitorClipboard');
 		},
 
 		/**
@@ -169,7 +127,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		allowPush: function() {
-			return app.Utils.get('allowPush');
+			return app.Storage.get('allowPush');
 		},
 
 		/**
@@ -178,7 +136,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		isAutoSend: function() {
-			return app.Utils.get('autoSend');
+			return app.Storage.get('autoSend');
 		},
 
 		/**
@@ -187,7 +145,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		allowReceive: function() {
-			return app.Utils.get('allowReceive');
+			return app.Storage.get('allowReceive');
 		},
 
 		/**
@@ -196,7 +154,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		isSignedIn: function() {
-			return this.get('signedIn');
+			return app.Storage.get('signedIn');
 		},
 
 		/**
@@ -205,7 +163,7 @@ app.Utils = (function() {
 		 * @memberOf app.Utils
 		 */
 		isRegistered: function() {
-			return this.get('registered');
+			return app.Storage.get('registered');
 		},
 
 		/**

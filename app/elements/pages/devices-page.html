@@ -133,7 +133,7 @@
 			this.splice('devices', 0, this.devices.length);
 
 			// populate list
-			const devices = app.Utils.get('devices');
+			const devices = app.Storage.get('devices');
 			if (devices) {
 				for (let key in devices) {
 					if (devices.hasOwnProperty(key)) {

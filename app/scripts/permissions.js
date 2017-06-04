@@ -43,7 +43,7 @@ app.Permissions = (function() {
 		 * @memberOf app.Permissions
 		 */
 		notSet: function() {
-			return app.Utils.get('permissions') === NOT_SET;
+			return app.Storage.get('permissions') === NOT_SET;
 		},
 
 		/**
@@ -52,7 +52,7 @@ app.Permissions = (function() {
 		 * @memberOf app.Permissions
 		 */
 		isAllowed: function() {
-			return app.Utils.get('permissions') === ALLOWED;
+			return app.Storage.get('permissions') === ALLOWED;
 		},
 
 		/**
@@ -64,7 +64,7 @@ app.Permissions = (function() {
 			// if promise chain
 			const ifGranted = function(isTrue) {
 				if (isTrue) {
-					app.Utils.set('permissions', app.Permissions.ALLOWED);
+					app.Storage.set('permissions', app.Permissions.ALLOWED);
 					return Promise.resolve(isTrue);
 				} else {
 					// remove if it has been previously granted
@@ -108,7 +108,7 @@ app.Permissions = (function() {
 						permissions: PERMISSIONS,
 					}).then((removed) => {
 						if (removed) {
-							app.Utils.set('permissions',
+							app.Storage.set('permissions',
 								app.Permissions.DENIED);
 						}
 						return Promise.resolve(removed);

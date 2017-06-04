@@ -46,7 +46,7 @@ app.Devices = (function() {
 	 */
 	function _load() {
 		_devices = new Map();
-		const json = app.Utils.get('devices');
+		const json = app.Storage.get('devices');
 		if (!json) {
 			return;
 		}
@@ -66,7 +66,7 @@ app.Devices = (function() {
 	 * @memberOf app.Devices
 	 */
 	function _save() {
-		app.Utils.set('devices', _mapToObj(_devices));
+		app.Storage.set('devices', _mapToObj(_devices));
 		// let listeners know we changed
 		chrome.runtime.sendMessage({
 			message: 'devicesChanged',

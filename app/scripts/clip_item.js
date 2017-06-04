@@ -164,7 +164,7 @@
 	 * @returns {Promise<boolean>} true if items were deleted
 	 */
 	ClipItem.deleteOld = function() {
-		const durIndex = app.Utils.getInt('storageDuration');
+		const durIndex = app.Storage.getInt('storageDuration', 2);
 		const durations = [
 			app.Utils.MILLIS_IN_DAY,
 			app.Utils.MILLIS_IN_DAY * 7,
