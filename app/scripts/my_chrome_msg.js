@@ -10,167 +10,167 @@ window.app = window.app || {};
  * Chrome messages for the extension
  * @namespace
  */
-app.MyCMsg = (function() {
-	'use strict';
+app.ChromeMsg = (function() {
+  'use strict';
 
-	new ExceptionHandler();
+  new ExceptionHandler();
 
-	/**
-	 * Restore default settings
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const RESTORE_DEFAULTS = {
-		message: 'restoreDefaults',
-	};
+  /**
+   * Restore default settings
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const RESTORE_DEFAULTS = {
+    message: 'restoreDefaults',
+  };
 
-	/**
-	 * Highlight a tab
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const HIGHLIGHT = {
-		message: 'highlightTab',
-	};
+  /**
+   * Highlight a tab
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const HIGHLIGHT = {
+    message: 'highlightTab',
+  };
 
-	/**
-	 * A save attempt to localStorage exceeded its capacity
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const STORAGE_EXCEEDED = {
-		message: 'storageExceeded',
-	};
+  /**
+   * A save attempt to localStorage exceeded its capacity
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const STORAGE_EXCEEDED = {
+    message: 'storageExceeded',
+  };
 
-	/**
-	 * Save value to storage message
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const STORE = {
-		message: 'store',
-		key: '',
-		value: '',
-	};
+  /**
+   * Save value to storage message
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const STORE = {
+    message: 'store',
+    key: '',
+    value: '',
+  };
 
-	/**
-	 * A {@link app.Device} was removed from the {@link app.Devices}
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const REMOVE_DEVICE = {
-		message: 'removeDevice',
-		item: '',
-	};
+  /**
+   * A {@link app.Device} was removed from the {@link app.Devices}
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const REMOVE_DEVICE = {
+    message: 'removeDevice',
+    item: '',
+  };
 
-	/**
-	 * The list of {@link app.Devices} changed
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const DEVICES_CHANGED = {
-		message: 'devicesChanged',
-	};
+  /**
+   * The list of {@link app.Devices} changed
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const DEVICES_CHANGED = {
+    message: 'devicesChanged',
+  };
 
-	/**
-	 * Ping our {@link app.Devices}
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const PING = {
-		message: 'ping',
-	};
+  /**
+   * Ping our {@link app.Devices}
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const PING = {
+    message: 'ping',
+  };
 
-	/**
-	 * Copy the item to the clipboard
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const COPY_TO_CLIPBOARD = {
-		message: 'copyToClipboard',
-		item: '',
-	};
+  /**
+   * Copy the item to the clipboard
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const COPY_TO_CLIPBOARD = {
+    message: 'copyToClipboard',
+    item: '',
+  };
 
-	/**
-	 * We copied something to the clipboard
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const COPIED_TO_CLIPBOARD = {
-		message: 'copiedToClipboard',
-	};
+  /**
+   * We copied something to the clipboard
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const COPIED_TO_CLIPBOARD = {
+    message: 'copiedToClipboard',
+  };
 
-	/**
-	 * User signed in
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const SIGN_IN = {
-		message: 'signIn',
-	};
+  /**
+   * User signed in
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const SIGN_IN = {
+    message: 'signIn',
+  };
 
-	/**
-	 * User signed OUT
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const SIGN_OUT = {
-		message: 'signOut',
-	};
+  /**
+   * User signed OUT
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const SIGN_OUT = {
+    message: 'signOut',
+  };
 
-	/**
-	 * Send {@link app.Msg} failed
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const MSG_FAILED = {
-		message: 'sendMessageFailed',
-	};
+  /**
+   * Send {@link app.Msg} failed
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const MSG_FAILED = {
+    message: 'sendMessageFailed',
+  };
 
-	/**
-	 * Register with server failed
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const REGISTER_FAILED = {
-		message: 'registerFailed',
-	};
+  /**
+   * Register with server failed
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const REGISTER_FAILED = {
+    message: 'registerFailed',
+  };
 
-	/**
-	 * Unregister with server failed
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const UNREGISTER_FAILED = {
-		message: 'unregisterFailed',
-	};
+  /**
+   * Unregister with server failed
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const UNREGISTER_FAILED = {
+    message: 'unregisterFailed',
+  };
 
-	/**
-	 * A {@link app.ClipItem} was added or updated
-	 * @type {app.MyCMsg.Message}
-	 * @memberOf app.MyCMsg
-	 */
-	const CLIP_ADDED = {
-		message: 'clipAdded',
-		item: '',
-		updated: false,
-	};
+  /**
+   * A {@link app.ClipItem} was added or updated
+   * @type {Chrome.Msg.Message}
+   * @memberOf app.ChromeMsg
+   */
+  const CLIP_ADDED = {
+    message: 'clipAdded',
+    item: '',
+    updated: false,
+  };
 
-	return {
-		RESTORE_DEFAULTS: RESTORE_DEFAULTS,
-		HIGHLIGHT: HIGHLIGHT,
-		STORAGE_EXCEEDED: STORAGE_EXCEEDED,
-		STORE: STORE,
-		REMOVE_DEVICE: REMOVE_DEVICE,
-		DEVICES_CHANGED: DEVICES_CHANGED,
-		PING: PING,
-		COPY_TO_CLIPBOARD: COPY_TO_CLIPBOARD,
-		COPIED_TO_CLIPBOARD: COPIED_TO_CLIPBOARD,
-		SIGN_IN: SIGN_IN,
-		SIGN_OUT: SIGN_OUT,
-		MSG_FAILED: MSG_FAILED,
-		REGISTER_FAILED: REGISTER_FAILED,
-		UNREGISTER_FAILED: UNREGISTER_FAILED,
-		CLIP_ADDED: CLIP_ADDED,
-	};
+  return {
+    RESTORE_DEFAULTS: RESTORE_DEFAULTS,
+    HIGHLIGHT: HIGHLIGHT,
+    STORAGE_EXCEEDED: STORAGE_EXCEEDED,
+    STORE: STORE,
+    REMOVE_DEVICE: REMOVE_DEVICE,
+    DEVICES_CHANGED: DEVICES_CHANGED,
+    PING: PING,
+    COPY_TO_CLIPBOARD: COPY_TO_CLIPBOARD,
+    COPIED_TO_CLIPBOARD: COPIED_TO_CLIPBOARD,
+    SIGN_IN: SIGN_IN,
+    SIGN_OUT: SIGN_OUT,
+    MSG_FAILED: MSG_FAILED,
+    REGISTER_FAILED: REGISTER_FAILED,
+    UNREGISTER_FAILED: UNREGISTER_FAILED,
+    CLIP_ADDED: CLIP_ADDED,
+  };
 })();

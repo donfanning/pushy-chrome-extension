@@ -5,27 +5,26 @@
  * https://goo.gl/wFvBM1
  */
 (function() {
-	'use strict';
+  'use strict';
 
-	/**
-	 * The background script for the extension.<br>
-	 * Note: We can't be an Event Page because we use
-	 * the chrome.webRequest API
-	 * @namespace app.Background
-	 */
-	new ExceptionHandler();
+  /**
+   * The background script for the extension.<br>
+   * Note: We can't be an Event Page because we use
+   * the chrome.webRequest API
+   * @namespace app.Background
+   */
+  new ExceptionHandler();
 
-
-	/**
-	 * Initial {@link ClipItem}
-	 * @type {string}
-	 * @default
-	 * @const
-	 * @private
-	 * @memberOf app.Background
-	 */
-	const INTRO_TEXT =
-		`A clipboard manager with push notifications.
+  /**
+   * Initial {@link ClipItem}
+   * @type {string}
+   * @default
+   * @const
+   * @private
+   * @memberOf app.Background
+   */
+  const INTRO_TEXT =
+      `A clipboard manager with push notifications.
 
 Please signin from the "Manage Account" page to share with your \
 other devices.
@@ -42,181 +41,181 @@ selecting "Options".
 It is a good idea to go to the "Settings" page and enter a nickname \
 for this device.`;
 
-	/**
-	 * Event: Fired when the extension is first installed,<br />
-	 * when the extension is updated to a new version,<br />
-	 * and when Chrome is updated to a new version.
-	 * @see https://developer.chrome.com/extensions/runtime#event-onInstalled
-	 * @param {Object} details - type of event
-	 * @private
-	 * @memberOf app.Background
-	 */
-	function _onInstalled(details) {
-		if (details.reason === 'install') {
-			// extension installed
-			app.CGA.event(app.GA.EVENT.INSTALLED);
-			// save OS
-			app.CUtils.getPlatformOS().then((os) => {
-				app.Storage.set('os', os);
-				return null;
-			}).catch((err) => {
-				app.CGA.error(err.message, 'Background._onInstalled');
-			});
-			_initializeData();
-			app.Notify.showMainTab();
-		} else if (details.reason === 'update') {
-			_updateData();
-			_initializeFirebase().then(() => {
-				return app.SW.update();
-			}).catch((err) => {
-				app.CGA.error(err.message, 'Background._onInstalled');
-			});
-		}
-		app.Utils.setBadgeText();
-		app.Alarm.updateAlarms();
-		app.Permissions.injectContentScripts();
-	}
+  /**
+   * Event: Fired when the extension is first installed,<br />
+   * when the extension is updated to a new version,<br />
+   * and when Chrome is updated to a new version.
+   * @see https://developer.chrome.com/extensions/runtime#event-onInstalled
+   * @param {Object} details - type of event
+   * @private
+   * @memberOf app.Background
+   */
+  function _onInstalled(details) {
+    if (details.reason === 'install') {
+      // extension installed
+      Chrome.GA.event(app.GA.EVENT.INSTALLED);
+      // save OS
+      Chrome.Utils.getPlatformOS().then((os) => {
+        Chrome.Storage.set('os', os);
+        return null;
+      }).catch((err) => {
+        Chrome.GA.error(err.message, 'Background._onInstalled');
+      });
+      _initializeData();
+      app.Notify.showMainTab();
+    } else if (details.reason === 'update') {
+      _updateData();
+      _initializeFirebase().then(() => {
+        return app.SW.update();
+      }).catch((err) => {
+        Chrome.GA.error(err.message, 'Background._onInstalled');
+      });
+    }
+    app.Utils.setBadgeText();
+    app.Alarm.updateAlarms();
+    app.Permissions.injectContentScripts();
+  }
 
-	/**
-	 * Event: Fired when a profile that has this extension installed first
-	 * starts up
-	 * @see https://developer.chrome.com/extensions/runtime#event-onStartup
-	 * @private
-	 * @memberOf app.Background
-	 */
-	function _onStartup() {
-		app.CGA.page('/background.html');
-		app.Alarm.updateAlarms();
-		app.Alarm.deleteOldClipItems();
-		_initializeFirebase().catch((err) => {
-			app.CGA.error(err.message, 'Background._onStartup');
-		});
-		app.Utils.setBadgeText();
-	}
+  /**
+   * Event: Fired when a profile that has this extension installed first
+   * starts up
+   * @see https://developer.chrome.com/extensions/runtime#event-onStartup
+   * @private
+   * @memberOf app.Background
+   */
+  function _onStartup() {
+    Chrome.GA.page('/background.html');
+    app.Alarm.updateAlarms();
+    app.Alarm.deleteOldClipItems();
+    _initializeFirebase().catch((err) => {
+      Chrome.GA.error(err.message, 'Background._onStartup');
+    });
+    app.Utils.setBadgeText();
+  }
 
-	/**
-	 * Event: Fired when a browser action icon is clicked.
-	 * @see https://goo.gl/abVwKu
-	 * @private
-	 * @memberOf app.Background
-	 */
-	function _onIconClicked() {
-		// get the clipboard contents
-		const text = app.CB.getTextFromClipboard();
-		if (app.Utils.isWhiteSpace(text)) {
-			return;
-		}
+  /**
+   * Event: Fired when a browser action icon is clicked.
+   * @see https://goo.gl/abVwKu
+   * @private
+   * @memberOf app.Background
+   */
+  function _onIconClicked() {
+    // get the clipboard contents
+    const text = app.CB.getTextFromClipboard();
+    if (app.Utils.isWhiteSpace(text)) {
+      return;
+    }
 
-		// Persist
-		app.ClipItem.add(text, Date.now(), false,
-			false, app.Device.myName()).then((clipItem) => {
-			// eslint-disable-next-line promise/no-nesting
-			return app.Msg.sendClipItem(clipItem).catch((err) => {
-				app.Gae.sendMessageFailed(err);
-			});
-		}).catch((err) => {
-			app.CGA.error(err.message, 'Background._onIconClicked');
-		});
-	}
+    // Persist
+    app.ClipItem.add(text, Date.now(), false,
+        false, app.Device.myName()).then((clipItem) => {
+      // eslint-disable-next-line promise/no-nesting
+      return app.Msg.sendClipItem(clipItem).catch((err) => {
+        app.Gae.sendMessageFailed(err);
+      });
+    }).catch((err) => {
+      Chrome.GA.error(err.message, 'Background._onIconClicked');
+    });
+  }
 
-	/**
-	 * Event: Fired when a tab is updated.
-	 * @see https://developer.chrome.com/extensions/tabs#event-onUpdated
-	 * @param {int} tabId - id of tab
-	 * @private
-	 * @memberOf app.Background
-	 */
-	function _onTabUpdated(tabId) {
-		app.Permissions.injectContentScript(tabId);
-	}
+  /**
+   * Event: Fired when a tab is updated.
+   * @see https://developer.chrome.com/extensions/tabs#event-onUpdated
+   * @param {int} tabId - id of tab
+   * @private
+   * @memberOf app.Background
+   */
+  function _onTabUpdated(tabId) {
+    app.Permissions.injectContentScript(tabId);
+  }
 
-	/**
-	 * Event: Fired when item in localStorage changes
-	 * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
-	 * @param {Event} event - storage event
-	 * @param {string} event.key - storage item that changed
-	 * @private
-	 * @memberOf app.Background
-	 */
-	function _onStorageChanged(event) {
-		if ((event.key === 'allowPush') || (event.key === 'signedIn')) {
-			app.Utils.setBadgeText();
-		}
-	}
+  /**
+   * Event: Fired when item in localStorage changes
+   * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
+   * @param {Event} event - storage event
+   * @param {string} event.key - storage item that changed
+   * @private
+   * @memberOf app.Background
+   */
+  function _onStorageChanged(event) {
+    if ((event.key === 'allowPush') || (event.key === 'signedIn')) {
+      app.Utils.setBadgeText();
+    }
+  }
 
-	/**
-	 * Initialize the data saved in localStorage
-	 * @private
-	 * @memberOf app.Background
-	 */
-	function _initializeData() {
-		app.MyData.saveDefaults();
+  /**
+   * Initialize the data saved in localStorage
+   * @private
+   * @memberOf app.Background
+   */
+  function _initializeData() {
+    app.MyData.saveDefaults();
 
-		const introClip =
-			new app.ClipItem(INTRO_TEXT, Date.now(), true,
-				false, app.Device.myName());
-		introClip.save().catch((err) => {
-			app.CGA.error(err.message, 'Background._initializeData');
-		});
+    const introClip =
+        new app.ClipItem(INTRO_TEXT, Date.now(), true,
+            false, app.Device.myName());
+    introClip.save().catch((err) => {
+      Chrome.GA.error(err.message, 'Background._initializeData');
+    });
 
-		app.User.setInfo().catch((err) => {
-			app.CGA.error(err.message, 'Background._initializeData');
-		});
-	}
+    app.User.setInfo().catch((err) => {
+      Chrome.GA.error(err.message, 'Background._initializeData');
+    });
+  }
 
-	/**
-	 * Update the data saved in localStorage
-	 * @private
-	 * @memberOf app.Background
-	 */
-	function _updateData() {
-		// New items and removal of unused items can take place here
-		// when the version changes
-		const version = app.MyData.getCurrentVersion();
-		const oldVersion = app.Storage.getInt('version');
+  /**
+   * Update the data saved in localStorage
+   * @private
+   * @memberOf app.Background
+   */
+  function _updateData() {
+    // New items and removal of unused items can take place here
+    // when the version changes
+    const version = app.MyData.getCurrentVersion();
+    const oldVersion = Chrome.Storage.getInt('version');
 
-		if (version > oldVersion) {
-			// update version number
-			app.Storage.set('version', version);
-		}
+    if (version > oldVersion) {
+      // update version number
+      Chrome.Storage.set('version', version);
+    }
 
-		if (oldVersion < 2) {
-			// remove unused variables
-			localStorage.removeItem('lastEmail');
-			localStorage.removeItem('lastUid');
-		}
+    if (oldVersion < 2) {
+      // remove unused variables
+      localStorage.removeItem('lastEmail');
+      localStorage.removeItem('lastUid');
+    }
 
-		app.MyData.saveDefaults();
-	}
+    app.MyData.saveDefaults();
+  }
 
-	/**
-	 * Initialize firebase and Service Worker if signed in
-	 * @returns {Promise<void>} void
-	 * @private
-	 * @memberOf app.Background
-	 */
-	function _initializeFirebase() {
-		if (app.MyData.isSignedIn()) {
-			return app.SW.initialize().catch((err) => {
-				app.CGA.error(err.message, 'Background._initializeFirebase');
-			});
-		} else {
-			return Promise.resolve();
-		}
-	}
+  /**
+   * Initialize firebase and Service Worker if signed in
+   * @returns {Promise<void>} void
+   * @private
+   * @memberOf app.Background
+   */
+  function _initializeFirebase() {
+    if (app.MyData.isSignedIn()) {
+      return app.SW.initialize().catch((err) => {
+        Chrome.GA.error(err.message, 'Background._initializeFirebase');
+      });
+    } else {
+      return Promise.resolve();
+    }
+  }
 
-	// Listen for extension install or update
-	chrome.runtime.onInstalled.addListener(_onInstalled);
+  // Listen for extension install or update
+  chrome.runtime.onInstalled.addListener(_onInstalled);
 
-	// Listen for Chrome starting
-	chrome.runtime.onStartup.addListener(_onStartup);
+  // Listen for Chrome starting
+  chrome.runtime.onStartup.addListener(_onStartup);
 
-	// Listen for click on the icon
-	chrome.browserAction.onClicked.addListener(_onIconClicked);
+  // Listen for click on the icon
+  chrome.browserAction.onClicked.addListener(_onIconClicked);
 
-	// Listen for tab updates
-	chrome.tabs.onUpdated.addListener(_onTabUpdated);
+  // Listen for tab updates
+  chrome.tabs.onUpdated.addListener(_onTabUpdated);
 
-	// Listen for changes to localStorage
-	addEventListener('storage', _onStorageChanged, false);
+  // Listen for changes to localStorage
+  addEventListener('storage', _onStorageChanged, false);
 })();

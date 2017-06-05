@@ -32,15 +32,15 @@ app.GA = (function() {
   /**
    * Event types
    * @type {{}}
-   * @property {app.CGA.Event} INSTALLED - extension installed
-   * @property {app.CGA.Event} MENU - menu selected
-   * @property {app.CGA.Event} TOGGLE - setting-toggle
-   * @property {app.CGA.Event} LINK - setting-link
-   * @property {app.CGA.Event} BUTTON - button click
-   * @property {app.CGA.Event} SENT - message sent
-   * @property {app.CGA.Event} RECEIVED - message received
-   * @property {app.CGA.Event} REGISTERED - {@link Device} registered
-   * @property {app.CGA.Event} UNREGISTERED - {@link Device} unregistered
+   * @property {Chrome.GA.Event} INSTALLED - extension installed
+   * @property {Chrome.GA.Event} MENU - menu selected
+   * @property {Chrome.GA.Event} TOGGLE - setting-toggle
+   * @property {Chrome.GA.Event} LINK - setting-link
+   * @property {Chrome.GA.Event} BUTTON - button click
+   * @property {Chrome.GA.Event} SENT - message sent
+   * @property {Chrome.GA.Event} RECEIVED - message received
+   * @property {Chrome.GA.Event} REGISTERED - {@link Device} registered
+   * @property {Chrome.GA.Event} UNREGISTERED - {@link Device} unregistered
    * @const
    * @memberOf app.GA
    */
@@ -109,8 +109,8 @@ app.GA = (function() {
    */
   function _onLoad() {
     // initialize analytics
-    app.CGA.initialize(_TRACKING_ID, 'Pushy Clipboard',
-        'pushy-chrome-extension', app.CUtils.getVersion());
+    Chrome.GA.initialize(_TRACKING_ID, 'Pushy Clipboard',
+        'pushy-chrome-extension', Chrome.Utils.getVersion());
   }
 
   // listen for document and resources loaded

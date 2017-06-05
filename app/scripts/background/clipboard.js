@@ -11,132 +11,131 @@ window.app = window.app || {};
  * @namespace
  */
 app.CB = (function() {
-	'use strict';
+  'use strict';
 
-	new ExceptionHandler();
+  new ExceptionHandler();
 
-	/**
-	 * Delay time for reading from clipboard
-	 * @type {int}
-	 * @default
-	 * @private
-	 * @memberOf app.CB
-	 */
-	const WAIT_MILLIS = 250;
+  /**
+   * Delay time for reading from clipboard
+   * @type {int}
+   * @default
+   * @private
+   * @memberOf app.CB
+   */
+  const WAIT_MILLIS = 250;
 
-	/**
-	 * Send local {@link ClipItem} push notification if enabled
-	 * @param {ClipItem} clipItem - {@link ClipItem} to send
-	 * @private
-	 * @memberOf app.CB
-	 */
-	function _sendLocalClipItem(clipItem) {
-		if (!clipItem.remote && app.MyData.isAutoSend()) {
-			// send to our devices
-			app.Msg.sendClipItem(clipItem).catch((err) => {
-				app.Gae.sendMessageFailed(err);
-			});
-		}
-	}
+  /**
+   * Send local {@link ClipItem} push notification if enabled
+   * @param {ClipItem} clipItem - {@link ClipItem} to send
+   * @private
+   * @memberOf app.CB
+   */
+  function _sendLocalClipItem(clipItem) {
+    if (!clipItem.remote && app.MyData.isAutoSend()) {
+      // send to our devices
+      app.Msg.sendClipItem(clipItem).catch((err) => {
+        app.Gae.sendMessageFailed(err);
+      });
+    }
+  }
 
-	/**
-	 * Add a new {@link ClipItem} from the Clipboard contents
-	 * @private
-	 * @memberOf app.CB
-	 */
-	function _addClipItemFromClipboard() {
-		if (!app.MyData.isMonitorClipboard()) {
-			return;
-		}
+  /**
+   * Add a new {@link ClipItem} from the Clipboard contents
+   * @private
+   * @memberOf app.CB
+   */
+  function _addClipItemFromClipboard() {
+    if (!app.MyData.isMonitorClipboard()) {
+      return;
+    }
 
-		// wait a little to make sure clipboard is ready
-		setTimeout(function() {
-			// get the clipboard contents
-			const text = app.CB.getTextFromClipboard();
-			if (app.Utils.isWhiteSpace(text)) {
-				return;
-			}
+    // wait a little to make sure clipboard is ready
+    setTimeout(function() {
+      // get the clipboard contents
+      const text = app.CB.getTextFromClipboard();
+      if (app.Utils.isWhiteSpace(text)) {
+        return;
+      }
 
-			// Persist
-			app.ClipItem.add(text, Date.now(), false, false,
-				app.Device.myName()).then((clipItem) => {
-				// send to our devices
-				_sendLocalClipItem(clipItem);
-				return null;
-			}).catch((err) => {
-				app.CGA.error(err.message, 'CB._addClipItemFromClipboard');
-			});
+      // Persist
+      app.ClipItem.add(text, Date.now(), false, false,
+          app.Device.myName()).then((clipItem) => {
+        // send to our devices
+        _sendLocalClipItem(clipItem);
+        return null;
+      }).catch((err) => {
+        Chrome.GA.error(err.message, 'CB._addClipItemFromClipboard');
+      });
 
-		}, WAIT_MILLIS);
-	}
+    }, WAIT_MILLIS);
+  }
 
-	// noinspection JSUnusedLocalSymbols
-	/**
-	 * Event: Fired when a message is sent from either an extension process<br>
-	 * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
-	 * @see https://developer.chrome.com/extensions/runtime#event-onMessage
-	 * @param {app.MyCMsg.Message} request - details for the
-	 * @param {Object} sender - MessageSender object
-	 * @param {function} response - function to call once after processing
-	 * @returns {boolean} true if asynchronous
-	 * @private
-	 * @memberOf app.CB
-	 */
-	function _onChromeMessage(request, sender, response) {
-		let ret = false;
+  // noinspection JSUnusedLocalSymbols
+  /**
+   * Event: Fired when a message is sent from either an extension process<br>
+   * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
+   * @see https://developer.chrome.com/extensions/runtime#event-onMessage
+   * @param {Chrome.Msg.Message} request - details for the
+   * @param {Object} sender - MessageSender object
+   * @param {function} response - function to call once after processing
+   * @returns {boolean} true if asynchronous
+   * @private
+   * @memberOf app.CB
+   */
+  function _onChromeMessage(request, sender, response) {
+    let ret = false;
 
-		if (request.message === app.MyCMsg.COPIED_TO_CLIPBOARD.message) {
-			// we put data on the clipboard
-			_addClipItemFromClipboard();
-		} else if (request.message === app.MyCMsg.COPY_TO_CLIPBOARD.message) {
-			// copy a ClipItem to the clipboard
-			const clip = request.item;
-			const clipItem =
-				new app.ClipItem(clip.text, clip.lastSeen, clip.fav,
-					clip.remote, clip.device);
-			app.CB.copyToClipboard(clipItem.text);
-			_sendLocalClipItem(clipItem);
-		}
-		return ret;
-	}
+    if (request.message === app.ChromeMsg.COPIED_TO_CLIPBOARD.message) {
+      // we put data on the clipboard
+      _addClipItemFromClipboard();
+    } else if (request.message === app.ChromeMsg.COPY_TO_CLIPBOARD.message) {
+      // copy a ClipItem to the clipboard
+      const clip = request.item;
+      const clipItem = new app.ClipItem(clip.text, clip.lastSeen, clip.fav,
+          clip.remote, clip.device);
+      app.CB.copyToClipboard(clipItem.text);
+      _sendLocalClipItem(clipItem);
+    }
+    return ret;
+  }
 
-	/**
-	 * Listen for Chrome messages
-	 */
-	app.CMsg.listen(_onChromeMessage);
+  /**
+   * Listen for Chrome messages
+   */
+  Chrome.Msg.listen(_onChromeMessage);
 
-	return {
-		/**
-		 * Get the text from the clipboard
-		 * @returns {string} text from clipboard
-		 * @memberOf app.CB
-		 */
-		getTextFromClipboard: function() {
-			const input = document.createElement('textArea');
-			document.body.appendChild(input);
-			input.focus();
-			input.select();
-			document.execCommand('Paste');
-			const text = input.value;
-			input.remove();
+  return {
+    /**
+     * Get the text from the clipboard
+     * @returns {string} text from clipboard
+     * @memberOf app.CB
+     */
+    getTextFromClipboard: function() {
+      const input = document.createElement('textArea');
+      document.body.appendChild(input);
+      input.focus();
+      input.select();
+      document.execCommand('Paste');
+      const text = input.value;
+      input.remove();
 
-			return text;
-		},
+      return text;
+    },
 
-		/**
-		 * Copy the given text to the clipboard
-		 * @param {string} text - text to copy
-		 * @memberOf app.CB
-		 */
-		copyToClipboard: function(text) {
-			const input = document.createElement('textArea');
-			document.body.appendChild(input);
-			input.textContent = text;
-			input.focus();
-			input.select();
-			document.execCommand('Copy');
-			input.remove();
-		},
-	};
+    /**
+     * Copy the given text to the clipboard
+     * @param {string} text - text to copy
+     * @memberOf app.CB
+     */
+    copyToClipboard: function(text) {
+      const input = document.createElement('textArea');
+      document.body.appendChild(input);
+      input.textContent = text;
+      input.focus();
+      input.select();
+      document.execCommand('Copy');
+      input.remove();
+    },
+  };
 })();
 

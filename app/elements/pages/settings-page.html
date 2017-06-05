@@ -19,7 +19,7 @@
 <link rel="import" href="../setting-dropdown/setting-dropdown.html">
 <link rel="import" href="../setting-text/setting-text.html">
 
-<script type="text/javascript" src="../../scripts/exception_handler.js"></script>
+<script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
 
 <dom-module id="settings-page">
 	<style include="iron-flex iron-flex-alignment"></style>
@@ -111,43 +111,43 @@
 </dom-module>
 
 <script>
-(function(window) {
-	'use strict';
+  (function(window) {
+    'use strict';
 
-	new ExceptionHandler();
+    new ExceptionHandler();
 
-	const ERROR_REGISTER = 'Failed to register with server.';
-	const ERROR_UNREGISTER = 'Failed to unregister with server.';
+    const ERROR_REGISTER = 'Failed to register with server.';
+    const ERROR_UNREGISTER = 'Failed to unregister with server.';
 
-	window.app = window.app || {};
-	app.SettingsPageFactory = Polymer({
-		is: 'settings-page',
+    window.app = window.app || {};
+    app.SettingsPageFactory = Polymer({
+      is: 'settings-page',
 
-		ready: function() {
-			// listen for chrome messages
-			chrome.runtime.onMessage.addListener((request) => {
-				if (request.message === app.MyCMsg.REGISTER_FAILED.message) {
-					const error = request.error;
-					this._showDialog(ERROR_REGISTER, error.toString());
-				} else if (request.message ===
-							app.MyCMsg.UNREGISTER_FAILED.message) {
-					const error = request.error;
-					this._showDialog(ERROR_UNREGISTER, error.toString());
-				}
-			});
-		},
+      ready: function() {
+        // listen for chrome messages
+        chrome.runtime.onMessage.addListener((request) => {
+          if (request.message === app.ChromeMsg.REGISTER_FAILED.message) {
+            const error = request.error;
+            this._showDialog(ERROR_REGISTER, error.toString());
+          } else if (request.message ===
+              app.ChromeMsg.UNREGISTER_FAILED.message) {
+            const error = request.error;
+            this._showDialog(ERROR_UNREGISTER, error.toString());
+          }
+        });
+      },
 
-		/**
-		 * Display error dialog
-		 * @param {string} title - error title
-		 * @param {string} text - description of error
-		 * @private
-		 */
-		_showDialog: function(title, text) {
-			this.$.dialogTitle.innerHTML = title;
-			this.$.dialogText.innerHTML = text;
-			this.$.errorDialog.open();
-		},
-	});
-})(window);
+      /**
+       * Display error dialog
+       * @param {string} title - error title
+       * @param {string} text - description of error
+       * @private
+       */
+      _showDialog: function(title, text) {
+        this.$.dialogTitle.innerHTML = title;
+        this.$.dialogText.innerHTML = text;
+        this.$.errorDialog.open();
+      },
+    });
+  })(window);
 </script>

@@ -24,7 +24,7 @@
 
 <link rel="import" href="../my_icons.html">
 
-<script type="text/javascript" src="../../scripts/exception_handler.js"></script>
+<script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
 
 <dom-module id="main-page">
 	<template>
@@ -131,7 +131,8 @@
 						                   style$="color: [[_computeFavMenuColor(isFavFilter)]];"
 						                   on-tap="_onFavFilterTapped"></paper-icon-button>
 						<paper-tooltip for="fav" position="left" offset="0">
-							[[_computeFavToolTip(isFavFilter)]]</paper-tooltip>
+							[[_computeFavToolTip(isFavFilter)]]
+						</paper-tooltip>
 						<paper-icon-button id="select" icon="myicons:check-box"
 						                   on-tap="_onSelectAllTapped"></paper-icon-button>
 						<paper-tooltip for="select" position="left" offset="0">Select all items</paper-tooltip>
@@ -152,7 +153,8 @@
 					<h2>Delete selected items?</h2>
 					<p>This operation cannot be undone.</p>
 					<paper-checkbox class="select-checkbox" checked="{{deleteFavs}}">
-						Include favorites</paper-checkbox>
+						Include favorites
+					</paper-checkbox>
 					<div class="buttons">
 						<paper-button dialog-dismiss autofocus>CANCEL</paper-button>
 						<paper-button dialog-confirm on-click="_deleteSelectedRows">DELETE</paper-button>
@@ -183,14 +185,16 @@
 												style$="color: [[_computeFavColor(listItem.clipItem.fav)]];"
 												on-tap="_onFavTapped"></paper-icon-button>
 										<paper-item-body class="date-text center flex">
-											{{_computeDate(listItem.clipItem.date)}}</paper-item-body>
+											{{_computeDate(listItem.clipItem.date)}}
+										</paper-item-body>
 										<paper-icon-button
 												icon="myicons:content-copy"
 												on-tap="_onCopyTapped"></paper-icon-button>
 									</paper-item>
 									<paper-item class="clip-text-row">
 										<paper-item-body class="clip-text fit vertical start-justified layout">
-											[[listItem.clipItem.text]]</paper-item-body>
+											[[listItem.clipItem.text]]
+										</paper-item-body>
 									</paper-item>
 								</div>
 							</div>
@@ -205,530 +209,531 @@
 </dom-module>
 
 <script>
-'use strict';
+  'use strict';
 
-new ExceptionHandler();
+  new ExceptionHandler();
 
-Polymer({
+  Polymer({
 
-	/**
-	 * Main Page - list of {@link ClipItem} objects
-	 * @namespace MainPage
-	 */
+    /**
+     * Main Page - list of {@link ClipItem} objects
+     * @namespace MainPage
+     */
 
-	is: 'main-page',
+    is: 'main-page',
 
-	properties: {
+    properties: {
 
-		/**
-		 * Item in the main list
-		 * @typedef {Object} MainPage.ListItem
-		 * @property {boolean} checked - true if selected
-		 * @property {ClipItem} clipItem - {@link ClipItem}
-		 * @memberOf MainPage
-		 */
+      /**
+       * Item in the main list
+       * @typedef {Object} MainPage.ListItem
+       * @property {boolean} checked - true if selected
+       * @property {ClipItem} clipItem - {@link ClipItem}
+       * @memberOf MainPage
+       */
 
-		listItems: {
-			type: Array,
-			value: [],
-			notify: true,
-		},
+      listItems: {
+        type: Array,
+        value: [],
+        notify: true,
+      },
 
-		selections: {
-			type: Array,
-			value: [],
-			notify: true,
-		},
+      selections: {
+        type: Array,
+        value: [],
+        notify: true,
+      },
 
-		hasSelections: {
-			type: Boolean,
-			value: false,
-			notify: true,
-		},
+      hasSelections: {
+        type: Boolean,
+        value: false,
+        notify: true,
+      },
 
-		isFavFilter: {
-			type: Boolean,
-			value: false,
-			notify: true,
-		},
+      isFavFilter: {
+        type: Boolean,
+        value: false,
+        notify: true,
+      },
 
-		deleteFavs: {
-			type: Boolean,
-			value: false,
-			notify: true,
-		},
+      deleteFavs: {
+        type: Boolean,
+        value: false,
+        notify: true,
+      },
 
-		title: {
-			type: String,
-			value: '',
-		},
-	},
+      title: {
+        type: String,
+        value: '',
+      },
+    },
 
-	observers: [
-		'_selectionsAddedOrRemoved(selections.splices)',
-	],
+    observers: [
+      '_selectionsAddedOrRemoved(selections.splices)',
+    ],
 
-	ready: function() {
-		this._loadClipItems();
+    ready: function() {
+      this._loadClipItems();
 
-		// listen for copy and cut events on document
-		document.addEventListener('cut', this._onCopy, true);
-		document.addEventListener('copy', this._onCopy, true);
+      // listen for copy and cut events on document
+      document.addEventListener('cut', this._onCopy, true);
+      document.addEventListener('copy', this._onCopy, true);
 
-		// listen for chrome messages
-		chrome.runtime.onMessage.addListener((request) => {
-			if (request.message === app.MyCMsg.CLIP_ADDED.message) {
-				this._addListItem(request);
-			}
-		});
-	},
+      // listen for chrome messages
+      chrome.runtime.onMessage.addListener((request) => {
+        if (request.message === app.ChromeMsg.CLIP_ADDED.message) {
+          this._addListItem(request);
+        }
+      });
+    },
 
-	/**
-	 * Event: We have animated in and are now the current page
-	 */
-	onCurrentPage: function() {
-		this.updateDates();
-	},
+    /**
+     * Event: We have animated in and are now the current page
+     */
+    onCurrentPage: function() {
+      this.updateDates();
+    },
 
-	/**
-	 * Update the relative dates
-	 */
-	updateDates: function() {
-		for (let i = 0; i < this.listItems.length; i++) {
-			const date = this.listItems[i].clipItem.date;
-			this.set(`listItems.${i}.clipItem.date`, date - 1);
-			this.set(`listItems.${i}.clipItem.date`, date);
-		}
-	},
+    /**
+     * Update the relative dates
+     */
+    updateDates: function() {
+      for (let i = 0; i < this.listItems.length; i++) {
+        const date = this.listItems[i].clipItem.date;
+        this.set(`listItems.${i}.clipItem.date`, date - 1);
+        this.set(`listItems.${i}.clipItem.date`, date);
+      }
+    },
 
-	/**
-	 * Event: Select all menu icon tapped
-	 * @private
-	 */
-	_onSelectAllTapped: function() {
-		let selections = [];
-		for (let i = 0; i < this.listItems.length; i++) {
-			this.set(`listItems.${i}.checked`, true);
-			selections.push(this.listItems[i]);
-		}
-		this.set('selections', selections);
-	},
+    /**
+     * Event: Select all menu icon tapped
+     * @private
+     */
+    _onSelectAllTapped: function() {
+      let selections = [];
+      for (let i = 0; i < this.listItems.length; i++) {
+        this.set(`listItems.${i}.checked`, true);
+        selections.push(this.listItems[i]);
+      }
+      this.set('selections', selections);
+    },
 
-	/**
-	 * Event: Deselect all menu icon tapped
-	 * @private
-	 */
-	_onDeselectAllTapped: function() {
-		for (let i = 0; i < this.listItems.length; i++) {
-			this.set(`listItems.${i}.checked`, false);
-		}
-		this.set('selections', []);
-	},
+    /**
+     * Event: Deselect all menu icon tapped
+     * @private
+     */
+    _onDeselectAllTapped: function() {
+      for (let i = 0; i < this.listItems.length; i++) {
+        this.set(`listItems.${i}.checked`, false);
+      }
+      this.set('selections', []);
+    },
 
-	/**
-	 * Event: Delete menu icon tapped
-	 * @private
-	 */
-	_onDeleteSelectedTapped: function() {
-		this.set('deleteFavs', false);
-		this.$.deleteDialog.open();
-	},
+    /**
+     * Event: Delete menu icon tapped
+     * @private
+     */
+    _onDeleteSelectedTapped: function() {
+      this.set('deleteFavs', false);
+      this.$.deleteDialog.open();
+    },
 
-	/**
-	 * Event: Favorite filter menu icon tapped
-	 * @private
-	 */
-	_onFavFilterTapped: function() {
-		this.set('isFavFilter', !this.isFavFilter);
-		if (this.isFavFilter) {
-			// deselect any selected non-fav rows
-			this._deselectNonFavorites();
-		}
-		this.$.listTemplate.render();
-	},
+    /**
+     * Event: Favorite filter menu icon tapped
+     * @private
+     */
+    _onFavFilterTapped: function() {
+      this.set('isFavFilter', !this.isFavFilter);
+      if (this.isFavFilter) {
+        // deselect any selected non-fav rows
+        this._deselectNonFavorites();
+      }
+      this.$.listTemplate.render();
+    },
 
-	/**
-	 * Event: listItem was selected
-	 * @private
-	 */
-	_onListItemSelected: function() {
-		this._updateView();
-	},
+    /**
+     * Event: listItem was selected
+     * @private
+     */
+    _onListItemSelected: function() {
+      this._updateView();
+    },
 
-	/**
-	 * Event: iron-selector selectable items changed
-	 * @param {event} event - event
-	 * @private
-	 */
-	_onSelectableChanged: function(event) {
-		const deleted = !!event.detail.removedNodes.length;
-		if (deleted) {
-			const count = this.listItems.length;
-			const selector = this.$.ironSelector;
-			const idx = selector.indexOf(selector.selectedItem);
-			if (idx === -1) {
-				if (count) {
-					// select last row if none is selected
-					selector.selectIndex(count - 1);
-				} else {
-					// no items
-					this._clearClipViewer();
-				}
-			}
-		}
-	},
+    /**
+     * Event: iron-selector selectable items changed
+     * @param {event} event - event
+     * @private
+     */
+    _onSelectableChanged: function(event) {
+      const deleted = !!event.detail.removedNodes.length;
+      if (deleted) {
+        const count = this.listItems.length;
+        const selector = this.$.ironSelector;
+        const idx = selector.indexOf(selector.selectedItem);
+        if (idx === -1) {
+          if (count) {
+            // select last row if none is selected
+            selector.selectIndex(count - 1);
+          } else {
+            // no items
+            this._clearClipViewer();
+          }
+        }
+      }
+    },
 
-	/**
-	 * Event: Toggle checked state of a list row
-	 * @param {event} event - event
-	 * @private
-	 */
-	_onCheckedTapped: function(event) {
-		const listItem = event.model.listItem;
-		if (listItem.checked) {
-			this.push('selections', listItem);
-		} else {
-			const pos = this.selections.indexOf(listItem);
-			this.splice('selections', pos, 1);
-		}
-	},
+    /**
+     * Event: Toggle checked state of a list row
+     * @param {event} event - event
+     * @private
+     */
+    _onCheckedTapped: function(event) {
+      const listItem = event.model.listItem;
+      if (listItem.checked) {
+        this.push('selections', listItem);
+      } else {
+        const pos = this.selections.indexOf(listItem);
+        this.splice('selections', pos, 1);
+      }
+    },
 
-	/**
-	 * Event: Copy list row to clipboard
-	 * @param {event} event - event
-	 * @private
-	 */
-	_onCopyTapped: function(event) {
-		const listItem = event.model.listItem;
-		const clipItem = listItem.clipItem;
-		const date = Date.now();
-		const remote = false;
-		clipItem.setDate(date);
-		clipItem.setRemote(remote);
-		// persist value
-		clipItem.save().catch((err) => {
-			app.CGA.error(err.message, 'Main._onCopyTapped');
-		});
+    /**
+     * Event: Copy list row to clipboard
+     * @param {event} event - event
+     * @private
+     */
+    _onCopyTapped: function(event) {
+      const listItem = event.model.listItem;
+      const clipItem = listItem.clipItem;
+      const date = Date.now();
+      const remote = false;
+      clipItem.setDate(date);
+      clipItem.setRemote(remote);
+      // persist value
+      clipItem.save().catch((err) => {
+        Chrome.GA.error(err.message, 'Main._onCopyTapped');
+      });
 
-		const pos = this.listItems.indexOf(listItem);
-		this.set(`listItems.${pos}.clipItem.date`, date);
-		this.set(`listItems.${pos}.clipItem.remote`, remote);
+      const pos = this.listItems.indexOf(listItem);
+      this.set(`listItems.${pos}.clipItem.date`, date);
+      this.set(`listItems.${pos}.clipItem.remote`, remote);
 
-		// prevent row selection
-		event.stopPropagation();
+      // prevent row selection
+      event.stopPropagation();
 
-		// select first row and update UI
-		this._selectFirst();
+      // select first row and update UI
+      this._selectFirst();
 
-		// copy to clipboard
-		const msg = app.JSONUtils.shallowCopy(app.MyCMsg.COPY_TO_CLIPBOARD);
-		msg.item = clipItem;
-		app.CMsg.send(msg).catch(() => {});
-	},
+      // copy to clipboard
+      const msg =
+          Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
+      msg.item = clipItem;
+      Chrome.Msg.send(msg).catch(() => {});
+    },
 
-	/**
-	 * Event: Toggle favorite state of {@link MainPage.ListItem}
-	 * @param {event} event - event
-	 * @private
-	 */
-	_onFavTapped: function(event) {
-		const listItem = event.model.listItem;
-		const clipItem = listItem.clipItem;
-		const fav = !clipItem.getFav();
-		clipItem.setFav(fav);
-		clipItem.save().catch((err) => {
-			app.CGA.error(err.message, 'Main._onFavTapped');
-		});
+    /**
+     * Event: Toggle favorite state of {@link MainPage.ListItem}
+     * @param {event} event - event
+     * @private
+     */
+    _onFavTapped: function(event) {
+      const listItem = event.model.listItem;
+      const clipItem = listItem.clipItem;
+      const fav = !clipItem.getFav();
+      clipItem.setFav(fav);
+      clipItem.save().catch((err) => {
+        Chrome.GA.error(err.message, 'Main._onFavTapped');
+      });
 
-		const pos = this.listItems.indexOf(listItem);
-		this.set(`listItems.${pos}.clipItem.fav`, fav);
-	},
+      const pos = this.listItems.indexOf(listItem);
+      this.set(`listItems.${pos}.clipItem.fav`, fav);
+    },
 
-	/**
-	 * Event: Text was copied to clipboard
-	 * @private
-	 */
-	_onCopy: function() {
-		app.CMsg.send(app.MyCMsg.COPIED_TO_CLIPBOARD).catch(() => {});
-	},
+    /**
+     * Event: Text was copied to clipboard
+     * @private
+     */
+    _onCopy: function() {
+      Chrome.Msg.send(app.ChromeMsg.COPIED_TO_CLIPBOARD).catch(() => {});
+    },
 
-	/**
-	 * Observer: track if there are selected items
-	 * @private
-	 */
-	_selectionsAddedOrRemoved: function() {
-		this.set('hasSelections', !!this.selections.length);
-	},
+    /**
+     * Observer: track if there are selected items
+     * @private
+     */
+    _selectionsAddedOrRemoved: function() {
+      this.set('hasSelections', !!this.selections.length);
+    },
 
-	/**
-	 * Computed Binding
-	 * @param {boolean} isTrue - true if fav
-	 * @returns {string} Favorite icon style
-	 * @private
-	 */
-	_computeFavIcon: function(isTrue) {
-		return isTrue ? 'myicons:favorite' : 'myicons:favorite-border';
-	},
+    /**
+     * Computed Binding
+     * @param {boolean} isTrue - true if fav
+     * @returns {string} Favorite icon style
+     * @private
+     */
+    _computeFavIcon: function(isTrue) {
+      return isTrue ? 'myicons:favorite' : 'myicons:favorite-border';
+    },
 
-	/**
-	 * Computed Binding
-	 * @param {boolean} isTrue - true if fav
-	 * @returns {string} Favorite icon color
-	 * @private
-	 */
-	_computeFavColor: function(isTrue) {
-		return isTrue ? 'rgba(255, 0, 0, .8)' : 'var(--primary-text-color)';
-	},
+    /**
+     * Computed Binding
+     * @param {boolean} isTrue - true if fav
+     * @returns {string} Favorite icon color
+     * @private
+     */
+    _computeFavColor: function(isTrue) {
+      return isTrue ? 'rgba(255, 0, 0, .8)' : 'var(--primary-text-color)';
+    },
 
-	/**
-	 * Computed Binding
-	 * @param {boolean} isTrue - true if fav
-	 * @returns {string} fav filter menu icon color
-	 * @private
-	 */
-	_computeFavMenuColor: function(isTrue) {
-		return isTrue ? 'rgba(255, 0, 0, .8)' : 'var(--menu-icon-color)';
-	},
+    /**
+     * Computed Binding
+     * @param {boolean} isTrue - true if fav
+     * @returns {string} fav filter menu icon color
+     * @private
+     */
+    _computeFavMenuColor: function(isTrue) {
+      return isTrue ? 'rgba(255, 0, 0, .8)' : 'var(--menu-icon-color)';
+    },
 
-	/**
-	 * Computed Binding
-	 * @param {int} date - from epoch in millis
-	 * @returns {string} Date as relative from now
-	 * @private
-	 */
-	_computeDate: function(date) {
-		return app.Utils.getRelativeTime(date);
-	},
+    /**
+     * Computed Binding
+     * @param {int} date - from epoch in millis
+     * @returns {string} Date as relative from now
+     * @private
+     */
+    _computeDate: function(date) {
+      return app.Utils.getRelativeTime(date);
+    },
 
-	/**
-	 * Computed Binding
-	 * @param {boolean} isFilter - true if filtering by fav
-	 * @returns {string} tooltip text of what toggling would be
-	 * @private
-	 */
-	_computeFavToolTip: function(isFilter) {
-		return isFilter ? 'Show all' : 'Show favorites';
-	},
+    /**
+     * Computed Binding
+     * @param {boolean} isFilter - true if filtering by fav
+     * @returns {string} tooltip text of what toggling would be
+     * @private
+     */
+    _computeFavToolTip: function(isFilter) {
+      return isFilter ? 'Show all' : 'Show favorites';
+    },
 
-	/**
-	 * Load the {@link ClipItem} objects
-	 * @private
-	 */
-	_loadClipItems: function() {
-		this.set('listItems', []);
-		this._clearClipViewer();
-		app.ClipItem.loadAll().then((clipItems) => {
-			// populate list
-			let listItems = [];
-			for (let i = 0; i < clipItems.length; i++) {
-				let listItem = {};
-				listItem.checked = false;
-				listItem.clipItem = clipItems[i];
-				listItems.push(listItem);
-			}
-			this.set('listItems', listItems);
+    /**
+     * Load the {@link ClipItem} objects
+     * @private
+     */
+    _loadClipItems: function() {
+      this.set('listItems', []);
+      this._clearClipViewer();
+      app.ClipItem.loadAll().then((clipItems) => {
+        // populate list
+        let listItems = [];
+        for (let i = 0; i < clipItems.length; i++) {
+          let listItem = {};
+          listItem.checked = false;
+          listItem.clipItem = clipItems[i];
+          listItems.push(listItem);
+        }
+        this.set('listItems', listItems);
 
-			this.$.ironSelector.selectIndex(0);
-			this.$.clipList.scrollTop = 0;
-			return Promise.resolve();
-		}).catch((err) => {
-			app.CGA.error(err.message, 'Main._loadClipItems');
-		});
-	},
+        this.$.ironSelector.selectIndex(0);
+        this.$.clipList.scrollTop = 0;
+        return Promise.resolve();
+      }).catch((err) => {
+        Chrome.GA.error(err.message, 'Main._loadClipItems');
+      });
+    },
 
-	/**
-	 * Delete the selected list rows, optionally including the favorites
-	 * @private
-	 */
-	_deleteSelectedRows: function() {
-		if (!this.deleteFavs) {
-			// don't delete favs
-			this._deselectFavorites();
-		}
+    /**
+     * Delete the selected list rows, optionally including the favorites
+     * @private
+     */
+    _deleteSelectedRows: function() {
+      if (!this.deleteFavs) {
+        // don't delete favs
+        this._deselectFavorites();
+      }
 
-		let keys = [];
-		for (let i = 0; i < this.selections.length; i++) {
-			const listItem = this.selections[i];
-			const clipItem = listItem.clipItem;
-			const pos = this.listItems.indexOf(listItem);
-			this.splice('listItems', pos, 1);
-			keys.push(clipItem.text);
-		}
+      let keys = [];
+      for (let i = 0; i < this.selections.length; i++) {
+        const listItem = this.selections[i];
+        const clipItem = listItem.clipItem;
+        const pos = this.listItems.indexOf(listItem);
+        this.splice('listItems', pos, 1);
+        keys.push(clipItem.text);
+      }
 
-		if (keys.length) {
-			app.ClipItem.remove(keys).then(() => {
-				return app.ClipItem.isEmpty();
-			}).then((isEmpty) => {
-				this.set('selections', []);
-				if (isEmpty) {
-					this._updateView();
-				}
-				return Promise.resolve();
-			}).catch((err) => {
-				app.CGA.error(err.message, 'Main._deleteSelectedRows');
-			});
-		}
-	},
+      if (keys.length) {
+        app.ClipItem.remove(keys).then(() => {
+          return app.ClipItem.isEmpty();
+        }).then((isEmpty) => {
+          this.set('selections', []);
+          if (isEmpty) {
+            this._updateView();
+          }
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.GA.error(err.message, 'Main._deleteSelectedRows');
+        });
+      }
+    },
 
-	/**
-	 * Deselect all rows that aren't favorites
-	 * @private
-	 */
-	_deselectNonFavorites: function() {
-		this._deselect(false);
-	},
+    /**
+     * Deselect all rows that aren't favorites
+     * @private
+     */
+    _deselectNonFavorites: function() {
+      this._deselect(false);
+    },
 
-	/**
-	 * Deselect all rows that are favorites
-	 * @private
-	 */
-	_deselectFavorites: function() {
-		this._deselect(true);
-	},
+    /**
+     * Deselect all rows that are favorites
+     * @private
+     */
+    _deselectFavorites: function() {
+      this._deselect(true);
+    },
 
-	/**
-	 * Deselect rows by favorite type
-	 * @param {boolean} fav - true deselect favs, false non-favs
-	 * @private
-	 */
-	_deselect: function(fav) {
-		const len = this.selections.length;
-		for (let i = len - 1; i >= 0; i--) {
-			const listItem = this.selections[i];
-			const clipItem = listItem.clipItem;
-			if (clipItem.fav === fav) {
-				const pos = this.listItems.indexOf(listItem);
-				this.set(`listItems.${pos}.checked`, false);
-				this.splice('selections', i, 1);
-			}
-		}
-	},
+    /**
+     * Deselect rows by favorite type
+     * @param {boolean} fav - true deselect favs, false non-favs
+     * @private
+     */
+    _deselect: function(fav) {
+      const len = this.selections.length;
+      for (let i = len - 1; i >= 0; i--) {
+        const listItem = this.selections[i];
+        const clipItem = listItem.clipItem;
+        if (clipItem.fav === fav) {
+          const pos = this.listItems.indexOf(listItem);
+          this.set(`listItems.${pos}.checked`, false);
+          this.splice('selections', i, 1);
+        }
+      }
+    },
 
-	/**
-	 * Add or update {@link MainPage.ListItem}
-	 * @param {app.MyCMsg.Message} request - Chrome message request
-	 */
-	_addListItem(request) {
-		const clip = request.item;
-		const updated = request.updated;
-		if (updated) {
-			// clip text already existed, update it
-			const pos = this._getListItemPos(clip.text);
-			if (pos !== -1) {
-				const str = `listItems.${pos}.clipItem.`;
-				this.set(`${str}fav`, clip.fav);
-				this.set(`${str}date`, clip.date);
-				this.set(`${str}remote`, clip.remote);
-				this.set(`${str}device`, clip.device);
-			}
-			// shouldn't get here
-		} else {
-			// new clip, add it
-			const clipItem = new app.ClipItem(clip.text, clip.date,
-				clip.fav, clip.remote, clip.device);
-			this.push('listItems', {
-				checked: false,
-				clipItem: clipItem,
-			});
-		}
-		// select first row and update UI
-		this._selectFirst();
-	},
+    /**
+     * Add or update {@link MainPage.ListItem}
+     * @param {app.ChromeMsg.Message} request - Chrome message request
+     */
+    _addListItem(request) {
+      const clip = request.item;
+      const updated = request.updated;
+      if (updated) {
+        // clip text already existed, update it
+        const pos = this._getListItemPos(clip.text);
+        if (pos !== -1) {
+          const str = `listItems.${pos}.clipItem.`;
+          this.set(`${str}fav`, clip.fav);
+          this.set(`${str}date`, clip.date);
+          this.set(`${str}remote`, clip.remote);
+          this.set(`${str}device`, clip.device);
+        }
+        // shouldn't get here
+      } else {
+        // new clip, add it
+        const clipItem = new app.ClipItem(clip.text, clip.date,
+            clip.fav, clip.remote, clip.device);
+        this.push('listItems', {
+          checked: false,
+          clipItem: clipItem,
+        });
+      }
+      // select first row and update UI
+      this._selectFirst();
+    },
 
-	/**
-	 * Get position of {@link MainPage.ListItem} with given text
-	 * @param {string} clipText - text to find
-	 * @returns {int} position in array, -1 if not found
-	 */
-	_getListItemPos: function(clipText) {
-		let pos = -1;
-		for (let i = 0; i < this.listItems.length; i++) {
-			if (clipText === this.listItems[i].clipItem.text) {
-				pos = i;
-				break;
-			}
-		}
-		return pos;
-	},
+    /**
+     * Get position of {@link MainPage.ListItem} with given text
+     * @param {string} clipText - text to find
+     * @returns {int} position in array, -1 if not found
+     */
+    _getListItemPos: function(clipText) {
+      let pos = -1;
+      for (let i = 0; i < this.listItems.length; i++) {
+        if (clipText === this.listItems[i].clipItem.text) {
+          pos = i;
+          break;
+        }
+      }
+      return pos;
+    },
 
-	/**
-	 * Sort list by date
-	 * @param {ListItem} listItemA - row to compare
-	 * @param {ListItem} listItemB - next row to compare
-	 * @returns {int} difference in dates
-	 * @private
-	 */
-	_sortByDate: function(listItemA, listItemB) {
-		return listItemB.clipItem.date - listItemA.clipItem.date;
-	},
+    /**
+     * Sort list by date
+     * @param {ListItem} listItemA - row to compare
+     * @param {ListItem} listItemB - next row to compare
+     * @returns {int} difference in dates
+     * @private
+     */
+    _sortByDate: function(listItemA, listItemB) {
+      return listItemB.clipItem.date - listItemA.clipItem.date;
+    },
 
-	/**
-	 * Filter list by favorites only
-	 * @param {ListItem} listItem - row to check
-	 * @returns {boolean} true if row is favorite
-	 * @private
-	 */
-	_filterByFav: function(listItem) {
-		return this.isFavFilter ? listItem.clipItem.fav : true;
-	},
+    /**
+     * Filter list by favorites only
+     * @param {ListItem} listItem - row to check
+     * @returns {boolean} true if row is favorite
+     * @private
+     */
+    _filterByFav: function(listItem) {
+      return this.isFavFilter ? listItem.clipItem.fav : true;
+    },
 
-	/**
-	 * Select first item in list
-	 * @private
-	 */
-	_selectFirst: function() {
-		this.$.listTemplate.render();
-		this.$.ironSelector.selectIndex(0);
-		this.$.clipList.scrollTop = 0;
-		this._updateView();
-	},
+    /**
+     * Select first item in list
+     * @private
+     */
+    _selectFirst: function() {
+      this.$.listTemplate.render();
+      this.$.ironSelector.selectIndex(0);
+      this.$.clipList.scrollTop = 0;
+      this._updateView();
+    },
 
-	/**
-	 * Update the UI state
-	 * @private
-	 */
-	_updateView: function() {
-		this._clearClipViewer();
-		this.updateDates();
-		const el = this.$.ironSelector.selectedItem;
-		const listItem = this.$.listTemplate.itemForElement(el);
-		if (listItem) {
-			const clipItem = listItem.clipItem;
-			if (clipItem.remote) {
-				this.set('title', `Remote clip - ${clipItem.device}`);
-			} else {
-				this.set('title', 'Local clip');
-			}
-			this._updateClipViewer(clipItem);
-		} else {
-			this.set('title', '');
-		}
-	},
+    /**
+     * Update the UI state
+     * @private
+     */
+    _updateView: function() {
+      this._clearClipViewer();
+      this.updateDates();
+      const el = this.$.ironSelector.selectedItem;
+      const listItem = this.$.listTemplate.itemForElement(el);
+      if (listItem) {
+        const clipItem = listItem.clipItem;
+        if (clipItem.remote) {
+          this.set('title', `Remote clip - ${clipItem.device}`);
+        } else {
+          this.set('title', 'Local clip');
+        }
+        this._updateClipViewer(clipItem);
+      } else {
+        this.set('title', '');
+      }
+    },
 
-	/**
-	 * Delete all elements created in the ClipViewer
-	 * @private
-	 */
-	_clearClipViewer: function() {
-		const el = this.$.clipViewer;
-		while (el.firstChild) {
-			// delete all children previous linkify created
-			el.removeChild(el.firstChild);
-		}
-	},
+    /**
+     * Delete all elements created in the ClipViewer
+     * @private
+     */
+    _clearClipViewer: function() {
+      const el = this.$.clipViewer;
+      while (el.firstChild) {
+        // delete all children previous linkify created
+        el.removeChild(el.firstChild);
+      }
+    },
 
-	/**
-	 * Set the ClipViewer contents
-	 * @param {ClipItem} clipItem - use this text
-	 * @private
-	 */
-	_updateClipViewer: function(clipItem) {
-		this._clearClipViewer();
-		const el = this.$.clipViewer;
-		el.textContent = clipItem.text;
-		// linkify it - creates element children
-		linkifyElement(el);
-	},
+    /**
+     * Set the ClipViewer contents
+     * @param {ClipItem} clipItem - use this text
+     * @private
+     */
+    _updateClipViewer: function(clipItem) {
+      this._clearClipViewer();
+      const el = this.$.clipViewer;
+      el.textContent = clipItem.text;
+      // linkify it - creates element children
+      linkifyElement(el);
+    },
 
-});
+  });
 </script>

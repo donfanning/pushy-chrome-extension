@@ -20,6 +20,7 @@ module.exports = {
 	'globals': {
 		'require': true,
 		'app': true,
+		'Chrome': true,
 		'Alarm': true,
 		'Background': true,
 		'CB': true,

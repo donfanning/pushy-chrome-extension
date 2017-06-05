@@ -24,7 +24,7 @@
 
 <link rel="import" href="../my_icons.html">
 
-<script type="text/javascript" src="../../scripts/exception_handler.js"></script>
+<script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
 
 <dom-module id="signin-page">
 	<template>
@@ -60,7 +60,7 @@
 				outline: none;
 				font-size: 14px;
 				font-weight: 400;
-				font-family: 'RobotoDraft','Roboto',arial,sans-serif;
+				font-family: 'RobotoDraft', 'Roboto', arial, sans-serif;
 				white-space: nowrap;
 				cursor: pointer;
 				background: #fff;
@@ -102,15 +102,16 @@
 					<div class="buttons">
 						<paper-button dialog-dismiss autofocus>CLOSE</paper-button>
 						<paper-button dialog-confirm hidden$="[[!confirmButton]]"
-						              on-click="_onDialogButtonClicked">OK</paper-button>
+						              on-click="_onDialogButtonClicked">OK
+						</paper-button>
 					</div>
 				</paper-dialog>
 
 				<div class="contentContainer horizontal layout center">
 					<paper-item id="description"
-					     style$="display: [[_computeDescDisplay(waiting)]];">
+					            style$="display: [[_computeDescDisplay(waiting)]];">
 						You must be signed in to the Browser with the account you
-						wish to use to share with your other devices.  It is only used to ensure
+						wish to use to share with your other devices. It is only used to ensure
 						that all messages goes to a single account. You also need to "Allow Notifications"
 						so the extension can send and receive messages.
 					</paper-item>
@@ -124,7 +125,7 @@
 					</div>
 				</div>
 				<div class="buttonContainer vertical layout center">
-					<paper-item id="googleAccountButton"  tabindex="0"
+					<paper-item id="googleAccountButton" tabindex="0"
 					            on-click="_onAccountButtonClicked" disabled$="[[signInDisabled]]">
 						<paper-ripple center></paper-ripple>
 						<iron-icon icon="myicons:google" item-icon></iron-icon>
@@ -139,194 +140,194 @@
 </dom-module>
 
 <script>
-(function(window) {
-	'use strict';
+  (function(window) {
+    'use strict';
 
-	new ExceptionHandler();
+    new ExceptionHandler();
 
-	const ERROR_SIGN_IN = 'Failed to sign in.';
-	const ERROR_SIGN_OUT = 'Failed to sign out.';
-	const ERROR_PERMISSION =
-		'Notification permission is required to sign-in.';
-	let ERROR_BLOCKED_MESSAGE =
-		`<p>You either blocked the request or the Chrome settings block
+    const ERROR_SIGN_IN = 'Failed to sign in.';
+    const ERROR_SIGN_OUT = 'Failed to sign out.';
+    const ERROR_PERMISSION =
+        'Notification permission is required to sign-in.';
+    let ERROR_BLOCKED_MESSAGE =
+        `<p>You either blocked the request or the Chrome settings block
 		all notifications. If you want to sign-in, go to
 		"Chrome settings -> Show advanced settings...". Click on
 		"content settings...". In the notification area
 		make sure "Ask when a site wants to show notifications"
 		is selected. In the "Manage Exceptions" area allow this if
 		it is blocked:<br />&nbsp&nbsp&nbsp&nbsp`;
-	const ERROR_DEFAULT_MESSAGE =
-		'Display notification pop-up again?';
-	const ERROR_UNKNOWN_MESSAGE =
-		'An error occurred. Please try again later.<br />';
+    const ERROR_DEFAULT_MESSAGE =
+        'Display notification pop-up again?';
+    const ERROR_UNKNOWN_MESSAGE =
+        'An error occurred. Please try again later.<br />';
 
-	window.app = window.app || {};
-	app.SignInPageFactory = Polymer({
-		is: 'signin-page',
+    window.app = window.app || {};
+    app.SignInPageFactory = Polymer({
+      is: 'signin-page',
 
-		properties: {
+      properties: {
 
-			signedIn: {
-				type: Boolean,
-				value: false,
-				notify: true,
-			},
+        signedIn: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
 
-			signInDisabled: {
-				type: Boolean,
-				value: true,
-				notify: true,
-			},
+        signInDisabled: {
+          type: Boolean,
+          value: true,
+          notify: true,
+        },
 
-			waiting: {
-				type: Boolean,
-				value: false,
-				notify: true,
-			},
+        waiting: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
 
-			confirmButton: {
-				type: Boolean,
-				value: false,
-			},
+        confirmButton: {
+          type: Boolean,
+          value: false,
+        },
 
-		},
+      },
 
-		ready: function() {
-			ERROR_BLOCKED_MESSAGE +=
-				`${app.CUtils.getExtensionName()}</p >`;
-		},
+      ready: function() {
+        ERROR_BLOCKED_MESSAGE +=
+            `${Chrome.Utils.getExtensionName()}</p >`;
+      },
 
-		onCurrentPage: function() {
-			this._checkChromeSignIn();
-		},
+      onCurrentPage: function() {
+        this._checkChromeSignIn();
+      },
 
-		/**
-		 * Determine if the user is signed into the Browser
-		 * @private
-		 */
-		_checkChromeSignIn: function() {
-			const chromep = new ChromePromise();
-			chromep.identity.getProfileUserInfo().then((userInfo) => {
-				if (!app.MyData.isSignedIn() &&
-					app.Utils.isWhiteSpace(userInfo.id)) {
-					this.set('signInDisabled', true);
-				} else {
-					this.set('signInDisabled', false);
-					this._checkPermissions();
-				}
-				return Promise.resolve();
-			}).catch((err) => {
-				app.CGA.error(err.message, 'SignInPage._checkChromeSignIn');
-			});
-		},
+      /**
+       * Determine if the user is signed into the Browser
+       * @private
+       */
+      _checkChromeSignIn: function() {
+        const chromep = new ChromePromise();
+        chromep.identity.getProfileUserInfo().then((userInfo) => {
+          if (!app.MyData.isSignedIn() &&
+              app.Utils.isWhiteSpace(userInfo.id)) {
+            this.set('signInDisabled', true);
+          } else {
+            this.set('signInDisabled', false);
+            this._checkPermissions();
+          }
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.GA.error(err.message, 'SignInPage._checkChromeSignIn');
+        });
+      },
 
-		/**
-		 * Display popup to Allow Notifications if necessary
-		 * @private
-		 */
-		_checkPermissions: function() {
-			// Note: Don't rely on Notification.permission
-			// if extension requests notifications permission
-			this.set('signInDisabled', true);
-			Notification.requestPermission().then((permission) => {
-				if (permission === 'denied') {
-					// user denied or Chrome setting blocks all
-					this._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE,
-						false);
-				} else if (permission === 'default') {
-					// user closed notification popup
-					this._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE,
-						true);
-				} else {
-					// granted
-					this.set('signInDisabled', false);
-				}
-				return Promise.resolve();
-			}).catch((err) => {
-				// something went wrong
-				app.CGA.error(err.message, 'SignInPage._checkPermissions');
-				this._showDialog(ERROR_PERMISSION,
-					ERROR_UNKNOWN_MESSAGE + err.message, false);
-			});
-		},
+      /**
+       * Display popup to Allow Notifications if necessary
+       * @private
+       */
+      _checkPermissions: function() {
+        // Note: Don't rely on Notification.permission
+        // if extension requests notifications permission
+        this.set('signInDisabled', true);
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'denied') {
+            // user denied or Chrome setting blocks all
+            this._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE,
+                false);
+          } else if (permission === 'default') {
+            // user closed notification popup
+            this._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE,
+                true);
+          } else {
+            // granted
+            this.set('signInDisabled', false);
+          }
+          return Promise.resolve();
+        }).catch((err) => {
+          // something went wrong
+          Chrome.GA.error(err.message, 'SignInPage._checkPermissions');
+          this._showDialog(ERROR_PERMISSION,
+              ERROR_UNKNOWN_MESSAGE + err.message, false);
+        });
+      },
 
-		/**
-		 * Attempt to sign in with current Browser account
-		 * @private
-		 */
-		_signIn: function() {
-			app.CMsg.send(app.MyCMsg.SIGN_IN).then((response) => {
-				if (response.message === 'error') {
-					app.CGA.error(response.error, 'SignInPage._signIn');
-					this._showDialog(ERROR_SIGN_IN, response.error, false);
-				}
-				this.set('waiting', false);
-				return Promise.resolve();
-			}).catch(() => {});
-		},
+      /**
+       * Attempt to sign in with current Browser account
+       * @private
+       */
+      _signIn: function() {
+        Chrome.Msg.send(app.ChromeMsg.SIGN_IN).then((response) => {
+          if (response.message === 'error') {
+            Chrome.GA.error(response.error, 'SignInPage._signIn');
+            this._showDialog(ERROR_SIGN_IN, response.error, false);
+          }
+          this.set('waiting', false);
+          return Promise.resolve();
+        }).catch(() => {});
+      },
 
-		/**
-		 * Attempt to sign out of current Browser account
-		 * @private
-		 */
-		_signOut: function() {
-			app.CMsg.send(app.MyCMsg.SIGN_OUT).then((response) => {
-				if (response.message === 'error') {
-					app.CGA.error(response.error, 'SignInPage._signOut');
-					this._showDialog(ERROR_SIGN_OUT, response.error, false);
-				}
-				this.set('waiting', false);
-				return Promise.resolve();
-			}).catch(() => {});
-		},
+      /**
+       * Attempt to sign out of current Browser account
+       * @private
+       */
+      _signOut: function() {
+        Chrome.Msg.send(app.ChromeMsg.SIGN_OUT).then((response) => {
+          if (response.message === 'error') {
+            Chrome.GA.error(response.error, 'SignInPage._signOut');
+            this._showDialog(ERROR_SIGN_OUT, response.error, false);
+          }
+          this.set('waiting', false);
+          return Promise.resolve();
+        }).catch(() => {});
+      },
 
-		_showDialog: function(title, text, confirmButton) {
-			this.$.dialogTitle.innerHTML = title;
-			this.$.dialogText.innerHTML = text;
-			this.set('confirmButton', confirmButton);
-			this.$.errorDialog.open();
-		},
+      _showDialog: function(title, text, confirmButton) {
+        this.$.dialogTitle.innerHTML = title;
+        this.$.dialogText.innerHTML = text;
+        this.set('confirmButton', confirmButton);
+        this.$.errorDialog.open();
+      },
 
-		_onAccountButtonClicked: function() {
-			app.CGA.event(app.GA.EVENT.BUTTON,
-				`SignInPage.accountButton: ${!this.signedIn}`);
-			this.set('waiting', true);
-			this.signedIn ? this._signOut() : this._signIn();
-		},
+      _onAccountButtonClicked: function() {
+        Chrome.GA.event(app.GA.EVENT.BUTTON,
+            `SignInPage.accountButton: ${!this.signedIn}`);
+        this.set('waiting', true);
+        this.signedIn ? this._signOut() : this._signIn();
+      },
 
-		_onDialogButtonClicked: function() {
-			this._checkPermissions();
-		},
+      _onDialogButtonClicked: function() {
+        this._checkPermissions();
+      },
 
-		_computeEmailLabel: function(signedIn) {
-			return signedIn ? `Signed in as: ${app.Storage.get('email')}` :
-				'Account Sign In';
-		},
+      _computeEmailLabel: function(signedIn) {
+        return signedIn ? `Signed in as: ${Chrome.Storage.get('email')}` :
+            'Account Sign In';
+      },
 
-		_computeButtonLabel: function(signedIn) {
-			return signedIn ? 'Sign out' : 'Sign in';
-		},
+      _computeButtonLabel: function(signedIn) {
+        return signedIn ? 'Sign out' : 'Sign in';
+      },
 
-		_computeWaiterLabel: function() {
-			return this.signedIn ? 'Signing Out...' : 'Signing In...';
-		},
+      _computeWaiterLabel: function() {
+        return this.signedIn ? 'Signing Out...' : 'Signing In...';
+      },
 
-		_computeDescDisplay: function(waiting) {
-			return waiting ? 'none' : 'block';
-		},
+      _computeDescDisplay: function(waiting) {
+        return waiting ? 'none' : 'block';
+      },
 
-		_computeWaiterDisplay: function(waiting) {
-			return waiting ? 'block' : 'none';
-		},
+      _computeWaiterDisplay: function(waiting) {
+        return waiting ? 'block' : 'none';
+      },
 
-		/**
-		 * initialize value if it is not in localStorage
-		 */
-		_initSignedIn: function() {
-			this.set('signedIn', false);
-		},
-	});
+      /**
+       * initialize value if it is not in localStorage
+       */
+      _initSignedIn: function() {
+        this.set('signedIn', false);
+      },
+    });
 
-})(window);
+  })(window);
 </script>

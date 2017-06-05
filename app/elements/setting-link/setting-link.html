@@ -14,7 +14,7 @@
 
 <link rel="import" href="../my_icons.html">
 
-<script type="text/javascript" src="../../scripts/exception_handler.js"></script>
+<script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
 
 <dom-module id="setting-link">
 	<style include="iron-flex iron-flex-alignment"></style>
@@ -72,57 +72,57 @@
 </dom-module>
 
 <script>
-	'use strict';
+  'use strict';
 
-	new ExceptionHandler();
+  new ExceptionHandler();
 
-	Polymer({
-		is: 'setting-link',
+  Polymer({
+    is: 'setting-link',
 
-		properties: {
-			name: {
-				type: String,
-				value: 'unknown',
-			},
+    properties: {
+      name: {
+        type: String,
+        value: 'unknown',
+      },
 
-			label: {
-				type: String,
-				value: '',
-			},
+      label: {
+        type: String,
+        value: '',
+      },
 
-			sectionTitle: {
-				type: String,
-				value: '',
-			},
+      sectionTitle: {
+        type: String,
+        value: '',
+      },
 
-			icon: {
-				type: String,
-				value: '',
-			},
+      icon: {
+        type: String,
+        value: '',
+      },
 
-			url: {
-				type: String,
-				value: '',
-			},
+      url: {
+        type: String,
+        value: '',
+      },
 
-			disabled: {
-				type: Boolean,
-				value: false,
-			},
+      disabled: {
+        type: Boolean,
+        value: false,
+      },
 
-			noseparator: {
-				type: Boolean,
-				value: false,
-			},
-		},
+      noseparator: {
+        type: Boolean,
+        value: false,
+      },
+    },
 
-		/**
-		 * Event: Show url on tap of item
-		 * @private
-		 */
-		_onLinkTapped: function() {
-			app.CGA.event(app.GA.EVENT.LINK, this.name);
-			chrome.tabs.create({url: this.url});
-		},
-	});
+    /**
+     * Event: Show url on tap of item
+     * @private
+     */
+    _onLinkTapped: function() {
+      Chrome.GA.event(app.GA.EVENT.LINK, this.name);
+      chrome.tabs.create({url: this.url});
+    },
+  });
 </script>

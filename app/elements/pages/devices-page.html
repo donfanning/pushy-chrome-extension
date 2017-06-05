@@ -17,7 +17,7 @@
 
 <link rel="import" href="../my_icons.html">
 
-<script type="text/javascript" src="../../scripts/exception_handler.js"></script>
+<script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
 
 <dom-module id="devices-page">
 	<template>
@@ -91,84 +91,86 @@
 </dom-module>
 
 <script>
-(function(window) {
-	'use strict';
+  (function(window) {
+    'use strict';
 
-	new ExceptionHandler();
+    new ExceptionHandler();
 
-	window.app = window.app || {};
-	app.DevicesPageFactory = Polymer({
-		is: 'devices-page',
+    window.app = window.app || {};
+    app.DevicesPageFactory = Polymer({
+      is: 'devices-page',
 
-		properties: {
+      properties: {
 
-			/**
-			 * The Array of {@link Device} objects
-			 */
-			devices: {
-				type: Array,
-				value: [],
-				notify: true,
-			},
-		},
+        /**
+         * The Array of {@link Device} objects
+         */
+        devices: {
+          type: Array,
+          value: [],
+          notify: true,
+        },
+      },
 
-		ready: function() {
-			// listen for chrome messages
-			chrome.runtime.onMessage.addListener((request) => {
-				if (request.message === app.MyCMsg.DEVICES_CHANGED.message) {
-					this._loadDevices();
-				}
-			});
-			this._loadDevices();
-		},
+      ready: function() {
+        // listen for chrome messages
+        chrome.runtime.onMessage.addListener((request) => {
+          if (request.message ===
+              app.ChromeMsg.DEVICES_CHANGED.message) {
+            this._loadDevices();
+          }
+        });
+        this._loadDevices();
+      },
 
-		onCurrentPage: function() {
-			this._ping();
-			this._loadDevices();
-		},
+      onCurrentPage: function() {
+        this._ping();
+        this._loadDevices();
+      },
 
-		// Load the Devices
-		_loadDevices: function() {
-			// clear list
-			this.splice('devices', 0, this.devices.length);
+      // Load the Devices
+      _loadDevices: function() {
+        // clear list
+        this.splice('devices', 0, this.devices.length);
 
-			// populate list
-			const devices = app.Storage.get('devices');
-			if (devices) {
-				for (let key in devices) {
-					if (devices.hasOwnProperty(key)) {
-						const v = devices[key];
-						const device = new app.Device(v.model, v.sn, v.os,
-							v.nickname, v.lastSeen);
-						this.push('devices', device);
-					}
-				}
-			}
-		},
+        // populate list
+        const devices = Chrome.Storage.get('devices');
+        if (devices) {
+          for (let key in devices) {
+            if (devices.hasOwnProperty(key)) {
+              const v = devices[key];
+              const device = new app.Device(v.model, v.sn, v.os,
+                  v.nickname, v.lastSeen);
+              this.push('devices', device);
+            }
+          }
+        }
+      },
 
-		_sortByDate: function(a, b) {
-			return b.lastSeen - a.lastSeen;
-		},
+      _sortByDate: function(a, b) {
+        return b.lastSeen - a.lastSeen;
+      },
 
-		_onDeleteTapped: function(event) {
-			const device = event.model.device;
-			const msg = app.JSONUtils.shallowCopy(app.MyCMsg.REMOVE_DEVICE);
-			msg.item = device.getUniqueName();
-			app.CMsg.send(msg).catch(() => {});
-		},
+      _onDeleteTapped: function(event) {
+        const device = event.model.device;
+        const msg =
+            Chrome.JSONUtils.shallowCopy(app.ChromeMsg.REMOVE_DEVICE);
+        msg.item = device.getUniqueName();
+        Chrome.Msg.send(msg).catch(() => {});
+      },
 
-		_onFabTapped: function() {
-			this._ping();
-		},
+      _onFabTapped: function() {
+        this._ping();
+      },
 
-		_computeDate: function(date) {
-			return app.Utils.getRelativeTime(date);
-		},
+      _computeDate: function(date) {
+        return app.Utils.getRelativeTime(date);
+      },
 
-		_ping: function() {
-			app.CMsg.send(app.MyCMsg.PING).catch(() => {});
-		},
+      _ping: function() {
+        Chrome.Msg.send(app.ChromeMsg.PING).catch(() => {});
+      },
 
-	});
-})(window);
+    });
+  })(window);
 </script>

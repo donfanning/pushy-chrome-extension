@@ -14,7 +14,7 @@
 <link rel="import" href="../../bower_components/paper-menu/paper-menu.html">
 <link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 
-<script type="text/javascript" src="../../scripts/exception_handler.js"></script>
+<script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
 
 <dom-module id="setting-dropdown">
 	<template>
@@ -38,7 +38,7 @@
 				padding-bottom: 10px;
 			}
 
-			:host paper-dropdown-menu {
+			:host #paper-dropdown-menu {
 				width: 175px;
 
 				--paper-input-container-input: {
@@ -68,64 +68,64 @@
 </dom-module>
 
 <script>
-	'use strict';
+  'use strict';
 
-	new ExceptionHandler();
+  new ExceptionHandler();
 
-	Polymer({
-		is: 'setting-dropdown',
+  Polymer({
+    is: 'setting-dropdown',
 
-		properties: {
-			name: {
-				type: String,
-				value: 'store',
-			},
+    properties: {
+      name: {
+        type: String,
+        value: 'store',
+      },
 
-			label: {
-				type: String,
-				value: '',
-			},
+      label: {
+        type: String,
+        value: '',
+      },
 
-			items: {
-				type: Array,
-				value: function() {
-					return [];
-				},
-			},
+      items: {
+        type: Array,
+        value: function() {
+          return [];
+        },
+      },
 
-			sectionTitle: {
-				type: String,
-				value: '',
-			},
+      sectionTitle: {
+        type: String,
+        value: '',
+      },
 
-			disabled: {
-				type: Boolean,
-				value: false,
-			},
+      disabled: {
+        type: Boolean,
+        value: false,
+      },
 
-			noseparator: {
-				type: Boolean,
-				value: false,
-			},
-		},
+      noseparator: {
+        type: Boolean,
+        value: false,
+      },
+    },
 
-		/**
-		 * Event: menu item tapped
-		 * @param {Event} ev - tap event
-		 */
-		_onItemSelected: function(ev) {
-			const model = this.$.t.modelForElement(ev.target);
-			if (model) {
-				app.CGA.event(app.GA.EVENT.MENU, `${this.name}: ${model.index}`);
-			}
-		},
+    /**
+     * Event: menu item tapped
+     * @param {Event} ev - tap event
+     */
+    _onItemSelected: function(ev) {
+      const model = this.$.t.modelForElement(ev.target);
+      if (model) {
+        Chrome.GA.event(app.GA.EVENT.MENU, `${this.name}: ${model.index}`);
+      }
+    },
 
-		/**
-		 * Initialize value if it is not in localstorage
-		 * @private
-		 */
-		_init: function() {
-			this.set('value', '0');
-		},
-	});
+    /**
+     * Initialize value if it is not in localstorage
+     * @private
+     */
+    _init: function() {
+      this.set('value', '0');
+    },
+  });
 </script>
