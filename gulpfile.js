@@ -25,6 +25,7 @@ const path = {
 	lib: `${base.src}lib/`,
 	locales: `${base.src}_locales/`,
 	bower: `${base.src}bower_components/`,
+	bowerToDoc: `${base.src}bower_components/chrome-extension-utils`,
 };
 const files = {
 	manifest: `${base.src}manifest.json`,
@@ -41,6 +42,7 @@ const files = {
 		`!${path.bower}**/test/*`,
 		`!${path.bower}**/demo/*`,
 	],
+  bowerToDoc: `${path.bowerToDoc}**/*.js`,
 };
 
 // command options
@@ -142,7 +144,8 @@ gulp.task('prodTest', function(callback) {
 gulp.task('docs', function(cb) {
 	const config = require('./jsdoc.json');
 	const README = '../Pushy-Clipboard.github.io/README.md';
-	gulp.src([README, files.scripts, files.elements], {read: false})
+	gulp.src([README, files.scripts, files.bowerToDoc, files.elements],
+			{read: false})
 		.pipe(plugins.jsdoc3(config, cb));
 });
 
