@@ -37,6 +37,10 @@ app.GA = (function() {
    * @property {app.CGA.Event} TOGGLE - setting-toggle
    * @property {app.CGA.Event} LINK - setting-link
    * @property {app.CGA.Event} BUTTON - button click
+   * @property {app.CGA.Event} SENT - message sent
+   * @property {app.CGA.Event} RECEIVED - message received
+   * @property {app.CGA.Event} REGISTERED - {@link Device} registered
+   * @property {app.CGA.Event} UNREGISTERED - {@link Device} unregistered
    * @const
    * @memberOf app.GA
    */
