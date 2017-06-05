@@ -164,7 +164,7 @@ window.app = window.app || {};
 	 */
 	t.addEventListener('dom-change', () => {
 		// track usage
-		app.GA.page('/main.html');
+		app.CGA.page('/main.html');
 		// disable devices-page if not signed in
 		const idx = _getPageIdx('page-devices');
 		t.pages[idx].disabled = !app.MyData.isSignedIn();
@@ -187,7 +187,7 @@ window.app = window.app || {};
 
 		const idx = _getPageIdx(event.currentTarget.id);
 
-		app.GA.event(app.GA.EVENT.MENU, t.pages[idx].route);
+		app.CGA.event(app.GA.EVENT.MENU, t.pages[idx].route);
 
 		if (!t.pages[idx].obj) {
 			// some pages are just pages
@@ -241,7 +241,7 @@ window.app = window.app || {};
 			}
 			return Promise.resolve();
 		}).catch((err) => {
-			app.GA.error(err.message, 'Main.onAcceptPermissionsClicked');
+			app.CGA.error(err.message, 'Main.onAcceptPermissionsClicked');
 		});
 	};
 
@@ -251,7 +251,7 @@ window.app = window.app || {};
 	 */
 	t.onDenyPermissionsClicked = function() {
 		app.Permissions.remove().catch((err) => {
-			app.GA.error(err.message, 'Main.onDenyPermissionsClicked');
+			app.CGA.error(err.message, 'Main.onDenyPermissionsClicked');
 		});
 	};
 
@@ -288,7 +288,7 @@ window.app = window.app || {};
 				chrome.tabs.update(t.id, {'highlighted': true});
 				return null;
 			}).catch((err) => {
-				app.GA.error(err.message, 'chromep.tabs.getCurrent');
+				app.CGA.error(err.message, 'chromep.tabs.getCurrent');
 			});
 			response(JSON.stringify({message: 'OK'}));
 		} else if (request.message === app.MyCMsg.MSG_FAILED.message) {

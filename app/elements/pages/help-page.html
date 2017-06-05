@@ -106,8 +106,8 @@
         */
        _computeEmailBody: function() {
 			const text =
-				`Extension version: ${app.Utils.getVersion()}
-				Chrome version: ${app.Utils.getFullChromeVersion()}
+				`Extension version: ${app.CUtils.getVersion()}
+				Chrome version: ${app.CUtils.getFullChromeVersion()}
 				OS: ${app.Storage.get('os')}\n\n\n`;
 			return encodeURIComponent(text);
        },
@@ -118,7 +118,7 @@
         * @private
         */
        _computeVersion: function() {
-			const text = app.Utils.getVersion();
+			const text = app.CUtils.getVersion();
 			return encodeURIComponent(text);
        },
 

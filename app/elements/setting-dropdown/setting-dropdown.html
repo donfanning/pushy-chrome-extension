@@ -116,7 +116,7 @@
 		_onItemSelected: function(ev) {
 			const model = this.$.t.modelForElement(ev.target);
 			if (model) {
-				app.GA.event(app.GA.EVENT.MENU, `${this.name}: ${model.index}`);
+				app.CGA.event(app.GA.EVENT.MENU, `${this.name}: ${model.index}`);
 			}
 		},
 

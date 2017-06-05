@@ -37,7 +37,7 @@ app.User = (function() {
 
 		}
 		app.User.setInfo().catch((err) => {
-			app.GA.error(err.message, 'User._onSignInChanged');
+			app.CGA.error(err.message, 'User._onSignInChanged');
 		});
 	}
 
@@ -63,11 +63,11 @@ app.User = (function() {
 				response({message: 'ok'});
 				return Promise.resolve();
 			}).catch((err) => {
-				app.GA.error(err.message, 'User._onChromeMessage');
+				app.CGA.error(err.message, 'User._onChromeMessage');
 				app.User.removeAccess().then(() => {
 					return Promise.resolve();
 				}).catch((err) => {
-					app.GA.error(err.message, 'User._onChromeMessage');
+					app.CGA.error(err.message, 'User._onChromeMessage');
 					_setSignIn(false);
 					app.Storage.set('registered', false);
 				});
@@ -80,7 +80,7 @@ app.User = (function() {
 				response({message: 'ok'});
 				return Promise.resolve();
 			}).catch((err) => {
-				app.GA.error(err.message, 'User._onChromeMessage');
+				app.CGA.error(err.message, 'User._onChromeMessage');
 				response({message: 'error', error: err.toString()});
 			});
 		}

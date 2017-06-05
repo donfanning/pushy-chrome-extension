@@ -47,7 +47,7 @@
 			return;
 		}
 
-		app.GA.event(app.GA.EVENT.RECEIVED);
+		app.CGA.event(app.GA.EVENT.RECEIVED);
 
 		try {
 			data.m = decodeURIComponent(data.m);
@@ -63,7 +63,7 @@
 			// persist
 			app.ClipItem.add(data.m, Date.now(), fav, true, device.getName())
 				.catch((err) => {
-					app.GA.error(err.message, 'ReceiveMsg._process');
+					app.CGA.error(err.message, 'ReceiveMsg._process');
 				});
 			// save to clipboard
 			app.CB.copyToClipboard(data.m);

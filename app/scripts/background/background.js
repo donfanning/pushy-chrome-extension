@@ -54,13 +54,13 @@ for this device.`;
 	function _onInstalled(details) {
 		if (details.reason === 'install') {
 			// extension installed
-			app.GA.event(app.GA.EVENT.INSTALLED);
+			app.CGA.event(app.GA.EVENT.INSTALLED);
 			// save OS
-			app.Utils.getPlatformOS().then((os) => {
+			app.CUtils.getPlatformOS().then((os) => {
 				app.Storage.set('os', os);
 				return null;
 			}).catch((err) => {
-				app.GA.error(err.message, 'Background._onInstalled');
+				app.CGA.error(err.message, 'Background._onInstalled');
 			});
 			_initializeData();
 			app.Notify.showMainTab();
@@ -69,7 +69,7 @@ for this device.`;
 			_initializeFirebase().then(() => {
 				return app.SW.update();
 			}).catch((err) => {
-				app.GA.error(err.message, 'Background._onInstalled');
+				app.CGA.error(err.message, 'Background._onInstalled');
 			});
 		}
 		app.Utils.setBadgeText();
@@ -85,11 +85,11 @@ for this device.`;
 	 * @memberOf app.Background
 	 */
 	function _onStartup() {
-		app.GA.page('/background.html');
+		app.CGA.page('/background.html');
 		app.Alarm.updateAlarms();
 		app.Alarm.deleteOldClipItems();
 		_initializeFirebase().catch((err) => {
-			app.GA.error(err.message, 'Background._onStartup');
+			app.CGA.error(err.message, 'Background._onStartup');
 		});
 		app.Utils.setBadgeText();
 	}
@@ -115,7 +115,7 @@ for this device.`;
 				app.Gae.sendMessageFailed(err);
 			});
 		}).catch((err) => {
-			app.GA.error(err.message, 'Background._onIconClicked');
+			app.CGA.error(err.message, 'Background._onIconClicked');
 		});
 	}
 
@@ -156,11 +156,11 @@ for this device.`;
 			new app.ClipItem(INTRO_TEXT, Date.now(), true,
 				false, app.Device.myName());
 		introClip.save().catch((err) => {
-			app.GA.error(err.message, 'Background._initializeData');
+			app.CGA.error(err.message, 'Background._initializeData');
 		});
 
 		app.User.setInfo().catch((err) => {
-			app.GA.error(err.message, 'Background._initializeData');
+			app.CGA.error(err.message, 'Background._initializeData');
 		});
 	}
 
@@ -198,7 +198,7 @@ for this device.`;
 	function _initializeFirebase() {
 		if (app.MyData.isSignedIn()) {
 			return app.SW.initialize().catch((err) => {
-				app.GA.error(err.message, 'Background._initializeFirebase');
+				app.CGA.error(err.message, 'Background._initializeFirebase');
 			});
 		} else {
 			return Promise.resolve();

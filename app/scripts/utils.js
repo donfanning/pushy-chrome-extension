@@ -36,82 +36,6 @@ app.Utils = (function() {
 		 */
 		MILLIS_IN_DAY: MILLIS_IN_DAY,
 
-		/** Get the extension's name
-		 * @returns {string} name of extension
-		 * @memberOf app.Utils
-		 */
-		getExtensionName: function() {
-			return `chrome-extension://${chrome.runtime.id}`;
-		},
-
-		/**
-		 * Get the Extension version
-		 * @returns {string} Extension version
-		 * @memberOf app.Utils
-		 */
-		getVersion: function() {
-			const manifest = chrome.runtime.getManifest();
-			return manifest.version;
-		},
-
-		/**
-		 * Get the major Chrome version
-		 * @see https://goo.gl/2ITMNO
-		 * @returns {int} Chrome major version
-		 * @memberOf app.Utils
-		 */
-		getChromeVersion: function() {
-			const raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
-			return raw ? parseInt(raw[2], 10) : false;
-		},
-
-		/**
-		 * Get the full Chrome version
-		 * @see https://goo.gl/2ITMNO
-		 * @returns {string} Chrome version
-		 * @memberOf app.Utils
-		 */
-		getFullChromeVersion: function() {
-			const raw = navigator.userAgent;
-			return raw ? raw : 'Unknown';
-		},
-
-		/**
-		 * Get the OS as a human readable string
-		 * @returns {Promise.<string>} OS name
-		 * @memberOf app.Utils
-		 */
-		getPlatformOS: function() {
-			const chromep = new ChromePromise();
-			return chromep.runtime.getPlatformInfo().then((info) => {
-				let output = 'Unknown';
-				const os = info.os;
-				switch (os) {
-					case 'win':
-						output = 'MS Windows';
-						break;
-					case 'mac':
-						output = 'Mac';
-						break;
-					case 'android':
-						output = 'Android';
-						break;
-					case 'cros':
-						output = 'Chrome OS';
-						break;
-					case 'linux':
-						output = 'Linux';
-						break;
-					case 'openbsd':
-						output = 'OpenBSD';
-						break;
-					default:
-						break;
-				}
-				return Promise.resolve(output);
-			});
-		},
-
 		/**
 		 * Set the badge displayed on the extension icon
 		 * @memberOf app.Utils
@@ -167,4 +91,4 @@ app.Utils = (function() {
 			return text;
 		},
 	};
-})(window);
+})();

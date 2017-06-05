@@ -16,18 +16,6 @@ app.MyCMsg = (function() {
 	new ExceptionHandler();
 
 	/**
-	 * A Chrome message
-	 * @typedef {{}} app.MyCMsg.Message
-	 * @property {string} message - Unique name
-	 * @property {Error} error - an error
-	 * @property {string|Object} item - a message specific item
-	 * @property {boolean} updated - item is new or updated
-	 * @property {string} key - key name
-	 * @property {?Object} value - value of key
-	 * @memberOf app.MyCMsg
-	 */
-
-	/**
 	 * Restore default settings
 	 * @type {app.MyCMsg.Message}
 	 * @memberOf app.MyCMsg

@@ -103,7 +103,7 @@ app.Fb = (function() {
 				return Promise.resolve();
 			}
 		}).catch((err) => {
-			app.GA.error(err.message, 'Fb._refreshRegToken');
+			app.CGA.error(err.message, 'Fb._refreshRegToken');
 		});
 	}
 

@@ -136,7 +136,7 @@
 	 * @returns {string} operating system version
 	 */
 	Device.myVersion = function() {
-		return app.Utils.getChromeVersion();
+		return app.CUtils.getChromeVersion();
 	};
 
 	/**

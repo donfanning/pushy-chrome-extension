@@ -59,7 +59,7 @@ app.Reg = (function() {
 			if (allowReceive) {
 				// user wants to receive messages now
 				app.Reg.register().catch((err) => {
-					app.GA.error(err.message, 'Reg._onStorageChanged');
+					app.CGA.error(err.message, 'Reg._onStorageChanged');
 					app.Storage.set('allowReceive', !allowReceive);
 					const msg = app.MyCMsg.REGISTER_FAILED;
 					msg.error = err.toString();
@@ -69,7 +69,7 @@ app.Reg = (function() {
 			} else {
 				// user no longer wants to receive messages
 				app.Reg.unregister().catch((err) => {
-					app.GA.error(err.message, 'Reg._onStorageChanged');
+					app.CGA.error(err.message, 'Reg._onStorageChanged');
 					app.Storage.set('allowReceive', !allowReceive);
 					const msg = app.MyCMsg.UNREGISTER_FAILED;
 					msg.error = err.toString();
@@ -100,7 +100,7 @@ app.Reg = (function() {
 				const url = `${URL_BASE}register/${regId}`;
 				return _doCommand(url, ERROR_REGISTER);
 			}).then(() => {
-				app.GA.event(app.GA.EVENT.REGISTERED);
+				app.CGA.event(app.GA.EVENT.REGISTERED);
 				app.Storage.set('registered', true);
 				return Promise.resolve();
 			});
@@ -120,7 +120,7 @@ app.Reg = (function() {
 				const url = `${URL_BASE}unregister/${regId}`;
 				return _doCommand(url, ERROR_UNREGISTER);
 			}).then(() => {
-				app.GA.event(app.GA.EVENT.UNREGISTERED);
+				app.CGA.event(app.GA.EVENT.UNREGISTERED);
 				app.Storage.set('registered', false);
 				return Promise.resolve();
 			});

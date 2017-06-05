@@ -136,7 +136,7 @@ app.Msg = (function() {
 			if (notify && app.Notify.onSend()) {
 				app.Notify.create(app.Notify.NOTIFY_SEND, data);
 			}
-			app.GA.event(app.GA.EVENT.SENT);
+			app.CGA.event(app.GA.EVENT.SENT);
 			return Promise.resolve();
 		});
 	}

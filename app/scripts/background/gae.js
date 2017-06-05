@@ -177,7 +177,7 @@ app.Gae = (function() {
 		 * @memberOf app.Gae
 		 */
 		sendMessageFailed: function(err) {
-			app.GA.error(err, 'GAE.sendMessageFailed');
+			app.CGA.error(err, 'GAE.sendMessageFailed');
 			const msg = app.MyCMsg.MSG_FAILED;
 			msg.error = err.toString();
 			app.CMsg.send(msg).catch(() => {});

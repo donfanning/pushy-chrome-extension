@@ -92,7 +92,7 @@ app.Alarm = (function() {
 		 */
 		deleteOldClipItems: function() {
 			app.ClipItem.deleteOld().catch((err) => {
-				app.GA.error(err.message, 'Alarm.deleteOldClipItems');
+				app.CGA.error(err.message, 'Alarm.deleteOldClipItems');
 			});
 		},
 	};

@@ -194,7 +194,7 @@
 
 		ready: function() {
 			ERROR_BLOCKED_MESSAGE +=
-				`${app.Utils.getExtensionName()}</p >`;
+				`${app.CUtils.getExtensionName()}</p >`;
 		},
 
 		onCurrentPage: function() {
@@ -217,7 +217,7 @@
 				}
 				return Promise.resolve();
 			}).catch((err) => {
-				app.GA.error(err.message, 'SignInPage._checkChromeSignIn');
+				app.CGA.error(err.message, 'SignInPage._checkChromeSignIn');
 			});
 		},
 
@@ -245,7 +245,7 @@
 				return Promise.resolve();
 			}).catch((err) => {
 				// something went wrong
-				app.GA.error(err.message, 'SignInPage._checkPermissions');
+				app.CGA.error(err.message, 'SignInPage._checkPermissions');
 				this._showDialog(ERROR_PERMISSION,
 					ERROR_UNKNOWN_MESSAGE + err.message, false);
 			});
@@ -258,7 +258,7 @@
 		_signIn: function() {
 			app.CMsg.send(app.MyCMsg.SIGN_IN).then((response) => {
 				if (response.message === 'error') {
-					app.GA.error(response.error, 'SignInPage._signIn');
+					app.CGA.error(response.error, 'SignInPage._signIn');
 					this._showDialog(ERROR_SIGN_IN, response.error, false);
 				}
 				this.set('waiting', false);
@@ -273,7 +273,7 @@
 		_signOut: function() {
 			app.CMsg.send(app.MyCMsg.SIGN_OUT).then((response) => {
 				if (response.message === 'error') {
-					app.GA.error(response.error, 'SignInPage._signOut');
+					app.CGA.error(response.error, 'SignInPage._signOut');
 					this._showDialog(ERROR_SIGN_OUT, response.error, false);
 				}
 				this.set('waiting', false);
@@ -289,7 +289,7 @@
 		},
 
 		_onAccountButtonClicked: function() {
-			app.GA.event(app.GA.EVENT.BUTTON,
+			app.CGA.event(app.GA.EVENT.BUTTON,
 				`SignInPage.accountButton: ${!this.signedIn}`);
 			this.set('waiting', true);
 			this.signedIn ? this._signOut() : this._signIn();

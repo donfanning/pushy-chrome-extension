@@ -407,7 +407,7 @@ Polymer({
 		clipItem.setRemote(remote);
 		// persist value
 		clipItem.save().catch((err) => {
-			app.GA.error(err.message, 'Main._onCopyTapped');
+			app.CGA.error(err.message, 'Main._onCopyTapped');
 		});
 
 		const pos = this.listItems.indexOf(listItem);
@@ -437,7 +437,7 @@ Polymer({
 		const fav = !clipItem.getFav();
 		clipItem.setFav(fav);
 		clipItem.save().catch((err) => {
-			app.GA.error(err.message, 'Main._onFavTapped');
+			app.CGA.error(err.message, 'Main._onFavTapped');
 		});
 
 		const pos = this.listItems.indexOf(listItem);
@@ -532,7 +532,7 @@ Polymer({
 			this.$.clipList.scrollTop = 0;
 			return Promise.resolve();
 		}).catch((err) => {
-			app.GA.error(err.message, 'Main._loadClipItems');
+			app.CGA.error(err.message, 'Main._loadClipItems');
 		});
 	},
 
@@ -565,7 +565,7 @@ Polymer({
 				}
 				return Promise.resolve();
 			}).catch((err) => {
-				app.GA.error(err.message, 'Main._deleteSelectedRows');
+				app.CGA.error(err.message, 'Main._deleteSelectedRows');
 			});
 		}
 	},

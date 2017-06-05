@@ -64,7 +64,7 @@ app.CB = (function() {
 				_sendLocalClipItem(clipItem);
 				return null;
 			}).catch((err) => {
-				app.GA.error(err.message, 'CB._addClipItemFromClipboard');
+				app.CGA.error(err.message, 'CB._addClipItemFromClipboard');
 			});
 
 		}, WAIT_MILLIS);
