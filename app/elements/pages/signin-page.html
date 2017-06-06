@@ -290,7 +290,7 @@
       },
 
       _onAccountButtonClicked: function() {
-        Chrome.GA.event(app.GA.EVENT.BUTTON,
+        Chrome.GA.event(Chrome.GA.EVENT.BUTTON,
             `SignInPage.accountButton: ${!this.signedIn}`);
         this.set('waiting', true);
         this.signedIn ? this._signOut() : this._signIn();

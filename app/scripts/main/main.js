@@ -205,7 +205,7 @@ window.app = window.app || {};
 
     const idx = _getPageIdx(event.currentTarget.id);
 
-    Chrome.GA.event(app.GA.EVENT.MENU, t.pages[idx].route);
+    Chrome.GA.event(Chrome.GA.EVENT.MENU, t.pages[idx].route);
 
     if (!t.pages[idx].obj) {
       // some pages are just pages

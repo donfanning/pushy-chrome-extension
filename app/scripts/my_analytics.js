@@ -32,11 +32,6 @@ app.GA = (function() {
   /**
    * Event types
    * @type {{}}
-   * @property {Chrome.GA.Event} INSTALLED - extension installed
-   * @property {Chrome.GA.Event} MENU - menu selected
-   * @property {Chrome.GA.Event} TOGGLE - setting-toggle
-   * @property {Chrome.GA.Event} LINK - setting-link
-   * @property {Chrome.GA.Event} BUTTON - button click
    * @property {Chrome.GA.Event} SENT - message sent
    * @property {Chrome.GA.Event} RECEIVED - message received
    * @property {Chrome.GA.Event} REGISTERED - {@link Device} registered
@@ -45,59 +40,25 @@ app.GA = (function() {
    * @memberOf app.GA
    */
   const EVENT = {
-    INSTALLED: {
-      eventCategory: 'extension',
-      eventAction: 'installed',
-      eventLabel: '',
-    },
-    MENU: {
-      eventCategory: 'ui',
-      eventAction: 'menuSelect',
-      eventLabel: '',
-    },
-    TOGGLE: {
-      eventCategory: 'ui',
-      eventAction: 'toggle',
-      eventLabel: '',
-    },
-    LINK: {
-      eventCategory: 'ui',
-      eventAction: 'linkSelect',
-      eventLabel: '',
-    },
-    BUTTON: {
-      eventCategory: 'ui',
-      eventAction: 'buttonClicked',
-      eventLabel: '',
-    },
-    ICON: {
-      eventCategory: 'ui',
-      eventAction: 'toolbarIconClicked',
-      eventLabel: '',
-    },
-    SENT: {
+     SENT: {
       eventCategory: 'message',
       eventAction: 'sent',
       eventLabel: '',
-      noInteraction: false,
     },
     RECEIVED: {
       eventCategory: 'message',
       eventAction: 'received',
       eventLabel: '',
-      noInteraction: true,
     },
     REGISTERED: {
       eventCategory: 'register',
       eventAction: 'registered',
       eventLabel: '',
-      noInteraction: false,
     },
     UNREGISTERED: {
       eventCategory: 'register',
       eventAction: 'unregistered',
       eventLabel: '',
-      noInteraction: false,
     },
   };
 
