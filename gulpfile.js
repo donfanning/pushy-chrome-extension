@@ -156,7 +156,7 @@ gulp.task('docs', function(cb) {
 // polylint elements
 gulp.task('polylint', function() {
     return gulp.src([files.elements]).
-        pipe(plugins.polylint({noRecursion: true})).
+        pipe(plugins.polylint({noRecursion: false})).
         pipe(plugins.polylint.reporter(plugins.polylint.reporter.stylishlike)).
         pipe(plugins.polylint.reporter.fail({
             buffer: true,
