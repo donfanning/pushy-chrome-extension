@@ -33,11 +33,42 @@ app.User = (function() {
       Chrome.Storage.set('needsCleanup', true);
       _setSignIn(false);
       Chrome.Storage.set('registered', false);
-      app.Fb.signOut();
+      app.Fb.signOut().catch(() => {});
 
     }
     app.User.setInfo().catch((err) => {
       Chrome.GA.error(err.message, 'User._onSignInChanged');
+    });
+  }
+
+  /**
+   * Sign in and register our {@link Device}
+   * @returns {Promise<void>} void
+   * @private
+   * @memberOf app.User
+   */
+  function _addAccess() {
+
+    /**
+     * Cleanup if user signed-out of Browser
+     * @returns {Promise<void>} void
+     * @memberOf app.User
+     */
+    function ifCleanup() {
+      if (Chrome.Storage.getBool('needsCleanup')) {
+        Chrome.Storage.set('needsCleanup', false);
+        return app.User.cleanup();
+      } else {
+        return Promise.resolve();
+      }
+    }
+
+    return ifCleanup().then(() => {
+      return app.SW.initialize();
+    }).then(() => {
+      return app.Reg.register();
+    }).then(() => {
+      return app.Msg.sendDeviceAdded();
     });
   }
 
@@ -59,7 +90,7 @@ app.User = (function() {
     if (request.message === app.ChromeMsg.SIGN_IN.message) {
       // try to signIn a user
       ret = true; // async
-      app.User.addAccess().then(() => {
+      _addAccess().then(() => {
         response({message: 'ok'});
         return Promise.resolve();
       }).catch((err) => {
@@ -101,6 +132,48 @@ app.User = (function() {
   }
 
   /**
+   * Get an OAuth2.0 token
+   * @see https://developer.chrome.com/apps/identity#method-getAuthToken
+   * @param {boolean} retry - if true, retry with new token on error
+   * @returns {Promise<token>} An access token
+   * @private
+   * @memberOf app.User
+   */
+  function _getAuthToken(retry) {
+    // If signed in, first try to get token non-interactively.
+    // If it fails, probably means token has expired or is invalid.
+    const interactive = !app.MyData.isSignedIn();
+    let authToken = null;
+
+    const chromep = new ChromePromise();
+    return chromep.identity.getAuthToken({
+      'interactive': interactive,
+    }).then((token) => {
+      authToken = token;
+      return Promise.resolve(token);
+    }).catch((err) => {
+      if (retry && err && authToken) {
+        // cached token may be expired or invalid.
+        // remove it and try again
+        return app.User.removeCachedAuthToken(authToken).then(() => {
+          return _getAuthToken(false);
+        });
+      } else if (err.message.includes('revoked') ||
+          err.message.includes('Authorization page could not be loaded')) {
+        // try one more time non-interactively
+        // Always returns Authorization page error
+        // when first registering, Not sure why
+        // Other message is if user revoked access to extension
+        return chromep.identity.getAuthToken({
+          'interactive': false,
+        });
+      } else {
+        throw err;
+      }
+    });
+  }
+
+  /**
    * Listen for changes to Browser sign-in
    */
   chrome.identity.onSignInChanged.addListener(_onSignInChanged);
@@ -121,7 +194,7 @@ app.User = (function() {
         return Promise.reject(new Error(ERROR_ALREADY_SIGNED_IN));
       }
 
-      return app.User.getAuthToken(true).then((token) => {
+      return _getAuthToken(true).then((token) => {
         return app.Fb.signIn(token);
       }).then((user) => {
         _setSignIn(true);
@@ -149,36 +222,6 @@ app.User = (function() {
     },
 
     /**
-     * Sign in and register {@link Device}
-     * @returns {Promise<void>} void
-     * @memberOf app.User
-     */
-    addAccess: function() {
-
-      /**
-       * Cleanup if user signed-out of Browser
-       * @returns {Promise<void>} void
-       * @memberOf app.User
-       */
-      function ifCleanup() {
-        if (Chrome.Storage.getBool('needsCleanup')) {
-          Chrome.Storage.set('needsCleanup', false);
-          return app.User.cleanup();
-        } else {
-          return Promise.resolve();
-        }
-      }
-
-      return ifCleanup().then(() => {
-        return app.User.signIn();
-      }).then(() => {
-        return app.Reg.register();
-      }).then(() => {
-        return app.Msg.sendDeviceAdded();
-      });
-    },
-
-    /**
      * Unregister {@link Device} and sign out
      * @returns {Promise<void>} void
      * @memberOf app.User
@@ -195,45 +238,12 @@ app.User = (function() {
     },
 
     /**
-     * Get an OAuth2.0 token
-     * @see https://developer.chrome.com/apps/identity#method-getAuthToken
-     * @param {boolean} retry - if true, retry with new token on error
-     * @returns {Promise<token>} An access token
-     * @memberOf app.User
-     */
-    getAuthToken: function(retry) {
-      // If signed in, first try to get token non-interactively.
-      // If it fails, probably means token has expired or is invalid.
-      const interactive = !app.MyData.isSignedIn();
-
-      const chromep = new ChromePromise();
-      return chromep.identity.getAuthToken({
-        'interactive': interactive,
-      }).then((token) => {
-        if (chrome.runtime.lastError) {
-          const error = chrome.runtime.lastError.message;
-          if (retry && error && token) {
-            // cached token may be expired or invalid.
-            // remove it and try again
-            return app.User.removeCachedAuthToken(token).then(() => {
-              return app.User.getAuthToken(false);
-            });
-          } else {
-            throw new Error(error);
-          }
-        } else {
-          return Promise.resolve(token);
-        }
-      });
-    },
-
-    /**
      * Cleanup after user signs out of Browser
      * @returns {Promise<void>} void
      * @memberOf app.User
      */
     cleanup: function() {
-      return app.User.getAuthToken(false).then((token) => {
+      return _getAuthToken(false).then((token) => {
         return app.User.removeCachedAuthToken(token);
       });
     },

@@ -53,7 +53,7 @@ for this device.`;
   function _onInstalled(details) {
     if (details.reason === 'install') {
       // extension installed
-      Chrome.GA.event(app.GA.EVENT.INSTALLED);
+      Chrome.GA.event(Chrome.GA.EVENT.INSTALLED);
       // save OS
       Chrome.Utils.getPlatformOS().then((os) => {
         Chrome.Storage.set('os', os);

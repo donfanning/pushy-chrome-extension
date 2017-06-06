@@ -24,25 +24,6 @@ app.Reg = (function() {
    */
   const URL_BASE = `${app.Gae.GAE_ROOT}/registration/v1/`;
 
-  const ERROR_REGISTER = 'Failed to register with the server.\n';
-  const ERROR_UNREGISTER = 'Failed to unregister with the server.\n';
-
-  /**
-   * Send request to server Endpoint
-   * @param {string} url - Endpoint path
-   * @param {string} errorPrefix - text prefix to add to Error on reject
-   * @returns {Promise<void>} void
-   * @private
-   * @memberOf app.Reg
-   */
-  function _doCommand(url, errorPrefix) {
-    return app.Gae.doPost(url, true, true).then(() => {
-      return Promise.resolve();
-    }).catch((err) => {
-      throw new Error(errorPrefix + err.message);
-    });
-  }
-
   /**
    * Event: Fired when item in localStorage changes
    * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
@@ -56,7 +37,7 @@ app.Reg = (function() {
       const allowReceive = app.MyData.allowReceive();
       if (allowReceive) {
         // user wants to receive messages now
-        app.Reg.register().catch((err) => {
+        app.Reg.register(true).catch((err) => {
           Chrome.GA.error(err.message, 'Reg._onStorageChanged');
           Chrome.Storage.set('allowReceive', !allowReceive);
           const msg = app.ChromeMsg.REGISTER_FAILED;
@@ -66,7 +47,7 @@ app.Reg = (function() {
         });
       } else {
         // user no longer wants to receive messages
-        app.Reg.unregister().catch((err) => {
+        app.Reg.unregister(true).catch((err) => {
           Chrome.GA.error(err.message, 'Reg._onStorageChanged');
           Chrome.Storage.set('allowReceive', !allowReceive);
           const msg = app.ChromeMsg.UNREGISTER_FAILED;
@@ -86,41 +67,51 @@ app.Reg = (function() {
   return {
     /**
      * Register {@link Device} with server
+     * @param {boolean} [interactive=false] - true if user initiated
      * @returns {Promise<void>} void
      * @memberOf app.Reg
      */
-    register: function() {
+    register: function(interactive = false) {
       if (app.MyData.isRegistered() || !app.MyData.allowReceive()) {
         return Promise.resolve();
       }
 
       return app.Fb.getRegToken().then((regId) => {
         const url = `${URL_BASE}register/${regId}`;
-        return _doCommand(url, ERROR_REGISTER);
+        return app.Gae.doPost(url, true, interactive);
       }).then(() => {
         Chrome.GA.event(app.GA.EVENT.REGISTERED);
         Chrome.Storage.set('registered', true);
         return Promise.resolve();
+      }).catch((err) => {
+        Chrome.GA.error(err.message, 'Reg.register');
+        const prefix = 'Failed to register with the server.\n';
+        throw new Error(prefix + err.message);
       });
     },
 
     /**
      * Unregister {@link Device} with server
+     * @param {boolean} [interactive=false] - true if user initiated
      * @returns {Promise<void>} void
      * @memberOf app.Reg
      */
-    unregister: function() {
+    unregister: function(interactive = false) {
       if (app.MyData.notRegistered()) {
         return Promise.resolve();
       }
 
       return app.Fb.getRegToken().then((regId) => {
         const url = `${URL_BASE}unregister/${regId}`;
-        return _doCommand(url, ERROR_UNREGISTER);
+        return app.Gae.doPost(url, true, interactive);
       }).then(() => {
         Chrome.GA.event(app.GA.EVENT.UNREGISTERED);
         Chrome.Storage.set('registered', false);
         return Promise.resolve();
+      }).catch((err) => {
+        Chrome.GA.error(err.message, 'Reg.unregister');
+        const prefix = 'Failed to unregister with the server.\n';
+        throw new Error(prefix + err.message);
       });
     },
   };
