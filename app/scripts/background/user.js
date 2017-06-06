@@ -15,11 +15,38 @@ app.User = (function() {
 
   new ExceptionHandler();
 
-  const ERROR_ALREADY_SIGNED_IN = 'Already signed in';
+  const chromep = new ChromePromise();
 
   /**
-   * Event: Fired when signin state changes for an account on the user's
-   *     profile.
+   * Set signIn state
+   * @param {boolean} val - true if signed in
+   * @private
+   */
+  function _setSignIn(val) {
+    Chrome.Storage.set('signedIn', val);
+    app.Utils.setBadgeText();
+    if (!val) {
+      Chrome.Storage.set('photoURL', '');
+    }
+  }
+
+  /**
+   * Get an OAuth2.0 token
+   * @see https://developer.chrome.com/apps/identity#method-getAuthToken
+   * @returns {Promise<string>} An access token
+   * @private
+   * @memberOf app.User
+   */
+  function _getAuthToken() {
+    return chromep.identity.getAuthToken({
+      'interactive': false,
+    }).then((token) => {
+      return Promise.resolve(token);
+    });
+  }
+
+  /**
+   * Event: Fired when signin state changes for an act. on the user's profile.
    * @see https://developer.chrome.com/apps/identity#event-onSignInChanged
    * @param {Object} account - chrome AccountInfo
    * @param {boolean} signedIn - true if signedIn
@@ -34,11 +61,27 @@ app.User = (function() {
       _setSignIn(false);
       Chrome.Storage.set('registered', false);
       app.Fb.signOut().catch(() => {});
-
     }
     app.User.setInfo().catch((err) => {
       Chrome.GA.error(err.message, 'User._onSignInChanged');
     });
+  }
+
+  /**
+   * Cleanup if user signed-out of Browser
+   * @returns {Promise<void>} void
+   * @private
+   * @memberOf app.User
+   */
+  function _needsCleanup() {
+    if (Chrome.Storage.getBool('needsCleanup')) {
+      Chrome.Storage.set('needsCleanup', false);
+      return _getAuthToken().then((token) => {
+        return chromep.identity.removeCachedAuthToken({'token': token});
+      });
+    } else {
+      return Promise.resolve();
+    }
   }
 
   /**
@@ -48,27 +91,38 @@ app.User = (function() {
    * @memberOf app.User
    */
   function _addAccess() {
-
-    /**
-     * Cleanup if user signed-out of Browser
-     * @returns {Promise<void>} void
-     * @memberOf app.User
-     */
-    function ifCleanup() {
-      if (Chrome.Storage.getBool('needsCleanup')) {
-        Chrome.Storage.set('needsCleanup', false);
-        return app.User.cleanup();
-      } else {
-        return Promise.resolve();
-      }
-    }
-
-    return ifCleanup().then(() => {
+    return _needsCleanup().then(() => {
       return app.SW.initialize();
     }).then(() => {
       return app.Reg.register();
     }).then(() => {
+      return _getAuthToken();
+    }).then((token) => {
+      return app.Fb.signIn(token);
+    }).then((user) => {
+      _setSignIn(true);
+      if (!app.Utils.isWhiteSpace(user.photoURL)) {
+        Chrome.Storage.set('photoURL', user.photoURL);
+      }
       return app.Msg.sendDeviceAdded();
+    });
+  }
+
+  /**
+   * Unregister {@link Device} and sign out of firebase
+   * @returns {Promise<void>} void
+   * @private
+   * @memberOf app.User
+   */
+  function _removeAccess() {
+    return app.Msg.sendDeviceRemoved().then(() => {
+      return app.Reg.unregister();
+    }).then(() => {
+      return app.Fb.signOut();
+    }).then(() => {
+      _setSignIn(false);
+      app.Devices.clear();
+      return Promise.resolve();
     });
   }
 
@@ -95,82 +149,27 @@ app.User = (function() {
         return Promise.resolve();
       }).catch((err) => {
         Chrome.GA.error(err.message, 'User._onChromeMessage');
-        app.User.removeAccess().then(() => {
+        _removeAccess().then(() => {
           return Promise.resolve();
         }).catch((err) => {
           Chrome.GA.error(err.message, 'User._onChromeMessage');
           _setSignIn(false);
           Chrome.Storage.set('registered', false);
         });
-        response({message: 'error', error: err.toString()});
+        response({message: 'error', error: err.message});
       });
     } else if (request.message === app.ChromeMsg.SIGN_OUT.message) {
       // try to signOut a user
       ret = true;  // async
-      app.User.removeAccess().then(() => {
+      _removeAccess().then(() => {
         response({message: 'ok'});
         return Promise.resolve();
       }).catch((err) => {
         Chrome.GA.error(err.message, 'User._onChromeMessage');
-        response({message: 'error', error: err.toString()});
+        response({message: 'error', error: err.message});
       });
     }
     return ret;
-  }
-
-  /**
-   * Set signIn state
-   * @param {boolean} val - true if signed in
-   * @private
-   */
-  function _setSignIn(val) {
-    Chrome.Storage.set('signedIn', val);
-    app.Utils.setBadgeText();
-    if (!val) {
-      Chrome.Storage.set('photoURL', '');
-    }
-  }
-
-  /**
-   * Get an OAuth2.0 token
-   * @see https://developer.chrome.com/apps/identity#method-getAuthToken
-   * @param {boolean} retry - if true, retry with new token on error
-   * @returns {Promise<token>} An access token
-   * @private
-   * @memberOf app.User
-   */
-  function _getAuthToken(retry) {
-    // If signed in, first try to get token non-interactively.
-    // If it fails, probably means token has expired or is invalid.
-    const interactive = !app.MyData.isSignedIn();
-    let authToken = null;
-
-    const chromep = new ChromePromise();
-    return chromep.identity.getAuthToken({
-      'interactive': interactive,
-    }).then((token) => {
-      authToken = token;
-      return Promise.resolve(token);
-    }).catch((err) => {
-      if (retry && err && authToken) {
-        // cached token may be expired or invalid.
-        // remove it and try again
-        return app.User.removeCachedAuthToken(authToken).then(() => {
-          return _getAuthToken(false);
-        });
-      } else if (err.message.includes('revoked') ||
-          err.message.includes('Authorization page could not be loaded')) {
-        // try one more time non-interactively
-        // Always returns Authorization page error
-        // when first registering, Not sure why
-        // Other message is if user revoked access to extension
-        return chromep.identity.getAuthToken({
-          'interactive': false,
-        });
-      } else {
-        throw err;
-      }
-    });
   }
 
   /**
@@ -185,87 +184,11 @@ app.User = (function() {
 
   return {
     /**
-     * SignIn with OAuth 2.0 and firebase
-     * @returns {Promise<void>} void
-     * @memberOf app.User
-     */
-    signIn: function() {
-      if (app.MyData.isSignedIn()) {
-        return Promise.reject(new Error(ERROR_ALREADY_SIGNED_IN));
-      }
-
-      return _getAuthToken(true).then((token) => {
-        return app.Fb.signIn(token);
-      }).then((user) => {
-        _setSignIn(true);
-        if (!app.Utils.isWhiteSpace(user.photoURL)) {
-          Chrome.Storage.set('photoURL', user.photoURL);
-        }
-        return Promise.resolve();
-      });
-    },
-
-    /**
-     * Sign-out of firebase
-     * @returns {Promise<void>} void
-     * @memberOf app.User
-     */
-    signOut: function() {
-      if (!app.MyData.isSignedIn()) {
-        return Promise.resolve();
-      }
-
-      return app.Fb.signOut().then(() => {
-        _setSignIn(false);
-        return Promise.resolve();
-      });
-    },
-
-    /**
-     * Unregister {@link Device} and sign out
-     * @returns {Promise<void>} void
-     * @memberOf app.User
-     */
-    removeAccess: function() {
-      return app.Msg.sendDeviceRemoved().then(() => {
-        return app.Reg.unregister();
-      }).then(() => {
-        return app.User.signOut();
-      }).then(() => {
-        app.Devices.clear();
-        return Promise.resolve();
-      });
-    },
-
-    /**
-     * Cleanup after user signs out of Browser
-     * @returns {Promise<void>} void
-     * @memberOf app.User
-     */
-    cleanup: function() {
-      return _getAuthToken(false).then((token) => {
-        return app.User.removeCachedAuthToken(token);
-      });
-    },
-
-    /**
-     * Remove Auth token from cache
-     * @param {string} token - Auth token
-     * @returns {Promise<void>} void
-     * @memberOf app.User
-     */
-    removeCachedAuthToken: function(token) {
-      const chromep = new ChromePromise();
-      return chromep.identity.removeCachedAuthToken({'token': token});
-    },
-
-    /**
      * Persist info on current Browser user (may be no-one)
      * @returns {Promise<void>} void
      * @memberOf app.User
      */
     setInfo: function() {
-      const chromep = new ChromePromise();
       return chromep.identity.getProfileUserInfo().then((user) => {
         Chrome.Storage.set('email', user.email);
         Chrome.Storage.set('uid', user.id);
