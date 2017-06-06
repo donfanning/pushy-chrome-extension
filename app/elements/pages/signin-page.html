@@ -109,7 +109,7 @@
 
 				<div class="contentContainer horizontal layout center">
 					<paper-item id="description"
-					            style$="display: [[_computeDescDisplay(waiting)]];">
+					            style$="display: [[_computeDescDisplay(waiting, signedIn)]];">
 						You must be signed in to the Browser with the account you
 						wish to use to share with your other devices. It is only used to ensure
 						that all messages goes to a single account. You also need to "Allow Notifications"
@@ -313,8 +313,8 @@
         return this.signedIn ? 'Signing Out...' : 'Signing In...';
       },
 
-      _computeDescDisplay: function(waiting) {
-        return waiting ? 'none' : 'block';
+      _computeDescDisplay: function(waiting, signedIn) {
+        return (waiting || signedIn) ? 'none' : 'block';
       },
 
       _computeWaiterDisplay: function(waiting) {
