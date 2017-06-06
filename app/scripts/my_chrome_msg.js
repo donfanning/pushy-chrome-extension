@@ -34,15 +34,6 @@ app.ChromeMsg = (function() {
   };
 
   /**
-   * A save attempt to localStorage exceeded its capacity
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const STORAGE_EXCEEDED = {
-    message: 'storageExceeded',
-  };
-
-  /**
    * Save value to storage message
    * @type {Chrome.Msg.Message}
    * @memberOf app.ChromeMsg
@@ -159,7 +150,6 @@ app.ChromeMsg = (function() {
   return {
     RESTORE_DEFAULTS: RESTORE_DEFAULTS,
     HIGHLIGHT: HIGHLIGHT,
-    STORAGE_EXCEEDED: STORAGE_EXCEEDED,
     STORE: STORE,
     REMOVE_DEVICE: REMOVE_DEVICE,
     DEVICES_CHANGED: DEVICES_CHANGED,
