@@ -129,9 +129,7 @@ app.Msg = (function() {
       const json = encodeURIComponent(JSON.stringify(data));
       const highPriority = Chrome.Storage.getBool('highPriority');
       url = `${URL_BASE}${regId}/${json}/${highPriority}`;
-      return app.User.getAuthToken(true);
-    }).then((token) => {
-      return app.Gae.doPost(url, token, true);
+      return app.Gae.doPost(url, true);
     }).then(() => {
       if (notify && app.Notify.onSend()) {
         app.Notify.create(app.Notify.NOTIFY_SEND, data);

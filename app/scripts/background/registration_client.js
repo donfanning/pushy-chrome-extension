@@ -36,12 +36,10 @@ app.Reg = (function() {
    * @memberOf app.Reg
    */
   function _doCommand(url, errorPrefix) {
-    return app.User.getAuthToken(true).then((token) => {
-      return app.Gae.doPost(url, token, true);
-    }).then(() => {
+    return app.Gae.doPost(url, true, true).then(() => {
       return Promise.resolve();
     }).catch((err) => {
-      throw new Error(errorPrefix + err);
+      throw new Error(errorPrefix + err.message);
     });
   }
 
