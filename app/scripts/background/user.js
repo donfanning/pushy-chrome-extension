@@ -94,7 +94,7 @@ app.User = (function() {
     return _needsCleanup().then(() => {
       return app.SW.initialize();
     }).then(() => {
-      return app.Reg.register();
+      return app.Reg.register(true);
     }).then(() => {
       return _getAuthToken();
     }).then((token) => {
@@ -116,7 +116,7 @@ app.User = (function() {
    */
   function _removeAccess() {
     return app.Msg.sendDeviceRemoved().then(() => {
-      return app.Reg.unregister();
+      return app.Reg.unregister(true);
     }).then(() => {
       return app.Fb.signOut();
     }).then(() => {
