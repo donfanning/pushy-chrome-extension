@@ -36,6 +36,7 @@ app.GA = (function() {
    * @property {Chrome.GA.Event} RECEIVED - message received
    * @property {Chrome.GA.Event} REGISTERED - {@link Device} registered
    * @property {Chrome.GA.Event} UNREGISTERED - {@link Device} unregistered
+   * @property {Chrome.GA.Event} TOKEN_REFRESHED - firebase token refreshed
    * @const
    * @memberOf app.GA
    */
@@ -58,6 +59,11 @@ app.GA = (function() {
     UNREGISTERED: {
       eventCategory: 'register',
       eventAction: 'unregistered',
+      eventLabel: '',
+    },
+    TOKEN_REFRESHED: {
+      eventCategory: 'token',
+      eventAction: 'refreshed',
       eventLabel: '',
     },
   };

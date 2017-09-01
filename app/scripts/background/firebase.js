@@ -96,14 +96,18 @@ app.Fb = (function() {
    * @memberOf app.Fb
    */
   function _refreshRegToken() {
+    let token = '';
     _messaging.getToken().then((refreshedToken) => {
-      if (app.MyData.isSignedIn()) {
+      token = refreshedToken;
+      Chrome.GA.event(app.GA.EVENT.TOKEN_REFRESHED, refreshedToken);
+      if (app.MyData.isRegistered()) {
         return app.Reg.register(false);
       } else {
         return Promise.resolve();
       }
     }).catch((err) => {
-      Chrome.GA.error(err.message, 'Fb._refreshRegToken');
+      const msg = `${err.message} Token: ${token}`;
+      Chrome.GA.error(msg, 'Fb._refreshRegToken');
     });
   }
 
