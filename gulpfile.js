@@ -25,7 +25,8 @@ const path = {
   lib: `${base.src}lib/`,
   locales: `${base.src}_locales/`,
   bower: `${base.src}bower_components/`,
-  bowerScripts: `${base.src}bower_components/chrome-extension-utils`,
+  bowerScripts: `${base.src}bower_components/chrome-extension-utils/`,
+  bowerFirebase: `${base.src}bower_components/firebase/`,
 };
 const files = {
   manifest: `${base.src}manifest.json`,
@@ -35,12 +36,20 @@ const files = {
   elements: `${path.elements}**/*.html`,
   images: `${path.images}*.*`,
   assets: `${path.assets}*.*`,
-  lib: `${path.lib}**/*.*`,
+  lib: [
+    `${path.lib}**/*.*`,
+    `${path.bowerFirebase}firebase-app.js`,
+    `${path.bowerFirebase}firebase-auth.js`,
+    `${path.bowerFirebase}firebase-messaging.js`,
+  ],
   locales: `${path.locales}**/*.*`,
   bower: [
     `${path.bower}**/*`,
     `!${path.bower}**/test/*`,
     `!${path.bower}**/demo/*`,
+    `!${path.bowerFirebase}firebase-app.js`,
+    `!${path.bowerFirebase}firebase-auth.js`,
+    `!${path.bowerFirebase}firebase-messaging.js`,
   ],
   bowerScripts: `${path.bowerScripts}**/*.js`,
 };
@@ -144,11 +153,11 @@ gulp.task('polylint', () => {
     verbose: true,
     name: currentTaskName,
   };
-  return gulp.src(input)
-      .pipe(isWatch ? watch(input, opts) : util.noop())
-      .pipe(plugins.polylint({noRecursion: true}))
-      .pipe(plugins.polylint.reporter(plugins.polylint.reporter.stylishlike))
-      .pipe(plugins.polylint.reporter.fail({
+  return gulp.src(input).
+      pipe(isWatch ? watch(input, opts) : util.noop()).
+      pipe(plugins.polylint({noRecursion: true})).
+      pipe(plugins.polylint.reporter(plugins.polylint.reporter.stylishlike)).
+      pipe(plugins.polylint.reporter.fail({
         buffer: false,
         ignoreWarnings: false,
       }));
@@ -185,151 +194,151 @@ gulp.task('incrementalBuild', (cb) => {
 gulp.task('manifest', () => {
   const input = files.manifest;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plumber())
-      .pipe((isProd && !isProdTest) ? plugins.stripLine('"key":') : util.noop())
-      .pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plumber()).
+      pipe((isProd && !isProdTest) ? plugins.stripLine('"key":') : util.noop()).
+      pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
 // prep bower files
 gulp.task('bower', () => {
   const input = files.bower;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plumber())
-      .pipe(If('*.html', plugins.crisper(crisperOpts)))
-      .pipe(gulp.dest(base.dev));
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plumber()).
+      pipe(If('*.html', plugins.crisper(crisperOpts))).
+      pipe(gulp.dest(base.dev));
 });
 
 // lint development js files
 gulp.task('lintdevjs', () => {
   const input = files.lintdevjs;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plugins.eslint())
-      .pipe(plugins.eslint.formatEach())
-      .pipe(plugins.eslint.failOnError());
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plugins.eslint()).
+      pipe(plugins.eslint.formatEach()).
+      pipe(plugins.eslint.failOnError());
 });
 
 // lint scripts
 gulp.task('lint', () => {
   const input = files.js;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(plugins.eslint())
-      .pipe(plugins.eslint.formatEach())
-      .pipe(plugins.eslint.failAfterError());
+  return gulp.src(input, {base: '.'}).
+      pipe(plugins.eslint()).
+      pipe(plugins.eslint.formatEach()).
+      pipe(plugins.eslint.failAfterError());
 });
 
 // scripts
 gulp.task('scripts', () => {
   const input = files.js;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plugins.eslint())
-      .pipe(plugins.eslint.formatEach())
-      .pipe(plugins.eslint.failAfterError())
-      .pipe(isProd ? minify(minifyOpts).on('error', util.log) : util.noop())
-      .pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plugins.eslint()).
+      pipe(plugins.eslint.formatEach()).
+      pipe(plugins.eslint.failAfterError()).
+      pipe(isProd ? minify(minifyOpts).on('error', util.log) : util.noop()).
+      pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
 // html
 gulp.task('html', () => {
   const input = files.html;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plumber())
-      .pipe((isProd && !isProdTest) ? util.noop() : plugins.replace(
-          '<!--@@build:replace -->', '<!--'))
-      .pipe(isProd ? plugins.minifyHtml() : util.noop())
-      .pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plumber()).
+      pipe((isProd && !isProdTest) ? util.noop() : plugins.replace(
+          '<!--@@build:replace -->', '<!--')).
+      pipe(isProd ? plugins.minifyHtml() : util.noop()).
+      pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
 // elements
 gulp.task('elements', () => {
   const input = files.elements;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plugins.eslint())
-      .pipe(plugins.eslint.formatEach())
-      .pipe(plugins.eslint.failAfterError())
-      .pipe(If('*.html', plugins.crisper(crisperOpts)))
-      .pipe(gulp.dest(base.dev));
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plugins.eslint()).
+      pipe(plugins.eslint.formatEach()).
+      pipe(plugins.eslint.failAfterError()).
+      pipe(If('*.html', plugins.crisper(crisperOpts))).
+      pipe(gulp.dest(base.dev));
 });
 
 // styles
 gulp.task('styles', () => {
   const input = files.styles;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plumber())
-      .pipe(If('*.css', isProd ? plugins.cleanCss() : util.noop()))
-      .pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plumber()).
+      pipe(If('*.css', isProd ? plugins.cleanCss() : util.noop())).
+      pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
 // images
 gulp.task('images', () => {
   const input = files.images;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plumber())
-      .pipe(plugins.imagemin({progressive: true, interlaced: true}))
-      .pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plumber()).
+      pipe(plugins.imagemin({progressive: true, interlaced: true})).
+      pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
 // assets
 gulp.task('assets', () => {
   const input = files.assets;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plumber())
-      .pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plumber()).
+      pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
 // lib
 gulp.task('lib', () => {
   const input = files.lib;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plumber())
-      .pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plumber()).
+      pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
 // locales
 gulp.task('locales', () => {
   const input = files.locales;
   watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'})
-      .pipe(isWatch ? watch(input, watchOpts) : util.noop())
-      .pipe(plumber())
-      .pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plumber()).
+      pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
 // vulcanize for production
 gulp.task('vulcanize', () => {
-  return gulp.src(`${path.elements}elements.html`, {base: '.'})
-      .pipe(plugins.vulcanize(vulcanizeOpts))
-      .pipe(plugins.crisper(crisperOpts))
-      .pipe(If('*.html', plugins.minifyInline()))
-      .pipe(If('*.js', minify(minifyOpts).on('error', util.log)))
-      .pipe(gulp.dest(base.dist));
+  return gulp.src(`${path.elements}elements.html`, {base: '.'}).
+      pipe(plugins.vulcanize(vulcanizeOpts)).
+      pipe(plugins.crisper(crisperOpts)).
+      pipe(If('*.html', plugins.minifyInline())).
+      pipe(If('*.js', minify(minifyOpts).on('error', util.log))).
+      pipe(gulp.dest(base.dist));
 });
 
 // compress for the Chrome Web Store
 gulp.task('zip', () => {
-  return gulp.src(`${base.dist}${base.src}**`)
-      .pipe(!isProdTest ? plugins.zip('store.zip') : plugins.zip(
-          'store-test.zip'))
-      .pipe(!isProdTest ? gulp.dest(base.store) : gulp.dest(base.dist));
+  return gulp.src(`${base.dist}${base.src}**`).
+      pipe(!isProdTest ? plugins.zip('store.zip') : plugins.zip(
+          'store-test.zip')).
+      pipe(!isProdTest ? gulp.dest(base.store) : gulp.dest(base.dist));
 });
 
