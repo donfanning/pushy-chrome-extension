@@ -8,6 +8,10 @@
 
 ### [License](https://github.com/dfahlander/Dexie.js/blob/master/LICENSE)
 
+## Firebase SDK
+
+### [License](https://github.com/firebase/firebase-js-sdk/blob/master/LICENSE)
+
 ## Linkify
 
 ### [License](https://github.com/SoapBox/linkifyjs/blob/master/LICENSE)
