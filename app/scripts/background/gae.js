@@ -39,8 +39,6 @@ app.Gae = (function() {
   // Set to GAE_ROOT_LOCAL for local testing
   const GAE_ROOT = GAE_ROOT_REMOTE;
 
-  const ERROR_UNAUTHORIZED_USER = 'Unauthorized user';
-
   return {
     /**
      *  Root path to our gae server
