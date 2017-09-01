@@ -35,10 +35,9 @@ app.Msg = (function() {
   /**
    * Message action
    * @type {{MESSAGE: string,
-	 * PING: string,
-	 * PING_RESPONSE: string,
-	 * DEVICE_ADDED: string,
-	 * DEVICE_REMOVED: string}}
+   * PING: string,
+   * DEVICE_ADDED: string,
+   * DEVICE_REMOVED: string}}
    * @const
    * @default
    * @memberOf app.Msg
@@ -54,9 +53,9 @@ app.Msg = (function() {
   /**
    * Message body
    * @type {{PING: string,
-	 * PING_RESPONSE: string,
-	 * DEVICE_ADDED: string,
-	 * DEVICE_REMOVED: string}}
+   * PING_RESPONSE: string,
+   * DEVICE_ADDED: string,
+   * DEVICE_REMOVED: string}}
    * @const
    * @default
    * @private

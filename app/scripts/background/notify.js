@@ -28,8 +28,8 @@ app.Notify = (function() {
   /**
    * Icons
    * @type {{LOCAL_COPY: string,
-	 * ADD_DEVICE: string,
-	 * REMOVE_DEVICE: string}}
+   * ADD_DEVICE: string,
+   * REMOVE_DEVICE: string}}
    * @const
    * @default
    * @private

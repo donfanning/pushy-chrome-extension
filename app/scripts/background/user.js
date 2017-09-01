@@ -160,7 +160,7 @@ app.User = (function() {
       });
     } else if (request.message === app.ChromeMsg.SIGN_OUT.message) {
       // try to signOut a user
-      ret = true;  // async
+      ret = true; // async
       _removeAccess().then(() => {
         response({message: 'ok'});
         return Promise.resolve();

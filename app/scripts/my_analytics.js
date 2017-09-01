@@ -40,7 +40,7 @@ app.GA = (function() {
    * @memberOf app.GA
    */
   const EVENT = {
-     SENT: {
+    SENT: {
       eventCategory: 'message',
       eventAction: 'sent',
       eventLabel: '',
