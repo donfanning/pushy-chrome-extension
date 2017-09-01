@@ -133,7 +133,7 @@ app.Msg = (function() {
       if (notify && app.Notify.onSend()) {
         app.Notify.create(app.Notify.NOTIFY_SEND, data);
       }
-      Chrome.GA.event(app.GA.EVENT.SENT);
+      Chrome.GA.event(app.GA.EVENT.SENT, data.act);
       return Promise.resolve();
     });
   }
