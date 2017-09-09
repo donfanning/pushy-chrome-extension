@@ -68,6 +68,22 @@ app.Notify = (function() {
       ],
       buttonFunctions: [_sendErrorEmail],
     },
+    ERROR_STORE_CLIP: {
+      id: 'error',
+      title: 'Pushy: Failed to store clipboard contents',
+      message: 'Not set',
+      isClickable: true,
+      clickFunction: app.Utils.showMainTab,
+      requireInteraction: true,
+      hasButtons: true,
+      buttons: [
+        {
+          'title': 'Contact support',
+          'iconUrl': chrome.runtime.getURL('/images/ic_email_black_48dp.png'),
+        },
+      ],
+      buttonFunctions: [_sendErrorEmail],
+    },
   };
 
   /**

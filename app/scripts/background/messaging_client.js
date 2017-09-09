@@ -161,7 +161,7 @@ app.Msg = (function() {
 
       const data = _getData(ACTION.MESSAGE, text);
       data.FAV = clipItem.fav ? '1' : '0';
-      return _sendMessage(data, true, app.Notify.ICON.LOCAL_COPY);
+      return _sendMessage(true, app.Notify.ICON.LOCAL_COPY); // TODO revert
     },
 
     /**
@@ -204,6 +204,17 @@ app.Msg = (function() {
       const data = _getData(ACTION.PING_RESPONSE, BODY.PING_RESPONSE);
       data.srcRegId = srcRegId;
       return _sendMessage(data, false);
+    },
+
+    /**
+     * Display notification that send message failed
+     * @param {Error} err - what caused the failure
+     * @memberOf app.Msg
+     */
+    sendFailed: function(err) {
+      Chrome.GA.error(err.message, 'GAE.sendMessageFailed');
+      app.Notify.create(app.Notify.TYPE.ERROR_SEND, app.Notify.ICON.ERROR,
+          err.message);
     },
   };
 })();

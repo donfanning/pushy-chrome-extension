@@ -107,14 +107,19 @@ for this device.`;
     }
 
     // Persist
+    let addOK = false;
     app.ClipItem.add(text, Date.now(), false,
         false, app.Device.myName()).then((clipItem) => {
-      // eslint-disable-next-line promise/no-nesting
-      return app.Msg.sendClipItem(clipItem).catch((err) => {
-        app.Gae.sendMessageFailed(err);
-      });
+      addOK = true;
+      return app.Msg.sendClipItem(clipItem);
     }).catch((err) => {
-      Chrome.GA.error(err.message, 'Background._onIconClicked');
+      if (addOK) {
+        app.Msg.sendFailed(err);
+      } else {
+        Chrome.GA.error(err.message, 'Background._onIconClicked');
+        app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP,
+            app.Notify.ICON.ERROR, err.message);
+      }
     });
   }
 

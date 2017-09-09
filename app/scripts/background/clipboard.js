@@ -34,7 +34,7 @@ app.CB = (function() {
     if (!clipItem.remote && app.MyData.isAutoSend()) {
       // send to our devices
       app.Msg.sendClipItem(clipItem).catch((err) => {
-        app.Gae.sendMessageFailed(err);
+        app.Msg.sendFailed(err);
       });
     }
   }
@@ -62,7 +62,7 @@ app.CB = (function() {
           app.Device.myName()).then((clipItem) => {
         // send to our devices
         _sendLocalClipItem(clipItem);
-        return null;
+        return Promise.resolve();
       }).catch((err) => {
         Chrome.GA.error(err.message, 'CB._addClipItemFromClipboard');
       });

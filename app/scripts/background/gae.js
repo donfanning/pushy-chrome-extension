@@ -69,16 +69,5 @@ app.Gae = (function() {
         }
       });
     },
-
-    /**
-     * Display notification that send message failed
-     * @param {Error} err - what caused the failure
-     * @memberOf app.Gae
-     */
-    sendMessageFailed: function(err) {
-      Chrome.GA.error(err.message, 'GAE.sendMessageFailed');
-      app.Notify.create(app.Notify.TYPE.ERROR_SEND, app.Notify.ICON.ERROR,
-          err.message);
-    },
   };
 })();
