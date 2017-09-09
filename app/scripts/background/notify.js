@@ -61,10 +61,12 @@ app.Notify = (function() {
       requireInteraction: true,
       hasButtons: true,
       buttons: [
-          {'title': 'Contact support',
-        'iconUrl': chrome.runtime.getURL('/images/ic_email_black_48dp.png')},
-        ],
-      buttonFunctions: [app.Utils.showMainTab], // todo update function
+        {
+          'title': 'Contact support',
+          'iconUrl': chrome.runtime.getURL('/images/ic_email_black_48dp.png'),
+        },
+      ],
+      buttonFunctions: [_sendErrorEmail],
     },
   };
 
@@ -85,6 +87,42 @@ app.Notify = (function() {
     REMOVE_DEVICE: '/images/ic_remove_device.png',
     ERROR: '/images/ic_error.png',
   };
+
+  /**
+   * Get the Notification options object
+   * @param {app.Notify.TYPE} type - notification type
+   * @param {string} icon - path to icon
+   * @param {string} message - message to display
+   * @returns {Object} options object
+   * @private
+   */
+  function _getOptions(type, icon, message) {
+    let options = {
+      type: 'basic',
+      eventTime: Date.now(),
+    };
+    options.title = type.title;
+    options.isClickable = type.isClickable;
+    options.requireInteraction = type.requireInteraction;
+    options.iconUrl = chrome.runtime.getURL(icon);
+    options.message = message;
+    if (type.hasButtons) {
+      options.buttons = type.buttons;
+    }
+    return options;
+  }
+
+  /**
+   * Send an email with info on an error
+   * @param {app.Notify.TYPE} type - notification type
+   * @private
+   */
+  function _sendErrorEmail(type) {
+    const body = `${type.message}\n\n${app.Utils.getEmailBody()}` +
+        'Please provide what information you can on what led to the error\n\n';
+    const url = app.Utils.getEmailUrl(`Error: ${type.title}`, body);
+    chrome.tabs.create({url: url});
+  }
 
   /**
    * Event: Fired when the user clicked in a non-button area
@@ -167,19 +205,11 @@ app.Notify = (function() {
         return;
       }
 
+      // save message
+      type.message = message;
+
       // setup notification option object
-      let options = {
-        type: 'basic',
-        eventTime: Date.now(),
-      };
-      options.title = type.title;
-      options.isClickable = type.isClickable;
-      options.requireInteraction = type.requireInteraction;
-      options.iconUrl = chrome.runtime.getURL(icon);
-      options.message = message;
-      if (type.hasButtons) {
-        options.buttons = type.buttons;
-      }
+      let options = _getOptions(type, icon, message);
 
       chrome.notifications.getPermissionLevel(function(level) {
         if (level === 'granted') {
