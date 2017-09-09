@@ -94,7 +94,7 @@ app.Utils = (function() {
      */
     setBadgeText: function() {
       let text = '';
-      if (app.MyData.isSignedIn() && app.MyData.allowPush()) {
+      if (app.Data.isSignedIn() && app.Data.allowPush()) {
         text = 'SEND';
       }
       chrome.browserAction.setBadgeText({text: text});

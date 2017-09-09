@@ -42,7 +42,7 @@
    */
   function _process(data) {
     const device = _getDevice(data);
-    if (!app.MyData.isSignedIn() || device.isMe()) {
+    if (!app.Data.isSignedIn() || device.isMe()) {
       // don't handle our messages or if we are signed out
       return;
     }

@@ -209,7 +209,7 @@
       _checkChromeSignIn: function() {
         const chromep = new ChromePromise();
         chromep.identity.getProfileUserInfo().then((userInfo) => {
-          if (!app.MyData.isSignedIn() &&
+          if (!app.Data.isSignedIn() &&
               Chrome.Utils.isWhiteSpace(userInfo.id)) {
             this.set('signInDisabled', true);
           } else {

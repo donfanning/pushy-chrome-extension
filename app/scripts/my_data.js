@@ -10,7 +10,7 @@ window.app = window.app || {};
  * The extension's localStorage data
  * @namespace
  */
-app.MyData = (function() {
+app.Data = (function() {
   'use strict';
 
   new ExceptionHandler();
@@ -21,14 +21,14 @@ app.MyData = (function() {
    * @default
    * @const
    * @private
-   * @memberOf app.MyData
+   * @memberOf app.Data
    */
   const _VERSION = 2;
 
   /**
    * The data items saved to localStorage
    *
-   * @typedef {Object} app.MyData.MyData
+   * @typedef {Object} app.Data.Items
    * @property {int} version - version of data
    * @property {boolean} monitorClipboard - save clipboard contents
    * @property {boolean} allowPush - send push notifications
@@ -49,15 +49,15 @@ app.MyData = (function() {
    * @property {string} uid - our unique id
    * @property {string} photoURL - path to out photo url
    * @property {string} permissions - enum: notSet allowed denied
-   * @memberOf app.MyData
+   * @memberOf app.Data
    */
 
   /**
    * Default values for localStorage items
-   * @type {app.MyData.MyData}
+   * @type {app.Data.Items}
    * @const
    * @private
-   * @memberOf app.MyData
+   * @memberOf app.Data
    */
   const _DEFAULTS = {
     'version': _VERSION,
@@ -85,16 +85,16 @@ app.MyData = (function() {
     /**
      * Get the current data version
      * @returns {int} the version of our data
-     * @memberOf app.MyData
+     * @memberOf app.Data
      */
     getCurrentVersion: function() {
       return _VERSION;
     },
 
     /**
-     * Save the [_DEFAULTS]{@link app.MyData._DEFAULTS}, if they
+     * Save the [_DEFAULTS]{@link app.Data._DEFAULTS}, if they
      * do not already exist
-     * @memberOf app.MyData
+     * @memberOf app.Data
      */
     saveDefaults: function() {
       Object.keys(_DEFAULTS).forEach(function(key) {
@@ -111,7 +111,7 @@ app.MyData = (function() {
     /**
      * Are we saving clipboard contents
      * @returns {boolean} true if enabled
-     * @memberOf app.MyData
+     * @memberOf app.Data
      */
     isMonitorClipboard: function() {
       return Chrome.Storage.getBool('monitorClipboard');
@@ -120,7 +120,7 @@ app.MyData = (function() {
     /**
      * Has user enabled pushing to {@link app.Devices}
      * @returns {boolean} true if enabled
-     * @memberOf app.MyData
+     * @memberOf app.Data
      */
     allowPush: function() {
       return Chrome.Storage.getBool('allowPush');
@@ -129,7 +129,7 @@ app.MyData = (function() {
     /**
      * Has user enabled autoSend option
      * @returns {boolean} true if enabled
-     * @memberOf app.MyData
+     * @memberOf app.Data
      */
     isAutoSend: function() {
       return Chrome.Storage.getBool('autoSend');
@@ -138,7 +138,7 @@ app.MyData = (function() {
     /**
      * Has user enabled receiving from {@link app.Devices}
      * @returns {boolean} true if enabled
-     * @memberOf app.MyData
+     * @memberOf app.Data
      */
     allowReceive: function() {
       return Chrome.Storage.getBool('allowReceive');
@@ -147,7 +147,7 @@ app.MyData = (function() {
     /**
      * Are we signed in
      * @returns {boolean} true if signed in
-     * @memberOf app.MyData
+     * @memberOf app.Data
      */
     isSignedIn: function() {
       return Chrome.Storage.getBool('signedIn');
@@ -156,7 +156,7 @@ app.MyData = (function() {
     /**
      * Are we registered with fcm
      * @returns {boolean} true if registered
-     * @memberOf app.MyData
+     * @memberOf app.Data
      */
     isRegistered: function() {
       return Chrome.Storage.getBool('registered');
@@ -165,7 +165,7 @@ app.MyData = (function() {
     /**
      * Are we not registered with fcm
      * @returns {boolean} true if not registered
-     * @memberOf app.MyData
+     * @memberOf app.Data
      */
     notRegistered: function() {
       return !this.isRegistered();
@@ -174,7 +174,7 @@ app.MyData = (function() {
     /**
      * Get our serial number
      * @returns {boolean} true if not registered
-     * @memberOf app.MyData
+     * @memberOf app.Data
      */
     getDeviceSN: function() {
       return Chrome.Storage.get('deviceSN');

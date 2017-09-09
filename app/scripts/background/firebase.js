@@ -100,7 +100,7 @@ app.Fb = (function() {
     _messaging.getToken().then((refreshedToken) => {
       token = refreshedToken;
       Chrome.GA.event(app.GA.EVENT.TOKEN_REFRESHED, refreshedToken);
-      if (app.MyData.isRegistered()) {
+      if (app.Data.isRegistered()) {
         return app.Reg.register(false);
       } else {
         return Promise.resolve();

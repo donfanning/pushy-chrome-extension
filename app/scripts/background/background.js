@@ -153,7 +153,7 @@ for this device.`;
    * @memberOf app.Background
    */
   function _initializeData() {
-    app.MyData.saveDefaults();
+    app.Data.saveDefaults();
 
     const introClip =
         new app.ClipItem(INTRO_TEXT, Date.now(), true,
@@ -175,7 +175,7 @@ for this device.`;
   function _updateData() {
     // New items and removal of unused items can take place here
     // when the version changes
-    const version = app.MyData.getCurrentVersion();
+    const version = app.Data.getCurrentVersion();
     const oldVersion = Chrome.Storage.getInt('version');
 
     if (version > oldVersion) {
@@ -189,7 +189,7 @@ for this device.`;
       localStorage.removeItem('lastUid');
     }
 
-    app.MyData.saveDefaults();
+    app.Data.saveDefaults();
   }
 
   /**
@@ -199,7 +199,7 @@ for this device.`;
    * @memberOf app.Background
    */
   function _initializeFirebase() {
-    if (app.MyData.isSignedIn()) {
+    if (app.Data.isSignedIn()) {
       return app.SW.initialize().catch((err) => {
         Chrome.GA.error(err.message, 'Background._initializeFirebase');
       });
