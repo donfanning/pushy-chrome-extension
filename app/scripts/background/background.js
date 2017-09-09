@@ -117,8 +117,7 @@ for this device.`;
         app.Msg.sendFailed(err);
       } else {
         Chrome.GA.error(err.message, 'Background._onIconClicked');
-        app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP,
-            app.Notify.ICON.ERROR, err.message);
+        app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, err.message);
       }
     });
   }

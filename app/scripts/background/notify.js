@@ -33,18 +33,46 @@ app.Notify = (function() {
    */
 
   /**
-   * Event types
+   * Notification types
    * @type {{}}
-   * @property {app.Notify.TYPE} SENT - message sent
+   * @property {app.Notify.TYPE} MESSAGE_SENT - message sent
+   * @property {app.Notify.TYPE} DEVICE_ADDED - added our device
+   * @property {app.Notify.TYPE} DEVICE_REMOVED - removed our device
    * @property {app.Notify.TYPE} SEND_ERROR - error sending message
+   * @property {app.Notify.TYPE} ERROR_STORE_CLIP - error saving to DB
    * @const
    * @memberOf app.Notify
    */
   const TYPE = {
-    SENT: {
+    MESSAGE_SENT: {
       id: 'sent',
-      title: 'Pushy: Sent push message',
+      title: 'Sent push message',
       message: 'Not set',
+      icon: '/images/ic_local_copy.png',
+      isClickable: true,
+      clickFunction: app.Utils.showMainTab,
+      requireInteraction: false,
+      hasButtons: false,
+      buttons: [],
+      buttonFunctions: [],
+    },
+    DEVICE_ADDED: {
+      id: 'added',
+      title: 'Sent push message',
+      message: 'Not set',
+      icon: '/images/ic_add_device.png',
+      isClickable: true,
+      clickFunction: app.Utils.showMainTab,
+      requireInteraction: false,
+      hasButtons: false,
+      buttons: [],
+      buttonFunctions: [],
+    },
+    DEVICE_REMOVED: {
+      id: 'removed',
+      title: 'Sent push message',
+      message: 'Not set',
+      icon: '/images/ic_remove_device.png',
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: false,
@@ -54,8 +82,9 @@ app.Notify = (function() {
     },
     ERROR_SEND: {
       id: 'error',
-      title: 'Pushy: Failed to send message.',
+      title: 'Failed to send message.',
       message: 'Not set',
+      icon: '/images/ic_error.png',
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: true,
@@ -70,8 +99,9 @@ app.Notify = (function() {
     },
     ERROR_STORE_CLIP: {
       id: 'error',
-      title: 'Pushy: Failed to store clipboard contents',
+      title: 'Failed to store clipboard contents',
       message: 'Not set',
+      icon: '/images/ic_error.png',
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: true,
@@ -87,40 +117,21 @@ app.Notify = (function() {
   };
 
   /**
-   * Icons
-   * @type {{LOCAL_COPY: string,
-   * ADD_DEVICE: string,
-   * REMOVE_DEVICE: string,
-   * ERROR: string}}
-   * @const
-   * @default
-   * @private
-   * @memberOf app.Notify
-   */
-  const ICON = {
-    LOCAL_COPY: '/images/ic_local_copy.png',
-    ADD_DEVICE: '/images/ic_add_device.png',
-    REMOVE_DEVICE: '/images/ic_remove_device.png',
-    ERROR: '/images/ic_error.png',
-  };
-
-  /**
    * Get the Notification options object
    * @param {app.Notify.TYPE} type - notification type
-   * @param {string} icon - path to icon
    * @param {string} message - message to display
    * @returns {Object} options object
    * @private
    */
-  function _getOptions(type, icon, message) {
+  function _getOptions(type, message) {
     let options = {
       type: 'basic',
       eventTime: Date.now(),
     };
-    options.title = type.title;
+    options.title = `Pushy: ${type.title}`;
     options.isClickable = type.isClickable;
     options.requireInteraction = type.requireInteraction;
-    options.iconUrl = chrome.runtime.getURL(icon);
+    options.iconUrl = chrome.runtime.getURL(type.icon);
     options.message = message;
     if (type.hasButtons) {
       options.buttons = type.buttons;
@@ -202,20 +213,13 @@ app.Notify = (function() {
     TYPE: TYPE,
 
     /**
-     * notification icons
-     * @memberOf app.Notify
-     */
-    ICON: ICON,
-
-    /**
      * Create and display a notification
      * @param {app.Notify.TYPE} type - notification type
-     * @param {?string} icon - path to icon
      * @param {string} message - message to display
      * @memberOf app.Notify
      */
-    create: function(type, icon, message) {
-      if (Chrome.Utils.isWhiteSpace(icon) ||
+    create: function(type, message) {
+      if (Chrome.Utils.isWhiteSpace(type.icon) ||
           Chrome.Utils.isWhiteSpace(message)) {
         // skip if no icon or message
         return;
@@ -225,7 +229,7 @@ app.Notify = (function() {
       type.message = message;
 
       // setup notification option object
-      let options = _getOptions(type, icon, message);
+      let options = _getOptions(type, message);
 
       chrome.notifications.getPermissionLevel(function(level) {
         if (level === 'granted') {
@@ -247,7 +251,7 @@ app.Notify = (function() {
 
     /**
      * Determine if error notifications are enabled
-     * todo add UI entry and data entry
+     * TODO add UI entry and data entry
      * @returns {boolean} true if enabled
      * @memberOf app.Notify
      */

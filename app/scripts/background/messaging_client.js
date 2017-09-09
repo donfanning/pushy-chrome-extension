@@ -114,12 +114,12 @@ app.Msg = (function() {
    * Send message to server for delivery to our {@link Devices}
    * @param {GaeMsg} data - data packet
    * @param {boolean} notify - display notification if true
-   * @param {?string} icon=null - notification icon
+   * @param {?app.Notify.TYPE} type=null - notification type
    * @returns {Promise<void>} void
    * @private
    * @memberOf app.Msg
    */
-  function _sendMessage(data, notify, icon=null) {
+  function _sendMessage(data, notify, type=null) {
     if (!app.MyData.isSignedIn() || !app.MyData.allowPush()) {
       return Promise.resolve();
     }
@@ -131,8 +131,8 @@ app.Msg = (function() {
       url = `${URL_BASE}${regId}/${json}/${highPriority}`;
       return app.Gae.doPost(url, true);
     }).then(() => {
-      if (notify && app.Notify.onSend()) {
-        app.Notify.create(app.Notify.TYPE.SENT, icon, data.m);
+      if (type && notify && app.Notify.onSend()) {
+        app.Notify.create(type, data.m);
       }
       Chrome.GA.event(app.GA.EVENT.SENT, data.act);
       return Promise.resolve();
@@ -161,7 +161,7 @@ app.Msg = (function() {
 
       const data = _getData(ACTION.MESSAGE, text);
       data.FAV = clipItem.fav ? '1' : '0';
-      return _sendMessage(true, app.Notify.ICON.LOCAL_COPY); // TODO revert
+      return _sendMessage(data, true, app.Notify.TYPE.MESSAGE_SENT);
     },
 
     /**
@@ -171,7 +171,7 @@ app.Msg = (function() {
      */
     sendDeviceAdded: function() {
       const data = _getData(ACTION.DEVICE_ADDED, BODY.DEVICE_ADDED);
-      return _sendMessage(data, true, app.Notify.ICON.ADD_DEVICE);
+      return _sendMessage(data, true, app.Notify.TYPE.DEVICE_ADDED);
     },
 
     /**
@@ -181,7 +181,7 @@ app.Msg = (function() {
      */
     sendDeviceRemoved: function() {
       const data = _getData(ACTION.DEVICE_REMOVED, BODY.DEVICE_REMOVED);
-      return _sendMessage(data, true, app.Notify.ICON.REMOVE_DEVICE);
+      return _sendMessage(data, true, app.Notify.TYPE.DEVICE_REMOVED);
     },
 
     /**
@@ -213,8 +213,7 @@ app.Msg = (function() {
      */
     sendFailed: function(err) {
       Chrome.GA.error(err.message, 'GAE.sendMessageFailed');
-      app.Notify.create(app.Notify.TYPE.ERROR_SEND, app.Notify.ICON.ERROR,
-          err.message);
+      app.Notify.create(app.Notify.TYPE.ERROR_SEND, err.message);
     },
   };
 })();
