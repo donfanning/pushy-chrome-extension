@@ -39,14 +39,14 @@ app.Notify = (function() {
   const TYPE = {
     SENT: {
       id: 'sent',
-      title: 'Sent push message',
+      title: 'Pushy: Sent push message',
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: false,
     },
     ERROR_SEND: {
       id: 'error',
-      title: 'Failed to send push message',
+      title: 'Pushy: Failed to send push message',
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: true,
