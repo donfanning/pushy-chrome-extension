@@ -210,7 +210,7 @@
         const chromep = new ChromePromise();
         chromep.identity.getProfileUserInfo().then((userInfo) => {
           if (!app.MyData.isSignedIn() &&
-              app.Utils.isWhiteSpace(userInfo.id)) {
+              Chrome.Utils.isWhiteSpace(userInfo.id)) {
             this.set('signInDisabled', true);
           } else {
             this.set('signInDisabled', false);

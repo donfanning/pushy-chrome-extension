@@ -37,6 +37,58 @@ app.Utils = (function() {
     MILLIS_IN_DAY: MILLIS_IN_DAY,
 
     /**
+     * Get our email address
+     * @memberOf app.Utils
+     * @returns {string} email address
+     */
+    getEmail: function() {
+      return 'pushyclipboard@gmail.com';
+    },
+
+    /**
+     * Get our Github base path
+     * @memberOf app.Utils
+     * @returns {string} path
+     */
+    getGithubPath: function() {
+      return 'https://github.com/Pushy-Clipboard/pushy-chrome-extension/';
+    },
+
+    /**
+     * Get our Github pages base path
+     * @memberOf app.Utils
+     * @returns {string} path
+     */
+    getGithubPagesPath: function() {
+      return 'https://pushy-clipboard.github.io/';
+    },
+
+    /**
+     * Get body for an email with basic extension info
+     * @memberOf app.Utils
+     * @returns {string} text
+     */
+    getEmailBody: function() {
+      return `Extension version: ${Chrome.Utils.getVersion()}\n`
+          + `Chrome version: ${Chrome.Utils.getFullChromeVersion()}\n`
+          + `OS: ${Chrome.Storage.get('os')}\n\n\n`;
+    },
+
+    /**
+     * Get encoded url for an email
+     * @memberOf app.Utils
+     * @param {string} subject - email subject
+     * @param {string} body - email bosy
+     * @returns {string} encoded url
+     */
+    getEmailUrl: function(subject, body) {
+      const email = encodeURIComponent(app.Utils.getEmail());
+      const sub = encodeURIComponent(subject);
+      const bod = encodeURIComponent(body);
+      return `mailto:${email}?subject=${sub}&body=${bod}`;
+    },
+
+    /**
      * Set the badge displayed on the extension icon
      * @memberOf app.Utils
      */
@@ -59,15 +111,6 @@ app.Utils = (function() {
         chrome.tabs.create({url: '../html/main.html'});
       });
     },
-    /**
-     * Determine if a String is null or whitespace only
-     * @param {string} str - string to check
-     * @returns {boolean} true if str is whitespace (or null)
-     * @memberOf app.Utils
-     */
-    isWhiteSpace: function(str) {
-      return (!str || str.length === 0 || /^\s*$/.test(str));
-    },
 
     /**
      * Get a date string in time ago format
@@ -78,28 +121,6 @@ app.Utils = (function() {
     getRelativeTime: function(time) {
       return `${moment(time).fromNow()}, ` +
           `${moment(time).format('h:mm a')}`;
-    },
-
-    /**
-     * Get a random string of the given length
-     * @param {int|null} len - length of generated string, 8 if null
-     * @returns {string} a random string
-     * @memberOf app.Utils
-     *
-     */
-    randomString: function(len) {
-      const POSS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
-          'abcdefghijklmnopqrstuvwxyz0123456789';
-      !len ? len = 8 : true;
-      if (!len) {
-        len = 8;
-      }
-      let text = '';
-      for (let i = 0; i < len; i++) {
-        text +=
-            POSS.charAt(Math.floor(Math.random() * POSS.length));
-      }
-      return text;
     },
   };
 })();

@@ -101,7 +101,7 @@ app.User = (function() {
       return app.Fb.signIn(token);
     }).then((user) => {
       _setSignIn(true);
-      if (!app.Utils.isWhiteSpace(user.photoURL)) {
+      if (!Chrome.Utils.isWhiteSpace(user.photoURL)) {
         Chrome.Storage.set('photoURL', user.photoURL);
       }
       return app.Msg.sendDeviceAdded();

@@ -281,7 +281,7 @@ window.app = window.app || {};
    */
   t.computeAvatarDisplay = function(avatar) {
     let ret = 'inline';
-    if (app.Utils.isWhiteSpace(avatar)) {
+    if (Chrome.Utils.isWhiteSpace(avatar)) {
       ret = 'none';
     }
     return ret;

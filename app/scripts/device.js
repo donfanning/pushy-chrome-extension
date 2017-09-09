@@ -73,7 +73,7 @@
    */
   Device.prototype.getName = function() {
     let name = this.nickname;
-    if (app.Utils.isWhiteSpace(name)) {
+    if (Chrome.Utils.isWhiteSpace(name)) {
       name = this.getUniqueName();
     }
     return name;
@@ -101,7 +101,7 @@
    */
   Device.myName = function() {
     let name = Device.myNickname();
-    if (app.Utils.isWhiteSpace(name)) {
+    if (Chrome.Utils.isWhiteSpace(name)) {
       name = Device.myUniqueName();
     }
     return name;

@@ -90,7 +90,7 @@
    * @returns {Promise<string>} primary key it was stored under
    */
   ClipItem.prototype.save = function() {
-    if (app.Utils.isWhiteSpace(this.text)) {
+    if (Chrome.Utils.isWhiteSpace(this.text)) {
       return Promise.reject(new Error(ClipItem.ERROR_EMPTY_TEXT));
     }
     return _db.clipItems.put(this);

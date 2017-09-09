@@ -17,76 +17,76 @@
 <script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
 
 <dom-module id="help-page">
-	<template>
-		<style include="iron-flex iron-flex-alignment"></style>
-		<style include="shared-styles"></style>
-		<style>
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
 
-			:host {
-				display: block;
-				position: relative;
-			}
+      :host {
+        display: block;
+        position: relative;
+      }
 
-			hr {
-				margin-left: 0;
-				margin-right: 0;
-			}
+      hr {
+        margin-left: 0;
+        margin-right: 0;
+      }
 
-			.card-content {
-				padding: 0;
-				margin: 0;
-			}
+      .card-content {
+        padding: 0;
+        margin: 0;
+      }
 
-		</style>
+    </style>
 
-		<paper-card class="page-content" heading="Help & feedback">
-			<div class="card-content">
-				<setting-link section-title="Feedback (English only, please)"
-				              label="Question"
-				              name="questionMail"
-				              icon="myicons:mail"
-				              url="mailto:pushyclipboard%40gmail.com?subject=Question&body=[[_computeEmailBody()]]"></setting-link>
-				<setting-link label="Bug report"
-				              name="bugMail"
-				              icon="myicons:mail"
-				              url="mailto:pushyclipboard%40gmail.com?subject=Bug%20report&body=[[_computeEmailBody()]]"></setting-link>
-				<setting-link label="Feature request"
-				              name="featureMail"
-				              icon="myicons:mail"
-				              url="mailto:pushyclipboard%40gmail.com?subject=Feature%20request&body=[[_computeEmailBody()]]"></setting-link>
-				<setting-link label="General feedback"
-				              name="feedbackMail"
-				              icon="myicons:mail"
-				              url="mailto:pushyclipboard%40gmail.com?subject=General%20feedback"></setting-link>
-				<setting-link label="Submit Github issue (requires account)"
-				              name="submitGitHubIssue"
-				              noseparator
-				              icon="myicons:github"
-				              url="https://github.com/Pushy-Clipboard/pushy-chrome-extension/issues/new"></setting-link>
+    <paper-card class="page-content" heading="Help & feedback">
+      <div class="card-content">
+        <setting-link section-title="Feedback (English only, please)"
+                      label="Question"
+                      name="questionMail"
+                      icon="myicons:mail"
+                      url="[[_computeMailToUrl('Question')]]"></setting-link>
+        <setting-link label="Bug report"
+                      name="bugMail"
+                      icon="myicons:mail"
+                      url="[[_computeMailToUrl('Bug Report')]]"></setting-link>
+        <setting-link label="Feature request"
+                      name="featureMail"
+                      icon="myicons:mail"
+                      url="[[_computeMailToUrl('Feature Request')]]"></setting-link>
+        <setting-link label="General feedback"
+                      name="feedbackMail"
+                      icon="myicons:mail"
+                      url="[[_computeMailToUrl('General Feedback')]]"></setting-link>
+        <setting-link label="Submit Github issue (requires account)"
+                      name="submitGitHubIssue"
+                      noseparator
+                      icon="myicons:github"
+                      url="[[githubPath]]issues/new"></setting-link>
 
-				<hr/>
+        <hr/>
 
-				<setting-link section-title="Help"
-				              name="documentation"
-				              label="User documentation"
-				              icon="myicons:info"
-				              url="https://pushy-clipboard.github.io/documentation.html"></setting-link>
-				<setting-link label="Release notes"
-				              name="releaseNotes"
-				              icon="myicons:github"
-				              url="https://github.com/Pushy-Clipboard/pushy-chrome-extension/releases/tag/v[[_computeVersion()]]"></setting-link>
-				<setting-link label="Open source licenses"
-				              name="licenses"
-				              icon="myicons:github"
-				              url="https://github.com/Pushy-Clipboard/pushy-chrome-extension/blob/master/LICENSES.md"></setting-link>
-				<setting-link label="Source code"
-				              name="sourceCode"
-				              noseparator
-				              icon="myicons:github"
-				              url="https://github.com/Pushy-Clipboard/pushy-chrome-extension"></setting-link>
-			</div>
-		</paper-card>
-	</template>
+        <setting-link section-title="Help"
+                      name="documentation"
+                      label="User documentation"
+                      icon="myicons:info"
+                      url="[[githubPagesPath]]documentation.html"></setting-link>
+        <setting-link label="Release notes"
+                      name="releaseNotes"
+                      icon="myicons:github"
+                      url="[[githubPath]]releases/tag/v[[_computeVersion()]]"></setting-link>
+        <setting-link label="Open source licenses"
+                      name="licenses"
+                      icon="myicons:github"
+                      url="[[githubPath]]blob/master/LICENSES.md"></setting-link>
+        <setting-link label="Source code"
+                      name="sourceCode"
+                      noseparator
+                      icon="myicons:github"
+                      url="[[githubPagesPath]]"></setting-link>
+      </div>
+    </paper-card>
+  </template>
 </dom-module>
 
 <script>
@@ -99,19 +99,25 @@
     app.HelpPageFactory = Polymer({
       is: 'help-page',
 
-      /**
-       * computed binding: Get the body for support emails
-       * @returns {string} email body
-       * @private
-       */
-      _computeEmailBody: function() {
-        const text = `Extension version: ${Chrome.Utils.getVersion()}\n`
-        + `Chrome version: ${Chrome.Utils.getFullChromeVersion()}\n`
-        + `OS: ${Chrome.Storage.get('os')}\n\n\n`;
-        return encodeURIComponent(text);
+      properties: {
+        githubPath: {
+          type: String,
+          value: function() {
+            return app.Utils.getGithubPath();
+          },
+          readOnly: true,
+        },
+
+        githubPagesPath: {
+          type: String,
+          value: function() {
+            return app.Utils.getGithubPagesPath();
+          },
+          readOnly: true,
+        },
       },
 
-      /**
+       /**
        * computed binding: Get the extension version
        * @returns {string} version
        * @private
@@ -119,6 +125,16 @@
       _computeVersion: function() {
         const text = Chrome.Utils.getVersion();
         return encodeURIComponent(text);
+      },
+
+       /**
+       * computed binding: Get a mailto url
+       * @param {string} subject - email subject
+       * @returns {string} url
+       * @private
+       */
+      _computeMailToUrl: function(subject) {
+        return app.Utils.getEmailUrl(subject, app.Utils.getEmailBody());
       },
 
     });

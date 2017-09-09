@@ -149,7 +149,7 @@ app.Msg = (function() {
      * @memberOf app.Msg
      */
     sendClipItem: function(clipItem) {
-      if (app.Utils.isWhiteSpace(clipItem.text)) {
+      if (Chrome.Utils.isWhiteSpace(clipItem.text)) {
         return Promise.resolve();
       }
 

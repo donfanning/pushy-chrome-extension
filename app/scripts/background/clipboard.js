@@ -53,7 +53,7 @@ app.CB = (function() {
     setTimeout(function() {
       // get the clipboard contents
       const text = app.CB.getTextFromClipboard();
-      if (app.Utils.isWhiteSpace(text)) {
+      if (Chrome.Utils.isWhiteSpace(text)) {
         return;
       }
 
