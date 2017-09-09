@@ -68,7 +68,7 @@ app.Notify = (function() {
     LOCAL_COPY: '/images/ic_local_copy.png',
     ADD_DEVICE: '/images/ic_add_device.png',
     REMOVE_DEVICE: '/images/ic_remove_device.png',
-    ERROR: '/images/ic_local_copy.png', // todo create icon
+    ERROR: '/images/ic_error.png',
   };
 
   /**
