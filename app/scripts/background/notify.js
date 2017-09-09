@@ -81,7 +81,7 @@ app.Notify = (function() {
       buttonFunctions: [],
     },
     ERROR_SEND: {
-      id: 'error',
+      id: 'error_send',
       title: 'Failed to send message.',
       message: 'Not set',
       icon: '/images/ic_error.png',
@@ -98,7 +98,7 @@ app.Notify = (function() {
       buttonFunctions: [_sendErrorEmail],
     },
     ERROR_STORE_CLIP: {
-      id: 'error',
+      id: 'error_store_clip',
       title: 'Failed to store clipboard contents',
       message: 'Not set',
       icon: '/images/ic_error.png',
