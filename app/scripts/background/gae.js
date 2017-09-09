@@ -71,15 +71,14 @@ app.Gae = (function() {
     },
 
     /**
-     * Notify listeners that send message failed
+     * Display notification that send message failed
      * @param {Error} err - what caused the failure
      * @memberOf app.Gae
      */
     sendMessageFailed: function(err) {
-      Chrome.GA.error(err, 'GAE.sendMessageFailed');
-      const msg = app.ChromeMsg.MSG_FAILED;
-      msg.error = err.toString();
-      Chrome.Msg.send(msg).catch(() => {});
+      Chrome.GA.error(err.message, 'GAE.sendMessageFailed');
+      app.Notify.create(app.Notify.TYPE.ERROR_SEND, app.Notify.ICON.ERROR,
+          err.message);
     },
   };
 })();

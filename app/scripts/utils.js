@@ -49,6 +49,17 @@ app.Utils = (function() {
     },
 
     /**
+     * Send message to the main tab to focus it. If not found, create it
+     * @memberOf app.Utils
+     */
+    showMainTab: function() {
+      // send message to the main tab to focus it.
+      Chrome.Msg.send(app.ChromeMsg.HIGHLIGHT).catch(() => {
+        // no one listening, create it
+        chrome.tabs.create({url: '../html/main.html'});
+      });
+    },
+    /**
      * Determine if a String is null or whitespace only
      * @param {string} str - string to check
      * @returns {boolean} true if str is whitespace (or null)

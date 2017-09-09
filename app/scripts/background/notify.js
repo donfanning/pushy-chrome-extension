@@ -8,7 +8,8 @@ window.app = window.app || {};
 
 /**
  * Handle display of notifications
- *  @namespace
+ * @see https://developer.chrome.com/apps/notifications
+ * @namespace
  */
 app.Notify = (function() {
   'use strict';
@@ -16,20 +17,48 @@ app.Notify = (function() {
   new ExceptionHandler();
 
   /**
-   * Send notification type
-   * @type {string}
-   * @default
-   * @const
-   * @private
+   * Notification type
+   * @typedef {Object} app.Notify.TYPE
+   * @property {string} id - unique notification type
+   * @property {string} title - title
+   * @property {string} icon - path to icon
+   * @property {boolean} isClickable - if true, execute function on click
+   * @property {function} clickFunction - function to run on click
+   * @property {boolean} requireInteraction - if true, visible until dismissed
    * @memberOf app.Notify
    */
-  const NOTIFY_SEND = 'CLIP_MAN_SEND';
+
+  /**
+   * Event types
+   * @type {{}}
+   * @property {app.Notify.TYPE} SENT - message sent
+   * @property {app.Notify.TYPE} SEND_ERROR - error sending message
+   * @const
+   * @memberOf app.Notify
+   */
+  const TYPE = {
+    SENT: {
+      id: 'sent',
+      title: 'Sent push message',
+      isClickable: true,
+      clickFunction: app.Utils.showMainTab,
+      requireInteraction: false,
+    },
+    ERROR_SEND: {
+      id: 'error',
+      title: 'Failed to send push message',
+      isClickable: true,
+      clickFunction: app.Utils.showMainTab,
+      requireInteraction: true,
+    },
+  };
 
   /**
    * Icons
    * @type {{LOCAL_COPY: string,
    * ADD_DEVICE: string,
-   * REMOVE_DEVICE: string}}
+   * REMOVE_DEVICE: string,
+   * ERROR: string}}
    * @const
    * @default
    * @private
@@ -39,26 +68,8 @@ app.Notify = (function() {
     LOCAL_COPY: '/images/ic_local_copy.png',
     ADD_DEVICE: '/images/ic_add_device.png',
     REMOVE_DEVICE: '/images/ic_remove_device.png',
+    ERROR: '/images/ic_local_copy.png', // todo create icon
   };
-
-  /**
-   * Get the icon for the notification
-   * @param {GaeMsg} data message object
-   * @returns {?string} path to icon, null for
-   * actions without notifications (ping)
-   * @memberOf app.Notify
-   */
-  function _getIcon(data) {
-    let path = '';
-    if (data.act === app.Msg.ACTION.MESSAGE) {
-      path = ICON.LOCAL_COPY;
-    } else if (data.act === app.Msg.ACTION.DEVICE_ADDED) {
-      path = ICON.ADD_DEVICE;
-    } else if (data.act === app.Msg.ACTION.DEVICE_REMOVED) {
-      path = ICON.REMOVE_DEVICE;
-    }
-    return path;
-  }
 
   /**
    * Event: Fired when the user clicked in a non-button area
@@ -69,7 +80,7 @@ app.Notify = (function() {
    * @memberOf app.Notify
    */
   function _onNotificationClicked(id) {
-    app.Notify.showMainTab();
+    app.Utils.showMainTab();
     chrome.notifications.clear(id, () => {});
   }
 
@@ -78,42 +89,45 @@ app.Notify = (function() {
 
   return {
     /**
-     * Send notification type
+     * notification types
      * @memberOf app.Notify
      */
-    NOTIFY_SEND: NOTIFY_SEND,
+    TYPE: TYPE,
+
+    /**
+     * notification icons
+     * @memberOf app.Notify
+     */
+    ICON: ICON,
 
     /**
      * Create and display a notification
-     * @param {string} type - notification type (send or receive)
-     * @param {GaeMsg} data - message data
+     * @param {app.Notify.TYPE} type - notification type
+     * @param {?string} icon - path to icon
+     * @param {string} message - message to display
      * @memberOf app.Notify
      */
-    create: function(type, data) {
-      const options = {
-        type: 'basic',
-        title: 'Pushy',
-        isClickable: true,
-        eventTime: Date.now(),
-      };
-      const icon = _getIcon(data);
-      if (!icon) {
-        // skip ping messages
+    create: function(type, icon, message) {
+      if (Chrome.Utils.isWhiteSpace(icon) ||
+          Chrome.Utils.isWhiteSpace(message)) {
+        // skip if no icon or message
         return;
       }
 
+      // setup notification option object
+      let options = {
+        type: 'basic',
+        eventTime: Date.now(),
+      };
+      options.title = type.title;
+      options.isClickable = type.isClickable;
+      options.requireInteraction = type.requireInteraction;
+      options.iconUrl = chrome.runtime.getURL(icon);
+      options.message = message;
+
       chrome.notifications.getPermissionLevel(function(level) {
         if (level === 'granted') {
-          switch (type) {
-            case NOTIFY_SEND:
-              options.iconUrl = chrome.runtime.getURL(icon);
-              options.title = 'Sent push message';
-              options.message = data.m;
-              chrome.notifications.create(type, options, () => {});
-              break;
-            default:
-              break;
-          }
+          chrome.notifications.create(type.id, options, () => {});
         }
       });
     },
@@ -130,15 +144,15 @@ app.Notify = (function() {
     },
 
     /**
-     * Send message to the main tab to focus it. If not found, create it
+     * Determine if error notifications are enabled
+     * todo add UI entry and data entry
+     * @returns {boolean} true if enabled
      * @memberOf app.Notify
      */
-    showMainTab: function() {
-      // send message to the main tab to focus it.
-      Chrome.Msg.send(app.ChromeMsg.HIGHLIGHT).catch(() => {
-        // no one listening, create it
-        chrome.tabs.create({url: '../html/main.html'});
-      });
+    onError: function() {
+      const notify = Chrome.Storage.getBool('notify');
+      const notifyOnError = Chrome.Storage.getBool('notifyOnError');
+      return notify && notifyOnError;
     },
   };
 })();

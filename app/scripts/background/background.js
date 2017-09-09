@@ -62,7 +62,7 @@ for this device.`;
         Chrome.GA.error(err.message, 'Background._onInstalled');
       });
       _initializeData();
-      app.Notify.showMainTab();
+      app.Utils.showMainTab();
     } else if (details.reason === 'update') {
       _updateData();
       _initializeFirebase().then(() => {
