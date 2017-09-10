@@ -39,6 +39,7 @@ app.Utils = (function() {
     /**
      * Get our email address
      * @returns {string} email address
+     * @memberOf app.Utils
      */
     getEmail: function() {
       return 'pushyclipboard@gmail.com';
