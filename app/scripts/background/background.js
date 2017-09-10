@@ -31,7 +31,7 @@
       // save OS
       Chrome.Utils.getPlatformOS().then((os) => {
         Chrome.Storage.set('os', os);
-        return null;
+        return Promise.resolve();
       }).catch((err) => {
         Chrome.GA.error(err.message, 'Background._onInstalled');
       });

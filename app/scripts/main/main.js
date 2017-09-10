@@ -304,7 +304,7 @@ window.app = window.app || {};
       const chromep = new ChromePromise();
       chromep.tabs.getCurrent().then((t) => {
         chrome.tabs.update(t.id, {'highlighted': true});
-        return null;
+        return Promise.resolve();
       }).catch((err) => {
         Chrome.GA.error(err.message, 'chromep.tabs.getCurrent');
       });
