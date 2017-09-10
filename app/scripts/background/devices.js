@@ -100,7 +100,7 @@ app.Devices = (function() {
       app.Devices.removeByName(request.item);
     } else if (request.message === app.ChromeMsg.PING.message) {
       app.Msg.sendPing().catch((err) => {
-        app.Gae.sendMessageFailed(err);
+        app.Msg.sendFailed(err);
       });
     }
     return ret;
