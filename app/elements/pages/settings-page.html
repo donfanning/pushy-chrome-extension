@@ -22,92 +22,97 @@
 <script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
 
 <dom-module id="settings-page">
-	<style include="iron-flex iron-flex-alignment"></style>
-	<style include="shared-styles"></style>
-	<template>
-		<style>
+  <style include="iron-flex iron-flex-alignment"></style>
+  <style include="shared-styles"></style>
+  <template>
+    <style>
 
-			:host {
-				display: block;
-				position: relative;
-			}
+      :host {
+        display: block;
+        position: relative;
+      }
 
-		</style>
+    </style>
 
-		<paper-card class="page-content" heading="Settings">
-			<div class="card-content">
+    <paper-card class="page-content" heading="Settings">
+      <div class="card-content">
 
-				<!-- Error dialog -->
-				<paper-dialog id="errorDialog" modal
-				              entry-animation="scale-up-animation"
-				              exit-animation="fade-out-animation">
-					<h2 id="dialogTitle" class="vertical layout center"></h2>
-					<paper-dialog-scrollable>
-						<paper-item id="dialogText"></paper-item>
-					</paper-dialog-scrollable>
-					<div class="buttons">
-						<paper-button dialog-dismiss autofocus>CLOSE</paper-button>
-					</div>
-				</paper-dialog>
+        <!-- Error dialog -->
+        <paper-dialog id="errorDialog" modal
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+          <h2 id="dialogTitle" class="vertical layout center"></h2>
+          <paper-dialog-scrollable>
+            <paper-item id="dialogText"></paper-item>
+          </paper-dialog-scrollable>
+          <div class="buttons">
+            <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
+          </div>
+        </paper-dialog>
 
-				<setting-toggle
-						section-title="Clipboard & messaging"
-						name="monitorClipboard"
-						main-label="Monitor clipboard"
-						secondary-label="Automatically store contents when possible">
-				</setting-toggle>
-				<setting-toggle
-						name="allowPush"
-						main-label="Push to devices"
-						secondary-label="Send messages to your registered devices"
-						checked="{{pushEnabled}}">
-				</setting-toggle>
-				<setting-toggle
-						name="autoSend"
-						main-label="Auto send"
-						secondary-label="Automatically send when possible"
-						disabled$="[[!pushEnabled]]"
-						indent>
-				</setting-toggle>
-				<setting-toggle
-						name="allowReceive"
-						main-label="Receive from devices"
-						secondary-label="Receive messages from your registered devices">
-				</setting-toggle>
-				<setting-toggle
-						name="highPriority"
-						main-label="High priority message"
-						secondary-label="Wakes android devices for immediate delivery. Uses more battery."
-						noseparator>
-				</setting-toggle>
+        <setting-toggle
+            section-title="Clipboard & messaging"
+            name="monitorClipboard"
+            main-label="Monitor clipboard"
+            secondary-label="Automatically store contents when possible">
+        </setting-toggle>
+        <setting-toggle
+            name="allowPush"
+            main-label="Push to devices"
+            secondary-label="Send messages to your registered devices"
+            checked="{{pushEnabled}}">
+        </setting-toggle>
+        <setting-toggle
+            name="autoSend"
+            main-label="Auto send"
+            secondary-label="Automatically send when possible"
+            disabled$="[[!pushEnabled]]"
+            indent>
+        </setting-toggle>
+        <setting-toggle
+            name="allowReceive"
+            main-label="Receive from devices"
+            secondary-label="Receive messages from your registered devices">
+        </setting-toggle>
+        <setting-toggle
+            name="highPriority"
+            main-label="High priority message"
+            secondary-label="Wakes android devices for immediate delivery. Uses more battery."
+            noseparator>
+        </setting-toggle>
 
-				<setting-text
-						section-title="General"
-						id="deviceNickname"
-						name="deviceNickname"
-						main-label="Nickname"
-						secondary-label="Descriptive name for this device"
-						placeholder="e.g. Home Laptop"
-						maxlength="32">
-				</setting-text>
-				<setting-dropdown
-						name="storageDuration"
-						label="Storage duration"
-						items='["One day", "One week", "One month",
+        <setting-text
+            section-title="General"
+            id="deviceNickname"
+            name="deviceNickname"
+            main-label="Nickname"
+            secondary-label="Descriptive name for this device"
+            placeholder="e.g. Home Laptop"
+            maxlength="32">
+        </setting-text>
+        <setting-dropdown
+            name="storageDuration"
+            label="Storage duration"
+            items='["One day", "One week", "One month",
 						 "One year", "Until space needed"]'
-						noseparator>
-				</setting-dropdown>
+            noseparator>
+        </setting-dropdown>
 
-				<setting-toggle
-						section-title="Notifications"
-						name="notifyOnSend"
-						main-label="Notify on send"
-						secondary-label="Display notification when a message is sent"
-						noseparator>
-				</setting-toggle>
-			</div>
-		</paper-card>
-	</template>
+        <setting-toggle
+            section-title="Notifications"
+            name="notifyOnSend"
+            main-label="Notify on send"
+            secondary-label="Display notification when a message is sent">
+        </setting-toggle>
+        <setting-toggle
+            name="notifyOnError"
+            main-label="Notify on error (recommended)"
+            secondary-label="Display notification when an error occurs"
+            noseparator>
+        </setting-toggle>
+      </div>
+    </paper-card>
+  </template>
 </dom-module>
 
 <script>

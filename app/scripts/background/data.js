@@ -66,6 +66,7 @@ app.Data = (function() {
     'storageDuration': 2,
     'notify': true,
     'notifyOnSend': false,
+    'notifyOnError': true,
     'highPriority': true,
     'deviceNickname': '',
     'devices': {},
