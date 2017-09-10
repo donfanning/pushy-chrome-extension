@@ -212,7 +212,7 @@ app.Msg = (function() {
      * @memberOf app.Msg
      */
     sendFailed: function(err) {
-      Chrome.GA.error(err.message, 'GAE.sendMessageFailed');
+      Chrome.GA.error(err.message, 'Msg.sendFailed');
       if (app.Notify.onError()) {
         app.Notify.create(app.Notify.TYPE.ERROR_SEND, err.message);
       }
