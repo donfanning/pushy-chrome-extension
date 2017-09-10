@@ -251,7 +251,6 @@ app.Notify = (function() {
 
     /**
      * Determine if error notifications are enabled
-     * TODO add UI entry and data entry
      * @returns {boolean} true if enabled
      * @memberOf app.Notify
      */

@@ -213,7 +213,9 @@ app.Msg = (function() {
      */
     sendFailed: function(err) {
       Chrome.GA.error(err.message, 'GAE.sendMessageFailed');
-      app.Notify.create(app.Notify.TYPE.ERROR_SEND, err.message);
+      if (app.Notify.onError()) {
+        app.Notify.create(app.Notify.TYPE.ERROR_SEND, err.message);
+      }
     },
   };
 })();

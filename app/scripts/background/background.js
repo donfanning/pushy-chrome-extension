@@ -91,7 +91,9 @@
         app.Msg.sendFailed(err);
       } else {
         Chrome.GA.error(err.message, 'Background._onIconClicked');
-        app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, err.message);
+        if (app.Notify.onError()) {
+          app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, err.message);
+        }
       }
     });
   }

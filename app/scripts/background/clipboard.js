@@ -65,7 +65,9 @@ app.CB = (function() {
         return Promise.resolve();
       }).catch((err) => {
         Chrome.GA.error(err.message, 'CB._addClipItemFromClipboard');
-        app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, err.message);
+        if (app.Notify.onError()) {
+          app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, err.message);
+        }
       });
 
     }, WAIT_MILLIS);
