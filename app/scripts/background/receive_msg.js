@@ -52,8 +52,8 @@
     try {
       data.m = decodeURIComponent(data.m);
     } catch (ex) {
-      // noinspection BadExpressionStatementJS
-      () => {};
+      const msg = `Caught: ReceiveMsg._process ${ex.message}`;
+      Chrome.GA.exception(msg, null, false);
     }
 
     if (data.act === app.Msg.ACTION.MESSAGE) {
@@ -100,8 +100,8 @@
     try {
       url = decodeURI(url);
     } catch (ex) {
-      // noinspection BadExpressionStatementJS
-      () => {};
+      const msg = `Caught: ReceiveMsg._onWebRequestBefore ${ex.message}`;
+      Chrome.GA.exception(msg, null, false);
     }
     const regex = /https:\/\/pushy-clipboard\.github\.io\/\?(.*)/;
     let text;
@@ -114,8 +114,8 @@
       try {
         dataArray = JSON.parse(text);
       } catch (ex) {
-        // noinspection BadExpressionStatementJS
-        () => {};
+        const msg = `Caught: ReceiveMsg._onWebRequestBefore ${ex.message}`;
+        Chrome.GA.exception(msg, null, false);
       }
       if (dataArray) {
         for (let i = 0; i < dataArray.length; i++) {
