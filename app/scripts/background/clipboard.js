@@ -31,7 +31,7 @@ app.CB = (function() {
    * @memberOf app.CB
    */
   function _sendLocalClipItem(clipItem) {
-    if (!clipItem.remote && app.Data.isAutoSend()) {
+    if (!clipItem.remote && app.Utils.isAutoSend()) {
       // send to our devices
       app.Msg.sendClipItem(clipItem).catch((err) => {
         app.Msg.sendFailed(err);
@@ -45,7 +45,7 @@ app.CB = (function() {
    * @memberOf app.CB
    */
   function _addClipItemFromClipboard() {
-    if (!app.Data.isMonitorClipboard()) {
+    if (!app.Utils.isMonitorClipboard()) {
       return;
     }
 

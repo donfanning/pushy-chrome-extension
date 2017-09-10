@@ -42,7 +42,7 @@
    */
   function _process(data) {
     const device = _getDevice(data);
-    if (!app.Data.isSignedIn() || device.isMe()) {
+    if (!app.Utils.isSignedIn() || device.isMe()) {
       // don't handle our messages or if we are signed out
       return;
     }
@@ -72,7 +72,7 @@
       app.Devices.add(device);
       // respond to ping
       app.Msg.sendPingResponse(data.srcRegId).catch((err) => {
-        app.Gae.sendMessageFailed(err);
+        app.Msg.sendFailed(err);
       });
     } else if (data.act === app.Msg.ACTION.PING_RESPONSE) {
       // someone is around

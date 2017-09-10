@@ -38,7 +38,6 @@ app.Utils = (function() {
 
     /**
      * Get our email address
-     * @memberOf app.Utils
      * @returns {string} email address
      */
     getEmail: function() {
@@ -47,8 +46,8 @@ app.Utils = (function() {
 
     /**
      * Get our Github base path
-     * @memberOf app.Utils
      * @returns {string} path
+     * @memberOf app.Utils
      */
     getGithubPath: function() {
       return 'https://github.com/Pushy-Clipboard/pushy-chrome-extension/';
@@ -56,8 +55,8 @@ app.Utils = (function() {
 
     /**
      * Get our Github pages base path
-     * @memberOf app.Utils
      * @returns {string} path
+     * @memberOf app.Utils
      */
     getGithubPagesPath: function() {
       return 'https://pushy-clipboard.github.io/';
@@ -65,8 +64,8 @@ app.Utils = (function() {
 
     /**
      * Get body for an email with basic extension info
-     * @memberOf app.Utils
      * @returns {string} text
+     * @memberOf app.Utils
      */
     getEmailBody: function() {
       return `Extension version: ${Chrome.Utils.getVersion()}\n`
@@ -76,10 +75,10 @@ app.Utils = (function() {
 
     /**
      * Get encoded url for an email
-     * @memberOf app.Utils
      * @param {string} subject - email subject
      * @param {string} body - email bosy
      * @returns {string} encoded url
+     * @memberOf app.Utils
      */
     getEmailUrl: function(subject, body) {
       const email = encodeURIComponent(app.Utils.getEmail());
@@ -94,7 +93,7 @@ app.Utils = (function() {
      */
     setBadgeText: function() {
       let text = '';
-      if (app.Data.isSignedIn() && app.Data.allowPush()) {
+      if (app.Utils.isSignedIn() && app.Utils.allowPush()) {
         text = 'SEND';
       }
       chrome.browserAction.setBadgeText({text: text});
@@ -121,6 +120,69 @@ app.Utils = (function() {
     getRelativeTime: function(time) {
       return `${moment(time).fromNow()}, ` +
           `${moment(time).format('h:mm a')}`;
+    },
+
+    /**
+     * Are we saving clipboard contents
+     * @returns {boolean} true if enabled
+     * @memberOf app.Utils
+     */
+    isMonitorClipboard: function() {
+      return Chrome.Storage.getBool('monitorClipboard');
+    },
+
+    /**
+     * Has user enabled pushing to {@link app.Devices}
+     * @returns {boolean} true if enabled
+     * @memberOf app.Utils
+     */
+    allowPush: function() {
+      return Chrome.Storage.getBool('allowPush');
+    },
+
+    /**
+     * Has user enabled autoSend option
+     * @returns {boolean} true if enabled
+     * @memberOf app.Utils
+     */
+    isAutoSend: function() {
+      return Chrome.Storage.getBool('autoSend');
+    },
+
+    /**
+     * Has user enabled receiving from {@link app.Devices}
+     * @returns {boolean} true if enabled
+     * @memberOf app.Utils
+     */
+    allowReceive: function() {
+      return Chrome.Storage.getBool('allowReceive');
+    },
+
+    /**
+     * Are we signed in
+     * @returns {boolean} true if signed in
+     * @memberOf app.Utils
+     */
+    isSignedIn: function() {
+      return Chrome.Storage.getBool('signedIn');
+    },
+
+    /**
+     * Are we registered with fcm
+     * @returns {boolean} true if registered
+     * @memberOf app.Utils
+     */
+    isRegistered: function() {
+      return Chrome.Storage.getBool('registered');
+    },
+
+    /**
+     * Are we not registered with fcm
+     * @returns {boolean} true if not registered
+     * @memberOf app.Utils
+     */
+    notRegistered: function() {
+      return !this.isRegistered();
     },
   };
 })();

@@ -185,7 +185,7 @@ window.app = window.app || {};
     Chrome.GA.page('/main.html');
     // disable devices-page if not signed in
     const idx = _getPageIdx('page-devices');
-    t.pages[idx].disabled = !app.Data.isSignedIn();
+    t.pages[idx].disabled = !app.Utils.isSignedIn();
     // listen for Chrome messages
     Chrome.Msg.listen(_onChromeMessage);
     // check for permissions
@@ -493,7 +493,7 @@ window.app = window.app || {};
     // disable devices-page if not signed in
     const idx = _getPageIdx('page-devices');
     const el = document.getElementById(t.pages[idx].route);
-    if (el && app.Data.isSignedIn()) {
+    if (el && app.Utils.isSignedIn()) {
       el.removeAttribute('disabled');
     } else if (el) {
       el.setAttribute('disabled', 'true');

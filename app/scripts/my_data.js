@@ -37,9 +37,7 @@ app.Data = (function() {
    * @property {int} storageDuration - how long to save clipItems
    * @property {boolean} notify - xxx
    * @property {boolean} notifyOnSend - show notification on send push
-   * @property {boolean} notifyOnReceive - show notification on receive push
    * @property {boolean} highPriority - send high priority messages
-   * @property {string} deviceSN - serial number of our device
    * @property {string} deviceNickname - nickname of our device
    * @property {Object} devices - other devices we know about
    * @property {boolean} signedIn - are we logged in
@@ -151,12 +149,11 @@ for this device.`;
     update: function() {
       // New items and removal of unused items can take place here
       // when the version changes
-      const version = app.Data.getCurrentVersion();
       const oldVersion = Chrome.Storage.getInt('version');
 
-      if (version > oldVersion) {
+      if ((oldVersion === null) || (_VERSION > oldVersion)) {
         // update version number
-        Chrome.Storage.set('version', version);
+        Chrome.Storage.set('version', _VERSION);
       }
 
       if (oldVersion < 2) {
@@ -171,87 +168,6 @@ for this device.`;
       }
 
       _addDefaults();
-    },
-
-    /**
-     * Get the current data version
-     * @returns {int} the version of our data
-     * @memberOf app.Data
-     */
-    getCurrentVersion: function() {
-      return _VERSION;
-    },
-
-    /**
-     * Are we saving clipboard contents
-     * @returns {boolean} true if enabled
-     * @memberOf app.Data
-     */
-    isMonitorClipboard: function() {
-      return Chrome.Storage.getBool('monitorClipboard');
-    },
-
-    /**
-     * Has user enabled pushing to {@link app.Devices}
-     * @returns {boolean} true if enabled
-     * @memberOf app.Data
-     */
-    allowPush: function() {
-      return Chrome.Storage.getBool('allowPush');
-    },
-
-    /**
-     * Has user enabled autoSend option
-     * @returns {boolean} true if enabled
-     * @memberOf app.Data
-     */
-    isAutoSend: function() {
-      return Chrome.Storage.getBool('autoSend');
-    },
-
-    /**
-     * Has user enabled receiving from {@link app.Devices}
-     * @returns {boolean} true if enabled
-     * @memberOf app.Data
-     */
-    allowReceive: function() {
-      return Chrome.Storage.getBool('allowReceive');
-    },
-
-    /**
-     * Are we signed in
-     * @returns {boolean} true if signed in
-     * @memberOf app.Data
-     */
-    isSignedIn: function() {
-      return Chrome.Storage.getBool('signedIn');
-    },
-
-    /**
-     * Are we registered with fcm
-     * @returns {boolean} true if registered
-     * @memberOf app.Data
-     */
-    isRegistered: function() {
-      return Chrome.Storage.getBool('registered');
-    },
-
-    /**
-     * Are we not registered with fcm
-     * @returns {boolean} true if not registered
-     * @memberOf app.Data
-     */
-    notRegistered: function() {
-      return !this.isRegistered();
-    },
-
-    /**
-     * Get our serial number
-     * @returns {boolean} true if not registered
-     * @memberOf app.Data
-     */
-    getDeviceSN: function() {
-      return Chrome.Storage.get('deviceSN');
     },
   };
 })();

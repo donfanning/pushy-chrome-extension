@@ -128,7 +128,7 @@
    * @memberOf Background
    */
   function _initializeFirebase() {
-    if (app.Data.isSignedIn()) {
+    if (app.Utils.isSignedIn()) {
       return app.SW.initialize().catch((err) => {
         Chrome.GA.error(err.message, 'Background._initializeFirebase');
       });
