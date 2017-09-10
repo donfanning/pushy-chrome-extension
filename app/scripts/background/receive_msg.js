@@ -24,8 +24,8 @@
   const MESSAGE_WAIT_MILLIS = 500;
 
   /**
-   * Get new {@link Device} from {@link GaeMsg}
-   * @param {GaeMsg} data - push data
+   * Get new {@link Device} from {@link app.Msg.GaeMsg}
+   * @param {app.Msg.GaeMsg} data - push data
    * @returns {Device} a {@link Device}
    * @private
    * @memberOf ReceiveMsg
@@ -36,7 +36,7 @@
 
   /**
    * Process received push notifications
-   * @param {GaeMsg} data - push message
+   * @param {app.Msg.GaeMsg} data - push message
    * @private
    * @memberOf ReceiveMsg
    */

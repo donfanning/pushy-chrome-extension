@@ -78,7 +78,7 @@
 
   /**
    * Get the name of the Device who sent the message
-   * @param {GaeMsg} data  - message object
+   * @param {app.Msg.GaeMsg} data  - message object
    * @returns {string} device name
    * @memberOf ServiceWorker
    */
@@ -94,7 +94,7 @@
 
   /**
    * Get the tag for the notification
-   * @param {GaeMsg} data - message object
+   * @param {app.Msg.GaeMsg} data - message object
    * @returns {string} notification tag
    * @memberOf ServiceWorker
    */
@@ -108,7 +108,7 @@
 
   /**
    * Get the icon for the notification
-   * @param {GaeMsg} data - message object
+   * @param {app.Msg.GaeMsg} data - message object
    * @returns {string} path to icon
    * @memberOf ServiceWorker
    */
@@ -124,7 +124,7 @@
 
   /**
    * Send any data attached to a notification to the extension
-   * @param {GaeMsg[]} dataArray - possible array of {@link GaeMsg} objects
+   * @param {GaeMsg[]} dataArray - possible array of {@link app.Msg.GaeMsg} objects
    * @returns {Promise<void>} always resolves
    */
   function processNotificationData(dataArray) {
@@ -138,7 +138,7 @@
   /**
    * Send fake GET request so extension can intercept it and get the payload
    * @see https://bugs.chromium.org/p/chromium/issues/detail?id=452942
-   * @param {GaeMsg[]} dataArray Array of {@link GaeMsg} objects
+   * @param {GaeMsg[]} dataArray Array of {@link app.Msg.GaeMsg} objects
    * @returns {Promise<void>} fails if extension successfully canceled request
    * @memberOf ServiceWorker
    */

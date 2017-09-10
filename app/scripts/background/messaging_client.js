@@ -70,7 +70,7 @@ app.Msg = (function() {
 
   /**
    * Data packet sent to server
-   * @typedef {{}} GaeMsg
+   * @typedef {{}} app.Msg.GaeMsg
    * @property {string} act - type of message
    * @property {string} m - content of message
    * @property {string} dM - {@link Device} model
@@ -79,13 +79,14 @@ app.Msg = (function() {
    * @property {string} dN - {@link Device} nickname
    * @property {string} fav - '1' if favorite item (optional)
    * @property {string} srcRegId - source of ping (optional)
+   * @memberOf app.Msg
    */
 
   /**
    * Get the data packet we will send
    * @param {string} action - message type
    * @param {string} body - message body
-   * @returns {GaeMsg} data packet
+   * @returns {app.Msg.GaeMsg} data packet
    * @private
    * @memberOf app.Msg
    */
@@ -112,7 +113,7 @@ app.Msg = (function() {
 
   /**
    * Send message to server for delivery to our {@link Devices}
-   * @param {GaeMsg} data - data packet
+   * @param {app.Msg.GaeMsg} data - data packet
    * @param {boolean} notify - display notification if true
    * @param {?app.Notify.TYPE} type=null - notification type
    * @returns {Promise<void>} void
