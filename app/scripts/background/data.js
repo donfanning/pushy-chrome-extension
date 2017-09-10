@@ -37,6 +37,7 @@ app.Data = (function() {
    * @property {int} storageDuration - how long to save clipItems
    * @property {boolean} notify - xxx
    * @property {boolean} notifyOnSend - show notification on send push
+   * @property {boolean} notifyOnError - show notification on errors
    * @property {boolean} highPriority - send high priority messages
    * @property {string} deviceNickname - nickname of our device
    * @property {Object} devices - other devices we know about
