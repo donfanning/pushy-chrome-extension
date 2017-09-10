@@ -16,151 +16,97 @@ app.ChromeMsg = (function() {
   new ExceptionHandler();
 
   /**
-   * Restore default settings
-   * @type {Chrome.Msg.Message}
+   * Chrome Messages
+   * @type {{}}
+   * @property {Chrome.Msg.Message} RESTORE_DEFAULTS - restore default settings
+   * @property {Chrome.Msg.Message} HIGHLIGHT - highlight a tab
+   * @property {Chrome.Msg.Message} STORE - save value to storage
+   * @property {Chrome.Msg.Message} REMOVE_DEVICE - a {@link Device} was
+   *     removed from {@link app.Devices}
+   * @property {Chrome.Msg.Message} DEVICES_CHANGED - list of {@link
+   *     app.Devices} changed
+   * @property {Chrome.Msg.Message} PING - ping our {@link app.Devices}
+   * @property {Chrome.Msg.Message} COPY_TO_CLIPBOARD - copy {@link
+   *     app.ClipItem} to clipboard
+   * @property {Chrome.Msg.Message} COPIED_TO_CLIPBOARD - {@link app.ClipItem}
+   *     copied to clipboard
+   * @property {Chrome.Msg.Message} SIGN_IN - {@link app.User} signed in
+   * @property {Chrome.Msg.Message} SIGN_OUT - {@link app.User} signed out
+   * @property {Chrome.Msg.Message} MSG_FAILED - send {@link app.Msg} failed
+   * @property {Chrome.Msg.Message} REGISTER_FAILED - register with server
+   *     failed
+   * @property {Chrome.Msg.Message} UNREGISTER_FAILED - unregister with server
+   *     failed
+   * @property {Chrome.Msg.Message} CLIP_ADDED - a {@link app.ClipItem} was
+   *     added or updated
+   * @const
    * @memberOf app.ChromeMsg
    */
-  const RESTORE_DEFAULTS = {
-    message: 'restoreDefaults',
-  };
-
-  /**
-   * Highlight a tab
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const HIGHLIGHT = {
-    message: 'highlightTab',
-  };
-
-  /**
-   * Save value to storage message
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const STORE = {
-    message: 'store',
-    key: '',
-    value: '',
-  };
-
-  /**
-   * A {@link app.Device} was removed from the {@link app.Devices}
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const REMOVE_DEVICE = {
-    message: 'removeDevice',
-    item: '',
-  };
-
-  /**
-   * The list of {@link app.Devices} changed
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const DEVICES_CHANGED = {
-    message: 'devicesChanged',
-  };
-
-  /**
-   * Ping our {@link app.Devices}
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const PING = {
-    message: 'ping',
-  };
-
-  /**
-   * Copy the item to the clipboard
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const COPY_TO_CLIPBOARD = {
-    message: 'copyToClipboard',
-    item: '',
-  };
-
-  /**
-   * We copied something to the clipboard
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const COPIED_TO_CLIPBOARD = {
-    message: 'copiedToClipboard',
-  };
-
-  /**
-   * User signed in
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const SIGN_IN = {
-    message: 'signIn',
-  };
-
-  /**
-   * User signed OUT
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const SIGN_OUT = {
-    message: 'signOut',
-  };
-
-  /**
-   * Send {@link app.Msg} failed
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const MSG_FAILED = {
-    message: 'sendMessageFailed',
-  };
-
-  /**
-   * Register with server failed
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const REGISTER_FAILED = {
-    message: 'registerFailed',
-  };
-
-  /**
-   * Unregister with server failed
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const UNREGISTER_FAILED = {
-    message: 'unregisterFailed',
-  };
-
-  /**
-   * A {@link app.ClipItem} was added or updated
-   * @type {Chrome.Msg.Message}
-   * @memberOf app.ChromeMsg
-   */
-  const CLIP_ADDED = {
-    message: 'clipAdded',
-    item: '',
-    updated: false,
+  const _MSG = {
+    RESTORE_DEFAULTS: {
+      message: 'restoreDefaults',
+    },
+    HIGHLIGHT: {
+      message: 'highlightTab',
+    },
+    STORE: {
+      message: 'store',
+      key: '',
+      value: '',
+    },
+    REMOVE_DEVICE: {
+      message: 'removeDevice',
+      item: '',
+    },
+    DEVICES_CHANGED: {
+      message: 'devicesChanged',
+    },
+    PING: {
+      message: 'ping',
+    },
+    COPY_TO_CLIPBOARD: {
+      message: 'copyToClipboard',
+      item: '',
+    },
+    COPIED_TO_CLIPBOARD: {
+      message: 'copiedToClipboard',
+    },
+    SIGN_IN: {
+      message: 'signIn',
+    },
+    SIGN_OUT: {
+      message: 'signOut',
+    },
+    MSG_FAILED: {
+      message: 'sendMessageFailed',
+    },
+    REGISTER_FAILED: {
+      message: 'registerFailed',
+    },
+    UNREGISTER_FAILED: {
+      message: 'unregisterFailed',
+    },
+    CLIP_ADDED: {
+      message: 'clipAdded',
+      item: '',
+      updated: false,
+    },
   };
 
   return {
-    RESTORE_DEFAULTS: RESTORE_DEFAULTS,
-    HIGHLIGHT: HIGHLIGHT,
-    STORE: STORE,
-    REMOVE_DEVICE: REMOVE_DEVICE,
-    DEVICES_CHANGED: DEVICES_CHANGED,
-    PING: PING,
-    COPY_TO_CLIPBOARD: COPY_TO_CLIPBOARD,
-    COPIED_TO_CLIPBOARD: COPIED_TO_CLIPBOARD,
-    SIGN_IN: SIGN_IN,
-    SIGN_OUT: SIGN_OUT,
-    MSG_FAILED: MSG_FAILED,
-    REGISTER_FAILED: REGISTER_FAILED,
-    UNREGISTER_FAILED: UNREGISTER_FAILED,
-    CLIP_ADDED: CLIP_ADDED,
+    RESTORE_DEFAULTS: _MSG.RESTORE_DEFAULTS,
+    HIGHLIGHT: _MSG.HIGHLIGHT,
+    STORE: _MSG.STORE,
+    REMOVE_DEVICE: _MSG.REMOVE_DEVICE,
+    DEVICES_CHANGED: _MSG.DEVICES_CHANGED,
+    PING: _MSG.PING,
+    COPY_TO_CLIPBOARD: _MSG.COPY_TO_CLIPBOARD,
+    COPIED_TO_CLIPBOARD: _MSG.COPIED_TO_CLIPBOARD,
+    SIGN_IN: _MSG.SIGN_IN,
+    SIGN_OUT: _MSG.SIGN_OUT,
+    MSG_FAILED: _MSG.MSG_FAILED,
+    REGISTER_FAILED: _MSG.REGISTER_FAILED,
+    UNREGISTER_FAILED: _MSG.UNREGISTER_FAILED,
+    CLIP_ADDED: _MSG.CLIP_ADDED,
   };
 })();
