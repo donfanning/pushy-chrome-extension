@@ -11,35 +11,9 @@
    * The background script for the extension.<br>
    * Note: We can't be an Event Page because we use
    * the chrome.webRequest API
-   * @namespace app.Background
+   * @namespace Background
    */
   new ExceptionHandler();
-
-  /**
-   * Initial {@link ClipItem}
-   * @type {string}
-   * @default
-   * @const
-   * @private
-   * @memberOf app.Background
-   */
-  const INTRO_TEXT =
-      `A clipboard manager with push notifications.
-
-Please signin from the "Manage Account" page to share with your \
-other devices.
-
-You can click on the toolbar icon at any time to send the current \
-contents of the clipboard to all your other devices.
-
-Information you copy in most Chrome pages will \
-automatically be sent if you have enabled that in "Settings".
-
-You can display this page by right clicking on the toolbar icon and \
-selecting "Options".
-
-It is a good idea to go to the "Settings" page and enter a nickname \
-for this device.`;
 
   /**
    * Event: Fired when the extension is first installed,<br />
@@ -48,7 +22,7 @@ for this device.`;
    * @see https://developer.chrome.com/extensions/runtime#event-onInstalled
    * @param {Object} details - type of event
    * @private
-   * @memberOf app.Background
+   * @memberOf Background
    */
   function _onInstalled(details) {
     if (details.reason === 'install') {
@@ -61,10 +35,10 @@ for this device.`;
       }).catch((err) => {
         Chrome.GA.error(err.message, 'Background._onInstalled');
       });
-      _initializeData();
+      app.Data.initialize();
       app.Utils.showMainTab();
     } else if (details.reason === 'update') {
-      _updateData();
+      app.Data.update();
       _initializeFirebase().then(() => {
         return app.SW.update();
       }).catch((err) => {
@@ -81,7 +55,7 @@ for this device.`;
    * starts up
    * @see https://developer.chrome.com/extensions/runtime#event-onStartup
    * @private
-   * @memberOf app.Background
+   * @memberOf Background
    */
   function _onStartup() {
     Chrome.GA.page('/background.html');
@@ -97,7 +71,7 @@ for this device.`;
    * Event: Fired when a browser action icon is clicked.
    * @see https://goo.gl/abVwKu
    * @private
-   * @memberOf app.Background
+   * @memberOf Background
    */
   function _onIconClicked() {
     // get the clipboard contents
@@ -127,7 +101,7 @@ for this device.`;
    * @see https://developer.chrome.com/extensions/tabs#event-onUpdated
    * @param {int} tabId - id of tab
    * @private
-   * @memberOf app.Background
+   * @memberOf Background
    */
   function _onTabUpdated(tabId) {
     app.Permissions.injectContentScript(tabId);
@@ -139,7 +113,7 @@ for this device.`;
    * @param {Event} event - storage event
    * @param {string} event.key - storage item that changed
    * @private
-   * @memberOf app.Background
+   * @memberOf Background
    */
   function _onStorageChanged(event) {
     if ((event.key === 'allowPush') || (event.key === 'signedIn')) {
@@ -148,55 +122,10 @@ for this device.`;
   }
 
   /**
-   * Initialize the data saved in localStorage
-   * @private
-   * @memberOf app.Background
-   */
-  function _initializeData() {
-    app.Data.saveDefaults();
-
-    const introClip =
-        new app.ClipItem(INTRO_TEXT, Date.now(), true,
-            false, app.Device.myName());
-    introClip.save().catch((err) => {
-      Chrome.GA.error(err.message, 'Background._initializeData');
-    });
-
-    app.User.setInfo().catch((err) => {
-      Chrome.GA.error(err.message, 'Background._initializeData');
-    });
-  }
-
-  /**
-   * Update the data saved in localStorage
-   * @private
-   * @memberOf app.Background
-   */
-  function _updateData() {
-    // New items and removal of unused items can take place here
-    // when the version changes
-    const version = app.Data.getCurrentVersion();
-    const oldVersion = Chrome.Storage.getInt('version');
-
-    if (version > oldVersion) {
-      // update version number
-      Chrome.Storage.set('version', version);
-    }
-
-    if (oldVersion < 2) {
-      // remove unused variables
-      localStorage.removeItem('lastEmail');
-      localStorage.removeItem('lastUid');
-    }
-
-    app.Data.saveDefaults();
-  }
-
-  /**
    * Initialize firebase and Service Worker if signed in
    * @returns {Promise<void>} void
    * @private
-   * @memberOf app.Background
+   * @memberOf Background
    */
   function _initializeFirebase() {
     if (app.Data.isSignedIn()) {
