@@ -72,7 +72,7 @@ app.Reg = (function() {
      * @memberOf app.Reg
      */
     register: function(interactive = false) {
-      if (app.Utils.isRegistered() || !app.Utils.isSignedIn()) {
+      if (app.Utils.isRegistered() || !app.Utils.allowReceive()) {
         return Promise.resolve();
       }
 
