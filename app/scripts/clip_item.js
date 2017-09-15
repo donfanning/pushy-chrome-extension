@@ -54,6 +54,14 @@
   ClipItem.ERROR_EMPTY_TEXT = 'Text is only whitespace';
 
   /**
+   * Error indicating that the database is full
+   * @const
+   * @default
+   * @type {string}
+   */
+  ClipItem.ERROR_DB_FULL = 'Database is full. Please delete unused items.';
+
+  /**
    * Set date
    * @param {int} date - millis from epoch
    */
@@ -126,11 +134,18 @@
     }
     
     const self = this;
+    const MAX_ITEMS = 3;
     let retKey = '';
 
+    /**
+     * Repeat the call to {@link ClipItem._putOrDeleteOldest} up to count
+     * equals 0
+     * @param {int} count - track number of calls
+     * @returns {Promise<string>} primary key it was stored under
+     */
     function repeatFunction(count) {
       if (count === 0) {
-        return Promise.resolve();
+        throw new Error(ClipItem.ERROR_DB_FULL);
       }
       return self._putOrDeleteOldest().then(function(key) {
         retKey = key;
@@ -139,10 +154,12 @@
       });
     }
 
-    const MAX_ITEMS = 3;
     return repeatFunction(MAX_ITEMS).then(function() {
       console.log('done, key: ', retKey);
       return Promise.resolve(retKey);
+    }).catch((err) => {
+      console.error(err);
+      throw err;
     });
   };
 
