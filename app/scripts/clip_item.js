@@ -51,7 +51,7 @@
    * @default
    * @type {string}
    */
-  ClipItem.ERROR_EMPTY_TEXT = 'Empty text';
+  ClipItem.ERROR_EMPTY_TEXT = 'Text is only whitespace';
 
   /**
    * Set date
@@ -90,6 +90,17 @@
    * @returns {Promise<string>} primary key it was stored under
    */
   ClipItem.prototype.save = function() {
+    if (Chrome.Utils.isWhiteSpace(this.text)) {
+      return Promise.reject(new Error(ClipItem.ERROR_EMPTY_TEXT));
+    }
+    return this._safeSave();
+  };
+
+  /**
+   * Save to storage, deleting old items if needed
+   * @returns {Promise<string>} primary key it was stored under
+   */
+  ClipItem.prototype._safeSave = function() {
     if (Chrome.Utils.isWhiteSpace(this.text)) {
       return Promise.reject(new Error(ClipItem.ERROR_EMPTY_TEXT));
     }

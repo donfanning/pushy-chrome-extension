@@ -53,9 +53,6 @@ app.CB = (function() {
     setTimeout(function() {
       // get the clipboard contents
       const text = app.CB.getTextFromClipboard();
-      if (Chrome.Utils.isWhiteSpace(text)) {
-        return;
-      }
 
       // Persist
       app.ClipItem.add(text, Date.now(), false, false,
@@ -64,9 +61,12 @@ app.CB = (function() {
         _sendLocalClipItem(clipItem);
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.GA.error(err.message, 'CB._addClipItemFromClipboard');
+        const msg = err.message;
+        if (msg !== app.ClipItem.ERROR_EMPTY_TEXT) {
+          Chrome.GA.error(msg, 'CB._addClipItemFromClipboard');
+        }
         if (app.Notify.onError()) {
-          app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, err.message);
+          app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, msg);
         }
       });
 

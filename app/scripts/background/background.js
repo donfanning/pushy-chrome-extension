@@ -76,9 +76,6 @@
   function _onIconClicked() {
     // get the clipboard contents
     const text = app.CB.getTextFromClipboard();
-    if (Chrome.Utils.isWhiteSpace(text)) {
-      return;
-    }
 
     // Persist
     let addOK = false;
@@ -90,9 +87,12 @@
       if (addOK) {
         app.Msg.sendFailed(err);
       } else {
-        Chrome.GA.error(err.message, 'Background._onIconClicked');
+        const msg = err.message;
+        if (msg !== app.ClipItem.ERROR_EMPTY_TEXT) {
+          Chrome.GA.error(msg, 'Background._onIconClicked');
+        }
         if (app.Notify.onError()) {
-          app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, err.message);
+          app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, msg);
         }
       }
     });
