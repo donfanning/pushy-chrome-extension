@@ -125,13 +125,15 @@
       throw new Error(ClipItem.ERROR_EMPTY_TEXT);
     }
     
-    const that = this;
+    const self = this;
+    let retKey = '';
 
     function repeatFunction(count) {
       if (count === 0) {
         return Promise.resolve();
       }
-      return that._putOrDeleteOldest().then(function(key) {
+      return self._putOrDeleteOldest().then(function(key) {
+        retKey = key;
         console.log('key in repeat: ', key);
         return repeatFunction(count - 1);
       });
@@ -139,8 +141,8 @@
 
     const MAX_ITEMS = 3;
     return repeatFunction(MAX_ITEMS).then(function() {
-      console.log('done');
-      return Promise.resolve();
+      console.log('done, key: ', retKey);
+      return Promise.resolve(retKey);
     });
   };
 
