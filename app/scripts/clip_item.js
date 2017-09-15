@@ -97,14 +97,51 @@
   };
 
   /**
+   * Put to database or delete oldest non favorite
+   * @returns {Promise<string>} primary key it was stored under
+   */
+  ClipItem.prototype._putOrDeleteOldest = function() {
+    return _db.clipItems.put(this).then((key) => {
+      console.log('key: ', key);
+      return Promise.resolve(key);
+    }).catch((err) => {
+      console.error(err);
+      const msg = err.message;
+      if (!msg.contains('Transaction aborted')) {
+        // failed to save, delete oldest here
+        throw err;
+      }
+      // some other error
+      throw err;
+    });
+  };
+
+  /**
    * Save to storage, deleting old items if needed
    * @returns {Promise<string>} primary key it was stored under
    */
   ClipItem.prototype._safeSave = function() {
     if (Chrome.Utils.isWhiteSpace(this.text)) {
-      return Promise.reject(new Error(ClipItem.ERROR_EMPTY_TEXT));
+      throw new Error(ClipItem.ERROR_EMPTY_TEXT);
     }
-    return _db.clipItems.put(this);
+    
+    const that = this;
+
+    function repeatFunction(count) {
+      if (count === 0) {
+        return Promise.resolve();
+      }
+      return that._putOrDeleteOldest().then(function(key) {
+        console.log('key in repeat: ', key);
+        return repeatFunction(count - 1);
+      });
+    }
+
+    const MAX_ITEMS = 3;
+    return repeatFunction(MAX_ITEMS).then(function() {
+      console.log('done');
+      return Promise.resolve();
+    });
   };
 
   /**
