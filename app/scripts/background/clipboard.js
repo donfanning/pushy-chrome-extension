@@ -53,6 +53,9 @@ app.CB = (function() {
     setTimeout(function() {
       // get the clipboard contents
       const text = app.CB.getTextFromClipboard();
+      if (app.Notify.onCopy()) {
+        app.Notify.create(app.Notify.TYPE.CLIPBOARD_CHANGED, text);
+      }
 
       // Persist
       app.ClipItem.add(text, Date.now(), false, false,
@@ -89,7 +92,7 @@ app.CB = (function() {
     let ret = false;
 
     if (request.message === app.ChromeMsg.COPIED_TO_CLIPBOARD.message) {
-      // we put data on the clipboard
+      // clipboard change detected
       _addClipItemFromClipboard();
     } else if (request.message === app.ChromeMsg.COPY_TO_CLIPBOARD.message) {
       // copy a ClipItem to the clipboard
@@ -138,6 +141,9 @@ app.CB = (function() {
       input.select();
       document.execCommand('Copy');
       input.remove();
+      if (app.Notify.onCopy()) {
+        app.Notify.create(app.Notify.TYPE.CLIPBOARD_CHANGED, text);
+      }
     },
   };
 })();

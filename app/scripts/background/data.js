@@ -23,7 +23,7 @@ app.Data = (function() {
    * @private
    * @memberOf app.Data
    */
-  const _VERSION = 3;
+  const _VERSION = 4;
 
   /**
    * The data items saved to localStorage
@@ -36,6 +36,7 @@ app.Data = (function() {
    * @property {boolean} allowReceive - receive push notifications
    * @property {int} storageDuration - how long to save clipItems
    * @property {boolean} notify - xxx
+   * @property {boolean} notifyOnCopy - show notification when copy detected
    * @property {boolean} notifyOnSend - show notification on send push
    * @property {boolean} notifyOnError - show notification on errors
    * @property {boolean} highPriority - send high priority messages
@@ -66,6 +67,7 @@ app.Data = (function() {
     'allowReceive': true,
     'storageDuration': 2,
     'notify': true,
+    'notifyOnCopy': false,
     'notifyOnSend': false,
     'notifyOnError': true,
     'highPriority': true,

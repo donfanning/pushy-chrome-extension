@@ -93,7 +93,7 @@ app.Utils = (function() {
      * @memberOf app.Utils
      */
     setBadgeText: function() {
-      let text = '';
+      let text = 'SAVE';
       if (app.Utils.isSignedIn() && app.Utils.allowPush()) {
         text = 'SEND';
       }

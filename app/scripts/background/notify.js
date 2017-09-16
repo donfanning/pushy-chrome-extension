@@ -35,7 +35,8 @@ app.Notify = (function() {
   /**
    * Notification types
    * @type {{}}
-   * @property {app.Notify.TYPE} MESSAGE_SENT - message sent
+   * @property {app.Notify.TYPE} CLIPBOARD_CHANGED - detected clipboard change
+   * @property {app.Notify.TYPE} MESSAGE_SENT - message sent to remote devices
    * @property {app.Notify.TYPE} DEVICE_ADDED - added our device
    * @property {app.Notify.TYPE} DEVICE_REMOVED - removed our device
    * @property {app.Notify.TYPE} SEND_ERROR - error sending message
@@ -44,8 +45,20 @@ app.Notify = (function() {
    * @memberOf app.Notify
    */
   const TYPE = {
+    CLIPBOARD_CHANGED: {
+      id: 'localCopy',
+      title: 'Clipboard change detected',
+      message: 'Not set',
+      icon: '/images/ic_local_copy.png',
+      isClickable: true,
+      clickFunction: app.Utils.showMainTab,
+      requireInteraction: false,
+      hasButtons: false,
+      buttons: [],
+      buttonFunctions: [],
+    },
     MESSAGE_SENT: {
-      id: 'sent',
+      id: 'localCopy',
       title: 'Sent push message',
       message: 'Not set',
       icon: '/images/ic_local_copy.png',
@@ -239,14 +252,23 @@ app.Notify = (function() {
     },
 
     /**
+     * Determine if copy notifications are enabled
+     * @returns {boolean} true if enabled
+     * @memberOf app.Notify
+     */
+    onCopy: function() {
+      const notify = Chrome.Storage.getBool('notify');
+      return notify && Chrome.Storage.getBool('notifyOnCopy');
+    },
+
+    /**
      * Determine if send notifications are enabled
      * @returns {boolean} true if enabled
      * @memberOf app.Notify
      */
     onSend: function() {
       const notify = Chrome.Storage.getBool('notify');
-      const notifyOnSend = Chrome.Storage.getBool('notifyOnSend');
-      return notify && notifyOnSend;
+      return notify && Chrome.Storage.getBool('notifyOnSend');
     },
 
     /**
@@ -256,8 +278,7 @@ app.Notify = (function() {
      */
     onError: function() {
       const notify = Chrome.Storage.getBool('notify');
-      const notifyOnError = Chrome.Storage.getBool('notifyOnError');
-      return notify && notifyOnError;
+      return notify && Chrome.Storage.getBool('notifyOnError');
     },
   };
 })();
