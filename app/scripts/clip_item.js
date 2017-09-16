@@ -44,11 +44,10 @@
    * @memberOf ClipItem
    */
   const VERSION = 1;
-
+  
   /**
    * Error indicating that {@link ClipItem} text is null or all whitespace
    * @const
-   * @default
    * @type {string}
    */
   ClipItem.ERROR_EMPTY_TEXT = 'Text is only whitespace';
@@ -56,7 +55,6 @@
   /**
    * Error indicating that the database is full
    * @const
-   * @default
    * @type {string}
    */
   ClipItem.ERROR_DB_FULL = 'Database is full. Please delete unused items.';
@@ -109,15 +107,10 @@
    * @returns {Promise<string>} primary key it was stored under
    */
   ClipItem.prototype._putOrDeleteOldest = function() {
-    return _db.clipItems.put(this).then((key) => {
-      console.log('key: ', key);
-      return Promise.resolve(key);
-      // todo delete return Promise.reject(new Error('Transaction aborted'));
-    }).catch((err) => {
-      console.error(err);
+    return _db.clipItems.put(this).catch((err) => {
       const msg = err.message;
       if (msg.includes('Transaction aborted')) {
-        // failed to save, delete oldest here
+        // failed to save, delete oldest non-fav item
         return ClipItem.loadAll().then((clipItems) => {
           clipItems.sort((a, b) => {
             return a.date - b.date;
@@ -127,7 +120,16 @@
             if (clipItem.fav) {
               continue;
             }
-            return ClipItem.remove(clipItem.text);
+            return ClipItem.remove(clipItem.text).then(() => {
+              // let listeners know a ClipItem was removed
+              // todo copy interface won't get this
+              // todo stupid not sending msg to source window
+              const msg = app.ChromeMsg.CLIP_REMOVED;
+              msg.item = clipItem;
+              // eslint-disable-next-line promise/no-nesting
+              Chrome.Msg.send(msg).catch(() => {});
+              return Promise.resolve();
+            });
           }
           throw new Error(ClipItem.ERROR_DB_FULL);
         });
@@ -147,7 +149,7 @@
     }
     
     const self = this;
-    const MAX_ITEMS = 3;
+    const MAX_DELETES = 100;
     let retKey = '';
 
     /**
@@ -162,7 +164,6 @@
       }
       return self._putOrDeleteOldest().then(function(key) {
         retKey = key;
-        console.log('key in repeat: ', key);
         if (retKey) {
           return Promise.resolve();
         }
@@ -170,12 +171,8 @@
       });
     }
 
-    return repeatFunction(MAX_ITEMS).then(function() {
-      console.log('done, key: ', retKey);
+    return repeatFunction(MAX_DELETES).then(function() {
       return Promise.resolve(retKey);
-    }).catch((err) => {
-      console.error(err);
-      throw err;
     });
   };
 
