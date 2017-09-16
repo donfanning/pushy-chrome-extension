@@ -41,6 +41,8 @@ app.ChromeMsg = (function() {
    *     added or updated
    * @property {Chrome.Msg.Message} CLIP_REMOVED - a {@link app.ClipItem} was
    *     deleted
+   * @property {Chrome.Msg.Message} RELOAD_DB - reload the {@link app.ClipItem}
+   * database
    * @const
    * @memberOf app.ChromeMsg
    */
@@ -97,6 +99,9 @@ app.ChromeMsg = (function() {
       message: 'clipRemoved',
       item: '',
     },
+    RELOAD_DB: {
+      message: 'reloadDB',
+    },
   };
 
   return {
@@ -115,5 +120,6 @@ app.ChromeMsg = (function() {
     UNREGISTER_FAILED: _MSG.UNREGISTER_FAILED,
     CLIP_ADDED: _MSG.CLIP_ADDED,
     CLIP_REMOVED: _MSG.CLIP_REMOVED,
+    RELOAD_DB: _MSG.RELOAD_DB,
   };
 })();

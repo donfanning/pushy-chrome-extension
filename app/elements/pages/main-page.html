@@ -285,6 +285,8 @@
           this._addListItem(request);
         } else if (request.message === app.ChromeMsg.CLIP_REMOVED.message) {
           this._removeListItem(request);
+        } else if (request.message === app.ChromeMsg.RELOAD_DB.message) {
+          this._loadClipItems();
         }
       });
     },
