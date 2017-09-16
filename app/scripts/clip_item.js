@@ -184,8 +184,10 @@
     }).catch((err) => {
       console.log('transaction failed.');
       console.error(err);
-      console.error(err.stack);
-      throw new Error(ClipItem.ERROR_DB_FULL);
+      // eslint-disable-next-line promise/no-nesting
+      Chrome.Msg.send(app.ChromeMsg.RELOAD_DB).catch(() => {});
+      // todo throw new Error(ClipItem.ERROR_DB_FULL);
+      throw err;
     });
   };
 
