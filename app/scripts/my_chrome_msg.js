@@ -39,6 +39,8 @@ app.ChromeMsg = (function() {
    *     failed
    * @property {Chrome.Msg.Message} CLIP_ADDED - a {@link app.ClipItem} was
    *     added or updated
+   * @property {Chrome.Msg.Message} CLIP_REMOVED - a {@link app.ClipItem} was
+   *     deleted
    * @const
    * @memberOf app.ChromeMsg
    */
@@ -91,6 +93,10 @@ app.ChromeMsg = (function() {
       item: '',
       updated: false,
     },
+    CLIP_REMOVED: {
+      message: 'clipRemoved',
+      item: '',
+    },
   };
 
   return {
@@ -108,5 +114,6 @@ app.ChromeMsg = (function() {
     REGISTER_FAILED: _MSG.REGISTER_FAILED,
     UNREGISTER_FAILED: _MSG.UNREGISTER_FAILED,
     CLIP_ADDED: _MSG.CLIP_ADDED,
+    CLIP_REMOVED: _MSG.CLIP_REMOVED,
   };
 })();

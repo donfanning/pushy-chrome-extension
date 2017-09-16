@@ -283,6 +283,8 @@
       chrome.runtime.onMessage.addListener((request) => {
         if (request.message === app.ChromeMsg.CLIP_ADDED.message) {
           this._addListItem(request);
+        } else if (request.message === app.ChromeMsg.CLIP_REMOVED.message) {
+          this._removeListItem(request);
         }
       });
     },
@@ -610,7 +612,7 @@
     },
 
     /**
-     * Add or update {@link MainPage.ListItem}
+     * Add or update a {@link MainPage.ListItem}
      * @param {app.ChromeMsg.Message} request - Chrome message request
      */
     _addListItem(request) {
@@ -635,6 +637,20 @@
           checked: false,
           clipItem: clipItem,
         });
+      }
+      // select first row and update UI
+      this._selectFirst();
+    },
+
+    /**
+     * Remove a {@link MainPage.ListItem}
+     * @param {app.ChromeMsg.Message} request - Chrome message request
+     */
+    _removeListItem(request) {
+      const clip = request.item;
+      const pos = this._getListItemPos(clip.text);
+      if (pos !== -1) {
+        this.splice('listItems', pos, 1);
       }
       // select first row and update UI
       this._selectFirst();
