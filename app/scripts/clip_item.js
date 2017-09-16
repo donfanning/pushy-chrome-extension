@@ -112,12 +112,25 @@
     return _db.clipItems.put(this).then((key) => {
       console.log('key: ', key);
       return Promise.resolve(key);
+      // todo delete return Promise.reject(new Error('Transaction aborted'));
     }).catch((err) => {
       console.error(err);
       const msg = err.message;
-      if (!msg.contains('Transaction aborted')) {
+      if (msg.includes('Transaction aborted')) {
         // failed to save, delete oldest here
-        throw err;
+        return ClipItem.loadAll().then((clipItems) => {
+          clipItems.sort((a, b) => {
+            return a.date - b.date;
+          });
+          for (let i = 0; i < clipItems.length; i++) {
+            const clipItem = clipItems[i];
+            if (clipItem.fav) {
+              continue;
+            }
+            return ClipItem.remove(clipItem.text);
+          }
+          throw new Error(ClipItem.ERROR_DB_FULL);
+        });
       }
       // some other error
       throw err;
@@ -141,7 +154,7 @@
      * Repeat the call to {@link ClipItem._putOrDeleteOldest} up to count
      * equals 0
      * @param {int} count - track number of calls
-     * @returns {Promise<string>} primary key it was stored under
+     * @returns {Promise<void>} void
      */
     function repeatFunction(count) {
       if (count === 0) {
@@ -150,6 +163,9 @@
       return self._putOrDeleteOldest().then(function(key) {
         retKey = key;
         console.log('key in repeat: ', key);
+        if (retKey) {
+          return Promise.resolve();
+        }
         return repeatFunction(count - 1);
       });
     }
@@ -201,11 +217,12 @@
 
   /**
    * Remove the given keys from storage
-   * @param {string[]} keys - array of keys to delete
+   * @param {string|string[]} keys - array of keys to delete
    * @returns {Promise<void>} void
    */
   ClipItem.remove = function(keys) {
-    return _db.clipItems.bulkDelete(keys);
+    const keyArray = Array.isArray(keys) ? keys : [keys];
+    return _db.clipItems.bulkDelete(keyArray);
   };
 
   /**
