@@ -44,7 +44,7 @@
    * @memberOf ClipItem
    */
   const VERSION = 1;
-  
+
   /**
    * Error indicating that {@link ClipItem} text is null or all whitespace
    * @const
@@ -58,6 +58,13 @@
    * @type {string}
    */
   ClipItem.ERROR_DB_FULL = 'Database is full. Please delete unused items.';
+
+  /**
+   * Error indicating there were no non favorites to delete
+   * @const
+   * @type {string}
+   */
+  ClipItem.ERROR_REMOVE_FAILED = 'Failed to delete item(s).';
 
   /**
    * Set date
@@ -102,37 +109,35 @@
     return this._safeSave();
   };
 
+  let counter = 0; // todo delete
+
   /**
    * Put to database or delete oldest non favorite
    * @returns {Promise<string>} primary key it was stored under
    */
   ClipItem.prototype._putOrDeleteOldest = function() {
-    return _db.clipItems.put(this).catch((err) => {
+    return _db.clipItems.put(this).then((key) => {
+      // todo delete if block
+      if (counter < 5) {
+        counter++;
+        return ClipItem.remove(this.text).then(() => {
+          throw new Error('Transaction aborted');
+        });
+      }
+      return Promise.resolve(key);
+    }).catch((err) => {
       const msg = err.message;
       if (msg.includes('Transaction aborted')) {
         // failed to save, delete oldest non-fav item
-        return ClipItem.loadAll().then((clipItems) => {
-          clipItems.sort((a, b) => {
-            return a.date - b.date;
-          });
-          for (let i = 0; i < clipItems.length; i++) {
-            const clipItem = clipItems[i];
-            if (clipItem.fav) {
-              continue;
-            }
-            return ClipItem.remove(clipItem.text).then(() => {
-              // let listeners know a ClipItem was removed
-              // todo copy interface won't get this
-              // todo stupid not sending msg to source window
-              const msg = app.ChromeMsg.CLIP_REMOVED;
-              msg.item = clipItem;
-              // eslint-disable-next-line promise/no-nesting
-              Chrome.Msg.send(msg).catch(() => {});
-              return Promise.resolve();
-            });
-          }
-          throw new Error(ClipItem.ERROR_DB_FULL);
-        });
+        return ClipItem._deleteOldest();
+      }
+      // some other error
+      throw err;
+    }).catch((err) => {
+      const msg = err.message;
+      if (msg === ClipItem.ERROR_REMOVE_FAILED) {
+        // nothing to delete, give up
+        throw new Error(ClipItem.ERROR_DB_FULL);
       }
       // some other error
       throw err;
@@ -147,7 +152,7 @@
     if (Chrome.Utils.isWhiteSpace(this.text)) {
       throw new Error(ClipItem.ERROR_EMPTY_TEXT);
     }
-    
+
     const self = this;
     const MAX_DELETES = 100;
     let retKey = '';
@@ -273,6 +278,37 @@
       return !clipItem.fav;
     }).delete().then((deleteCount) => {
       return Promise.resolve(!!deleteCount);
+    });
+  };
+
+  /**
+   * Delete the oldest non favorite
+   * @returns {Promise<void>} void
+   */
+  ClipItem._deleteOldest = function() {
+    let clipItem = null;
+    return ClipItem.loadAll().then((clipItems) => {
+      if (clipItems) {
+        clipItems.sort((a, b) => {
+          return a.date - b.date;
+        });
+        for (let i = 0; i < clipItems.length; i++) {
+          clipItem = clipItems[i];
+          if (!clipItem.fav) {
+            return ClipItem.remove(clipItem.text);
+          }
+        }
+      }
+      throw new Error(ClipItem.ERROR_REMOVE_FAILED);
+    }).then(() => {
+      // let listeners know a ClipItem was removed
+      // todo copy interface won't get this
+      // todo stupid not sending msg to source window
+      const msg = app.ChromeMsg.CLIP_REMOVED;
+      msg.item = clipItem;
+      // eslint-disable-next-line promise/no-nesting
+      Chrome.Msg.send(msg).catch(() => {});
+      return Promise.resolve();
     });
   };
 
