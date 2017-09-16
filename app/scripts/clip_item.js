@@ -123,8 +123,9 @@
         return ClipItem.remove(this.text).then(() => {
           throw new Dexie.QuotaExceededError('quota');
         });
+      } else {
+        return Promise.resolve(key);
       }
-      return Promise.resolve(key);
     }).catch((err) => {
       if (err.name === 'QuotaExceededError') {
         // failed to save, delete oldest non-fav item
@@ -136,8 +137,10 @@
     }).catch((err) => {
       const msg = err.message;
       if (msg === ClipItem.ERROR_REMOVE_FAILED) {
-        // nothing to delete, give up
-        throw new Error(ClipItem.ERROR_DB_FULL);
+        // nothing to delete, give up todo doesnt seem right
+        err.message = ClipItem.ERROR_DB_FULL;
+        throw err;
+        // throw new Error(ClipItem.ERROR_DB_FULL);
       } else {
         // some other error
         throw err;
@@ -174,6 +177,9 @@
           return Promise.resolve();
         }
         return repeatFunction(count - 1);
+      }).catch((err) => {
+        console.error(err);
+        throw err;
       });
     }
 
