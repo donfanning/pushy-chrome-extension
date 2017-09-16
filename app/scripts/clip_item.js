@@ -103,29 +103,16 @@
    * @returns {Promise<string>} primary key it was stored under
    */
   ClipItem.prototype.save = function() {
-    if (Chrome.Utils.isWhiteSpace(this.text)) {
-      return Promise.reject(new Error(ClipItem.ERROR_EMPTY_TEXT));
-    }
     return this._safeSave();
   };
 
-  let counter = 0; // todo delete
-
   /**
-   * Put to database or delete oldest non favorite
+   * Put to the database or delete oldest non favorite if there is no room
    * @returns {Promise<string>} primary key it was stored under
    */
   ClipItem.prototype._putOrDeleteOldest = function() {
     return _db.clipItems.put(this).then((key) => {
-      // todo delete if block
-      if (counter < 5) {
-        counter++;
-        return ClipItem.remove(this.text).then(() => {
-          throw new Dexie.QuotaExceededError('quota');
-        });
-      } else {
-        return Promise.resolve(key);
-      }
+      return Promise.resolve(key);
     }).catch((err) => {
       if (err.name === 'QuotaExceededError') {
         // failed to save, delete oldest non-fav item
@@ -135,16 +122,11 @@
         throw err;
       }
     }).catch((err) => {
-      const msg = err.message;
-      if (msg === ClipItem.ERROR_REMOVE_FAILED) {
-        // nothing to delete, give up todo doesnt seem right
+      if (err.message === ClipItem.ERROR_REMOVE_FAILED) {
+        // nothing to delete, give up
         err.message = ClipItem.ERROR_DB_FULL;
-        throw err;
-        // throw new Error(ClipItem.ERROR_DB_FULL);
-      } else {
-        // some other error
-        throw err;
       }
+      throw err;
     });
   };
 
@@ -156,43 +138,38 @@
     if (Chrome.Utils.isWhiteSpace(this.text)) {
       throw new Error(ClipItem.ERROR_EMPTY_TEXT);
     }
-
-    const self = this;
     const MAX_DELETES = 100;
     let retKey = '';
 
     /**
-     * Repeat the call to {@link ClipItem._putOrDeleteOldest} up to count
-     * equals 0
+     * Repeat function call up to count equals 0
      * @param {int} count - track number of calls
      * @returns {Promise<void>} void
      */
-    function repeatFunction(count) {
+    const repeatFunc = ((count) => {
       if (count === 0) {
         throw new Error(ClipItem.ERROR_DB_FULL);
       }
-      return self._putOrDeleteOldest().then(function(key) {
+      return this._putOrDeleteOldest().then(function(key) {
         retKey = key;
         if (retKey) {
           return Promise.resolve();
         }
-        return repeatFunction(count - 1);
+        return repeatFunc(count - 1);
       }).catch((err) => {
         console.error(err);
         throw err;
       });
-    }
+    });
 
+    // perform the save
     return _db.transaction('rw', _db.clipItems, () => {
-      return repeatFunction(MAX_DELETES);
+      return repeatFunc(MAX_DELETES);
     }).then(() => {
       return Promise.resolve(retKey);
     }).catch((err) => {
-      console.log('transaction failed.');
-      console.error(err);
       // eslint-disable-next-line promise/no-nesting
       Chrome.Msg.send(app.ChromeMsg.RELOAD_DB).catch(() => {});
-      // todo throw new Error(ClipItem.ERROR_DB_FULL);
       throw err;
     });
   };
@@ -325,8 +302,7 @@
       }
     }).then(() => {
       // let listeners know a ClipItem was removed
-      // todo copy interface won't get this
-      // todo stupid not sending msg to source window
+      // Note: This will not be called if invoked by other than background.html
       const msg = app.ChromeMsg.CLIP_REMOVED;
       msg.item = clipItem;
       // eslint-disable-next-line promise/no-nesting
