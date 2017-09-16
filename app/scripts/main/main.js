@@ -142,6 +142,13 @@ window.app = window.app || {};
   t.route = 'page-main';
 
   /**
+   * Content Script permission
+   * @type {string}
+   * @memberOf Main
+   */
+  t.permissions = Chrome.Storage.get('permissions');
+
+  /**
    * User photo
    * @type {string}
    * @memberOf Main
@@ -254,6 +261,7 @@ window.app = window.app || {};
    */
   t.onAcceptPermissionsClicked = function() {
     app.Permissions.request().then((granted) => {
+      t.permissions = Chrome.Storage.get('permissions');
       if (granted) {
         app.Permissions.injectContentScripts();
       }
@@ -268,9 +276,22 @@ window.app = window.app || {};
    * @memberOf Main
    */
   t.onDenyPermissionsClicked = function() {
-    app.Permissions.remove().catch((err) => {
+    app.Permissions.remove().then(() => {
+      t.permissions = Chrome.Storage.get('permissions');
+      return Promise.resolve();
+    }).catch((err) => {
       Chrome.GA.error(err.message, 'Main.onDenyPermissionsClicked');
     });
+  };
+
+  /**
+   * Computed Binding: Determine content script permission status string
+   * @param {string} permissions - current setting
+   * @returns {string} display type
+   * @memberOf Main
+   */
+  t.computePermissionsStatus = function(permissions) {
+    return `Current Status: ${permissions}`;
   };
 
   /**
