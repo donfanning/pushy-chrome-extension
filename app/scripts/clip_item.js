@@ -177,8 +177,15 @@
       });
     }
 
-    return repeatFunction(MAX_DELETES).then(function() {
+    return _db.transaction('rw', _db.clipItems, () => {
+      return repeatFunction(MAX_DELETES);
+    }).then(() => {
       return Promise.resolve(retKey);
+    }).catch((err) => {
+      console.log('transaction failed.');
+      console.error(err);
+      console.error(err.stack);
+      throw new Error(ClipItem.ERROR_DB_FULL);
     });
   };
 
@@ -290,22 +297,21 @@
     let clipItem = null;
     return ClipItem.loadAll().then((clipItems) => {
       let found = false;
-      if (clipItems) {
-        clipItems.sort((a, b) => {
-          return a.date - b.date;
-        });
-        for (let i = 0; i < clipItems.length; i++) {
-          clipItem = clipItems[i];
-          if (!clipItem.fav) {
-            found = true;
-            break;
-          }
+      if (!clipItems) {
+        throw new Error(ClipItem.ERROR_REMOVE_FAILED);
+      }
+      clipItems.sort((a, b) => {
+        return a.date - b.date;
+      });
+      for (let i = 0; i < clipItems.length; i++) {
+        clipItem = clipItems[i];
+        if (!clipItem.fav) {
+          found = true;
+          break;
         }
-        if (found) {
-          return ClipItem.remove(clipItem.text);
-        } else {
-          throw new Error(ClipItem.ERROR_REMOVE_FAILED);
-        }
+      }
+      if (found) {
+        return ClipItem.remove(clipItem.text);
       } else {
         throw new Error(ClipItem.ERROR_REMOVE_FAILED);
       }
