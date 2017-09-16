@@ -121,26 +121,27 @@
       if (counter < 5) {
         counter++;
         return ClipItem.remove(this.text).then(() => {
-          throw new Error('Transaction aborted');
+          throw new Dexie.QuotaExceededError('quota');
         });
       }
       return Promise.resolve(key);
     }).catch((err) => {
-      const msg = err.message;
-      if (msg.includes('Transaction aborted')) {
+      if (err.name === 'QuotaExceededError') {
         // failed to save, delete oldest non-fav item
         return ClipItem._deleteOldest();
+      } else {
+        // some other error
+        throw err;
       }
-      // some other error
-      throw err;
     }).catch((err) => {
       const msg = err.message;
       if (msg === ClipItem.ERROR_REMOVE_FAILED) {
         // nothing to delete, give up
         throw new Error(ClipItem.ERROR_DB_FULL);
+      } else {
+        // some other error
+        throw err;
       }
-      // some other error
-      throw err;
     });
   };
 
@@ -288,6 +289,7 @@
   ClipItem._deleteOldest = function() {
     let clipItem = null;
     return ClipItem.loadAll().then((clipItems) => {
+      let found = false;
       if (clipItems) {
         clipItems.sort((a, b) => {
           return a.date - b.date;
@@ -295,11 +297,18 @@
         for (let i = 0; i < clipItems.length; i++) {
           clipItem = clipItems[i];
           if (!clipItem.fav) {
-            return ClipItem.remove(clipItem.text);
+            found = true;
+            break;
           }
         }
+        if (found) {
+          return ClipItem.remove(clipItem.text);
+        } else {
+          throw new Error(ClipItem.ERROR_REMOVE_FAILED);
+        }
+      } else {
+        throw new Error(ClipItem.ERROR_REMOVE_FAILED);
       }
-      throw new Error(ClipItem.ERROR_REMOVE_FAILED);
     }).then(() => {
       // let listeners know a ClipItem was removed
       // todo copy interface won't get this
