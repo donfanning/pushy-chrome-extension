@@ -195,8 +195,8 @@ window.app = window.app || {};
     t.pages[idx].disabled = !app.Utils.isSignedIn();
     // listen for Chrome messages
     Chrome.Msg.listen(_onChromeMessage);
-    // check for permissions
-    _checkPermissions();
+    // check for optional
+    _checkOptionalPermissions();
   });
 
   /**
@@ -388,7 +388,7 @@ window.app = window.app || {};
    * @memberOf Main
    * @private
    */
-  function _checkPermissions() {
+  function _checkOptionalPermissions() {
     if (Chrome.Storage.get('permissions') === app.Permissions.NOT_SET) {
       _showPermissionsDialog();
     }
