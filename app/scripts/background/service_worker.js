@@ -17,24 +17,22 @@ app.SW = (function() {
 
   const _ERR_REG = 'Failed to register Service Worker: ';
   const _ERR_UNREG = 'Failed to unregister Service Worker: ';
-  const _ERR_NOT_REG = 'Not registered ';
   const _ERR_UNREG_BOOL = 'returned false';
 
   /**
    * Path to our {@link ServiceWorker}
    * @const
-   * @default
    * @private
    * @memberOf app.SW
    */
-  const SERVICE_WORKER = '../scripts/sw.js';
+  const _PATH = '../scripts/sw.js';
 
   /**
    * Our ServiceWorkerRegistration object
    * @private
    * @memberOf app.SW
    */
-  let _swRegistration = null;
+  let _reg = null;
 
   /**
    * Register the Service Worker
@@ -44,9 +42,9 @@ app.SW = (function() {
    * @memberOf app.SW
    */
   function _register() {
-    return navigator.serviceWorker.register(SERVICE_WORKER).then((swReg) => {
-      _swRegistration = swReg;
-      return Promise.resolve(_swRegistration);
+    return navigator.serviceWorker.register(_PATH).then((swReg) => {
+      _reg = swReg;
+      return Promise.resolve(_reg);
     }).catch((err) => {
       throw new Error(_ERR_REG + err.message);
     });
@@ -59,12 +57,11 @@ app.SW = (function() {
    * @memberOf app.SW
    */
   function _unsubscribePush() {
-    return _swRegistration.pushManager.getSubscription().then((sub) => {
+    return _reg.pushManager.getSubscription().then((sub) => {
       if (sub) {
         return sub.unsubscribe();
-      } else {
-        throw new Error('Not subscribed');
       }
+      return Promise.resolve();
     });
   }
 
@@ -75,14 +72,8 @@ app.SW = (function() {
      * @memberOf app.SW
      */
     initialize: function() {
-      if (_swRegistration) {
-        return Promise.resolve();
-      }
-
       return _register().then((swReg) => {
         return app.Fb.initialize(swReg);
-      }).then(() => {
-        return Promise.resolve();
       }).catch((err) => {
         throw new Error(_ERR_REG + err.message);
       });
@@ -94,21 +85,21 @@ app.SW = (function() {
      * @memberOf app.SW
      */
     unregister: function() {
-      if (!_swRegistration) {
-        throw new Error(_ERR_UNREG + _ERR_NOT_REG);
+      if (!_reg) {
+        return Promise.resolve();
       }
 
       return _unsubscribePush().then(() => {
-        return _swRegistration.unregister();
+        return _reg.unregister();
       }).then((unregistered) => {
         if (unregistered) {
-          _swRegistration = null;
+          _reg = null;
           return Promise.resolve();
         } else {
-          throw new Error(_ERR_UNREG + _ERR_UNREG_BOOL);
+          return Promise.reject(new Error(_ERR_UNREG + _ERR_UNREG_BOOL));
         }
       }).catch((err) => {
-        throw new Error(_ERR_UNREG + err.message);
+        return Promise.reject(new Error(_ERR_UNREG + err.message));
       });
     },
 
@@ -118,10 +109,43 @@ app.SW = (function() {
      * @memberOf app.SW
      */
     update: function() {
-      if (_swRegistration) {
-        _swRegistration.update();
+      if (_reg) {
+        _reg.update();
       }
       return Promise.resolve();
+    },
+
+    /**
+     * Are we subscribed to push notifications
+     * @returns {Promise<boolean>} true if subscribed
+     * @memberOf app.SW
+     */
+    isSubscribed: function() {
+      if (_reg) {
+        return _reg.pushManager.getSubscription().then((sub) => {
+          // sub null if not subscribed
+          return Promise.resolve(!!sub);
+        });
+      }
+      return Promise.resolve(false);
+    },
+
+    /**
+     * Check if the ServiceWorker in a state for receiving messages
+     * @returns {Promise<boolean>} true if in receiving state
+     * @reject {Error} {@link app.Utils.ERROR_NO_NOTIFICATIONS}
+     * @memberOf app.SW
+     */
+    canReceive: function() {
+      // Need to be subscribed and have notifications permission
+      return app.Notify.hasNavigatorPermission().then((granted) => {
+        if (!granted) {
+          return Promise.reject(new Error(app.Utils.ERROR_NO_NOTIFICATIONS));
+        }
+        return app.SW.isSubscribed();
+      }).then((subscribed) => {
+        return Promise.resolve(subscribed);
+      });
     },
   };
 })();
