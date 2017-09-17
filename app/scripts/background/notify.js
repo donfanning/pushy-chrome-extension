@@ -283,7 +283,6 @@ app.Notify = (function() {
 
     /**
      * Determine if navigator Notifications permission has been granted
-     * Will prompt user if not set, if possible
      * Note: this will work from the background script of an extension,
      * unlike the other solutions
      * @see https://goo.gl/RzekrB
