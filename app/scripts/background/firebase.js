@@ -19,11 +19,17 @@ app.Fb = (function() {
   /**
    * Error message for regToken
    * @type {string}
-   * @default
    * @memberOf app.Fb
    */
-  const ERROR_TOKEN =
-      'Failed to obtain messaging token.\n';
+  const ERROR_TOKEN = 'Failed to obtain messaging token.\n';
+
+  /**
+   * Error message for no notification permission
+   * @type {string}
+   * @memberOf app.Fb
+   */
+  const ERROR_NOTIFICATIONS =
+      'You need to allow notifications to send and receive messages.';
 
   /**
    * Firebase app
@@ -54,6 +60,7 @@ app.Fb = (function() {
    * @memberOf app.Fb
    */
   function _initializeFirebase(swReg) {
+    // noinspection SpellCheckingInspection
     const config = {
       apiKey: 'AIzaSyBzqx2gVefRo3tvMFGRFs9gztd081pRgVg',
       authDomain: 'clip-man.firebaseapp.com',
@@ -78,16 +85,15 @@ app.Fb = (function() {
 
   /**
    * Delete firebase.app if it exists
-   * @returns {Promise.<void>} void
+   * @returns {firebase.Promise<void>|Promise<void>} void
    * @private
    * @memberOf app.Fb
    */
   function _deleteFirebaseApp() {
     if (_app) {
       return firebase.app().delete();
-    } else {
-      return Promise.resolve();
     }
+    return Promise.resolve();
   }
 
   /**
@@ -102,9 +108,8 @@ app.Fb = (function() {
       Chrome.GA.event(app.GA.EVENT.TOKEN_REFRESHED, refreshedToken);
       if (app.Utils.isRegistered()) {
         return app.Reg.register(false);
-      } else {
-        return Promise.resolve();
       }
+      return Promise.resolve();
     }).catch((err) => {
       const msg = `${err.message} Token: ${token}`;
       Chrome.GA.error(msg, 'Fb._refreshRegToken');
@@ -154,12 +159,16 @@ app.Fb = (function() {
      * @memberOf app.Fb
      */
     getRegToken: function() {
-      return _messaging.getToken().then((token) => {
+      return app.Notify.hasNavigatorPermission().then((granted) => {
+        if (!granted) {
+          return Promise.reject(new Error(ERROR_NOTIFICATIONS));
+        }
+        return _messaging.getToken();
+      }).then((token) => {
         if (token) {
           return Promise.resolve(token);
-        } else {
-          return Promise.reject(new Error(ERROR_TOKEN));
         }
+        return Promise.reject(new Error(ERROR_TOKEN));
       });
     },
   };
