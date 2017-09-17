@@ -280,5 +280,27 @@ app.Notify = (function() {
       const notify = Chrome.Storage.getBool('notify');
       return notify && Chrome.Storage.getBool('notifyOnError');
     },
+
+    /**
+     * Determine if navigator Notifications permission has been granted
+     * Will prompt user if not set, if possible
+     * Note: this will work from the background script of an extension,
+     * unlike the other solutions
+     * @see https://goo.gl/RzekrB
+     * @see https://w3c.github.io/permissions/
+     * @see https://www.chromestatus.com/features/6443143280984064
+     * @returns {Promise<boolean>} true if granted
+     * @memberOf app.Notify
+     */
+    hasNavigatorPermission: function() {
+      return navigator.permissions.query({
+        name: 'notifications',
+      }).then((status) => {
+        if (status.state === 'granted') {
+          return Promise.resolve(true);
+        }
+        return Promise.resolve(false);
+      });
+    },
   };
 })();
