@@ -16,6 +16,8 @@ app.Notify = (function() {
 
   new ExceptionHandler();
 
+  const _ERROR_NO_NOTIFICATIONS = 'Notifications not granted';
+
   /**
    * Notification type
    * @typedef {Object} app.Notify.TYPE
@@ -224,6 +226,14 @@ app.Notify = (function() {
      * @memberOf app.Notify
      */
     TYPE: TYPE,
+
+    /**
+     * System Notifications not granted error message
+     * @const
+     * @type {string}
+     * @memberOf app.Notify
+     */
+    ERROR_NO_NOTIFICATIONS: _ERROR_NO_NOTIFICATIONS,
 
     /**
      * Create and display a notification
