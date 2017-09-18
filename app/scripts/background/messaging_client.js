@@ -126,7 +126,13 @@ app.Msg = (function() {
     }
 
     let url;
-    return app.Fb.getRegToken().then((regId) => {
+    return app.SW.cantReceive().then((cantReceive) => {
+      if (cantReceive) {
+        // we don't have a valid regId anymore
+        return Promise.resolve('unknownRegId');
+      }
+      return app.Fb.getRegToken();
+    }).then((regId) => {
       const json = encodeURIComponent(JSON.stringify(data));
       const highPriority = Chrome.Storage.getBool('highPriority');
       url = `${URL_BASE}${regId}/${json}/${highPriority}`;
