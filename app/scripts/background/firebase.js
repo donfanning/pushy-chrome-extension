@@ -24,14 +24,6 @@ app.Fb = (function() {
   const ERROR_TOKEN = 'Failed to obtain messaging token.\n';
 
   /**
-   * Error message for no notification permission
-   * @type {string}
-   * @memberOf app.Fb
-   */
-  const ERROR_NOTIFICATIONS =
-      'You need to allow notifications to send and receive messages.';
-
-  /**
    * Firebase app
    * @private
    * @memberOf app.Fb
@@ -159,12 +151,7 @@ app.Fb = (function() {
      * @memberOf app.Fb
      */
     getRegToken: function() {
-      return app.Notify.hasNavigatorPermission().then((granted) => {
-        if (!granted) {
-          return Promise.reject(new Error(ERROR_NOTIFICATIONS));
-        }
-        return _messaging.getToken();
-      }).then((token) => {
+      return _messaging.getToken().then((token) => {
         if (token) {
           return Promise.resolve(token);
         }
