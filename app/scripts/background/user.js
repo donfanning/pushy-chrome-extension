@@ -168,6 +168,18 @@ app.User = (function() {
         Chrome.GA.error(err.message, 'User._onChromeMessage');
         response({message: 'error', error: err.message});
       });
+    } else if (request.message === app.ChromeMsg.SIGN_OUT_ONLY.message) {
+      // try to signOut a user without unregister with App Engine
+      ret = true; // async
+      app.User.signOutOnly().then(() => {
+        response({message: 'ok'});
+        return Promise.resolve();
+      }).catch((err) => {
+        _setSignIn(false);
+        app.Devices.clear();
+        Chrome.GA.error(err.message, 'User._onChromeMessage');
+        response({message: 'error', error: err.message});
+      });
     }
     return ret;
   }
@@ -192,6 +204,19 @@ app.User = (function() {
       return chromep.identity.getProfileUserInfo().then((user) => {
         Chrome.Storage.set('email', user.email);
         Chrome.Storage.set('uid', user.id);
+        return Promise.resolve();
+      });
+    },
+
+    /**
+     * Try to signOut without unregister with App Engine
+     * @returns {Promise<void>} void
+     * @memberOf app.User
+     */
+    signOutOnly: function() {
+      return app.Fb.signOut().then(() => {
+        _setSignIn(false);
+        app.Devices.clear();
         return Promise.resolve();
       });
     },
