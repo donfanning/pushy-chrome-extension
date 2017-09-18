@@ -18,6 +18,7 @@ app.SW = (function() {
   const _ERR_REG = 'Failed to register Service Worker: ';
   const _ERR_UNREG = 'Failed to unregister Service Worker: ';
   const _ERR_UNREG_BOOL = 'returned false';
+  const _ERROR_NOT_SUBSCRIBED = 'Not subscribed to push notifications.';
 
   /**
    * Path to our {@link ServiceWorker}
@@ -66,6 +67,14 @@ app.SW = (function() {
   }
 
   return {
+    /**
+     * Not subscribed to push error message
+     * @const
+     * @type {string}
+     * @memberOf app.SW
+     */
+    ERROR_NOT_SUBSCRIBED: _ERROR_NOT_SUBSCRIBED,
+    
     /**
      * Initialize the {@link ServiceWorker} and firebase
      * @returns {Promise<void>} void
@@ -131,20 +140,23 @@ app.SW = (function() {
     },
 
     /**
-     * Check if the ServiceWorker in a state for receiving messages
-     * @returns {Promise<boolean>} true if in receiving state
-     * @reject {Error} {@link app.Utils.ERROR_NO_NOTIFICATIONS}
+     * Check if the ServiceWorker is not in a state for receiving messages
+     * @returns {Promise<?string>} reason if it can't, or null
      * @memberOf app.SW
      */
-    canReceive: function() {
+    cantReceive: function() {
       // Need to be subscribed and have notifications permission
+      let cantMsg = null;
       return app.Notify.hasNavigatorPermission().then((granted) => {
         if (!granted) {
-          return Promise.reject(new Error(app.Utils.ERROR_NO_NOTIFICATIONS));
+          cantMsg = app.Notify.ERROR_NO_NOTIFICATIONS;
         }
         return app.SW.isSubscribed();
       }).then((subscribed) => {
-        return Promise.resolve(subscribed);
+        if (!subscribed) {
+          cantMsg = app.SW.ERROR_NOT_SUBSCRIBED;
+        }
+        return Promise.resolve(cantMsg);
       });
     },
   };
