@@ -37,6 +37,9 @@ app.Reg = (function() {
       const allowReceive = app.Utils.allowReceive();
       if (allowReceive) {
         // user wants to receive messages now
+        if (!app.Utils.isSignedIn()) {
+          return;
+        }
         app.Reg.register(true).catch((err) => {
           Chrome.GA.error(err.message, 'Reg._onStorageChanged');
           Chrome.Storage.set('allowReceive', !allowReceive);
@@ -47,6 +50,9 @@ app.Reg = (function() {
         });
       } else {
         // user no longer wants to receive messages
+        if (!app.Utils.isSignedIn()) {
+          return;
+        }
         app.Reg.unregister(true).catch((err) => {
           Chrome.GA.error(err.message, 'Reg._onStorageChanged');
           Chrome.Storage.set('allowReceive', !allowReceive);
@@ -72,7 +78,7 @@ app.Reg = (function() {
      * @memberOf app.Reg
      */
     register: function(interactive = false) {
-      if (app.Utils.isRegistered() || !app.Utils.allowReceive()) {
+      if (!app.Utils.allowReceive()) {
         return Promise.resolve();
       }
 
@@ -97,7 +103,7 @@ app.Reg = (function() {
      * @memberOf app.Reg
      */
     unregister: function(interactive = false) {
-      if (app.Utils.notRegistered()) {
+      if (!app.Utils.isSignedIn()) {
         return Promise.resolve();
       }
 
