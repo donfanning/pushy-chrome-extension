@@ -130,13 +130,19 @@
    * @memberOf Background
    */
   function _initializeFirebase() {
-    if (app.Utils.isSignedIn()) {
-      return app.SW.initialize().catch((err) => {
-        Chrome.GA.error(err.message, 'Background._initializeFirebase');
-      });
-    } else {
+    if (!app.Utils.isSignedIn()) {
       return Promise.resolve();
     }
+    
+    return app.SW.initialize().then(() => {
+      return app.SW.cantReceive();
+    }).then((cantReceive) => {
+      if (app.Utils.allowReceive() && cantReceive) {
+        // can't receive messages anymore even though we want to.
+        return app.User.forceSignOut(true, cantReceive);
+      }
+      return Promise.resolve();
+    });
   }
 
   // Listen for extension install or update

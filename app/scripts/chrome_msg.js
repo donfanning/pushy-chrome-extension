@@ -32,7 +32,7 @@ app.ChromeMsg = (function() {
    *     copied to clipboard
    * @property {Chrome.Msg.Message} SIGN_IN - {@link app.User} sign in
    * @property {Chrome.Msg.Message} SIGN_OUT - {@link app.User} sign out
-   * @property {Chrome.Msg.Message} SIGN_OUT_ONLY - {@link app.User} sign out
+   * @property {Chrome.Msg.Message} FORCE_SIGN_OUT - {@link app.User} sign out
    * but don't unregister
    * @property {Chrome.Msg.Message} MSG_FAILED - send {@link app.Msg} failed
    * @property {Chrome.Msg.Message} REGISTER_FAILED - register with server
@@ -83,8 +83,8 @@ app.ChromeMsg = (function() {
     SIGN_OUT: {
       message: 'signOut',
     },
-    SIGN_OUT_ONLY: {
-      message: 'signOutOnly',
+    FORCE_SIGN_OUT: {
+      message: 'forceSignOut',
     },
     MSG_FAILED: {
       message: 'sendMessageFailed',
@@ -120,7 +120,7 @@ app.ChromeMsg = (function() {
     COPIED_TO_CLIPBOARD: _MSG.COPIED_TO_CLIPBOARD,
     SIGN_IN: _MSG.SIGN_IN,
     SIGN_OUT: _MSG.SIGN_OUT,
-    SIGN_OUT_ONLY: _MSG.SIGN_OUT_ONLY,
+    FORCE_SIGN_OUT: _MSG.FORCE_SIGN_OUT,
     MSG_FAILED: _MSG.MSG_FAILED,
     REGISTER_FAILED: _MSG.REGISTER_FAILED,
     UNREGISTER_FAILED: _MSG.UNREGISTER_FAILED,

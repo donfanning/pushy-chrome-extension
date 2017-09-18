@@ -27,116 +27,116 @@
 <script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
 
 <dom-module id="signin-page">
-	<template>
-		<style include="iron-flex iron-flex-alignment"></style>
-		<style include="shared-styles"></style>
-		<style>
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
 
-			:host {
-				display: block;
-				position: relative;
-			}
+      :host {
+        display: block;
+        position: relative;
+      }
 
-			#errorDialog {
-				max-width: 40vw;
-			}
+      #errorDialog {
+        max-width: 40vw;
+      }
 
-			.contentContainer {
-				min-height: 25vh;
-			}
+      .contentContainer {
+        min-height: 25vh;
+      }
 
-			#description {
-				padding: 0;
-				margin: 16px 16px 16px 16px
-			}
+      #description {
+        padding: 0;
+        margin: 16px 16px 16px 16px
+      }
 
-			.buttonContainer {
-				padding-top: 16px;
-				padding-bottom: 8px;
-				border-top: 1px solid #d9d9d9;
-			}
+      .buttonContainer {
+        padding-top: 16px;
+        padding-bottom: 8px;
+        border-top: 1px solid #d9d9d9;
+      }
 
-			#googleAccountButton {
-				outline: none;
-				font-size: 14px;
-				font-weight: 400;
-				font-family: 'RobotoDraft', 'Roboto', arial, sans-serif;
-				white-space: nowrap;
-				cursor: pointer;
-				background: #fff;
-				border: 1px solid #d9d9d9;
-				border-radius: 3px;
-				box-sizing: border-box;
-				margin: 0 0.29em;
-				z-index: 0;
-			}
+      #googleAccountButton {
+        outline: none;
+        font-size: 14px;
+        font-weight: 400;
+        font-family: 'RobotoDraft', 'Roboto', arial, sans-serif;
+        white-space: nowrap;
+        cursor: pointer;
+        background: #fff;
+        border: 1px solid #d9d9d9;
+        border-radius: 3px;
+        box-sizing: border-box;
+        margin: 0 0.29em;
+        z-index: 0;
+      }
 
-			iron-icon {
-				width: 22px;
-				height: 22px;
-				margin: 6px;
-			}
+      iron-icon {
+        width: 22px;
+        height: 22px;
+        margin: 6px;
+      }
 
-			#waiter {
-				margin: 20px auto;
-			}
+      #waiter {
+        margin: 20px auto;
+      }
 
-			#waiter paper-item {
-				@apply(--paper-font-title);
-			}
+      #waiter paper-item {
+        @apply(--paper-font-title);
+      }
 
-		</style>
+    </style>
 
-		<paper-card class="page-content"
-		            heading="[[_computeEmailLabel(signedIn)]]">
-			<div class="card-content">
+    <paper-card class="page-content"
+                heading="[[_computeEmailLabel(signedIn)]]">
+      <div class="card-content">
 
-				<!-- Error dialog -->
-				<paper-dialog id="errorDialog" modal
-				              entry-animation="scale-up-animation"
-				              exit-animation="fade-out-animation">
-					<h2 id="dialogTitle" class="vertical layout center"></h2>
-					<paper-dialog-scrollable>
-						<paper-item id="dialogText"></paper-item>
-					</paper-dialog-scrollable>
-					<div class="buttons">
-						<paper-button dialog-dismiss autofocus>CLOSE</paper-button>
-						<paper-button dialog-confirm hidden$="[[!confirmButton]]"
-						              on-click="_onDialogButtonClicked">OK
-						</paper-button>
-					</div>
-				</paper-dialog>
+        <!-- Error dialog -->
+        <paper-dialog id="errorDialog" modal
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+          <h2 id="dialogTitle" class="vertical layout center"></h2>
+          <paper-dialog-scrollable>
+            <paper-item id="dialogText"></paper-item>
+          </paper-dialog-scrollable>
+          <div class="buttons">
+            <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
+            <paper-button dialog-confirm hidden$="[[!confirmButton]]"
+                          on-click="_onDialogButtonClicked">OK
+            </paper-button>
+          </div>
+        </paper-dialog>
 
-				<div class="contentContainer horizontal layout center">
-					<paper-item id="description"
-					            style$="display: [[_computeDescDisplay(waiting, signedIn)]];">
-						You must be signed in to the Browser with the account you
-						wish to use to share with your other devices. It is only used to ensure
-						that all messages goes to a single account. You also need to "Allow Notifications"
-						so the extension can send and receive messages.
-					</paper-item>
+        <div class="contentContainer horizontal layout center">
+          <paper-item id="description"
+                      style$="display: [[_computeDescDisplay(waiting, signedIn)]];">
+            You must be signed in to the Browser with the account you
+            wish to use to share with your other devices. It is only used to ensure
+            that all messages goes to a single account. You also need to "Allow Notifications"
+            so the extension can send and receive messages.
+          </paper-item>
 
-					<div id="waiter" class="vertical layout center"
-					     style$="display: [[_computeWaiterDisplay(waiting)]];">
-						<div class="horizontal center-justified layout">
-							<paper-spinner active="[[waiting]]" tabindex="-1"></paper-spinner>
-						</div>
-						<paper-item>[[_computeWaiterLabel(waiting)]]</paper-item>
-					</div>
-				</div>
-				<div class="buttonContainer vertical layout center">
-					<paper-item id="googleAccountButton" tabindex="0"
-					            on-click="_onAccountButtonClicked" disabled$="[[signInDisabled]]">
-						<paper-ripple center></paper-ripple>
-						<iron-icon icon="myicons:google" item-icon></iron-icon>
-						<span class="setting-label">[[_computeButtonLabel(signedIn)]]</span>
-					</paper-item>
-				</div>
-			</div>
-		</paper-card>
-		<iron-localstorage name="signedIn" value="{{signedIn}}"
-		                   on-iron-localstorage-load-empty="_initSignedIn"></iron-localstorage>
-	</template>
+          <div id="waiter" class="vertical layout center"
+               style$="display: [[_computeWaiterDisplay(waiting)]];">
+            <div class="horizontal center-justified layout">
+              <paper-spinner active="[[waiting]]" tabindex="-1"></paper-spinner>
+            </div>
+            <paper-item>[[_computeWaiterLabel(waiting)]]</paper-item>
+          </div>
+        </div>
+        <div class="buttonContainer vertical layout center">
+          <paper-item id="googleAccountButton" tabindex="0"
+                      on-click="_onAccountButtonClicked" disabled$="[[signInDisabled]]">
+            <paper-ripple center></paper-ripple>
+            <iron-icon icon="myicons:google" item-icon></iron-icon>
+            <span class="setting-label">[[_computeButtonLabel(signedIn)]]</span>
+          </paper-item>
+        </div>
+      </div>
+    </paper-card>
+    <iron-localstorage name="signedIn" value="{{signedIn}}"
+                       on-iron-localstorage-load-empty="_initSignedIn"></iron-localstorage>
+  </template>
 </dom-module>
 
 <script>
@@ -150,13 +150,14 @@
     const ERROR_PERMISSION =
         'Notification permission is required to sign-in.';
     let ERROR_BLOCKED_MESSAGE =
-        `<p>You either blocked the request or the Chrome settings block
-    all notifications. If you want to sign-in, go to
-    "Chrome settings -> Show advanced settings...". Click on
-    "content settings...". In the notification area
-    make sure "Ask when a site wants to show notifications"
-    is selected. In the "Manage Exceptions" area allow this if
-    it is blocked:<br />&nbsp&nbsp&nbsp&nbsp`;
+        `<p>You either blocked notifications for the extension or the Chrome
+          settings block all notifications.<br />
+          If you want to sign-in, go to <b>Chrome settings</b> and click
+          on <b>Advanced</b>.
+          Click on <b>Content settings</b> then <b>Notifications</b>.
+          Make sure <b>Ask before sending (recommended)</b> is selected.
+          In the <b>Block</b> area allow <b>Pushy Clipboard</b>.
+        </p>`;
     const ERROR_DEFAULT_MESSAGE =
         'Display notification pop-up again?';
     const ERROR_UNKNOWN_MESSAGE =
@@ -194,8 +195,6 @@
       },
 
       ready: function() {
-        ERROR_BLOCKED_MESSAGE +=
-            `${Chrome.Utils.getExtensionName()}</p >`;
       },
 
       onCurrentPage: function() {
@@ -233,10 +232,18 @@
         Notification.requestPermission().then((permission) => {
           if (permission === 'denied') {
             // user denied or Chrome setting blocks all
+            if (app.Utils.isSignedIn()) {
+              // force sign out because we must have lost registration
+              this._signOutOnly();
+            }
             this._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE,
                 false);
           } else if (permission === 'default') {
             // user closed notification popup
+            if (app.Utils.isSignedIn()) {
+              // force sign out because we must have lost registration
+              this._signOutOnly();
+            }
             this._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE,
                 true);
           } else {
@@ -282,6 +289,18 @@
         }).catch(() => {});
       },
 
+      /**
+       * Attempt to sign out of current Browser account without
+       * unregistering from App Engine
+       * @private
+       */
+      _signOutOnly: function() {
+        // force sign out because we must have lost registration
+        Chrome.Storage.set('registered', false);
+        // eslint-disable-next-line promise/no-nesting
+        Chrome.Msg.send(app.ChromeMsg.FORCE_SIGN_OUT).catch(() => {});
+      },
+
       _showDialog: function(title, text, confirmButton) {
         this.$.dialogTitle.innerHTML = title;
         this.$.dialogText.innerHTML = text;
@@ -301,8 +320,8 @@
       },
 
       _computeEmailLabel: function(signedIn) {
-        return signedIn ? `Signed in as: ${Chrome.Storage.get('email')}` :
-            'Account Sign In';
+        return signedIn ?
+            `Signed in as: ${Chrome.Storage.get('email')}` : 'Account Sign In';
       },
 
       _computeButtonLabel: function(signedIn) {

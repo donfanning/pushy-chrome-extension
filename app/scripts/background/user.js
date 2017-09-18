@@ -90,7 +90,7 @@ app.User = (function() {
    * @private
    * @memberOf app.User
    */
-  function _addAccess() {
+  function _signIn() {
     return _needsCleanup().then(() => {
       return app.SW.initialize();
     }).then(() => {
@@ -114,7 +114,7 @@ app.User = (function() {
    * @private
    * @memberOf app.User
    */
-  function _removeAccess() {
+  function _signOut() {
     return app.Msg.sendDeviceRemoved().then(() => {
       return app.Reg.unregister(true);
     }).then(() => {
@@ -144,15 +144,17 @@ app.User = (function() {
     if (request.message === app.ChromeMsg.SIGN_IN.message) {
       // try to signIn a user
       ret = true; // async
-      _addAccess().then(() => {
+      _signIn().then(() => {
         response({message: 'ok'});
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.GA.error(err.message, 'User._onChromeMessage');
-        _removeAccess().then(() => {
+        Chrome.GA.error(`${request.message} ${err.message}`,
+            'User._onChromeMessage');
+        _signOut().then(() => {
           return Promise.resolve();
         }).catch((err) => {
-          Chrome.GA.error(err.message, 'User._onChromeMessage');
+          Chrome.GA.error(`${request.message} ${err.message}`,
+              'User._onChromeMessage');
           _setSignIn(false);
           Chrome.Storage.set('registered', false);
         });
@@ -161,23 +163,25 @@ app.User = (function() {
     } else if (request.message === app.ChromeMsg.SIGN_OUT.message) {
       // try to signOut a user
       ret = true; // async
-      _removeAccess().then(() => {
+      _signOut().then(() => {
         response({message: 'ok'});
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.GA.error(err.message, 'User._onChromeMessage');
+        Chrome.GA.error(`${request.message} ${err.message}`,
+            'User._onChromeMessage');
         response({message: 'error', error: err.message});
       });
-    } else if (request.message === app.ChromeMsg.SIGN_OUT_ONLY.message) {
+    } else if (request.message === app.ChromeMsg.FORCE_SIGN_OUT.message) {
       // try to signOut a user without unregister with App Engine
       ret = true; // async
-      app.User.signOutOnly().then(() => {
+      app.User.forceSignOut().then(() => {
         response({message: 'ok'});
         return Promise.resolve();
       }).catch((err) => {
         _setSignIn(false);
         app.Devices.clear();
-        Chrome.GA.error(err.message, 'User._onChromeMessage');
+        Chrome.GA.error(`${request.message} ${err.message}`,
+            'User._onChromeMessage');
         response({message: 'error', error: err.message});
       });
     }
@@ -209,14 +213,26 @@ app.User = (function() {
     },
 
     /**
-     * Try to signOut without unregister with App Engine
+     * Force signOut without unregister with App Engine
+     * @param {boolean} [notify=false] if true, post error notification
+     * @param {string} [reason='Unknown Error'] reason for call
      * @returns {Promise<void>} void
      * @memberOf app.User
      */
-    signOutOnly: function() {
+    forceSignOut: function(notify=false, reason='Unknown Error') {
+      Chrome.Storage.set('registered', false);
       return app.Fb.signOut().then(() => {
         _setSignIn(false);
         app.Devices.clear();
+        Chrome.GA.error(reason, 'User.forceSignOut');
+        if (notify) {
+          let msg = reason;
+          msg+= '\n\nTry to sign in again. If the problem persists, please ' +
+              'contact support.';
+          if (app.Notify.onError()) {
+            app.Notify.create(app.Notify.TYPE.ERROR_FORCE_SIGN_OUT, msg);
+          }
+        }
         return Promise.resolve();
       });
     },

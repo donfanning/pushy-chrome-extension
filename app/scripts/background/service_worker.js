@@ -18,7 +18,8 @@ app.SW = (function() {
   const _ERR_REG = 'Failed to register Service Worker: ';
   const _ERR_UNREG = 'Failed to unregister Service Worker: ';
   const _ERR_UNREG_BOOL = 'returned false';
-  const _ERROR_NOT_SUBSCRIBED = 'Not subscribed to push notifications.';
+  const _ERROR_NOT_SUBSCRIBED =
+      'The extension has lost the subscription to receive push notifications.';
 
   /**
    * Path to our {@link ServiceWorker}
@@ -153,7 +154,7 @@ app.SW = (function() {
         }
         return app.SW.isSubscribed();
       }).then((subscribed) => {
-        if (!subscribed) {
+        if (!subscribed && !cantMsg) {
           cantMsg = app.SW.ERROR_NOT_SUBSCRIBED;
         }
         return Promise.resolve(cantMsg);

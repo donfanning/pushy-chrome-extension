@@ -16,7 +16,8 @@ app.Notify = (function() {
 
   new ExceptionHandler();
 
-  const _ERROR_NO_NOTIFICATIONS = 'Notifications not granted';
+  const _ERROR_NO_NOTIFICATIONS =
+      'Display of notifications on received messages has been disabled.';
 
   /**
    * Notification type
@@ -115,6 +116,23 @@ app.Notify = (function() {
     ERROR_STORE_CLIP: {
       id: 'error_store_clip',
       title: 'Failed to store clipboard contents',
+      message: 'Not set',
+      icon: '/images/ic_error.png',
+      isClickable: true,
+      clickFunction: app.Utils.showMainTab,
+      requireInteraction: true,
+      hasButtons: true,
+      buttons: [
+        {
+          'title': 'Contact support',
+          'iconUrl': chrome.runtime.getURL('/images/ic_email_black_48dp.png'),
+        },
+      ],
+      buttonFunctions: [_sendErrorEmail],
+    },
+    ERROR_FORCE_SIGN_OUT: {
+      id: 'error_force_sign_out',
+      title: 'Signed out of extension',
       message: 'Not set',
       icon: '/images/ic_error.png',
       isClickable: true,
