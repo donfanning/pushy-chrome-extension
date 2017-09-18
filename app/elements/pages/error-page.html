@@ -1,0 +1,98 @@
+<!--
+  ~ Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
+  ~ Licensed under Apache 2.0
+  ~ https://opensource.org/licenses/Apache-2.0
+  ~ https://goo.gl/wFvBM1
+  -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+
+<script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
+
+<dom-module id="error-page">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      hr {
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      .card-content {
+        padding: 0;
+        margin: 0;
+      }
+
+    </style>
+
+    <paper-card class="page-content" heading="Error viewer">
+      <div class="card-content">
+        <p>Hi there</p>
+      </div>
+    </paper-card>
+  </template>
+</dom-module>
+
+<script>
+  (function(window) {
+    'use strict';
+
+    new ExceptionHandler();
+
+    window.app = window.app || {};
+    app.ErrorPageFactory = Polymer({
+      is: 'error-page',
+
+      properties: {
+        githubPath: {
+          type: String,
+          value: function() {
+            return app.Utils.getGithubPath();
+          },
+          readOnly: true,
+        },
+
+        githubPagesPath: {
+          type: String,
+          value: function() {
+            return app.Utils.getGithubPagesPath();
+          },
+          readOnly: true,
+        },
+      },
+
+      /**
+       * computed binding: Get the extension version
+       * @returns {string} version
+       * @private
+       */
+      _computeVersion: function() {
+        const text = Chrome.Utils.getVersion();
+        return encodeURIComponent(text);
+      },
+
+      /**
+       * computed binding: Get a mailto url
+       * @param {string} subject - email subject
+       * @returns {string} url
+       * @private
+       */
+      _computeMailToUrl: function(subject) {
+        return app.Utils.getEmailUrl(subject, app.Utils.getEmailBody());
+      },
+
+    });
+  })(window);
+</script>

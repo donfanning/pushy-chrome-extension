@@ -99,14 +99,19 @@ window.app = window.app || {};
       ready: true, disabled: false, divider: false,
     },
     {
+      label: 'View last error', route: 'page-error',
+      icon: 'myicons:error', obj: _showErrorPage,
+      ready: false, disabled: false, divider: false,
+    },
+    {
       label: 'Help & feedback', route: 'page-help',
       icon: 'myicons:help', obj: _showHelpPage,
-      ready: false, disabled: false, divider: false,
+      ready: false, disabled: false, divider: true,
     },
     {
       label: 'Get android app', route: 'page-android',
       icon: 'myicons:android', obj: ANDROID_URI,
-      ready: true, disabled: false, divider: true,
+      ready: true, disabled: false, divider: false,
     },
     {
       label: 'Rate extension', route: 'page-rate',
@@ -470,6 +475,23 @@ window.app = window.app || {};
       t.pages[index].ready = true;
       const el = new app.HelpPageFactory();
       Polymer.dom(t.$.helpInsertion).appendChild(el);
+    }
+    t.route = t.pages[index].route;
+    _scrollPageToTop();
+  }
+
+  /**
+   * Show the error viewer page
+   * @param {int} index - index into {@link Main.pages}
+   * @private
+   * @memberOf Main
+   */
+  function _showErrorPage(index) {
+    if (!t.pages[index].ready) {
+      // insert the page the first time
+      t.pages[index].ready = true;
+      const el = new app.ErrorPageFactory();
+      Polymer.dom(t.$.errorInsertion).appendChild(el);
     }
     t.route = t.pages[index].route;
     _scrollPageToTop();

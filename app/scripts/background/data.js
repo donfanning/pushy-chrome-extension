@@ -49,6 +49,7 @@ app.Data = (function() {
    * @property {string} uid - our unique id
    * @property {string} photoURL - path to out photo url
    * @property {string} permissions - enum: notSet allowed denied
+   * @property {string} lastError - last error that we saved
    * @memberOf app.Data
    */
 
@@ -80,6 +81,7 @@ app.Data = (function() {
     'uid': '',
     'photoURL': '',
     'permissions': 'notSet', // enum: notSet allowed denied
+    'lastError': '',
   };
 
   /**
