@@ -11,7 +11,16 @@
 
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-styles/color.html">
-<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../../bower_components/paper-tooltip/paper-tooltip.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 
 <script type="text/javascript" src="../../bower_components/chrome-extension-utils/exception_handler.js"></script>
 
@@ -26,33 +35,58 @@
         position: relative;
       }
 
-      hr {
-        margin-left: 0;
-        margin-right: 0;
+      .page-content {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
       }
 
-      .card-content {
-        padding: 0;
+      .page-toolbar {
+        margin-bottom: 0;
+      }
+
+      .body-content {
+        padding-top: 0;
+      }
+
+      #errorViewer {
+        height: 82vh;
+        @apply(--paper-font-subhead);
+        white-space: pre-wrap;
+        overflow: hidden;
+        overflow-y: scroll;
+        padding: 16px;
         margin: 0;
       }
 
-      /*.error-text {*/
-        /*line-height: 1.2em;*/
-        /*height: 2.4em;*/
-        /*overflow: hidden;*/
-        /*margin-left: 16px;*/
-        /*margin-right: 16px;*/
-      /*}*/
-
     </style>
 
-    <paper-card class="page-content" heading="Error viewer - [[value.title]]">
-      <div class="card-content">
-        <div class="error-text">[[value.message]]</div>
-        <div class="error-text">[[value.stack]]</div>
+    <paper-material elevation="1" class="page-content">
+      <!-- Tool bar -->
+      <paper-material elevation="1">
+        <paper-toolbar class="page-toolbar">
+          <span class="space"></span>
+          <div class="middle middle-container center horizontal layout flex">
+            <div class="flex">[[_computeTitle(value)]]</div>
+            <paper-icon-button id="email" icon="myicons:mail"
+                               on-tap="_onEmailTapped"></paper-icon-button>
+            <paper-tooltip for="email" position="left" offset="0">Send email to support</paper-tooltip>
+            <paper-icon-button id="remove" icon="myicons:delete"
+                               on-tap="_onRemoveTapped"></paper-icon-button>
+            <paper-tooltip for="email" position="left" offset="0">Remove the error</paper-tooltip>
+          </div>
+        </paper-toolbar>
+      </paper-material>
+      <!-- Content -->
+      <div class="body-content horizontal layout">
+        <div id="errorViewer">
+          <div class="error-text">[[_computeMessage(value)]]</div>
+          <div class="error-text">[[_computeStack(value)]]</div>
+        </div>
       </div>
-    </paper-card>
-    <iron-localstorage name="{{name}}" value="{{value}}" on-iron-localstorage-load-empty="_init"></iron-localstorage>
+      <iron-localstorage name="{{name}}" value="{{value}}" on-iron-localstorage-load-empty="_init"></iron-localstorage>
+    </paper-material>
   </template>
 </dom-module>
 
@@ -76,14 +110,78 @@
           type: Object,
           value: function() {
             return new Chrome.Storage.LastError();
-            },
+          },
           notify: true,
         },
       },
 
-      // initialize value if it is not in local storage
+      /**
+       * Event: Email support
+       * @private
+       */
+      _onEmailTapped: function() {
+        let body = app.Utils.getEmailBody();
+        body = body + `${this.value.title}\n\n${this.value.message}\n\n` +
+            `${this.value.stack}`;
+        body = body + '\n\nPlease provide any additional info. ' +
+            'on what led to the error.\n\n';
+
+        const url = app.Utils.getEmailUrl('Last Error', body);
+        Chrome.GA.event(Chrome.GA.EVENT.LINK, 'Last Error');
+        chrome.tabs.create({url: url});
+      },
+
+      /**
+       * Event: Remove the error
+       * @private
+       */
+      _onRemoveTapped: function() {
+        this.set('value', new Chrome.Storage.LastError());
+      },
+
+      /**
+       * Computed Binding
+       * @param {Chrome.Storage.LastError} error - the error
+       * @returns {string} message
+       * @private
+       */
+      _computeMessage: function(error) {
+        return error.message;
+      },
+
+      /**
+       * Computed Binding
+       * @param {Chrome.Storage.LastError} error - the error
+       * @returns {string} stack trace
+       * @private
+       */
+      _computeStack: function(error) {
+        let ret = '';
+        if (error.message) {
+          ret += error.stack;
+        }
+        return ret;
+      },
+
+      /**
+       * Computed Binding
+       * @param {Chrome.Storage.LastError} error - the error
+       * @returns {string} page title
+       * @private
+       */
+      _computeTitle: function(error) {
+        let ret = 'Last error viewer';
+        if (error.message) {
+          ret += ` - ${error.title}`;
+        }
+        return ret;
+      },
+
+      /**
+       * initialize value if it is not in local storage
+       */
       _init: function() {
-        this.set('value', new Error());
+        this.set('value', new Chrome.Storage.LastError());
       },
 
     });
