@@ -26,6 +26,7 @@ app.Notify = (function() {
    * @property {string} title - title
    * @property {string} message - message
    * @property {string} icon - path to icon
+   * @property {boolean} isError - if true, error notification
    * @property {boolean} isClickable - if true, execute function on click
    * @property {function} clickFunction - function to run on click
    * @property {boolean} requireInteraction - if true, visible until dismissed
@@ -53,6 +54,7 @@ app.Notify = (function() {
       title: 'Clipboard change detected',
       message: 'Not set',
       icon: '/images/ic_local_copy.png',
+      isError: false,
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: false,
@@ -65,6 +67,7 @@ app.Notify = (function() {
       title: 'Sent push message',
       message: 'Not set',
       icon: '/images/ic_local_copy.png',
+      isError: false,
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: false,
@@ -77,6 +80,7 @@ app.Notify = (function() {
       title: 'Sent push message',
       message: 'Not set',
       icon: '/images/ic_add_device.png',
+      isError: false,
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: false,
@@ -89,6 +93,7 @@ app.Notify = (function() {
       title: 'Sent push message',
       message: 'Not set',
       icon: '/images/ic_remove_device.png',
+      isError: false,
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: false,
@@ -98,9 +103,10 @@ app.Notify = (function() {
     },
     ERROR_SEND: {
       id: 'error_send',
-      title: 'Failed to send message.',
+      title: 'Failed to send message',
       message: 'Not set',
       icon: '/images/ic_error.png',
+      isError: true,
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: true,
@@ -118,6 +124,7 @@ app.Notify = (function() {
       title: 'Failed to store clipboard contents',
       message: 'Not set',
       icon: '/images/ic_error.png',
+      isError: true,
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: true,
@@ -132,9 +139,10 @@ app.Notify = (function() {
     },
     ERROR_FORCE_SIGN_OUT: {
       id: 'error_force_sign_out',
-      title: 'Signed out of extension',
+      title: 'Forced to sign out of extension',
       message: 'Not set',
       icon: '/images/ic_error.png',
+      isError: true,
       isClickable: true,
       clickFunction: app.Utils.showMainTab,
       requireInteraction: true,
@@ -275,6 +283,11 @@ app.Notify = (function() {
       chrome.notifications.getPermissionLevel(function(level) {
         if (level === 'granted') {
           chrome.notifications.create(type.id, options, () => {});
+        }
+
+        if (type.isError) {
+          const error = new Chrome.Storage.LastError(type.message, type.title);
+          Chrome.Storage.setLastError(error);
         }
       });
     },

@@ -33,7 +33,7 @@
         Chrome.Storage.set('os', os);
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.GA.error(err.message, 'Background._onInstalled');
+        Chrome.Log.error(err.message, 'Background._onInstalled');
       });
       app.Data.initialize();
       app.Utils.showMainTab();
@@ -42,7 +42,7 @@
       _initializeFirebase().then(() => {
         return app.SW.update();
       }).catch((err) => {
-        Chrome.GA.error(err.message, 'Background._onInstalled');
+        Chrome.Log.error(err.message, 'Background._onInstalled');
       });
     }
     app.Utils.setBadgeText();
@@ -62,7 +62,7 @@
     app.Alarm.updateAlarms();
     app.Alarm.deleteOldClipItems();
     _initializeFirebase().catch((err) => {
-      Chrome.GA.error(err.message, 'Background._onStartup');
+      Chrome.Log.error(err.message, 'Background._onStartup');
     });
     app.Utils.setBadgeText();
   }
@@ -89,7 +89,7 @@
       } else {
         const msg = err.message;
         if (msg !== app.ClipItem.ERROR_EMPTY_TEXT) {
-          Chrome.GA.error(msg, 'Background._onIconClicked');
+          Chrome.Log.error(msg, 'Background._onIconClicked');
         }
         if (app.Notify.onError()) {
           app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, msg);
@@ -133,7 +133,7 @@
     if (!app.Utils.isSignedIn()) {
       return Promise.resolve();
     }
-    
+
     return app.SW.initialize().then(() => {
       return app.SW.cantReceive();
     }).then((cantReceive) => {

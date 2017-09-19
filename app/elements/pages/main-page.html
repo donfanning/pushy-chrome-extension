@@ -415,7 +415,7 @@
       clipItem.setRemote(remote);
       // persist value
       clipItem.save().catch((err) => {
-        Chrome.GA.error(err.message, 'Main._onCopyTapped');
+        Chrome.Log.error(err.message, 'Main._onCopyTapped');
       });
 
       const pos = this.listItems.indexOf(listItem);
@@ -446,7 +446,7 @@
       const fav = !clipItem.getFav();
       clipItem.setFav(fav);
       clipItem.save().catch((err) => {
-        Chrome.GA.error(err.message, 'Main._onFavTapped');
+        Chrome.Log.error(err.message, 'Main._onFavTapped');
       });
 
       const pos = this.listItems.indexOf(listItem);
@@ -541,7 +541,7 @@
         this.$.clipList.scrollTop = 0;
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.GA.error(err.message, 'Main._loadClipItems');
+        Chrome.Log.error(err.message, 'Main._loadClipItems');
       });
     },
 
@@ -574,7 +574,7 @@
           }
           return Promise.resolve();
         }).catch((err) => {
-          Chrome.GA.error(err.message, 'Main._deleteSelectedRows');
+          Chrome.Log.error(err.message, 'Main._deleteSelectedRows');
         });
       }
     },

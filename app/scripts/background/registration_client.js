@@ -41,7 +41,7 @@ app.Reg = (function() {
           return;
         }
         app.Reg.register(true).catch((err) => {
-          Chrome.GA.error(err.message, 'Reg._onStorageChanged');
+          Chrome.Log.error(err.message, 'Reg._onStorageChanged');
           Chrome.Storage.set('allowReceive', !allowReceive);
           const msg = app.ChromeMsg.REGISTER_FAILED;
           msg.error = err.toString();
@@ -54,7 +54,7 @@ app.Reg = (function() {
           return;
         }
         app.Reg.unregister(true).catch((err) => {
-          Chrome.GA.error(err.message, 'Reg._onStorageChanged');
+          Chrome.Log.error(err.message, 'Reg._onStorageChanged');
           Chrome.Storage.set('allowReceive', !allowReceive);
           const msg = app.ChromeMsg.UNREGISTER_FAILED;
           msg.error = err.toString();
@@ -90,7 +90,7 @@ app.Reg = (function() {
         Chrome.Storage.set('registered', true);
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.GA.error(err.message, 'Reg.register');
+        Chrome.Log.error(err.message, 'Reg.register');
         const prefix = 'Failed to register with the server.\n';
         throw new Error(prefix + err.message);
       });
@@ -115,7 +115,7 @@ app.Reg = (function() {
         Chrome.Storage.set('registered', false);
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.GA.error(err.message, 'Reg.unregister');
+        Chrome.Log.error(err.message, 'Reg.unregister');
         const prefix = 'Failed to unregister with the server.\n';
         throw new Error(prefix + err.message);
       });

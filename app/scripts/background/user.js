@@ -63,7 +63,7 @@ app.User = (function() {
       app.Fb.signOut().catch(() => {});
     }
     app.User.setInfo().catch((err) => {
-      Chrome.GA.error(err.message, 'User._onSignInChanged');
+      Chrome.Log.error(err.message, 'User._onSignInChanged');
     });
   }
 
@@ -148,12 +148,12 @@ app.User = (function() {
         response({message: 'ok'});
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.GA.error(`${request.message} ${err.message}`,
+        Chrome.Log.error(`${request.message} ${err.message}`,
             'User._onChromeMessage');
         _signOut().then(() => {
           return Promise.resolve();
         }).catch((err) => {
-          Chrome.GA.error(`${request.message} ${err.message}`,
+          Chrome.Log.error(`${request.message} ${err.message}`,
               'User._onChromeMessage');
           _setSignIn(false);
           Chrome.Storage.set('registered', false);
@@ -167,7 +167,7 @@ app.User = (function() {
         response({message: 'ok'});
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.GA.error(`${request.message} ${err.message}`,
+        Chrome.Log.error(`${request.message} ${err.message}`,
             'User._onChromeMessage');
         response({message: 'error', error: err.message});
       });
@@ -180,7 +180,7 @@ app.User = (function() {
       }).catch((err) => {
         _setSignIn(false);
         app.Devices.clear();
-        Chrome.GA.error(`${request.message} ${err.message}`,
+        Chrome.Log.error(`${request.message} ${err.message}`,
             'User._onChromeMessage');
         response({message: 'error', error: err.message});
       });
@@ -224,7 +224,7 @@ app.User = (function() {
       return app.Fb.signOut().then(() => {
         _setSignIn(false);
         app.Devices.clear();
-        Chrome.GA.error(reason, 'User.forceSignOut');
+        Chrome.Log.error(reason, 'User.forceSignOut');
         if (notify) {
           let msg = reason;
           msg+= '\n\nTry to sign in again. If the problem persists, please ' +

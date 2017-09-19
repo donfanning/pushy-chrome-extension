@@ -53,7 +53,7 @@
       data.m = decodeURIComponent(data.m);
     } catch (ex) {
       const msg = `Caught: ReceiveMsg._process ${ex.message}`;
-      Chrome.GA.exception(msg, null, false);
+      Chrome.Log.exception(ex, msg);
     }
 
     if (data.act === app.Msg.ACTION.MESSAGE) {
@@ -63,7 +63,7 @@
       // persist
       app.ClipItem.add(data.m, Date.now(), fav, true, device.getName()).
           catch((err) => {
-            Chrome.GA.error(err.message, 'ReceiveMsg._process');
+            Chrome.Log.error(err.message, 'ReceiveMsg._process');
           });
       // save to clipboard
       app.CB.copyToClipboard(data.m);
@@ -101,7 +101,7 @@
       url = decodeURI(url);
     } catch (ex) {
       const msg = `Caught: ReceiveMsg._onWebRequestBefore ${ex.message}`;
-      Chrome.GA.exception(msg, null, false);
+      Chrome.Log.exception(ex, msg);
     }
     const regex = /https:\/\/pushy-clipboard\.github\.io\/\?(.*)/;
     let text;
@@ -115,7 +115,7 @@
         dataArray = JSON.parse(text);
       } catch (ex) {
         const msg = `Caught: ReceiveMsg._onWebRequestBefore ${ex.message}`;
-        Chrome.GA.exception(msg, null, false);
+        Chrome.Log.exception(ex, msg);
       }
       if (dataArray) {
         for (let i = 0; i < dataArray.length; i++) {

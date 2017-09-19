@@ -42,8 +42,8 @@
     "paper-tooltip": "PolymerElements/paper-tooltip#^1.0.0",
     "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#^1.0.0",
     "neon-animation": "PolymerElements/neon-animation#^1.0.0",
-    "chrome-extension-utils": "opus1269/chrome-extension-utils#^1.0.0",
-    "setting-elements": "opus1269/setting-elements#^1.0.0",
+    "chrome-extension-utils": "opus1269/chrome-extension-utils#^2.0.0",
+    "setting-elements": "opus1269/setting-elements#^2.0.0",
     "firebase": "^4.0.0"
   }
 }

@@ -217,7 +217,7 @@
           }
           return Promise.resolve();
         }).catch((err) => {
-          Chrome.GA.error(err.message, 'SignInPage._checkChromeSignIn');
+          Chrome.Log.error(err.message, 'SignInPage._checkChromeSignIn');
         });
       },
 
@@ -253,7 +253,7 @@
           return Promise.resolve();
         }).catch((err) => {
           // something went wrong
-          Chrome.GA.error(err.message, 'SignInPage._checkPermissions');
+          Chrome.Log.error(err.message, 'SignInPage._checkPermissions');
           this._showDialog(ERROR_PERMISSION,
               ERROR_UNKNOWN_MESSAGE + err.message, false);
         });
@@ -266,7 +266,7 @@
       _signIn: function() {
         Chrome.Msg.send(app.ChromeMsg.SIGN_IN).then((response) => {
           if (response.message === 'error') {
-            Chrome.GA.error(response.error, 'SignInPage._signIn');
+            Chrome.Log.error(response.error, 'SignInPage._signIn');
             this._showDialog(ERROR_SIGN_IN, response.error, false);
           }
           this.set('waiting', false);
@@ -281,7 +281,7 @@
       _signOut: function() {
         Chrome.Msg.send(app.ChromeMsg.SIGN_OUT).then((response) => {
           if (response.message === 'error') {
-            Chrome.GA.error(response.error, 'SignInPage._signOut');
+            Chrome.Log.error(response.error, 'SignInPage._signOut');
             this._showDialog(ERROR_SIGN_OUT, response.error, false);
           }
           this.set('waiting', false);

@@ -195,12 +195,19 @@ window.app = window.app || {};
   t.addEventListener('dom-change', () => {
     // track usage
     Chrome.GA.page('/main.html');
-    // disable devices-page if not signed in
-    const idx = _getPageIdx('page-devices');
+
+    // initialize menu states
+    let idx = _getPageIdx('page-devices');
     t.pages[idx].disabled = !app.Utils.isSignedIn();
+    idx = _getPageIdx('page-error');
+    const lastError = Chrome.Storage.getLastError();
+    t.pages[idx].disabled =
+        Chrome.Utils.isWhiteSpace(lastError.message);
+
     // listen for Chrome messages
     Chrome.Msg.listen(_onChromeMessage);
-    // check for optional
+
+    // check for optional permissions
     _checkOptionalPermissions();
   });
 
@@ -272,7 +279,7 @@ window.app = window.app || {};
       }
       return Promise.resolve();
     }).catch((err) => {
-      Chrome.GA.error(err.message, 'Main.onAcceptPermissionsClicked');
+      Chrome.Log.error(err.message, 'Main.onAcceptPermissionsClicked');
     });
   };
 
@@ -285,7 +292,7 @@ window.app = window.app || {};
       t.permissions = Chrome.Storage.get('permissions');
       return Promise.resolve();
     }).catch((err) => {
-      Chrome.GA.error(err.message, 'Main.onDenyPermissionsClicked');
+      Chrome.Log.error(err.message, 'Main.onDenyPermissionsClicked');
     });
   };
 
@@ -332,7 +339,8 @@ window.app = window.app || {};
         chrome.tabs.update(t.id, {'highlighted': true});
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.GA.error(err.message, 'chromep.tabs.getCurrent');
+        Chrome.Log.error(`${request.message} ${err.message}`,
+            'chromep.tabs.getCurrent');
       });
       response(JSON.stringify({message: 'OK'}));
     } else if (request.message === app.ChromeMsg.MSG_FAILED.message) {
@@ -353,6 +361,8 @@ window.app = window.app || {};
   function _onStorageChanged(event) {
     if (event.key === 'signedIn') {
       _setDevicesState();
+    } else if (event.key === 'lastError') {
+      _setErrorState();
     } else if (event.key === 'photoURL') {
       t.avatar = Chrome.Storage.get('photoURL');
     }
@@ -537,6 +547,22 @@ window.app = window.app || {};
     const idx = _getPageIdx('page-devices');
     const el = document.getElementById(t.pages[idx].route);
     if (el && app.Utils.isSignedIn()) {
+      el.removeAttribute('disabled');
+    } else if (el) {
+      el.setAttribute('disabled', 'true');
+    }
+  }
+
+  /**
+   * Set enabled state of Error Viewer menu item
+   * @private
+   * @memberOf Main
+   */
+  function _setErrorState() {
+    // disable error-page if no lastError
+    const idx = _getPageIdx('page-error');
+    const el = document.getElementById(t.pages[idx].route);
+    if (el && !Chrome.Utils.isWhiteSpace(Chrome.Storage.getLastError())) {
       el.removeAttribute('disabled');
     } else if (el) {
       el.setAttribute('disabled', 'true');

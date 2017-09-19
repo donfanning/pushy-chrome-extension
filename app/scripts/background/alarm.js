@@ -92,7 +92,7 @@ app.Alarm = (function() {
      */
     deleteOldClipItems: function() {
       app.ClipItem.deleteOld().catch((err) => {
-        Chrome.GA.error(err.message, 'Alarm.deleteOldClipItems');
+        Chrome.Log.error(err.message, 'Alarm.deleteOldClipItems');
       });
     },
   };

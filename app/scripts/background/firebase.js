@@ -104,7 +104,7 @@ app.Fb = (function() {
       return Promise.resolve();
     }).catch((err) => {
       const msg = `${err.message} Token: ${token}`;
-      Chrome.GA.error(msg, 'Fb._refreshRegToken');
+      Chrome.Log.error(msg, 'Fb._refreshRegToken');
     });
   }
 

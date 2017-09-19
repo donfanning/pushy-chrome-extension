@@ -49,7 +49,7 @@ app.Data = (function() {
    * @property {string} uid - our unique id
    * @property {string} photoURL - path to out photo url
    * @property {string} permissions - enum: notSet allowed denied
-   * @property {string} lastError - last error that we saved
+   * @property {Chrome.Storage.LastError} lastError - last error that we saved
    * @memberOf app.Data
    */
 
@@ -81,7 +81,6 @@ app.Data = (function() {
     'uid': '',
     'photoURL': '',
     'permissions': 'notSet', // enum: notSet allowed denied
-    'lastError': '',
   };
 
   /**
@@ -126,6 +125,10 @@ for this device.`;
     if (Chrome.Storage.get('deviceSN') === null) {
       Chrome.Storage.set('deviceSN', Chrome.Utils.getRandomString(8));
     }
+    // and the last error
+    if (Chrome.Storage.get('lastError') === null) {
+      Chrome.Storage.setLastError(new Chrome.Storage.LastError());
+    }
   }
 
   return {
@@ -140,11 +143,11 @@ for this device.`;
           new app.ClipItem(INTRO_TEXT, Date.now(), true,
               false, app.Device.myName());
       introClip.save().catch((err) => {
-        Chrome.GA.error(err.message, 'app.Data.initialize');
+        Chrome.Log.error(err.message, 'app.Data.initialize');
       });
 
       app.User.setInfo().catch((err) => {
-        Chrome.GA.error(err.message, 'app.Data.initialize');
+        Chrome.Log.error(err.message, 'app.Data.initialize');
       });
     },
 

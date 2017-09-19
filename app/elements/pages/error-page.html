@@ -7,6 +7,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
 
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-styles/color.html">
@@ -35,13 +36,23 @@
         margin: 0;
       }
 
+      /*.error-text {*/
+        /*line-height: 1.2em;*/
+        /*height: 2.4em;*/
+        /*overflow: hidden;*/
+        /*margin-left: 16px;*/
+        /*margin-right: 16px;*/
+      /*}*/
+
     </style>
 
-    <paper-card class="page-content" heading="Error viewer">
+    <paper-card class="page-content" heading="Error viewer - [[value.title]]">
       <div class="card-content">
-        <p>Hi there</p>
+        <div class="error-text">[[value.message]]</div>
+        <div class="error-text">[[value.stack]]</div>
       </div>
     </paper-card>
+    <iron-localstorage name="{{name}}" value="{{value}}" on-iron-localstorage-load-empty="_init"></iron-localstorage>
   </template>
 </dom-module>
 
@@ -56,41 +67,23 @@
       is: 'error-page',
 
       properties: {
-        githubPath: {
+        name: {
           type: String,
-          value: function() {
-            return app.Utils.getGithubPath();
-          },
-          readOnly: true,
+          value: 'lastError',
         },
 
-        githubPagesPath: {
-          type: String,
+        value: {
+          type: Object,
           value: function() {
-            return app.Utils.getGithubPagesPath();
-          },
-          readOnly: true,
+            return new Chrome.Storage.LastError();
+            },
+          notify: true,
         },
       },
 
-      /**
-       * computed binding: Get the extension version
-       * @returns {string} version
-       * @private
-       */
-      _computeVersion: function() {
-        const text = Chrome.Utils.getVersion();
-        return encodeURIComponent(text);
-      },
-
-      /**
-       * computed binding: Get a mailto url
-       * @param {string} subject - email subject
-       * @returns {string} url
-       * @private
-       */
-      _computeMailToUrl: function(subject) {
-        return app.Utils.getEmailUrl(subject, app.Utils.getEmailBody());
+      // initialize value if it is not in local storage
+      _init: function() {
+        this.set('value', new Error());
       },
 
     });

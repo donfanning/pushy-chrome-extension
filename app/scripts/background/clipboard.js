@@ -66,7 +66,7 @@ app.CB = (function() {
       }).catch((err) => {
         const msg = err.message;
         if (msg !== app.ClipItem.ERROR_EMPTY_TEXT) {
-          Chrome.GA.error(msg, 'CB._addClipItemFromClipboard');
+          Chrome.Log.error(msg, 'CB._addClipItemFromClipboard');
         }
         if (app.Notify.onError()) {
           app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, msg);
