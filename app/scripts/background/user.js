@@ -150,6 +150,7 @@ app.User = (function() {
       }).catch((err) => {
         Chrome.Log.error(`${request.message} ${err.message}`,
             'User._onChromeMessage');
+        // eslint-disable-next-line promise/no-nesting
         _signOut().then(() => {
           return Promise.resolve();
         }).catch((err) => {

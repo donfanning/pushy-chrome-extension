@@ -124,7 +124,8 @@
 
   /**
    * Send any data attached to a notification to the extension
-   * @param {GaeMsg[]} dataArray - possible array of {@link app.Msg.GaeMsg} objects
+   * @param {GaeMsg[]} dataArray - possible array of {@link app.Msg.GaeMsg}
+   * objects
    * @returns {Promise<void>} always resolves
    */
   function processNotificationData(dataArray) {
@@ -192,10 +193,12 @@
         if (clients[i].focused === true) {
           // we have focus, don't display notification
           // send data to extension
+          // eslint-disable-next-line promise/no-nesting
           return doFakeFetch([data]).catch(() => {});
         }
       }
 
+      // eslint-disable-next-line promise/no-nesting
       return self.registration.getNotifications({
         tag: tag,
       }).then((notifications) => {
@@ -207,6 +210,7 @@
             // data is in the notification
             // add current and send all to extension
             noteData.push(data);
+            // eslint-disable-next-line promise/no-nesting
             return processNotificationData(noteData).then(() => {
               title += `\n${noteData.length} new items`;
               // set data back to item count
@@ -266,6 +270,7 @@
       includeUncontrolled: true,
       type: 'window',
     }).then((windowClients) => {
+      // eslint-disable-next-line promise/no-nesting
       return processNotificationData(event.notification.data).then(() => {
         for (let i = 0; i < windowClients.length; i++) {
           const client = windowClients[i];

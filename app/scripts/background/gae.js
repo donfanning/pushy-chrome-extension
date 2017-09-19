@@ -37,6 +37,7 @@ app.Gae = (function() {
   const GAE_ROOT_LOCAL = 'http://localhost:8080/_ah/api';
 
   // Set to GAE_ROOT_LOCAL for local testing
+  // noinspection UnnecessaryLocalVariableJS
   const GAE_ROOT = GAE_ROOT_REMOTE;
 
   return {
