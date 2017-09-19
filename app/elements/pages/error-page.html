@@ -69,12 +69,22 @@
           <span class="space"></span>
           <div class="middle middle-container center horizontal layout flex">
             <div class="flex">[[_computeTitle(value)]]</div>
-            <paper-icon-button id="email" icon="myicons:mail"
-                               on-tap="_onEmailTapped"></paper-icon-button>
-            <paper-tooltip for="email" position="left" offset="0">Send email to support</paper-tooltip>
-            <paper-icon-button id="remove" icon="myicons:delete"
-                               on-tap="_onRemoveTapped"></paper-icon-button>
-            <paper-tooltip for="email" position="left" offset="0">Remove the error</paper-tooltip>
+            <paper-icon-button
+                id="email" icon="myicons:mail" on-tap="_onEmailTapped"
+                disabled$="[[!value.message]]">
+            </paper-icon-button>
+            <paper-tooltip
+                for="email" position="left" offset="0">
+              Send email to support
+            </paper-tooltip>
+            <paper-icon-button
+                id="remove" icon="myicons:delete" on-tap="_onRemoveTapped"
+                disabled$="[[!value.message]]">
+            </paper-icon-button>
+            <paper-tooltip
+                for="remove" position="left" offset="0">
+              Delete the error
+            </paper-tooltip>
           </div>
         </paper-toolbar>
       </paper-material>
@@ -136,7 +146,11 @@
        * @private
        */
       _onRemoveTapped: function() {
-        this.set('value', new Chrome.Storage.LastError());
+        const error = new Chrome.Storage.LastError();
+        Chrome.Storage.setLastError(error);
+        this.set('value', error);
+        // we wont get Storage Changed - stupid Chrome
+        app.Main.setErrorMenuState();
       },
 
       /**
@@ -183,7 +197,6 @@
       _init: function() {
         this.set('value', new Chrome.Storage.LastError());
       },
-
     });
   })(window);
 </script>
