@@ -169,9 +169,10 @@ app.Notify = (function() {
   function _getOptions(type, message) {
     let options = {
       type: 'basic',
+      contextMessage: 'Pushy Clipboard',
       eventTime: Date.now(),
     };
-    options.title = `Pushy: ${type.title}`;
+    options.title = type.title;
     options.isClickable = type.isClickable;
     options.requireInteraction = type.requireInteraction;
     options.iconUrl = chrome.runtime.getURL(type.icon);
