@@ -16,6 +16,8 @@ app.Main = (function() {
 
   new ExceptionHandler();
 
+  const chromep = new ChromePromise();
+
   /**
    * Path to the extension in the Web Store
    * @type {string}
@@ -334,7 +336,6 @@ app.Main = (function() {
   function _onChromeMessage(request, sender, response) {
     if (request.message === app.ChromeMsg.HIGHLIGHT.message) {
       // highlight ourselves and let the sender know we are here
-      const chromep = new ChromePromise();
       chromep.tabs.getCurrent().then((t) => {
         chrome.tabs.update(t.id, {'highlighted': true});
         return Promise.resolve();
@@ -377,10 +378,10 @@ app.Main = (function() {
    */
   function _onHighlighted(highlightInfo) {
     const tabIds = highlightInfo.tabIds;
-    chrome.tabs.getCurrent(function(myTab) {
+    chromep.tabs.getCurrent().then((tab) => {
       for (let i = 0; i < tabIds.length; i++) {
         const tabId = tabIds[i];
-        if (tabId === myTab.id) {
+        if (tabId === tab.id) {
           // our tab
           if (!isMainPage) {
             // focus main page
@@ -394,6 +395,9 @@ app.Main = (function() {
           break;
         }
       }
+      return Promise.resolve();
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'Main._onHighlighted');
     });
   }
 
