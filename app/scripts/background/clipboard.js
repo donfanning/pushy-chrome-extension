@@ -69,7 +69,8 @@ app.CB = (function() {
           Chrome.Log.error(msg, 'CB._addClipItemFromClipboard');
         }
         if (app.Notify.onError()) {
-          app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, msg);
+          app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, msg,
+              new Chrome.Storage.LastError());
         }
       });
 

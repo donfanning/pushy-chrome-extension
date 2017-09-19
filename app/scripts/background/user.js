@@ -219,7 +219,7 @@ app.User = (function() {
      * @returns {Promise<void>} void
      * @memberOf app.User
      */
-    forceSignOut: function(notify=false, reason='Unknown Error') {
+    forceSignOut: function(notify = false, reason = 'Unknown Error') {
       Chrome.Storage.set('registered', false);
       return app.Fb.signOut().then(() => {
         _setSignIn(false);
@@ -227,10 +227,11 @@ app.User = (function() {
         Chrome.Log.error(reason, 'User.forceSignOut');
         if (notify) {
           let msg = reason;
-          msg+= '\n\nTry to sign in again. If the problem persists, please ' +
+          msg += '\n\nTry to sign in again. If the problem persists, please ' +
               'contact support.';
           if (app.Notify.onError()) {
-            app.Notify.create(app.Notify.TYPE.ERROR_FORCE_SIGN_OUT, msg);
+            app.Notify.create(app.Notify.TYPE.ERROR_FORCE_SIGN_OUT, msg,
+                new Chrome.Storage.LastError());
           }
         }
         return Promise.resolve();

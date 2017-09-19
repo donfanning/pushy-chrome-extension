@@ -92,7 +92,8 @@
           Chrome.Log.error(msg, 'Background._onIconClicked');
         }
         if (app.Notify.onError()) {
-          app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, msg);
+          app.Notify.create(app.Notify.TYPE.ERROR_STORE_CLIP, msg,
+              new Chrome.Storage.LastError());
         }
       }
     });

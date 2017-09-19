@@ -120,7 +120,7 @@ app.Msg = (function() {
    * @private
    * @memberOf app.Msg
    */
-  function _sendMessage(data, notify, type=null) {
+  function _sendMessage(data, notify, type = null) {
     if (!app.Utils.isSignedIn() || !app.Utils.allowPush()) {
       return Promise.resolve();
     }
@@ -221,7 +221,8 @@ app.Msg = (function() {
     sendFailed: function(err) {
       Chrome.Log.error(err.message, 'Msg.sendFailed');
       if (app.Notify.onError()) {
-        app.Notify.create(app.Notify.TYPE.ERROR_SEND, err.message);
+        app.Notify.create(app.Notify.TYPE.ERROR_SEND, err.message,
+            new Chrome.Storage.LastError());
       }
     },
   };

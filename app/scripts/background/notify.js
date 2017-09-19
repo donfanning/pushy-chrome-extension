@@ -265,9 +265,10 @@ app.Notify = (function() {
      * Create and display a notification
      * @param {app.Notify.TYPE} type - notification type
      * @param {string} message - message to display
+     * @param {Chrome.Storage.LastError} [lastError=null] - lastError
      * @memberOf app.Notify
      */
-    create: function(type, message) {
+    create: function(type, message, lastError=null) {
       if (Chrome.Utils.isWhiteSpace(type.icon) ||
           Chrome.Utils.isWhiteSpace(message)) {
         // skip if no icon or message
@@ -286,7 +287,14 @@ app.Notify = (function() {
         }
 
         if (type.isError) {
-          const error = new Chrome.Storage.LastError(type.message, type.title);
+          let error;
+          if (lastError) {
+            error = lastError;
+            error.message = type.message;
+            error.title = type.title;
+          } else {
+            error = new Chrome.Storage.LastError(type.message, type.title);
+          }
           Chrome.Storage.setLastError(error);
         }
       });
