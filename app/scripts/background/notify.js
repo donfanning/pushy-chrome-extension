@@ -16,6 +16,8 @@ app.Notify = (function() {
 
   new ExceptionHandler();
 
+  const chromep = new ChromePromise();
+
   const _ERROR_NO_NOTIFICATIONS =
       'Display of notifications on received messages has been disabled.';
 
@@ -268,7 +270,7 @@ app.Notify = (function() {
      * @param {Chrome.Storage.LastError} [lastError=null] - lastError
      * @memberOf app.Notify
      */
-    create: function(type, message, lastError=null) {
+    create: function(type, message, lastError = null) {
       if (Chrome.Utils.isWhiteSpace(type.icon) ||
           Chrome.Utils.isWhiteSpace(message)) {
         // skip if no icon or message
@@ -278,25 +280,29 @@ app.Notify = (function() {
       // save message
       type.message = message;
 
+      if (type.isError) {
+        let error;
+        if (lastError) {
+          error = lastError;
+          error.message = type.message;
+          error.title = type.title;
+        } else {
+          error = new Chrome.Storage.LastError(type.message, type.title);
+        }
+        Chrome.Storage.setLastError(error);
+        type.message += `\n\n${error.stack}`;
+      }
+
       // setup notification option object
-      let options = _getOptions(type, message);
+      let options = _getOptions(type, type.message);
 
-      chrome.notifications.getPermissionLevel(function(level) {
+      chromep.notifications.getPermissionLevel().then((level) => {
         if (level === 'granted') {
-          chrome.notifications.create(type.id, options, () => {});
+          return chromep.notifications.create(type.id, options);
         }
-
-        if (type.isError) {
-          let error;
-          if (lastError) {
-            error = lastError;
-            error.message = type.message;
-            error.title = type.title;
-          } else {
-            error = new Chrome.Storage.LastError(type.message, type.title);
-          }
-          Chrome.Storage.setLastError(error);
-        }
+        return Promise.resolve();
+      }).catch((err) => {
+        Chrome.Log.error(err.message, 'Notify.create');
       });
     },
 
