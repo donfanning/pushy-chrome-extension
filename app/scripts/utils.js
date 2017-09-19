@@ -77,7 +77,7 @@ app.Utils = (function() {
     /**
      * Get encoded url for an email
      * @param {string} subject - email subject
-     * @param {string} body - email bosy
+     * @param {string} body - email body
      * @returns {string} encoded url
      * @memberOf app.Utils
      */
