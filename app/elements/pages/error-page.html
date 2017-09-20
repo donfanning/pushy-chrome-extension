@@ -137,7 +137,7 @@
             'on what led to the error.\n\n';
 
         const url = app.Utils.getEmailUrl('Last Error', body);
-        Chrome.GA.event(Chrome.GA.EVENT.LINK, 'Last Error');
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'Last Error');
         chrome.tabs.create({url: url});
       },
 
