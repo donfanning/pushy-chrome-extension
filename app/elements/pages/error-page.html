@@ -137,7 +137,7 @@
             'on what led to the error.\n\n';
 
         const url = app.Utils.getEmailUrl('Last Error', body);
-        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'Last Error');
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'LastError email');
         chrome.tabs.create({url: url});
       },
 
@@ -149,6 +149,7 @@
         const error = new Chrome.Storage.LastError();
         Chrome.Storage.setLastError(error);
         this.set('value', error);
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'LastError delete');
         // we wont get Storage Changed - stupid Chrome
         app.Main.setErrorMenuState();
       },
