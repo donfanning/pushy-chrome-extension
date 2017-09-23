@@ -18,9 +18,6 @@ app.ChromeMsg = (function() {
   /**
    * Chrome Messages
    * @type {{}}
-   * @property {Chrome.Msg.Message} RESTORE_DEFAULTS - restore default settings
-   * @property {Chrome.Msg.Message} HIGHLIGHT - highlight a tab
-   * @property {Chrome.Msg.Message} STORE - save value to storage
    * @property {Chrome.Msg.Message} REMOVE_DEVICE - a {@link Device} was
    *     removed from {@link app.Devices}
    * @property {Chrome.Msg.Message} DEVICES_CHANGED - list of {@link
@@ -49,17 +46,6 @@ app.ChromeMsg = (function() {
    * @memberOf app.ChromeMsg
    */
   const _MSG = {
-    RESTORE_DEFAULTS: {
-      message: 'restoreDefaults',
-    },
-    HIGHLIGHT: {
-      message: 'highlightTab',
-    },
-    STORE: {
-      message: 'store',
-      key: '',
-      value: '',
-    },
     REMOVE_DEVICE: {
       message: 'removeDevice',
       item: '',
@@ -110,9 +96,6 @@ app.ChromeMsg = (function() {
   };
 
   return {
-    RESTORE_DEFAULTS: _MSG.RESTORE_DEFAULTS,
-    HIGHLIGHT: _MSG.HIGHLIGHT,
-    STORE: _MSG.STORE,
     REMOVE_DEVICE: _MSG.REMOVE_DEVICE,
     DEVICES_CHANGED: _MSG.DEVICES_CHANGED,
     PING: _MSG.PING,

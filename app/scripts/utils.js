@@ -106,7 +106,7 @@ app.Utils = (function() {
      */
     showMainTab: function() {
       // send message to the main tab to focus it.
-      Chrome.Msg.send(app.ChromeMsg.HIGHLIGHT).catch(() => {
+      Chrome.Msg.send(Chrome.Msg.HIGHLIGHT).catch(() => {
         // no one listening, create it
         chrome.tabs.create({url: '../html/main.html'});
       });

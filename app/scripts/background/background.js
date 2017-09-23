@@ -21,6 +21,8 @@
    * and when Chrome is updated to a new version.
    * @see https://developer.chrome.com/extensions/runtime#event-onInstalled
    * @param {Object} details - type of event
+   * @param {string} details.reason - reason for install
+   * @param {string} details.previousVersion - old version if 'update' reason
    * @private
    * @memberOf Background
    */
@@ -38,6 +40,9 @@
       app.Data.initialize();
       app.Utils.showMainTab();
     } else if (details.reason === 'update') {
+      const label = `To: ${Chrome.Utils.getVersion()}` +
+          ` From: ${details.previousVersion}`;
+      Chrome.GA.event(Chrome.GA.EVENT.UPDATED, label);
       app.Data.update();
       _initializeFirebase().then(() => {
         return app.SW.update();

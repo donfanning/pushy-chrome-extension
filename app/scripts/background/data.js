@@ -23,7 +23,7 @@ app.Data = (function() {
    * @private
    * @memberOf app.Data
    */
-  const _VERSION = 4;
+  const _VERSION = 5;
 
   /**
    * The data items saved to localStorage
@@ -125,10 +125,6 @@ for this device.`;
     if (Chrome.Storage.get('deviceSN') === null) {
       Chrome.Storage.set('deviceSN', Chrome.Utils.getRandomString(8));
     }
-    // and the last error
-    if (Chrome.Storage.get('lastError') === null) {
-      Chrome.Storage.setLastError(new Chrome.Storage.LastError());
-    }
   }
 
   return {
@@ -148,6 +144,11 @@ for this device.`;
 
       app.User.setInfo().catch((err) => {
         Chrome.Log.error(err.message, 'app.Data.initialize');
+      });
+      
+      // and the last error
+      Chrome.Storage.clearLastError().catch((err) => {
+        Chrome.GA.error(err.message, 'Data.initialize');
       });
     },
 
@@ -174,6 +175,23 @@ for this device.`;
       if (oldVersion < 3) {
         // remove unused variables
         localStorage.removeItem('notifyOnReceive');
+      }
+
+      if (oldVersion < 5) {
+        // move lastError
+        const lastError = Chrome.Storage.get('lastError');
+        if (lastError) {
+          // transfer to chrome.storage.local
+          Chrome.Storage.setLastError(lastError).catch((err) => {
+            Chrome.GA.error(err.message, 'Data.update');
+          });
+          localStorage.removeItem('lastError');
+        } else {
+          // add empty
+          Chrome.Storage.clearLastError().catch((err) => {
+            Chrome.GA.error(err.message, 'Data.update');
+          });
+        }
       }
 
       _addDefaults();
