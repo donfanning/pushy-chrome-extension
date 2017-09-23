@@ -165,13 +165,13 @@ app.User = (function() {
         response({message: 'ok'});
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.Log.error(`${request.message} ${err.message}`,
+        Chrome.Log.error(`${request.message}: ${err.message}`,
             'User._onChromeMessage');
         // eslint-disable-next-line promise/no-nesting
         _signOut().then(() => {
           return Promise.resolve();
         }).catch((err) => {
-          Chrome.Log.error(`${request.message} ${err.message}`,
+          Chrome.Log.error(`${request.message}: ${err.message}`,
               'User._onChromeMessage');
           _setSignIn(false);
           Chrome.Storage.set('registered', false);
@@ -185,7 +185,7 @@ app.User = (function() {
         response({message: 'ok'});
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.Log.error(`${request.message} ${err.message}`,
+        Chrome.Log.error(`${request.message}: ${err.message}`,
             'User._onChromeMessage');
         response({message: 'error', error: err.message});
       });
@@ -198,7 +198,7 @@ app.User = (function() {
       }).catch((err) => {
         _setSignIn(false);
         app.Devices.clear();
-        Chrome.Log.error(`${request.message} ${err.message}`,
+        Chrome.Log.error(`${request.message}: ${err.message}`,
             'User._onChromeMessage');
         response({message: 'error', error: err.message});
       });

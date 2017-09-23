@@ -340,7 +340,7 @@ app.Main = (function() {
         chrome.tabs.update(t.id, {'highlighted': true});
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.Log.error(`${request.message} ${err.message}`,
+        Chrome.Log.error(`${request.message}: ${err.message}`,
             'chromep.tabs.getCurrent');
       });
       response(JSON.stringify({message: 'OK'}));

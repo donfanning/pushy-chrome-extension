@@ -126,8 +126,7 @@
 
     new ExceptionHandler();
 
-    const ERROR_REGISTER = 'Failed to register with server.';
-    const ERROR_UNREGISTER = 'Failed to unregister with server.';
+    const ERROR_TITLE = 'Failed to change setting';
 
     window.app = window.app || {};
     app.SettingsPageFactory = Polymer({
@@ -137,12 +136,18 @@
         // listen for chrome messages
         chrome.runtime.onMessage.addListener((request) => {
           if (request.message === app.ChromeMsg.REGISTER_FAILED.message) {
-            const error = request.error;
-            this._showDialog(ERROR_REGISTER, error.toString());
+            let error = request.error;
+            if (error.message) {
+              error = error.message;
+            }
+            this._showDialog(ERROR_TITLE, error);
           } else if (request.message ===
               app.ChromeMsg.UNREGISTER_FAILED.message) {
-            const error = request.error;
-            this._showDialog(ERROR_UNREGISTER, error.toString());
+            let error = request.error;
+            if (error.message) {
+              error = error.message;
+            }
+            this._showDialog(ERROR_TITLE, error);
           }
         });
       },
@@ -154,6 +159,7 @@
        * @private
        */
       _showDialog: function(title, text) {
+        text = text.replace('\n', '<br/>');
         this.$.dialogTitle.innerHTML = title;
         this.$.dialogText.innerHTML = text;
         this.$.errorDialog.open();

@@ -44,7 +44,7 @@ app.Reg = (function() {
           Chrome.Log.error(err.message, 'Reg._onStorageChanged');
           Chrome.Storage.set('allowReceive', !allowReceive);
           const msg = app.ChromeMsg.REGISTER_FAILED;
-          msg.error = err.toString();
+          msg.error = err.message;
           // eslint-disable-next-line promise/no-nesting
           Chrome.Msg.send(msg).catch(() => {});
         });
@@ -57,7 +57,7 @@ app.Reg = (function() {
           Chrome.Log.error(err.message, 'Reg._onStorageChanged');
           Chrome.Storage.set('allowReceive', !allowReceive);
           const msg = app.ChromeMsg.UNREGISTER_FAILED;
-          msg.error = err.toString();
+          msg.error = err.message;
           // eslint-disable-next-line promise/no-nesting
           Chrome.Msg.send(msg).catch(() => {});
         });

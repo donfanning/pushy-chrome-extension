@@ -297,6 +297,7 @@
       },
 
       _showDialog: function(title, text, confirmButton) {
+        text = text.replace('\n', '<br/>');
         this.$.dialogTitle.innerHTML = title;
         this.$.dialogText.innerHTML = text;
         this.set('confirmButton', confirmButton);
