@@ -24,7 +24,8 @@
 
 <link rel="import" href="../my_icons.html">
 
-<script type="text/javascript" src="../../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
+<script type="text/javascript"
+        src="../../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
 
 <dom-module id="signin-page">
   <template>
@@ -88,7 +89,7 @@
     </style>
 
     <paper-card class="page-content"
-                heading="[[_computeEmailLabel(signedIn)]]">
+                heading="[[_computeTitle(signedIn)]]">
       <div class="card-content">
 
         <!-- Error dialog -->
@@ -146,7 +147,6 @@
     new ExceptionHandler();
 
     const ERROR_SIGN_IN = 'Failed to sign in.';
-    const ERROR_SIGN_OUT = 'Failed to sign out.';
     const ERROR_PERMISSION =
         'Notification permission is required to sign-in.';
     let ERROR_BLOCKED_MESSAGE =
@@ -168,7 +168,6 @@
       is: 'signin-page',
 
       properties: {
-
         signedIn: {
           type: Boolean,
           value: false,
@@ -191,10 +190,6 @@
           type: Boolean,
           value: false,
         },
-
-      },
-
-      ready: function() {
       },
 
       onCurrentPage: function() {
@@ -233,16 +228,16 @@
           if (permission === 'denied') {
             // user denied or Chrome setting blocks all
             if (app.Utils.isSignedIn()) {
-              // force sign out because we must have lost registration
-              this._signOutOnly();
+              // force sign out
+              this._forceSignOut();
             }
             this._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE,
                 false);
           } else if (permission === 'default') {
             // user closed notification popup
             if (app.Utils.isSignedIn()) {
-              // force sign out because we must have lost registration
-              this._signOutOnly();
+              // force sign out
+              this._forceSignOut();
             }
             this._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE,
                 true);
@@ -271,7 +266,9 @@
           }
           this.set('waiting', false);
           return Promise.resolve();
-        }).catch(() => {});
+        }).catch(() => {
+          this.set('waiting', false);
+        });
       },
 
       /**
@@ -281,23 +278,21 @@
       _signOut: function() {
         Chrome.Msg.send(app.ChromeMsg.SIGN_OUT).then((response) => {
           if (response.message === 'error') {
-            Chrome.Log.error(response.error, 'SignInPage._signOut');
-            this._showDialog(ERROR_SIGN_OUT, response.error, false);
+            // just force it to happen
+            this._forceSignOut();
           }
           this.set('waiting', false);
           return Promise.resolve();
-        }).catch(() => {});
+        }).catch(() => {
+          this.set('waiting', false);
+        });
       },
 
       /**
-       * Attempt to sign out of current Browser account without
-       * unregistering from App Engine
+       * Force sign out
        * @private
        */
-      _signOutOnly: function() {
-        // force sign out because we must have lost registration
-        Chrome.Storage.set('registered', false);
-        // eslint-disable-next-line promise/no-nesting
+      _forceSignOut: function() {
         Chrome.Msg.send(app.ChromeMsg.FORCE_SIGN_OUT).catch(() => {});
       },
 
@@ -319,9 +314,10 @@
         this._checkPermissions();
       },
 
-      _computeEmailLabel: function(signedIn) {
-        return signedIn ?
-            `Signed in as: ${Chrome.Storage.get('email')}` : 'Account Sign In';
+      _computeTitle: function(isSignedIn) {
+        const signedIn = `Signed in as: ${Chrome.Storage.get('email')}`;
+        const signedOut = 'Account Sign In';
+        return isSignedIn ? signedIn : signedOut;
       },
 
       _computeButtonLabel: function(signedIn) {
@@ -347,6 +343,5 @@
         this.set('signedIn', false);
       },
     });
-
   })(window);
 </script>

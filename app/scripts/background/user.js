@@ -68,6 +68,23 @@ app.User = (function() {
   }
 
   /**
+   * Remove the cached auth token
+   * @returns {Promise.<void>} void
+   * @private
+   */
+  function _removeAuthToken() {
+    return _getAuthToken().then((token) => {
+      if (token) {
+        return chromep.identity.removeCachedAuthToken({'token': token});
+      }
+      return Promise.resolve();
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'User._removeAuthToken');
+      return Promise.resolve();
+    });
+  }
+
+  /**
    * Cleanup if user signed-out of Browser
    * @returns {Promise<void>} void
    * @private
@@ -76,9 +93,7 @@ app.User = (function() {
   function _needsCleanup() {
     if (Chrome.Storage.getBool('needsCleanup')) {
       Chrome.Storage.set('needsCleanup', false);
-      return _getAuthToken().then((token) => {
-        return chromep.identity.removeCachedAuthToken({'token': token});
-      });
+      return _removeAuthToken();
     } else {
       return Promise.resolve();
     }
@@ -119,6 +134,8 @@ app.User = (function() {
       return app.Reg.unregister(true);
     }).then(() => {
       return app.Fb.signOut();
+    }).then(() => {
+      return _removeAuthToken();
     }).then(() => {
       _setSignIn(false);
       app.Devices.clear();
@@ -173,7 +190,7 @@ app.User = (function() {
         response({message: 'error', error: err.message});
       });
     } else if (request.message === app.ChromeMsg.FORCE_SIGN_OUT.message) {
-      // try to signOut a user without unregister with App Engine
+      // force sign out
       ret = true; // async
       app.User.forceSignOut().then(() => {
         response({message: 'ok'});
@@ -214,7 +231,8 @@ app.User = (function() {
     },
 
     /**
-     * Force signOut without unregister with App Engine
+     * Force signOut without unregistering from App Engine and without
+     * needing OAuth
      * @param {boolean} [notify=false] if true, post error notification
      * @param {string} [reason='Unknown Error'] reason for call
      * @returns {Promise<void>} void
@@ -226,17 +244,16 @@ app.User = (function() {
         _setSignIn(false);
         app.Devices.clear();
         Chrome.Log.error(reason, 'User.forceSignOut');
-        if (notify) {
+        if (notify && app.Notify.onError()) {
           let msg = reason;
           msg += '\n\nTry to sign in again. If the problem persists, please ' +
               'contact support.';
-          if (app.Notify.onError()) {
-            app.Notify.create(app.Notify.TYPE.ERROR_FORCE_SIGN_OUT, msg,
-                new Chrome.Storage.LastError());
-          }
+          app.Notify.create(app.Notify.TYPE.ERROR_FORCE_SIGN_OUT, msg,
+              new Chrome.Storage.LastError());
         }
-        return Promise.resolve();
+        return _removeAuthToken();
       });
     },
+
   };
 })();
