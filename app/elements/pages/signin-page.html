@@ -146,7 +146,9 @@
 
     new ExceptionHandler();
 
+    const ERROR_NETWORK = 'There is no Internet connection';
     const ERROR_SIGN_IN = 'Failed to sign in.';
+    const ERROR_SIGN_OUT = 'Failed to sign out.';
     const ERROR_PERMISSION =
         'Notification permission is required to sign-in.';
     let ERROR_BLOCKED_MESSAGE =
@@ -307,8 +309,14 @@
       _onAccountButtonClicked: function() {
         Chrome.GA.event(Chrome.GA.EVENT.BUTTON,
             `SignInPage.accountButton: ${!this.signedIn}`);
-        this.set('waiting', true);
-        this.signedIn ? this._signOut() : this._signIn();
+        if (!navigator.onLine) {
+          const title = this.signedIn ? ERROR_SIGN_OUT : ERROR_SIGN_IN;
+          Chrome.Log.error(ERROR_NETWORK, 'SignInPage._accountButton', title);
+          this._showDialog(title, ERROR_NETWORK, false);
+        } else {
+          this.set('waiting', true);
+          this.signedIn ? this._signOut() : this._signIn();
+        }
       },
 
       _onDialogButtonClicked: function() {
