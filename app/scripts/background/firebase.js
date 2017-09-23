@@ -151,12 +151,17 @@ app.Fb = (function() {
      * @memberOf app.Fb
      */
     getRegToken: function() {
-      return _messaging.getToken().then((token) => {
-        if (token) {
-          return Promise.resolve(token);
-        }
-        return Promise.reject(new Error(ERROR_TOKEN));
-      });
+      if (navigator.onLine) {
+        // this will at least ensure the LAN is connected
+        // may get false positives for other failures
+        return _messaging.getToken().then((token) => {
+          if (token) {
+            return Promise.resolve(token);
+          }
+          return Promise.reject(new Error(ERROR_TOKEN));
+        });
+      }
+      return Promise.reject(new Error(ERROR_TOKEN));
     },
   };
 })();
