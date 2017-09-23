@@ -24,6 +24,13 @@ app.Fb = (function() {
   const ERROR_TOKEN = 'Failed to obtain messaging token.\n';
 
   /**
+   * Error message for no internet
+   * @type {string}
+   * @memberOf app.Fb
+   */
+  const ERROR_NETWORK = 'There is no Internet connection.\n';
+
+  /**
    * Firebase app
    * @private
    * @memberOf app.Fb
@@ -161,7 +168,7 @@ app.Fb = (function() {
           return Promise.reject(new Error(ERROR_TOKEN));
         });
       }
-      return Promise.reject(new Error(ERROR_TOKEN));
+      return Promise.reject(new Error(ERROR_NETWORK));
     },
   };
 })();
