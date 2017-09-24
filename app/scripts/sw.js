@@ -15,7 +15,6 @@
   /**
    * Fake fetch base path
    * @const
-   * @default
    * @type {string}
    * @memberOf ServiceWorker
    */
@@ -24,7 +23,6 @@
   /**
    * Google search base path
    * @const
-   * @default
    * @type {string}
    * @memberOf ServiceWorker
    */
@@ -33,7 +31,6 @@
   /**
    * Path to extension's main page
    * @const
-   * @default
    * @type {string}
    * @memberOf ServiceWorker
    */
@@ -60,14 +57,16 @@
   const IC_SEARCH = '../images/search-web.png';
 
   /** @memberOf ServiceWorker */
-  const FAKE_FETCH_DONE = 'Fake fetch done';
+  const FETCH_CANCELED = 'Failed to fetch';
 
-  // temporary variable to help get all messages at Chrome start-up
-  // normally, can't use globals in service worker, but this is
-  // only used when Chrome first starts up. Pretty sure it won't be
-  // stopped during this time
-  // could use indexedDB if we really have to
-  /** @memberOf ServiceWorker */
+  /**
+   * Temporary variable to help get all messages at Chrome start-up
+   * normally, can't use globals in service worker, but this is
+   * only used when Chrome first starts up. Pretty sure it won't be
+   * stopped during this time
+   * could use indexedDB if we really have to
+   *  @memberOf ServiceWorker
+   */
   let msgArr = [];
 
   /**
@@ -81,7 +80,7 @@
 
   /**
    * Get the name of the Device who sent the message
-   * @param {app.Msg.GaeMsg} data  - message object
+   * @param {app.Msg.GaeMsg} data - message object
    * @returns {string} device name
    * @memberOf ServiceWorker
    */
@@ -155,31 +154,67 @@
 
   /**
    * Send any data attached to a notification to the extension
-   * @param {GaeMsg[]} dataArray - possible array of {@link app.Msg.GaeMsg}
-   * objects
+   * @param {app.Msg.GaeMsg[]} dataArray - possible array of
+   * {@link app.Msg.GaeMsg} objects
    * @returns {Promise<void>} always resolves
+   * @memberOf ServiceWorker
    */
   function sendNotificationData(dataArray) {
     if (dataArray instanceof Array) {
-      return doFakeFetch(dataArray).catch(() => {});
+      return doFakeFetch(dataArray);
     } else {
       return Promise.resolve();
     }
   }
 
   /**
+   * Handle push message if our client has the focus
+   * @param {Object} clients - our clients
+   * @param {app.Msg.GaeMsg} data - our data
+   * @returns {Promise.<boolean>} true if we handled it
+   * @memberOf ServiceWorker
+   */
+  function processFocusedClient(clients, data) {
+    if (!clients || !data) {
+      return Promise.resolve(false);
+    }
+
+    for (let i = 0; i < clients.length; i++) {
+      const client = clients[i];
+      if (client.focused) {
+        // we have focus, send data to extension
+        return doFakeFetch([data]).then(() => {
+          // send message with page route
+          return postRouteMessage(client, getIcon(data));
+        }).then(() => {
+          return Promise.resolve(true);
+        });
+      }
+    }
+    return Promise.resolve(false);
+  }
+
+  /**
    * Send fake GET request so extension can intercept it and get the payload
    * @see https://bugs.chromium.org/p/chromium/issues/detail?id=452942
-   * @param {GaeMsg[]} dataArray Array of {@link app.Msg.GaeMsg} objects
-   * @returns {Promise<void>} fails if extension successfully canceled request
+   * @param {app.Msg.GaeMsg[]} dataArray Array of {@link app.Msg.GaeMsg} objects
+   * @returns {Promise<boolean>} true if canceled, always resolves
    * @memberOf ServiceWorker
    */
   function doFakeFetch(dataArray) {
     msgArr = [];
     let URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
     URL_FETCH = encodeURI(URL_FETCH);
-    return fetch(URL_FETCH, {method: 'GET'}).catch(() => {
-      return Promise.reject(new Error(FAKE_FETCH_DONE));
+    return fetch(URL_FETCH, {method: 'GET'}).then(() => {
+      // fetch was not canceled by extension
+      return Promise.resolve(false);
+    }).catch((err) => {
+      // fetch canceled by extension
+      if (err.message === FETCH_CANCELED) {
+        return Promise.resolve(true);
+      }
+      // some other error
+      return Promise.resolve(false);
     });
   }
 
@@ -188,7 +223,7 @@
    * @param {SWEvent} event - the event
    * @memberOf ServiceWorker
    */
-  function onPush(event) {
+  function onPushReceived(event) {
     const payload = event.data.json();
     const data = payload.data;
     let body;
@@ -222,26 +257,24 @@
       includeUncontrolled: true,
       type: 'window',
     }).then((clients) => {
-      for (let i = 0; i < clients.length; i++) {
-        const client = clients[i];
-        if (client.focused === true) {
-          // we have focus, don't display notification
-          // send data to extension
-          // eslint-disable-next-line promise/no-nesting
-          return doFakeFetch([data]).catch(() => {
-            // send message with page route
-            return postRouteMessage(client, getIcon(data));
-          });
-        }
+      return processFocusedClient(clients, data);
+    }).then((handled) => {
+      if (handled) {
+        // our focused client has received the data, we are done
+        return Promise.resolve(null);
       }
-
       return self.registration.getNotifications({tag: tag});
     }).then((notifications) => {
-      if ((notifications.length > 0)) {
+      if (!notifications) {
+        // done
+        return Promise.resolve(true);
+      }
+      if (notifications.length > 0) {
         // append to existing displayed notification
         noteOpt.renotify = true;
         const noteData = notifications[0].data;
         if (noteData instanceof Array) {
+          console.log('appending data');
           // data is in the notification
           // add current and send all to extension
           noteData.push(data);
@@ -250,40 +283,38 @@
             title = `\n${noteData.length} new items`;
             // set data back to item count
             noteOpt.data = noteData.length;
-            // simulate doFakeFetch cancel error
-            throw new Error(FAKE_FETCH_DONE);
+            return Promise.resolve(true);
           });
         } else {
           // count of notifications
+          console.log('count of notifications');
           noteOpt.data = notifications[0].data + 1;
           title = `${noteOpt.data} new items`;
         }
       } else {
         // new notification
+        console.log('new notification');
         noteOpt.data = 1;
       }
       // send data to extension
       return doFakeFetch([data]);
-    }).then(() => {
-      // Extension did not cancel the fake fetch
-      // add data to the notification instead
-      // this is necessary for Chrome OS at startup at least
-      if (tag === TAG_MESSAGE) {
-        msgArr.push(data);
-        if (msgArr.length > 1) {
-          title += `\n${msgArr.length} new items`;
+    }).then((canceled) => {
+      if (!canceled) {
+        // Extension did not cancel the fake fetch
+        // add data to the notification instead
+        // this is necessary for Chrome OS at startup at least
+        if (tag === TAG_MESSAGE) {
+          msgArr.push(data);
+          if (msgArr.length > 1) {
+            title += `\n${msgArr.length} new items`;
+          }
+          // shallow copy
+          noteOpt.data = JSON.parse(JSON.stringify(msgArr));
         }
-        // shallow copy
-        noteOpt.data = JSON.parse(JSON.stringify(msgArr));
       }
       return self.registration.showNotification(title, noteOpt);
     }).catch((err) => {
-      if (err.message === FAKE_FETCH_DONE) {
-        // This is the normal outcome of the extension canceling
-        // the fake fetch
-        return self.registration.showNotification(title, noteOpt);
-      }
-      console.error('Unexpected error in push event ', err);
+      console.error('A service worker error occurred in onPushReceived: ', err);
       return Promise.reject(err);
     });
 
@@ -330,7 +361,10 @@
         return clients.openWindow(URL_EXT);
       }
       return Promise.resolve();
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error('A service worker error occurred in onNotificationClick: ',
+          err);
+    });
 
     event.waitUntil(promiseChain);
   }
@@ -341,8 +375,7 @@
    * @memberOf ServiceWorker
    */
   function onNotificationClose(event) {
-    event.waitUntil(
-        sendNotificationData(event.notification.data).catch(() => {}));
+    event.waitUntil(sendNotificationData(event.notification.data));
   }
 
   // Listen for install events
@@ -356,7 +389,7 @@
   });
 
   // Listen for push events
-  self.addEventListener('push', onPush);
+  self.addEventListener('push', onPushReceived);
 
   // Listen for notificationclick events
   self.addEventListener('notificationclick', onNotificationClick);
