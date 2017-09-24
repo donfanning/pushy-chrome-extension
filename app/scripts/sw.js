@@ -123,6 +123,34 @@
   }
 
   /**
+   * Post a message about the page route to displa
+   * @param {Object} client - our clients window
+   * @param {string} icon - notification icon
+   * @returns {Promise<void>} void
+   * @memberOf ServiceWorker
+   */
+  function postRouteMessage(client, icon) {
+    return client.postMessage({
+      message: 'route',
+      route: getPageRoute(icon),
+    });
+  }
+
+  /**
+   * Get the page route for the icon
+   * @param {string} icon - notification icon
+   * @returns {string} path to icon
+   * @memberOf ServiceWorker
+   */
+  function getPageRoute(icon) {
+    let page = 'page-devices';
+    if (icon.includes('ic_remote_copy.png')) {
+      page = 'page-main';
+    }
+    return page;
+  }
+
+  /**
    * Send any data attached to a notification to the extension
    * @param {GaeMsg[]} dataArray - possible array of {@link app.Msg.GaeMsg}
    * objects
@@ -194,7 +222,10 @@
           // we have focus, don't display notification
           // send data to extension
           // eslint-disable-next-line promise/no-nesting
-          return doFakeFetch([data]).catch(() => {});
+          return doFakeFetch([data]).catch(() => {
+            // send message with route
+            return postRouteMessage(clients[i], getIcon(data));
+          });
         }
       }
 
@@ -247,7 +278,7 @@
         // the fake fetch
         return self.registration.showNotification(title, noteOpt);
       });
-    });
+    }).catch(() => {});
 
     event.waitUntil(promiseChain);
   }
@@ -266,26 +297,29 @@
 
     event.notification.close();
 
+    let wClients;
     const promiseChain = clients.matchAll({
       includeUncontrolled: true,
       type: 'window',
     }).then((windowClients) => {
-      // eslint-disable-next-line promise/no-nesting
-      return processNotificationData(event.notification.data).then(() => {
-        for (let i = 0; i < windowClients.length; i++) {
-          const client = windowClients[i];
-          if ((client.url === url) && 'focus' in client) {
-            // tab exists, focus it
-            return client.focus();
-          }
+      wClients = windowClients;
+      return processNotificationData(event.notification.data);
+    }).then(() => {
+      for (let i = 0; i < wClients.length; i++) {
+        const client = wClients[i];
+        if ((client.url === url) && 'focus' in client) {
+          // tab exists
+          // Send a message to the client to route to correct page
+          return postRouteMessage(client, event.notification.icon);
         }
-        if (clients.openWindow) {
-          // create new tab
-          return clients.openWindow(url);
-        }
-        return Promise.resolve();
-      }).catch(() => {});
-    });
+      }
+      
+      if (clients.openWindow) {
+        // create new tab
+        return clients.openWindow(url);
+      }
+      return Promise.resolve();
+    }).catch(() => {});
 
     event.waitUntil(promiseChain);
   }
@@ -297,26 +331,25 @@
    */
   function onNotificationClose(event) {
     event.waitUntil(
-        processNotificationData(event.notification.data).catch(() => {})
-    );
+        processNotificationData(event.notification.data).catch(() => {}));
   }
 
-  // Listen for install events
+// Listen for install events
   self.addEventListener('install', (event) => {
     event.waitUntil(self.skipWaiting());
   });
 
-  // Listen for activate events
+// Listen for activate events
   self.addEventListener('activate', (event) => {
     event.waitUntil(self.clients.claim());
   });
 
-  // Listen for push events
+// Listen for push events
   self.addEventListener('push', onPush);
 
-  // Listen for notificationclick events
+// Listen for notificationclick events
   self.addEventListener('notificationclick', onNotificationClick);
 
-  // Listen for notificationclose events
+// Listen for notificationclose events
   self.addEventListener('notificationclose', onNotificationClose);
 })();

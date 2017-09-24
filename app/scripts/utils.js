@@ -102,11 +102,14 @@ app.Utils = (function() {
 
     /**
      * Send message to the main tab to focus it. If not found, create it
+     * @param {?string} [route='page-main'] - the page to route to
      * @memberOf app.Utils
      */
-    showMainTab: function() {
+    showMainTab: function(route = 'page-main') {
       // send message to the main tab to focus it.
-      Chrome.Msg.send(Chrome.Msg.HIGHLIGHT).catch(() => {
+      const msg = Chrome.JSONUtils.shallowCopy(Chrome.Msg.HIGHLIGHT);
+      msg.item = route;
+      Chrome.Msg.send(msg).catch(() => {
         // no one listening, create it
         chrome.tabs.create({url: '../html/main.html'});
       });

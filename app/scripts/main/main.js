@@ -170,6 +170,13 @@ window.app = window.app || {};
   let prevRoute = 'page-main';
 
   /**
+   * Route to use on tan highlight
+   * @type {string}
+   * @memberOf Main
+   */
+  let onHighlightRoute = 'page-main';
+
+  /**
    * signin-page element
    * @type {element}
    * @memberOf Main
@@ -182,13 +189,6 @@ window.app = window.app || {};
    * @memberOf Main
    */
   let devicesPage;
-
-  /**
-   * Is the mainPage being displayed
-   * @type {boolean}
-   * @memberOf Main
-   */
-  let isMainPage = true;
 
   /**
    *  Listen for template bound event to know when bindings
@@ -220,9 +220,36 @@ window.app = window.app || {};
       }
     });
 
+    // listen for messages from the service worker
+    navigator.serviceWorker.addEventListener('message',
+        _onServiceWorkerMessage);
+    
     // check for optional permissions
     _checkOptionalPermissions();
   });
+
+  /**
+   * Set the route from onHighlightRoute
+   * @private
+   * @memberOf Main
+   */
+  t._setHighlightRoute = function() {
+    prevRoute = t.route;
+    const idx = _getPageIdx(onHighlightRoute);
+    const page = t.pages[idx];
+    if (!page.ready) {
+      // insert and show
+      page.obj(idx);
+    } else {
+      // select it
+      t.route = onHighlightRoute;
+    }
+    t.$.mainMenu.select(onHighlightRoute);
+    if ((prevRoute === 'page-main') && (t.route === 'page-main')) {
+      t.$.mainPage.updateDates();
+    }
+    onHighlightRoute = 'page-main';
+  };
 
   /**
    * Event: navigation menu selected
@@ -236,23 +263,22 @@ window.app = window.app || {};
     prevRoute = t.route;
 
     const idx = _getPageIdx(event.currentTarget.id);
+    const page = t.pages[idx];
 
-    Chrome.GA.event(Chrome.GA.EVENT.MENU, t.pages[idx].route);
+    Chrome.GA.event(Chrome.GA.EVENT.MENU, page.route);
 
-    if (!t.pages[idx].obj) {
+    if (!page.obj) {
       // some pages are just pages
-      t.route = t.pages[idx].route;
+      t.route = page.route;
       _scrollPageToTop();
-    } else if (typeof t.pages[idx].obj === 'string') {
+    } else if (typeof page.obj === 'string') {
       // some pages are url links
       t.$.mainMenu.select(prevRoute);
-      chrome.tabs.create({url: t.pages[idx].obj});
+      chrome.tabs.create({url: page.obj});
     } else {
       // some pages have functions to view them
-      t.pages[idx].obj(idx);
+      page.obj(idx);
     }
-
-    isMainPage = (t.route === 'page-main');
   };
 
   /**
@@ -353,6 +379,30 @@ window.app = window.app || {};
     });
   }
 
+  /**
+   * Event: Fired when a message is posted from out service worker
+   * @param {Event} event - the event
+   * @private
+   * @memberOf Main
+   */
+  function _onServiceWorkerMessage(event) {
+    if (event.data.message === 'route') {
+      // highlight ourselves if needed, and set the current route
+      onHighlightRoute = event.data.route;
+      chromep.tabs.getCurrent().then((tab) => {
+        if (!tab.highlighted) {
+          chromep.tabs.update(tab.id, {'highlighted': true});
+        } else {
+          // already highlighted, set route
+          t._setHighlightRoute();
+        }
+        return Promise.resolve();
+      }).catch((err) => {
+        Chrome.Log.error(err.message, 'Main.serviceWorkerMessage');
+      });
+    }
+  }
+  
   // noinspection JSUnusedLocalSymbols
   /**
    * Event: Fired when a message is sent from either an extension process<br>
@@ -366,9 +416,15 @@ window.app = window.app || {};
    */
   function _onChromeMessage(request, sender, response) {
     if (request.message === Chrome.Msg.HIGHLIGHT.message) {
+      onHighlightRoute = request.item;
       // highlight ourselves and let the sender know we are here
-      chromep.tabs.getCurrent().then((t) => {
-        chrome.tabs.update(t.id, {'highlighted': true});
+      chromep.tabs.getCurrent().then((tab) => {
+        if (!tab.highlighted) {
+          chromep.tabs.update(tab.id, {'highlighted': true});
+        } else {
+          // already highlighted, set route
+          t._setHighlightRoute();
+        }
         return Promise.resolve();
       }).catch((err) => {
         Chrome.Log.error(`${request.message}: ${err.message}`,
@@ -412,15 +468,7 @@ window.app = window.app || {};
         const tabId = tabIds[i];
         if (tabId === tab.id) {
           // our tab
-          if (!isMainPage) {
-            // focus main page
-            prevRoute = t.route;
-            t.route = 'page-main';
-            isMainPage = true;
-            t.$.mainMenu.select(t.route);
-          } else {
-            t.$.mainPage.updateDates();
-          }
+          t._setHighlightRoute();
           break;
         }
       }
@@ -444,15 +492,15 @@ window.app = window.app || {};
 
   /**
    * Get the index into the {@link Main.pages} array
-   * @param {string} name - {@link Main.page} route
+   * @param {string} route - {@link Main.page} route
    * @returns {int} index into array
    * @private
    * @memberOf Main
    */
-  function _getPageIdx(name) {
+  function _getPageIdx(route) {
     return t.pages.map(function(e) {
       return e.route;
-    }).indexOf(name);
+    }).indexOf(route);
   }
 
   /**

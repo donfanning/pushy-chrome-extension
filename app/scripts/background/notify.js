@@ -18,6 +18,8 @@ app.Notify = (function() {
 
   const chromep = new ChromePromise();
 
+  const _ICON_ERROR = '/images/ic_email_black_48dp.png';
+
   const _ERROR_NO_NOTIFICATIONS =
       'Display of notifications on received messages has been disabled.';
 
@@ -29,8 +31,7 @@ app.Notify = (function() {
    * @property {string} message - message
    * @property {string} icon - path to icon
    * @property {boolean} isError - if true, error notification
-   * @property {boolean} isClickable - if true, execute function on click
-   * @property {function} clickFunction - function to run on click
+   * @property {string} pageRoute - page in main.html to route too
    * @property {boolean} requireInteraction - if true, visible until dismissed
    * @property {boolean} hasButtons - if true, we have buttons
    * @property {Array} buttons - button description
@@ -57,8 +58,7 @@ app.Notify = (function() {
       message: 'Not set',
       icon: '/images/ic_local_copy.png',
       isError: false,
-      isClickable: true,
-      clickFunction: app.Utils.showMainTab,
+      pageRoute: 'page-main',
       requireInteraction: false,
       hasButtons: false,
       buttons: [],
@@ -70,8 +70,7 @@ app.Notify = (function() {
       message: 'Not set',
       icon: '/images/ic_local_copy.png',
       isError: false,
-      isClickable: true,
-      clickFunction: app.Utils.showMainTab,
+      pageRoute: 'page-main',
       requireInteraction: false,
       hasButtons: false,
       buttons: [],
@@ -83,8 +82,7 @@ app.Notify = (function() {
       message: 'Not set',
       icon: '/images/ic_add_device.png',
       isError: false,
-      isClickable: true,
-      clickFunction: app.Utils.showMainTab,
+      pageRoute: 'page-devices',
       requireInteraction: false,
       hasButtons: false,
       buttons: [],
@@ -96,8 +94,7 @@ app.Notify = (function() {
       message: 'Not set',
       icon: '/images/ic_remove_device.png',
       isError: false,
-      isClickable: true,
-      clickFunction: app.Utils.showMainTab,
+      pageRoute: 'page-main',
       requireInteraction: false,
       hasButtons: false,
       buttons: [],
@@ -109,14 +106,13 @@ app.Notify = (function() {
       message: 'Not set',
       icon: '/images/ic_error.png',
       isError: true,
-      isClickable: true,
-      clickFunction: app.Utils.showMainTab,
+      pageRoute: 'page-error',
       requireInteraction: true,
       hasButtons: true,
       buttons: [
         {
           'title': 'Contact support',
-          'iconUrl': chrome.runtime.getURL('/images/ic_email_black_48dp.png'),
+          'iconUrl': chrome.runtime.getURL(_ICON_ERROR),
         },
       ],
       buttonFunctions: [_sendErrorEmail],
@@ -127,14 +123,13 @@ app.Notify = (function() {
       message: 'Not set',
       icon: '/images/ic_error.png',
       isError: true,
-      isClickable: true,
-      clickFunction: app.Utils.showMainTab,
+      pageRoute: 'page-error',
       requireInteraction: true,
       hasButtons: true,
       buttons: [
         {
           'title': 'Contact support',
-          'iconUrl': chrome.runtime.getURL('/images/ic_email_black_48dp.png'),
+          'iconUrl': chrome.runtime.getURL(_ICON_ERROR),
         },
       ],
       buttonFunctions: [_sendErrorEmail],
@@ -145,14 +140,13 @@ app.Notify = (function() {
       message: 'Not set',
       icon: '/images/ic_error.png',
       isError: true,
-      isClickable: true,
-      clickFunction: app.Utils.showMainTab,
+      pageRoute: 'page-error',
       requireInteraction: true,
       hasButtons: true,
       buttons: [
         {
           'title': 'Contact support',
-          'iconUrl': chrome.runtime.getURL('/images/ic_email_black_48dp.png'),
+          'iconUrl': chrome.runtime.getURL(_ICON_ERROR),
         },
       ],
       buttonFunctions: [_sendErrorEmail],
@@ -170,10 +164,10 @@ app.Notify = (function() {
     let options = {
       type: 'basic',
       contextMessage: 'Pushy Clipboard',
+      isClickable: true,
       eventTime: Date.now(),
     };
     options.title = type.title;
-    options.isClickable = type.isClickable;
     options.requireInteraction = type.requireInteraction;
     options.iconUrl = chrome.runtime.getURL(type.icon);
     options.message = message;
@@ -204,12 +198,13 @@ app.Notify = (function() {
    * @memberOf app.Notify
    */
   function _onNotificationClicked(id) {
-    for (let prop in TYPE) {
-      if (TYPE.hasOwnProperty(prop)) {
-        if (TYPE[prop].id === id) {
-          // call click function
-          if (TYPE[prop].clickFunction) {
-            TYPE[prop].clickFunction();
+    for (let type in TYPE) {
+      if (TYPE.hasOwnProperty(type)) {
+        const item = TYPE[type];
+        if (item.id === id) {
+          if (item.pageRoute) {
+            // route to proper page
+            app.Utils.showMainTab(item.pageRoute);
             chrome.notifications.clear(id, () => {});
           }
           break;
