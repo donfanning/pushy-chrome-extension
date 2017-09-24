@@ -270,12 +270,12 @@
         return Promise.resolve(true);
       }
       if (notifications.length > 0) {
-        // append to existing displayed notification
+        // use existing displayed notification
         noteOpt.renotify = true;
         const noteData = notifications[0].data;
         if (noteData instanceof Array) {
           console.log('appending data');
-          // data is in the notification
+          // data is in the notification from failed fakeFetch calls
           // add current and send all to extension
           noteData.push(data);
           // eslint-disable-next-line promise/no-nesting
