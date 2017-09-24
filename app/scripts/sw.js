@@ -59,6 +59,9 @@
   /** @memberOf ServiceWorker */
   const IC_SEARCH = '../images/search-web.png';
 
+  /** @memberOf ServiceWorker */
+  const FAKE_FETCH_DONE = 'Fake fetch done';
+
   // temporary variable to help get all messages at Chrome start-up
   // normally, can't use globals in service worker, but this is
   // only used when Chrome first starts up. Pretty sure it won't be
@@ -156,7 +159,7 @@
    * objects
    * @returns {Promise<void>} always resolves
    */
-  function processNotificationData(dataArray) {
+  function sendNotificationData(dataArray) {
     if (dataArray instanceof Array) {
       return doFakeFetch(dataArray).catch(() => {});
     } else {
@@ -175,7 +178,9 @@
     msgArr = [];
     let URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
     URL_FETCH = encodeURI(URL_FETCH);
-    return fetch(URL_FETCH, {method: 'GET'});
+    return fetch(URL_FETCH, {method: 'GET'}).catch(() => {
+      return Promise.reject(new Error(FAKE_FETCH_DONE));
+    });
   }
 
   /**
@@ -203,7 +208,7 @@
       data: null,
     };
     if ((tag === TAG_MESSAGE)) {
-      // add web search action
+      // add web search action for regular messages
       noteOpt.actions = [
         {
           action: 'search',
@@ -211,74 +216,76 @@
           icon: IC_SEARCH,
         }];
     }
-    let title = `From ${getDeviceName(data)}`;
+    let title = `From: ${getDeviceName(data)}`;
 
     const promiseChain = clients.matchAll({
       includeUncontrolled: true,
       type: 'window',
     }).then((clients) => {
       for (let i = 0; i < clients.length; i++) {
-        if (clients[i].focused === true) {
+        const client = clients[i];
+        if (client.focused === true) {
           // we have focus, don't display notification
           // send data to extension
           // eslint-disable-next-line promise/no-nesting
           return doFakeFetch([data]).catch(() => {
-            // send message with route
-            return postRouteMessage(clients[i], getIcon(data));
+            // send message with page route
+            return postRouteMessage(client, getIcon(data));
           });
         }
       }
 
-      // eslint-disable-next-line promise/no-nesting
-      return self.registration.getNotifications({
-        tag: tag,
-      }).then((notifications) => {
-        if ((notifications.length > 0)) {
-          // append to existing notification
-          noteOpt.renotify = true;
-          const noteData = notifications[0].data;
-          if (noteData instanceof Array) {
-            // data is in the notification
-            // add current and send all to extension
-            noteData.push(data);
-            // eslint-disable-next-line promise/no-nesting
-            return processNotificationData(noteData).then(() => {
-              title += `\n${noteData.length} new items`;
-              // set data back to item count
-              noteOpt.data = noteData.length;
-              // simulate doFakeFetch cancel error
-              throw new Error('fetch failed');
-            });
-          } else {
-            // count of notifications
-            noteOpt.data = notifications[0].data + 1;
-            title = `${noteOpt.data} new items\n${title}`;
-          }
+      return self.registration.getNotifications({tag: tag});
+    }).then((notifications) => {
+      if ((notifications.length > 0)) {
+        // append to existing displayed notification
+        noteOpt.renotify = true;
+        const noteData = notifications[0].data;
+        if (noteData instanceof Array) {
+          // data is in the notification
+          // add current and send all to extension
+          noteData.push(data);
+          // eslint-disable-next-line promise/no-nesting
+          return sendNotificationData(noteData).then(() => {
+            title = `\n${noteData.length} new items`;
+            // set data back to item count
+            noteOpt.data = noteData.length;
+            // simulate doFakeFetch cancel error
+            throw new Error(FAKE_FETCH_DONE);
+          });
         } else {
-          // new notification
-          noteOpt.data = 1;
+          // count of notifications
+          noteOpt.data = notifications[0].data + 1;
+          title = `${noteOpt.data} new items`;
         }
-        // send data to extension
-        return doFakeFetch([data]);
-      }).then(() => {
-        // Extension did not cancel the fake fetch
-        // add data to the notification instead
-        // this is necessary for Chrome OS at startup at least
-        if (tag === TAG_MESSAGE) {
-          msgArr.push(data);
-          if (msgArr.length > 1) {
-            title += `\n${msgArr.length} new items`;
-          }
-          // shallow copy
-          noteOpt.data = JSON.parse(JSON.stringify(msgArr));
+      } else {
+        // new notification
+        noteOpt.data = 1;
+      }
+      // send data to extension
+      return doFakeFetch([data]);
+    }).then(() => {
+      // Extension did not cancel the fake fetch
+      // add data to the notification instead
+      // this is necessary for Chrome OS at startup at least
+      if (tag === TAG_MESSAGE) {
+        msgArr.push(data);
+        if (msgArr.length > 1) {
+          title += `\n${msgArr.length} new items`;
         }
-        return self.registration.showNotification(title, noteOpt);
-      }).catch(() => {
+        // shallow copy
+        noteOpt.data = JSON.parse(JSON.stringify(msgArr));
+      }
+      return self.registration.showNotification(title, noteOpt);
+    }).catch((err) => {
+      if (err.message === FAKE_FETCH_DONE) {
         // This is the normal outcome of the extension canceling
         // the fake fetch
         return self.registration.showNotification(title, noteOpt);
-      });
-    }).catch(() => {});
+      }
+      console.error('Unexpected error in push event ', err);
+      return Promise.reject(err);
+    });
 
     event.waitUntil(promiseChain);
   }
@@ -289,13 +296,17 @@
    * @memberOf ServiceWorker
    */
   function onNotificationClick(event) {
-    let url = URL_EXT;
+    event.notification.close();
+
     if (event.action === 'search') {
       // clicked on search action
-      url = URL_SEARCH_BASE + encodeURIComponent(event.notification.body);
+      if (clients.openWindow) {
+        const searchUrl =
+            URL_SEARCH_BASE + encodeURIComponent(event.notification.body);
+        clients.openWindow(searchUrl);
+      }
+      return;
     }
-
-    event.notification.close();
 
     let wClients;
     const promiseChain = clients.matchAll({
@@ -303,11 +314,11 @@
       type: 'window',
     }).then((windowClients) => {
       wClients = windowClients;
-      return processNotificationData(event.notification.data);
+      return sendNotificationData(event.notification.data);
     }).then(() => {
       for (let i = 0; i < wClients.length; i++) {
         const client = wClients[i];
-        if ((client.url === url) && 'focus' in client) {
+        if ((client.url === URL_EXT) && 'focus' in client) {
           // tab exists
           // Send a message to the client to route to correct page
           return postRouteMessage(client, event.notification.icon);
@@ -315,8 +326,8 @@
       }
 
       if (clients.openWindow) {
-        // create new tab
-        return clients.openWindow(url);
+        // create our main page
+        return clients.openWindow(URL_EXT);
       }
       return Promise.resolve();
     }).catch(() => {});
@@ -331,7 +342,7 @@
    */
   function onNotificationClose(event) {
     event.waitUntil(
-        processNotificationData(event.notification.data).catch(() => {}));
+        sendNotificationData(event.notification.data).catch(() => {}));
   }
 
   // Listen for install events

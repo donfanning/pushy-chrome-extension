@@ -170,7 +170,7 @@ window.app = window.app || {};
   let prevRoute = 'page-main';
 
   /**
-   * Route to use on tan highlight
+   * Route to use on tab highlight
    * @type {string}
    * @memberOf Main
    */
