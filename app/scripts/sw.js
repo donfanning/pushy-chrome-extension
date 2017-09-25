@@ -60,14 +60,29 @@
   const FETCH_CANCELED = 'Failed to fetch';
 
   /**
+   * Notification data
+   * @typedef {Object} NoteData
+   * @property {string} title - notification title
+   * @property {int} count - renotify count
+   * @property {app.Msg.GaeMsg[]} array - array of data objects
+   * @memberOf ServiceWorker
+   */
+  const NOTE_DATA = {
+    title: '',
+    count: 0,
+    array: [],
+  };
+
+  /**
    * Temporary variable to help get all messages at Chrome start-up
    * normally, can't use globals in service worker, but this is
    * only used when Chrome first starts up. Pretty sure it won't be
    * stopped during this time
    * could use indexedDB if we really have to
-   *  @memberOf ServiceWorker
+   * @type NoteData
+   * @memberOf ServiceWorker
    */
-  let msgArr = [];
+  let tmpData = NOTE_DATA;
 
   /**
    * Service Worker Events
@@ -160,9 +175,43 @@
    * @memberOf ServiceWorker
    */
   function sendNotificationData(dataArray) {
-    if (dataArray instanceof Array) {
+    if ((dataArray instanceof Array) && (dataArray.length > 0)) {
       return doFakeFetch(dataArray);
     } else {
+      return Promise.resolve();
+    }
+  }
+
+  /**
+   * Process data when a notification is already showing
+   * @param {Object[]} notifications - our notifications
+   * @param {Object} noteOpt - our options
+   * @param {app.Msg.GaeMsg} data - our data
+   * @returns {Promise.<void>} void
+   * @memberOf ServiceWorker
+   */
+  function processOnShowingNotification(notifications, noteOpt, data) {
+    // use existing displayed notification
+    noteOpt.renotify = true;
+    const noteData = notifications[0].data;
+    if (noteData.array.length > 0) {
+      console.log('appending data');
+      // data is in the notification from failed fakeFetch calls
+      // add current and send all to extension
+      noteData.array.push(data);
+      return sendNotificationData(noteData.array).then(() => {
+        noteData.title = `\n${noteData.count} new items`;
+        noteData.array.length = 0;
+        noteOpt.data = NOTE_DATA;
+        return Promise.resolve();
+      });
+    } else {
+      // add to existing notification
+      console.log('count of notifications');
+      noteData.count++;
+      noteData.title = `${noteData.count} new items`;
+      noteData.array.push(data);
+      noteOpt.data = noteData;
       return Promise.resolve();
     }
   }
@@ -174,7 +223,7 @@
    * @returns {Promise.<boolean>} true if we handled it
    * @memberOf ServiceWorker
    */
-  function processFocusedClient(clients, data) {
+  function processOnFocusedClient(clients, data) {
     if (!clients || !data) {
       return Promise.resolve(false);
     }
@@ -202,7 +251,7 @@
    * @memberOf ServiceWorker
    */
   function doFakeFetch(dataArray) {
-    msgArr = [];
+    tmpData = NOTE_DATA;
     let URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
     URL_FETCH = encodeURI(URL_FETCH);
     return fetch(URL_FETCH, {method: 'GET'}).then(() => {
@@ -234,13 +283,18 @@
       () => {};
     }
     const tag = getTag(data);
+    let title = `From: ${getDeviceName(data)}`;
     const noteOpt = {
       requireInteraction: (tag === TAG_MESSAGE),
       body: body,
       icon: getIcon(data),
       tag: tag,
       timestamp: Date.now(),
-      data: null,
+      data: {
+        count: 0,
+        array: [],
+        title: title,
+      },
     };
     if ((tag === TAG_MESSAGE)) {
       // add web search action for regular messages
@@ -251,68 +305,56 @@
           icon: IC_SEARCH,
         }];
     }
-    let title = `From: ${getDeviceName(data)}`;
 
+    let wClients = null;
+    let nots = null;
     const promiseChain = clients.matchAll({
       includeUncontrolled: true,
       type: 'window',
     }).then((clients) => {
-      return processFocusedClient(clients, data);
-    }).then((handled) => {
-      if (handled) {
-        // our focused client has received the data, we are done
-        return Promise.resolve(null);
-      }
+      wClients = clients;
       return self.registration.getNotifications({tag: tag});
     }).then((notifications) => {
-      if (!notifications) {
-        // done
-        return Promise.resolve(true);
-      }
+      nots = notifications;
       if (notifications.length > 0) {
         // use existing displayed notification
         noteOpt.renotify = true;
-        const noteData = notifications[0].data;
-        if (noteData instanceof Array) {
-          console.log('appending data');
-          // data is in the notification from failed fakeFetch calls
-          // add current and send all to extension
-          noteData.push(data);
-          // eslint-disable-next-line promise/no-nesting
-          return sendNotificationData(noteData).then(() => {
-            title = `\n${noteData.length} new items`;
-            // set data back to item count
-            noteOpt.data = noteData.length;
-            return Promise.resolve(true);
-          });
-        } else {
-          // count of notifications
-          console.log('count of notifications');
-          noteOpt.data = notifications[0].data + 1;
-          title = `${noteOpt.data} new items`;
-        }
-      } else {
+        return processOnShowingNotification(notifications, noteOpt, data);
+      }
+      return Promise.resolve();
+    }).then(() => {
+      if (nots.length === 0) {
         // new notification
         console.log('new notification');
-        noteOpt.data = 1;
+        noteOpt.data = {
+          title: title,
+          count: 1,
+          array: [],
+        };
+        return doFakeFetch([data]);
       }
-      // send data to extension
-      return doFakeFetch([data]);
+      // existing notification
+      return doFakeFetch(noteOpt.data.array);
     }).then((canceled) => {
       if (!canceled) {
         // Extension did not cancel the fake fetch
-        // add data to the notification instead
+        // Add data to the notification instead
         // this is necessary for Chrome OS at startup at least
         if (tag === TAG_MESSAGE) {
-          msgArr.push(data);
-          if (msgArr.length > 1) {
-            title += `\n${msgArr.length} new items`;
+          tmpData.title = title;
+          tmpData.array.push(data);
+          tmpData.count++;
+          if (tmpData.count > 1) {
+            tmpData.title = `\n${tmpData.count} new items`;
           }
           // shallow copy
-          noteOpt.data = JSON.parse(JSON.stringify(msgArr));
+          noteOpt.data = JSON.parse(JSON.stringify(tmpData));
         }
+      } else {
+        // data has been sent to extension
+        noteOpt.data.array = [];
       }
-      return self.registration.showNotification(title, noteOpt);
+      return self.registration.showNotification(noteOpt.data.title, noteOpt);
     }).catch((err) => {
       console.error('A service worker error occurred in onPushReceived: ', err);
       return Promise.reject(err);
@@ -345,7 +387,7 @@
       type: 'window',
     }).then((windowClients) => {
       wClients = windowClients;
-      return sendNotificationData(event.notification.data);
+      return sendNotificationData(event.notification.data.array);
     }).then(() => {
       for (let i = 0; i < wClients.length; i++) {
         const client = wClients[i];
@@ -375,7 +417,7 @@
    * @memberOf ServiceWorker
    */
   function onNotificationClose(event) {
-    event.waitUntil(sendNotificationData(event.notification.data));
+    event.waitUntil(sendNotificationData(event.notification.data.array));
   }
 
   // Listen for install events
