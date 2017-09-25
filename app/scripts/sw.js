@@ -195,7 +195,6 @@
     noteOpt.renotify = true;
     const noteData = notifications[0].data;
     if (noteData.array.length > 0) {
-      console.log('appending data');
       // data is in the notification from failed fakeFetch calls
       // add current and send all to extension
       noteData.array.push(data);
@@ -207,7 +206,6 @@
       });
     } else {
       // add to existing notification
-      console.log('count of notifications');
       noteData.count++;
       noteData.title = `${noteData.count} new items`;
       noteData.array.push(data);
@@ -216,32 +214,32 @@
     }
   }
 
-  /**
-   * Handle push message if our client has the focus
-   * @param {Object} clients - our clients
-   * @param {app.Msg.GaeMsg} data - our data
-   * @returns {Promise.<boolean>} true if we handled it
-   * @memberOf ServiceWorker
-   */
-  function processOnFocusedClient(clients, data) {
-    if (!clients || !data) {
-      return Promise.resolve(false);
-    }
-
-    for (let i = 0; i < clients.length; i++) {
-      const client = clients[i];
-      if (client.focused) {
-        // we have focus, send data to extension
-        return doFakeFetch([data]).then(() => {
-          // send message with page route
-          return postRouteMessage(client, getIcon(data));
-        }).then(() => {
-          return Promise.resolve(true);
-        });
-      }
-    }
-    return Promise.resolve(false);
-  }
+  // /**
+  //  * Handle push message if our client has the focus
+  //  * @param {Object} clients - our clients
+  //  * @param {app.Msg.GaeMsg} data - our data
+  //  * @returns {Promise.<boolean>} true if we handled it
+  //  * @memberOf ServiceWorker
+  //  */
+  // function processOnFocusedClient(clients, data) {
+  //   if (!clients || !data) {
+  //     return Promise.resolve(false);
+  //   }
+  //
+  //   for (let i = 0; i < clients.length; i++) {
+  //     const client = clients[i];
+  //     if (client.focused) {
+  //       // we have focus, send data to extension
+  //       return doFakeFetch([data]).then(() => {
+  //         // send message with page route
+  //         return postRouteMessage(client, getIcon(data));
+  //       }).then(() => {
+  //         return Promise.resolve(true);
+  //       });
+  //     }
+  //   }
+  //   return Promise.resolve(false);
+  // }
 
   /**
    * Send fake GET request so extension can intercept it and get the payload
@@ -273,29 +271,25 @@
    * @memberOf ServiceWorker
    */
   function onPushReceived(event) {
-    const payload = event.data.json();
-    const data = payload.data;
-    let body;
+    const data = event.data.json().data;
+    let body = '';
     try {
       body = decodeURIComponent(data.m);
     } catch (ex) {
-      // noinspection BadExpressionStatementJS
-      () => {};
+      console.error('Failed to decode message: ', ex);
     }
     const tag = getTag(data);
-    let title = `From: ${getDeviceName(data)}`;
     const noteOpt = {
       requireInteraction: (tag === TAG_MESSAGE),
       body: body,
       icon: getIcon(data),
       tag: tag,
       timestamp: Date.now(),
-      data: {
-        count: 0,
-        array: [],
-        title: title,
-      },
+      data: NOTE_DATA,
     };
+    noteOpt.data.title = `From: ${getDeviceName(data)}`;
+    noteOpt.data.count = 1;
+    noteOpt.data.array = [data];
     if ((tag === TAG_MESSAGE)) {
       // add web search action for regular messages
       noteOpt.actions = [
@@ -306,16 +300,8 @@
         }];
     }
 
-    let wClients = null;
-    let nots = null;
-    const promiseChain = clients.matchAll({
-      includeUncontrolled: true,
-      type: 'window',
-    }).then((clients) => {
-      wClients = clients;
-      return self.registration.getNotifications({tag: tag});
-    }).then((notifications) => {
-      nots = notifications;
+    const promiseChain =
+        self.registration.getNotifications({tag: tag}).then((notifications) => {
       if (notifications.length > 0) {
         // use existing displayed notification
         noteOpt.renotify = true;
@@ -323,17 +309,6 @@
       }
       return Promise.resolve();
     }).then(() => {
-      if (nots.length === 0) {
-        // new notification
-        console.log('new notification');
-        noteOpt.data = {
-          title: title,
-          count: 1,
-          array: [],
-        };
-        return doFakeFetch([data]);
-      }
-      // existing notification
       return doFakeFetch(noteOpt.data.array);
     }).then((canceled) => {
       if (!canceled) {
@@ -341,7 +316,7 @@
         // Add data to the notification instead
         // this is necessary for Chrome OS at startup at least
         if (tag === TAG_MESSAGE) {
-          tmpData.title = title;
+          tmpData.title = noteOpt.data.title;
           tmpData.array.push(data);
           tmpData.count++;
           if (tmpData.count > 1) {
