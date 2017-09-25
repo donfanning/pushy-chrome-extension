@@ -57,32 +57,17 @@
   const IC_SEARCH = '../images/search-web.png';
 
   /** @memberOf ServiceWorker */
-  const FETCH_CANCELED = 'Failed to fetch';
-
-  /**
-   * Notification data
-   * @typedef {Object} NoteData
-   * @property {string} title - notification title
-   * @property {int} count - renotify count
-   * @property {app.Msg.GaeMsg[]} array - array of data objects
-   * @memberOf ServiceWorker
-   */
-  const NOTE_DATA = {
-    title: '',
-    count: 0,
-    array: [],
-  };
+  const FAKE_FETCH_DONE = 'Fake fetch done';
 
   /**
    * Temporary variable to help get all messages at Chrome start-up
-   * normally, can't use globals in service worker, but this is
+   * Normally, can't use globals in service worker, but this is
    * only used when Chrome first starts up. Pretty sure it won't be
    * stopped during this time
    * could use indexedDB if we really have to
-   * @type NoteData
    * @memberOf ServiceWorker
    */
-  let tmpData = NOTE_DATA;
+  let msgArr = [];
 
   /**
    * Service Worker Events
@@ -95,7 +80,7 @@
 
   /**
    * Get the name of the Device who sent the message
-   * @param {app.Msg.GaeMsg} data - message object
+   * @param {app.Msg.GaeMsg} data  - message object
    * @returns {string} device name
    * @memberOf ServiceWorker
    */
@@ -169,99 +154,32 @@
 
   /**
    * Send any data attached to a notification to the extension
-   * @param {app.Msg.GaeMsg[]} dataArray - possible array of
-   * {@link app.Msg.GaeMsg} objects
+   * @param {app.Msg.GaeMsg[]} dataArray 
+   * - possible array of {@link app.Msg.GaeMsg} objects
    * @returns {Promise<void>} always resolves
    * @memberOf ServiceWorker
    */
   function sendNotificationData(dataArray) {
-    if ((dataArray instanceof Array) && (dataArray.length > 0)) {
-      return doFakeFetch(dataArray);
+    if (dataArray instanceof Array) {
+      return doFakeFetch(dataArray).catch(() => {});
     } else {
       return Promise.resolve();
     }
   }
-
-  /**
-   * Process data when a notification is already showing
-   * @param {Object[]} notifications - our notifications
-   * @param {Object} noteOpt - our options
-   * @param {app.Msg.GaeMsg} data - our data
-   * @returns {Promise.<void>} void
-   * @memberOf ServiceWorker
-   */
-  function processOnShowingNotification(notifications, noteOpt, data) {
-    // use existing displayed notification
-    noteOpt.renotify = true;
-    const noteData = notifications[0].data;
-    if (noteData.array.length > 0) {
-      // data is in the notification from failed fakeFetch calls
-      // add current and send all to extension
-      noteData.array.push(data);
-      return sendNotificationData(noteData.array).then(() => {
-        noteData.title = `\n${noteData.count} new items`;
-        noteData.array.length = 0;
-        noteOpt.data = NOTE_DATA;
-        return Promise.resolve();
-      });
-    } else {
-      // add to existing notification
-      noteData.count++;
-      noteData.title = `${noteData.count} new items`;
-      noteData.array.push(data);
-      noteOpt.data = noteData;
-      return Promise.resolve();
-    }
-  }
-
-  // /**
-  //  * Handle push message if our client has the focus
-  //  * @param {Object} clients - our clients
-  //  * @param {app.Msg.GaeMsg} data - our data
-  //  * @returns {Promise.<boolean>} true if we handled it
-  //  * @memberOf ServiceWorker
-  //  */
-  // function processOnFocusedClient(clients, data) {
-  //   if (!clients || !data) {
-  //     return Promise.resolve(false);
-  //   }
-  //
-  //   for (let i = 0; i < clients.length; i++) {
-  //     const client = clients[i];
-  //     if (client.focused) {
-  //       // we have focus, send data to extension
-  //       return doFakeFetch([data]).then(() => {
-  //         // send message with page route
-  //         return postRouteMessage(client, getIcon(data));
-  //       }).then(() => {
-  //         return Promise.resolve(true);
-  //       });
-  //     }
-  //   }
-  //   return Promise.resolve(false);
-  // }
 
   /**
    * Send fake GET request so extension can intercept it and get the payload
    * @see https://bugs.chromium.org/p/chromium/issues/detail?id=452942
    * @param {app.Msg.GaeMsg[]} dataArray Array of {@link app.Msg.GaeMsg} objects
-   * @returns {Promise<boolean>} true if canceled, always resolves
+   * @returns {Promise<void>} fails if extension successfully canceled request
    * @memberOf ServiceWorker
    */
   function doFakeFetch(dataArray) {
-    tmpData = NOTE_DATA;
+    msgArr = [];
     let URL_FETCH = URL_FETCH_BASE + JSON.stringify(dataArray);
     URL_FETCH = encodeURI(URL_FETCH);
-    return fetch(URL_FETCH, {method: 'GET'}).then(() => {
-      // fetch was not canceled by extension
-      return Promise.resolve(false);
-    }).catch((err) => {
-      // fetch canceled by extension
-      if (err.message === FETCH_CANCELED) {
-        return Promise.resolve(true);
-      }
-      // some other error
-      return Promise.resolve(false);
+    return fetch(URL_FETCH, {method: 'GET'}).catch(() => {
+      return Promise.reject(new Error(FAKE_FETCH_DONE));
     });
   }
 
@@ -271,12 +189,14 @@
    * @memberOf ServiceWorker
    */
   function onPushReceived(event) {
-    const data = event.data.json().data;
-    let body = '';
+    const payload = event.data.json();
+    const data = payload.data;
+    let body;
     try {
       body = decodeURIComponent(data.m);
     } catch (ex) {
-      console.error('Failed to decode message: ', ex);
+      // noinspection BadExpressionStatementJS
+      () => {};
     }
     const tag = getTag(data);
     const noteOpt = {
@@ -285,11 +205,8 @@
       icon: getIcon(data),
       tag: tag,
       timestamp: Date.now(),
-      data: NOTE_DATA,
+      data: null,
     };
-    noteOpt.data.title = `From: ${getDeviceName(data)}`;
-    noteOpt.data.count = 1;
-    noteOpt.data.array = [data];
     if ((tag === TAG_MESSAGE)) {
       // add web search action for regular messages
       noteOpt.actions = [
@@ -299,39 +216,74 @@
           icon: IC_SEARCH,
         }];
     }
+    let title = `From: ${getDeviceName(data)}`;
 
-    const promiseChain =
-        self.registration.getNotifications({tag: tag}).then((notifications) => {
-      if (notifications.length > 0) {
-        // use existing displayed notification
-        noteOpt.renotify = true;
-        return processOnShowingNotification(notifications, noteOpt, data);
+    const promiseChain = clients.matchAll({
+      includeUncontrolled: true,
+      type: 'window',
+    }).then((clients) => {
+      for (let i = 0; i < clients.length; i++) {
+        const client = clients[i];
+        if (client.focused === true) {
+          // we have focus, don't display notification
+          // send data to extension
+          // eslint-disable-next-line promise/no-nesting
+          return doFakeFetch([data]).catch(() => {
+            // send message with page route
+            return postRouteMessage(client, getIcon(data));
+          });
+        }
       }
-      return Promise.resolve();
-    }).then(() => {
-      return doFakeFetch(noteOpt.data.array);
-    }).then((canceled) => {
-      if (!canceled) {
-        // Extension did not cancel the fake fetch
-        // Add data to the notification instead
-        // this is necessary for Chrome OS at startup at least
-        if (tag === TAG_MESSAGE) {
-          tmpData.title = noteOpt.data.title;
-          tmpData.array.push(data);
-          tmpData.count++;
-          if (tmpData.count > 1) {
-            tmpData.title = `\n${tmpData.count} new items`;
-          }
-          // shallow copy
-          noteOpt.data = JSON.parse(JSON.stringify(tmpData));
+
+      return self.registration.getNotifications({tag: tag});
+    }).then((notifications) => {
+      if ((notifications.length > 0)) {
+        // append to existing displayed notification
+        noteOpt.renotify = true;
+        const noteData = notifications[0].data;
+        if (noteData instanceof Array) {
+          // data is in the notification
+          // add current and send all to extension
+          noteData.push(data);
+          // eslint-disable-next-line promise/no-nesting
+          return sendNotificationData(noteData).then(() => {
+            title = `\n${noteData.length} new items`;
+            // set data back to item count
+            noteOpt.data = noteData.length;
+            // simulate doFakeFetch cancel error
+            throw new Error(FAKE_FETCH_DONE);
+          });
+        } else {
+          // count of notifications
+          noteOpt.data = notifications[0].data + 1;
+          title = `${noteOpt.data} new items`;
         }
       } else {
-        // data has been sent to extension
-        noteOpt.data.array = [];
+        // new notification
+        noteOpt.data = 1;
       }
-      return self.registration.showNotification(noteOpt.data.title, noteOpt);
+      // send data to extension
+      return doFakeFetch([data]);
+    }).then(() => {
+      // Extension did not cancel the fake fetch
+      // add data to the notification instead
+      // this is necessary for Chrome OS at startup at least
+      if (tag === TAG_MESSAGE) {
+        msgArr.push(data);
+        if (msgArr.length > 1) {
+          title += `\n${msgArr.length} new items`;
+        }
+        // shallow copy
+        noteOpt.data = JSON.parse(JSON.stringify(msgArr));
+      }
+      return self.registration.showNotification(title, noteOpt);
     }).catch((err) => {
-      console.error('A service worker error occurred in onPushReceived: ', err);
+      if (err.message === FAKE_FETCH_DONE) {
+        // This is the normal outcome of the extension canceling
+        // the fake fetch
+        return self.registration.showNotification(title, noteOpt);
+      }
+      console.error('Unexpected error in push event ', err);
       return Promise.reject(err);
     });
 
@@ -362,7 +314,7 @@
       type: 'window',
     }).then((windowClients) => {
       wClients = windowClients;
-      return sendNotificationData(event.notification.data.array);
+      return sendNotificationData(event.notification.data);
     }).then(() => {
       for (let i = 0; i < wClients.length; i++) {
         const client = wClients[i];
@@ -378,10 +330,7 @@
         return clients.openWindow(URL_EXT);
       }
       return Promise.resolve();
-    }).catch((err) => {
-      console.error('A service worker error occurred in onNotificationClick: ',
-          err);
-    });
+    }).catch(() => {});
 
     event.waitUntil(promiseChain);
   }
@@ -392,7 +341,8 @@
    * @memberOf ServiceWorker
    */
   function onNotificationClose(event) {
-    event.waitUntil(sendNotificationData(event.notification.data.array));
+    event.waitUntil(
+        sendNotificationData(event.notification.data).catch(() => {}));
   }
 
   // Listen for install events
