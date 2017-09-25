@@ -80,7 +80,7 @@
 
   /**
    * Get the name of the Device who sent the message
-   * @param {app.Msg.GaeMsg} data  - message object
+   * @param {app.Msg.GaeMsg} data - message object
    * @returns {string} device name
    * @memberOf ServiceWorker
    */
@@ -154,7 +154,7 @@
 
   /**
    * Send any data attached to a notification to the extension
-   * @param {app.Msg.GaeMsg[]} dataArray 
+   * @param {app.Msg.GaeMsg[]} dataArray
    * - possible array of {@link app.Msg.GaeMsg} objects
    * @returns {Promise<void>} always resolves
    * @memberOf ServiceWorker
@@ -218,74 +218,57 @@
     }
     let title = `From: ${getDeviceName(data)}`;
 
-    const promiseChain = clients.matchAll({
-      includeUncontrolled: true,
-      type: 'window',
-    }).then((clients) => {
-      for (let i = 0; i < clients.length; i++) {
-        const client = clients[i];
-        if (client.focused === true) {
-          // we have focus, don't display notification
-          // send data to extension
-          // eslint-disable-next-line promise/no-nesting
-          return doFakeFetch([data]).catch(() => {
-            // send message with page route
-            return postRouteMessage(client, getIcon(data));
-          });
-        }
-      }
-
-      return self.registration.getNotifications({tag: tag});
-    }).then((notifications) => {
-      if ((notifications.length > 0)) {
-        // append to existing displayed notification
-        noteOpt.renotify = true;
-        const noteData = notifications[0].data;
-        if (noteData instanceof Array) {
-          // data is in the notification
-          // add current and send all to extension
-          noteData.push(data);
-          // eslint-disable-next-line promise/no-nesting
-          return sendNotificationData(noteData).then(() => {
-            title = `\n${noteData.length} new items`;
-            // set data back to item count
-            noteOpt.data = noteData.length;
-            // simulate doFakeFetch cancel error
-            throw new Error(FAKE_FETCH_DONE);
-          });
+    const promiseChain =
+      self.registration.getNotifications({tag: tag}).then((notifications) => {
+        if ((notifications.length > 0)) {
+          // append to existing displayed notification
+          noteOpt.renotify = true;
+          const noteData = notifications[0].data;
+          if (noteData instanceof Array) {
+            // data is in the notification
+            // add current and send all to extension
+            noteData.push(data);
+            // eslint-disable-next-line promise/no-nesting
+            return sendNotificationData(noteData).then(() => {
+              title = `\n${noteData.length} new items`;
+              // set data back to item count
+              noteOpt.data = noteData.length;
+              // simulate doFakeFetch cancel error
+              throw new Error(FAKE_FETCH_DONE);
+            });
+          } else {
+            // count of notifications
+            noteOpt.data = notifications[0].data + 1;
+            title = `${noteOpt.data} new items`;
+          }
         } else {
-          // count of notifications
-          noteOpt.data = notifications[0].data + 1;
-          title = `${noteOpt.data} new items`;
+          // new notification
+          noteOpt.data = 1;
         }
-      } else {
-        // new notification
-        noteOpt.data = 1;
-      }
-      // send data to extension
-      return doFakeFetch([data]);
-    }).then(() => {
-      // Extension did not cancel the fake fetch
-      // add data to the notification instead
-      // this is necessary for Chrome OS at startup at least
-      if (tag === TAG_MESSAGE) {
-        msgArr.push(data);
-        if (msgArr.length > 1) {
-          title += `\n${msgArr.length} new items`;
+        // send data to extension
+        return doFakeFetch([data]);
+      }).then(() => {
+        // Extension did not cancel the fake fetch
+        // add data to the notification instead
+        // this is necessary for Chrome OS at startup at least
+        if (tag === TAG_MESSAGE) {
+          msgArr.push(data);
+          if (msgArr.length > 1) {
+            title += `\n${msgArr.length} new items`;
+          }
+          // shallow copy
+          noteOpt.data = JSON.parse(JSON.stringify(msgArr));
         }
-        // shallow copy
-        noteOpt.data = JSON.parse(JSON.stringify(msgArr));
-      }
-      return self.registration.showNotification(title, noteOpt);
-    }).catch((err) => {
-      if (err.message === FAKE_FETCH_DONE) {
-        // This is the normal outcome of the extension canceling
-        // the fake fetch
         return self.registration.showNotification(title, noteOpt);
-      }
-      console.error('Unexpected error in push event ', err);
-      return Promise.reject(err);
-    });
+      }).catch((err) => {
+        if (err.message === FAKE_FETCH_DONE) {
+          // This is the normal outcome of the extension canceling
+          // the fake fetch
+          return self.registration.showNotification(title, noteOpt);
+        }
+        console.error('Unexpected error in push event: ', err);
+        return Promise.reject(err);
+      });
 
     event.waitUntil(promiseChain);
   }
