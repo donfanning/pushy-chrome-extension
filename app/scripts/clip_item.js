@@ -28,24 +28,6 @@
   };
 
   /**
-   * The Dexie database
-   * @see http://dexie.org/
-   * @type {Object}
-   * @private
-   * @memberOf ClipItem
-   */
-  let _db;
-
-  /**
-   * The Dexie database version
-   * @const
-   * @type {int}
-   * @private
-   * @memberOf ClipItem
-   */
-  const VERSION = 1;
-
-  /**
    * Error indicating that {@link ClipItem} text is null or all whitespace
    * @const
    * @type {string}
@@ -111,7 +93,7 @@
    * @returns {Promise<string>} primary key it was stored under
    */
   ClipItem.prototype._putOrDeleteOldest = function() {
-    return _db.clipItems.put(this).then((key) => {
+    return app.DB.get().clipItems.put(this).then((key) => {
       return Promise.resolve(key);
     }).catch((err) => {
       if (err.name === 'QuotaExceededError') {
@@ -163,7 +145,7 @@
     });
 
     // perform the save
-    return _db.transaction('rw', _db.clipItems, () => {
+    return app.DB.get().transaction('rw', app.DB.get().clipItems, () => {
       return repeatFunc(MAX_DELETES);
     }).then(() => {
       return Promise.resolve(retKey);
@@ -179,7 +161,7 @@
    * @returns {Promise<boolean>} true if text exists
    */
   ClipItem.prototype.exists = function() {
-    return _db.clipItems.get(this.text).then((item) => {
+    return app.DB.get().clipItems.get(this.text).then((item) => {
       return Promise.resolve((item !== undefined));
     });
   };
@@ -217,7 +199,7 @@
    */
   ClipItem.remove = function(keys) {
     const keyArray = Array.isArray(keys) ? keys : [keys];
-    return _db.clipItems.bulkDelete(keyArray);
+    return app.DB.get().clipItems.bulkDelete(keyArray);
   };
 
   /**
@@ -225,7 +207,7 @@
    * @returns {Promise<boolean>} true if no {@link ClipItem} objects
    */
   ClipItem.isEmpty = function() {
-    return _db.clipItems.count().then((count) => {
+    return app.DB.get().clipItems.count().then((count) => {
       return Promise.resolve(!count);
     });
   };
@@ -235,7 +217,7 @@
    * @returns {Promise<Array>} Array of {@link ClipItem} objects
    */
   ClipItem.loadAll = function() {
-    return _db.clipItems.toArray();
+    return app.DB.get().clipItems.toArray();
   };
 
   /**
@@ -267,7 +249,8 @@
    * @private
    */
   ClipItem._deleteOlderThan = function(time) {
-    return _db.clipItems.where('date').below(time).filter(function(clipItem) {
+    return app.DB.get().clipItems.where('date').below(time)
+    .filter((clipItem) => {
       return !clipItem.fav;
     }).delete().then((deleteCount) => {
       return Promise.resolve(!!deleteCount);
@@ -310,27 +293,7 @@
       return Promise.resolve();
     });
   };
-
-  /**
-   * Event: called when document and resources are loaded<br />
-   * Initialize Dexie
-   * @private
-   * @memberOf ClipItem
-   */
-  function _onLoad() {
-    _db = new Dexie('ClipItemsDB');
-
-    // define database
-    _db.version(VERSION).stores({
-      clipItems: '&text,date',
-    });
-
-    _db.clipItems.mapToClass(ClipItem);
-  }
-
-  // listen for document and resources loaded
-  window.addEventListener('load', _onLoad);
-
+  
   window.app = window.app || {};
   window.app.ClipItem = ClipItem;
 })(window);
