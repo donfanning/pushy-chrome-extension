@@ -175,8 +175,8 @@
   };
 
   /**
-   * Determine if {@link ClipItem} text exists in storage
-   * @returns {Promise<int|null>} database PK or null
+   * Get the PK for our text
+   * @returns {Promise<int|null>} database PK or null if text not found
    */
   ClipItem.prototype._getId = function() {
     return app.DB.clips().where('text').equals(this.text).first((clipItem) => {

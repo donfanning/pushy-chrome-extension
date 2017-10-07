@@ -211,9 +211,11 @@
       },
 
       _onListItemBlur: function(event) {
-        console.log(event);
-//        Chrome.GA.event(Chrome.GA.EVENT.TEXT, this.name);
-//        this.fire('setting-text-changed', {value: this.value});
+        const label = event.model.label;
+        label.setName(label.name).catch((err) => {
+          Chrome.GA.error('Failed to update label name',
+              'LabelPage._onListItemBlur');
+        });
       },
 
       _onListItemKeyUp: function(event) {

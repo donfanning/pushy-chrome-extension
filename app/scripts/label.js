@@ -21,13 +21,26 @@
   };
 
   /**
-   * Determine if {@link Label} name exists in database
-   * @returns {Promise<boolean>} true if name exists
+   * Get the PK for our name
+   * @returns {Promise<int|null>} database PK or null if text not found
    */
-  Label.prototype.exists = function() {
+  Label.prototype._getId = function() {
     return app.DB.labels().where('name').equals(this.name).first((label) => {
-      return Promise.resolve((label !== undefined));
+      if (label !== undefined) {
+        return Promise.resolve(label._id);
+      }
+      return Promise.resolve(null);
     });
+  };
+
+  /**
+   * Update our name
+   * @param {string} name - new name
+   * @returns {Promise<boolean>} true if database updated
+   */
+  Label.prototype.setName = function(name) {
+    this.name = name;
+    return app.DB.labels().update(this._id, this);
   };
 
   /**
@@ -36,6 +49,33 @@
    */
   Label.prototype.save = function() {
     return app.DB.labels().put(this);
+  };
+
+  /**
+   * Update database
+   * @returns {Promise<int>} database PK
+   */
+  Label.prototype.save = function() {
+    return app.DB.labels().put(this);
+  };
+
+  /**
+   * Add if new or update if existing
+   * @returns {Promise<boolean>} true if updated
+   */
+  Label.prototype._addOrUpdate = function() {
+    let updated = false;
+    return this._getId().then((id) => {
+      if (id) {
+        updated = true;
+        this._id = id;
+        return app.DB.labels().update(id, this);
+      } else {
+        return app.DB.labels().put(this);
+      }
+    }).then(() => {
+      return Promise.resolve(updated);
+    });
   };
 
   /**
@@ -70,8 +110,8 @@
       return Promise.reject(new Error(Label.ERROR_EMPTY_TEXT));
     }
     const label = new Label(name);
-    return label.exists().then((isTrue) => {
-      if (isTrue) {
+    return label._getId().then((id) => {
+      if (id) {
         return Promise.reject(new Error(Label.ERROR_EXISTS));
       }
       return label.save();
@@ -84,7 +124,7 @@
    * Return true is there are no stored {@link Label} objects
    * @returns {Promise<boolean>} true if no {@link Label} objects
    */
-  Label.isEmpty = function() {
+  Label.isTableEmpty = function() {
     return app.DB.labels().count().then((count) => {
       return Promise.resolve(!count);
     });
