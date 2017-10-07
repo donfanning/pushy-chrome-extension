@@ -72,9 +72,9 @@ window.app = window.app || {};
    * Array of {@link Main.page} objects
    * @type {Main.page[]}
    * @memberOf Main
-   * @alias Main.pages
+   * @alias Main.pages_one
    */
-  t.pages = [
+  t.pages_one = [
     {
       label: 'Main', route: 'page-main',
       icon: 'myicons:list', obj: null,
@@ -95,10 +95,19 @@ window.app = window.app || {};
       icon: 'myicons:label', obj: _showLabelsPage,
       ready: false, disabled: false, divider: false,
     },
+  ];
+
+  /**
+   * Array of {@link Main.page} objects
+   * @type {Main.page[]}
+   * @memberOf Main
+   * @alias Main.pages_two
+   */
+  t.pages_two = [
     {
       label: 'Settings', route: 'page-settings',
       icon: 'myicons:settings', obj: _showSettingsPage,
-      ready: false, disabled: false, divider: false,
+      ready: false, disabled: false, divider: true,
     },
     {
       label: 'Manage optional permissions', route: 'page-permissions',
@@ -133,6 +142,22 @@ window.app = window.app || {};
   ];
 
   /**
+   * Array of {@link Main.page} objects for the {@link Label} objects
+   * @type {Main.page[]}
+   * @memberOf Main
+   * @alias Main.pages_labels
+   */
+  t.pages_labels;
+  
+  /**
+   * Array concatenation of {@link Main.page} objects
+   * @type {Main.page[]}
+   * @memberOf Main
+   * @alias Main.pages
+   */
+  t.pages;
+  
+    /**
    * Error dialog title
    * @type {string}
    * @memberOf Main
@@ -209,6 +234,9 @@ window.app = window.app || {};
   t.addEventListener('dom-change', () => {
     // track usage
     Chrome.GA.page('/main.html');
+    
+    // concatenate all the pages
+    _buildPages();
 
     // listen for Chrome messages
     Chrome.Msg.listen(_onChromeMessage);
@@ -372,26 +400,6 @@ window.app = window.app || {};
     }
     return ret;
   };
-
-  /**
-   * Set enabled state of Error Viewer menu item
-   * @memberOf Main
-   */
-  function _setErrorMenuState() {
-    // disable error-page if no lastError
-    Chrome.Storage.getLastError().then((lastError) => {
-      const idx = _getPageIdx('page-error');
-      const el = document.getElementById(t.pages[idx].route);
-      if (el && !Chrome.Utils.isWhiteSpace(lastError.message)) {
-        el.removeAttribute('disabled');
-      } else if (el) {
-        el.setAttribute('disabled', 'true');
-      }
-      return Promise.resolve();
-    }).catch((err) => {
-      Chrome.GA.error(err.message, 'Main._setErrorMenuState');
-    });
-  }
 
   /**
    * Event: Fired when a message is posted from out service worker
@@ -650,6 +658,45 @@ window.app = window.app || {};
   }
 
   /**
+   * Build the menu items
+   * @private
+   * @memberOf Main
+   */
+  function _buildPages() {
+    t.pages = t.pages_one;
+    _getLabelPages().then((pages) => {
+      pages = pages || [];
+      t.set('pages_labels', pages);
+      t.pages = t.pages.concat(t.pages_labels);
+      t.pages = t.pages.concat(t.pages_two);
+      return Promise.resolve();
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'Main._buildPages', 'Failed to build menu');
+    });
+  }
+  
+  /**
+   * Build the menu items for {@link app.Label} objects
+   * @returns {Promise<Main.page[]>} array of pages
+   * @private
+   * @memberOf Main
+   */
+  function _getLabelPages() {
+    return app.Label.loadAll().then((labels) => {
+      labels = labels || [];
+      const pages = [];
+      labels.forEach((label) => {
+        pages.push({
+          label: label.name, route: 'page-main',
+          icon: 'myicons:label', obj: null,
+          ready: true, disabled: false, divider: false,
+        });
+      });
+      return Promise.resolve(pages);
+    });
+  }
+  
+  /**
    * Set enabled state of Devices menu item
    * @private
    * @memberOf Main
@@ -663,6 +710,27 @@ window.app = window.app || {};
     } else if (el) {
       el.setAttribute('disabled', 'true');
     }
+  }
+
+  /**
+   * Set enabled state of Error Viewer menu item
+   * @private
+   * @memberOf Main
+   */
+  function _setErrorMenuState() {
+    // disable error-page if no lastError
+    Chrome.Storage.getLastError().then((lastError) => {
+      const idx = _getPageIdx('page-error');
+      const el = document.getElementById(t.pages[idx].route);
+      if (el && !Chrome.Utils.isWhiteSpace(lastError.message)) {
+        el.removeAttribute('disabled');
+      } else if (el) {
+        el.setAttribute('disabled', 'true');
+      }
+      return Promise.resolve();
+    }).catch((err) => {
+      Chrome.GA.error(err.message, 'Main._setErrorMenuState');
+    });
   }
 
   // listen for changes to localStorage
