@@ -72,18 +72,18 @@
                            tabindex="0" no-label-float="true"
                            on-keyup="_onAddKeyUp"></paper-input>
             </div>
-            <paper-icon-button id="addButton" icon="myicons:check"
+            <paper-icon-button id="addButton" icon="myicons:check" disabled
                                on-tap="_onAddTapped"></paper-icon-button>
           </div>
           <hr/>
         </div>
         <div id="labelList" class="flex">
-          <template is="dom-repeat" id="listTemplate" items="{{labels}}" as="label"
+          <template is="dom-repeat" id="listTemplate" items="{{items}}" as="item"
                     sort="_sortByName">
             <div class="list-item horizontal center layout" id="item[[index]]">
               <iron-icon class="lead-icon" icon="myicons:label"></iron-icon>
               <div class="flex" tabindex="-1">
-                <paper-input id="text[[index]]" value="{{label.name}}"
+                <paper-input id="text[[index]]" value="{{item.newName}}"
                              minlength="1" maxlength="32"
                              tabindex="0" no-label-float="true"
                              on-blur="_onListItemBlur" on-keyup="_onListItemKeyUp">
@@ -117,8 +117,8 @@
           notify: true,
         },
 
-        /** The Array of {@link Label} objects */
-        labels: {
+        /** The Array of list objects */
+        items: {
           type: Array,
           value: [],
           notify: true,
@@ -143,12 +143,15 @@
       /** Load the Labels from the database */
       _loadLabels: function() {
         // clear list
-        this.splice('labels', 0, this.labels.length);
+        this.splice('items', 0, this.items.length);
 
         // populate list
         app.Label.loadAll().then((labels) => {
           labels.forEach((label) => {
-            this.push('labels', label);
+            this.push('items', {
+              label: label,
+              newName: label.name,
+            });
           });
           return Promise.resolve();
         }).catch((err) => {
@@ -157,8 +160,8 @@
       },
 
       _sortByName: function(a, b) {
-        const aName = a.name.toLowerCase();
-        const bName = b.name.toLowerCase();
+        const aName = a.label.name.toLowerCase();
+        const bName = b.label.name.toLowerCase();
         if (aName < bName) {
           return -1;
         } else if (aName > bName) {
@@ -169,9 +172,12 @@
       },
 
       _addLabel() {
-        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage.add');
+        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage._addLabel');
         app.Label.add(this.addText).then((label) => {
-          this.push('labels', label);
+          this.push('items', {
+            label: label,
+            newName: label.name,
+          });
           return Promise.resolve();
         }).catch((err) => {
           if ((err.message !== app.Label.ERROR_EMPTY_TEXT) &&
@@ -182,26 +188,77 @@
         });
       },
 
+      _setAddDisabledState(disabled) {
+        if (disabled) {
+          this.$.addButton.setAttribute('disabled', 'true');
+        } else {
+          this.$.addButton.removeAttribute('disabled');
+        }
+      },
+
+      _updateListLabel(model) {
+        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage._updateListLabel');
+        const item = model.item;
+        const name = item.newName.trim();
+        const idx = this.items.findIndex((el) => {
+          return el.label.name === item.label.name;
+        });
+        if (name.length > 0) {
+          if (idx !== -1) {
+            this.set(`items.${idx}.label.name`, name);
+            this.set(`items.${idx}.newName`, name);
+          }
+          item.label.setName(name).catch((err) => {
+            Chrome.Log.error(err.message, 'LabelsPage._updateListLabel',
+                'Failed to update label name');
+          });
+        } else {
+          if (idx !== -1) {
+            this.set(`labels.${idx}.newName`, item.label.name);
+          }
+        }
+        this._setDeleteDisabledState(false, model.index);
+      },
+
+      _setDeleteDisabledState(disabled, index) {
+        const el = document.getElementById(`delete${index}`);
+        if (el && disabled) {
+          el.setAttribute('disabled', 'true');
+        } else if (el) {
+          el.removeAttribute('disabled');
+        }
+      },
+
       _onAddTapped: function() {
         this._addLabel();
       },
 
       _onAddKeyUp: function(event) {
-        // check if 'enter' was pressed
+        let name = this.addText;
+        name = name || '';
+        name = name.trim();
         if (event.keyCode === 13) {
+          // 'enter' was pressed
+          this.set('addText', name);
           this._addLabel();
+        } else {
+          if (name.length > 0) {
+            this._setAddDisabledState(false);
+          } else {
+            this._setAddDisabledState(true);
+          }
         }
       },
 
       _onDeleteTapped: function(event) {
         Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage.delete');
-        const label = event.model.label;
-        label.delete().then(() => {
-          const idx = this.labels.findIndex((el) => {
-            return el.name === label.name;
+        const item = event.model.item;
+        item.label.delete().then(() => {
+          const idx = this.items.findIndex((el) => {
+            return el.label.name === item.label.name;
           });
           if (idx !== -1) {
-            this.splice('labels', idx, 1);
+            this.splice('items', idx, 1);
           }
           return Promise.resolve();
         }).catch((err) => {
@@ -211,19 +268,19 @@
       },
 
       _onListItemBlur: function(event) {
-        const label = event.model.label;
-        label.setName(label.name).catch((err) => {
-          Chrome.GA.error('Failed to update label name',
-              'LabelPage._onListItemBlur');
-        });
+        this._updateListLabel(event.model);
       },
 
       _onListItemKeyUp: function(event) {
-        // check if 'enter' was pressed
+        const model = event.model;
+        const item = model.item;
         if (event.keyCode === 13) {
-          console.log(event);
-//          Chrome.GA.event(Chrome.GA.EVENT.TEXT, this.name);
-//          this.fire('setting-text-changed', {value: this.value});
+          // 'enter' was pressed
+          this._updateListLabel(model);
+        } else {
+          // disable if name has changed
+          const disabled = (item.newName !== item.label.name);
+          this._setDeleteDisabledState(disabled, model.index);
         }
       },
     });
