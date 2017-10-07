@@ -1,0 +1,229 @@
+<!--
+  ~ Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
+  ~ Licensed under Apache 2.0
+  ~ https://opensource.org/licenses/Apache-2.0
+  ~ https://goo.gl/wFvBM1
+  -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+
+<link rel="import" href="../my_icons.html">
+
+<script type="text/javascript"
+        src="../../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
+
+<dom-module id="labels-page">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      .card-content {
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+
+      #labelList {
+        max-height: 79vh;
+        overflow: hidden;
+        overflow-y: scroll;
+        padding: 0 0 16px;
+        margin: 0;
+      }
+
+      .list-item {
+        position: relative;
+        padding: 16px;
+        margin: 0;
+      }
+
+      .list-item .lead-icon {
+        margin-right: 16px;
+        color: var(--setting-item-color);
+      }
+
+      .list-item paper-icon-button {
+        margin-left: 16px;
+      }
+
+    </style>
+
+    <paper-card class="page-content" heading="Edit labels">
+      <div class="card-content">
+        <div id="addLabel" class="flex">
+          <div class="list-item horizontal center layout">
+            <iron-icon class="lead-icon" icon="myicons:add"></iron-icon>
+            <div class="flex" tabindex="-1">
+              <paper-input id="addInput" value="{{addText}}" label="Create new label"
+                           minlength="1" maxlength="32"
+                           tabindex="0" no-label-float="true"
+                           on-keyup="_onAddKeyUp"></paper-input>
+            </div>
+            <paper-icon-button id="addButton" icon="myicons:check"
+                               on-tap="_onAddTapped"></paper-icon-button>
+          </div>
+          <hr/>
+        </div>
+        <div id="labelList" class="flex">
+          <template is="dom-repeat" id="listTemplate" items="{{labels}}" as="label"
+                    sort="_sortByName">
+            <div class="list-item horizontal center layout" id="item[[index]]">
+              <iron-icon class="lead-icon" icon="myicons:label"></iron-icon>
+              <div class="flex" tabindex="-1">
+                <paper-input id="text[[index]]" value="{{label.name}}"
+                             minlength="1" maxlength="32"
+                             tabindex="0" no-label-float="true"
+                             on-blur="_onListItemBlur" on-keyup="_onListItemKeyUp">
+                </paper-input>
+              </div>
+              <paper-icon-button id="delete[[index]]" icon="myicons:close"
+                                 on-tap="_onDeleteTapped"></paper-icon-button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </paper-card>
+  </template>
+</dom-module>
+
+<script>
+  (function(window) {
+    'use strict';
+
+    new ExceptionHandler();
+
+    window.app = window.app || {};
+    app.LabelsPageFactory = Polymer({
+      is: 'labels-page',
+
+      properties: {
+        /** The add Label text */
+        addText: {
+          type: String,
+          value: '',
+          notify: true,
+        },
+
+        /** The Array of {@link Label} objects */
+        labels: {
+          type: Array,
+          value: [],
+          notify: true,
+        },
+      },
+
+      ready: function() {
+        // listen for chrome messages
+//        chrome.runtime.onMessage.addListener((request) => {
+//          if (request.message ===
+//              app.ChromeMsg.DEVICES_CHANGED.message) {
+//            this._loadDevices();
+//          }
+//        });
+//        this._loadLabels();
+      },
+
+      onCurrentPage: function() {
+        this._loadLabels();
+      },
+
+      /** Load the Labels from the database */
+      _loadLabels: function() {
+        // clear list
+        this.splice('labels', 0, this.labels.length);
+
+        // populate list
+        app.Label.loadAll().then((labels) => {
+          labels.forEach((label) => {
+            this.push('labels', label);
+          });
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, 'LabelPage._loadLabels');
+        });
+      },
+
+      _sortByName: function(a, b) {
+        const aName = a.name.toLowerCase();
+        const bName = b.name.toLowerCase();
+        if (aName < bName) {
+          return -1;
+        } else if (aName > bName) {
+          return 1;
+        } else {
+          return 0;
+        }
+      },
+
+      _addLabel() {
+        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage.add');
+        app.Label.add(this.addText).then((label) => {
+          this.push('labels', label);
+          return Promise.resolve();
+        }).catch((err) => {
+          if ((err.message !== app.Label.ERROR_EMPTY_TEXT) &&
+              (err.message !== app.Label.ERROR_EXISTS)) {
+            Chrome.Log.error(err.message, 'LabelsPage._addLabel',
+                'Failed to create label');
+          }
+        });
+      },
+
+      _onAddTapped: function() {
+        this._addLabel();
+      },
+
+      _onAddKeyUp: function(event) {
+        // check if 'enter' was pressed
+        if (event.keyCode === 13) {
+          this._addLabel();
+        }
+      },
+
+      _onDeleteTapped: function(event) {
+        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage.delete');
+        const label = event.model.label;
+        label.delete().then(() => {
+          const idx = this.labels.findIndex((el) => {
+            return el.name === label.name;
+          });
+          if (idx !== -1) {
+            this.splice('labels', idx, 1);
+          }
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, 'LabelsPage._onDeleteTapped',
+              'Failed to delete label');
+        });
+      },
+
+      _onListItemBlur: function(event) {
+        console.log(event);
+//        Chrome.GA.event(Chrome.GA.EVENT.TEXT, this.name);
+//        this.fire('setting-text-changed', {value: this.value});
+      },
+
+      _onListItemKeyUp: function(event) {
+        // check if 'enter' was pressed
+        if (event.keyCode === 13) {
+          console.log(event);
+//          Chrome.GA.event(Chrome.GA.EVENT.TEXT, this.name);
+//          this.fire('setting-text-changed', {value: this.value});
+        }
+      },
+    });
+  })(window);
+</script>

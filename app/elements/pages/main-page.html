@@ -24,188 +24,189 @@
 
 <link rel="import" href="../my_icons.html">
 
-<script type="text/javascript" src="../../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
+<script type="text/javascript"
+        src="../../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
 
 <dom-module id="main-page">
-	<template>
-		<style include="iron-flex iron-flex-alignment iron-flex-factors iron-positioning"></style>
-		<style include="shared-styles"></style>
-		<style>
-			:host {
-				display: block;
-				position: relative;
-			}
+  <template>
+    <style include="iron-flex iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="shared-styles"></style>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
 
-			.page-content {
-				width: 100%;
-				height: 100%;
-				margin: 0;
-				padding: 0;
-			}
+      .page-content {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
 
-			.page-toolbar {
-				margin-bottom: 0;
-			}
+      .page-toolbar {
+        margin-bottom: 0;
+      }
 
-			.body-content {
-				padding-top: 0;
-			}
+      .body-content {
+        padding-top: 0;
+      }
 
-			#clipList {
-				min-width: 600px;
-				height: 82vh;
-				overflow: hidden;
-				overflow-y: scroll;
-				border: 1px #CCCCCC;
-				border-right-style: solid;
-				padding: 0 0 32px;
-				margin: 0;
-			}
+      #clipList {
+        min-width: 600px;
+        height: 82vh;
+        overflow: hidden;
+        overflow-y: scroll;
+        border: 1px #CCCCCC;
+        border-right-style: solid;
+        padding: 0 0 32px;
+        margin: 0;
+      }
 
-			#clipViewer {
-				height: 82vh;
-				@apply(--paper-font-subhead);
-				white-space: pre-wrap;
-				overflow: hidden;
-				overflow-y: scroll;
-				padding: 16px;
-				margin: 0;
-			}
+      #clipViewer {
+        height: 82vh;
+        @apply(--paper-font-subhead);
+        white-space: pre-wrap;
+        overflow: hidden;
+        overflow-y: scroll;
+        padding: 16px;
+        margin: 0;
+      }
 
-			.list-item {
-				position: relative;
-				border: 1px #CCCCCC;
-				border-bottom-style: solid;
-				padding: 0;
-				margin: 0;
-				cursor: pointer;
-			}
+      .list-item {
+        position: relative;
+        border: 1px #CCCCCC;
+        border-bottom-style: solid;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+      }
 
-			.list-item paper-item {
-				/*stupid documentation*/
-				--paper-item-focused-before: {
-					background: transparent;
-				};
-			}
+      .list-item paper-item {
+        /*stupid documentation*/
+        --paper-item-focused-before: {
+          background: transparent;
+        };
+      }
 
-			.date-row {
-				padding: 0 8px;
-			}
+      .date-row {
+        padding: 0 8px;
+      }
 
-			.date-text {
-				color: var(--accent-color);
-				text-align: center;
-			}
+      .date-text {
+        color: var(--accent-color);
+        text-align: center;
+      }
 
-			.clip-text-row {
-				padding-left: 0;
-				padding-right: 0;
-			}
+      .clip-text-row {
+        padding-left: 0;
+        padding-right: 0;
+      }
 
-			.clip-text {
-				line-height: 1.2em;
-				height: 2.4em;
-				overflow: hidden;
-				margin-left: 16px;
-				margin-right: 16px;
-			}
+      .clip-text {
+        line-height: 1.2em;
+        height: 2.4em;
+        overflow: hidden;
+        margin-left: 16px;
+        margin-right: 16px;
+      }
 
-			.select-checkbox {
-				padding-left: 28px;
-			}
+      .select-checkbox {
+        padding-left: 28px;
+      }
 
-			.iron-selected {
-				background: var(--selected-color);
-			}
+      .iron-selected {
+        background: var(--selected-color);
+      }
 
-		</style>
+    </style>
 
-		<paper-material elevation="1" class="page-content">
-			<!-- Tool bar -->
-			<paper-material elevation="1">
-				<paper-toolbar class="page-toolbar">
-					<span class="space"></span>
-					<div class="middle middle-container center horizontal layout flex">
-						<div class="flex">[[title]]</div>
-						<paper-icon-button id="fav" icon="[[_computeFavIcon(isFavFilter)]]"
-						                   style$="color: [[_computeFavMenuColor(isFavFilter)]];"
-						                   on-tap="_onFavFilterTapped"></paper-icon-button>
-						<paper-tooltip for="fav" position="left" offset="0">
-							[[_computeFavToolTip(isFavFilter)]]
-						</paper-tooltip>
-						<paper-icon-button id="select" icon="myicons:check-box"
-						                   on-tap="_onSelectAllTapped"></paper-icon-button>
-						<paper-tooltip for="select" position="left" offset="0">Select all items</paper-tooltip>
-						<paper-icon-button id="deselect" icon="myicons:check-box-outline-blank"
-						                   on-tap="_onDeselectAllTapped"></paper-icon-button>
-						<paper-tooltip for="deselect" position="left" offset="0">Deselect all items</paper-tooltip>
-						<paper-icon-button id="delete" icon="myicons:delete" on-tap="_onDeleteSelectedTapped"
-						                   disabled$="[[!hasSelections]]"></paper-icon-button>
-						<paper-tooltip for="delete" position="left" offset="0">Delete selected items</paper-tooltip>
-					</div>
-				</paper-toolbar>
-			</paper-material>
-			<!-- Content -->
-			<div class="body-content horizontal layout">
-				<!-- Delete dialog -->
-				<paper-dialog id="deleteDialog" modal entry-animation="scale-up-animation"
-				              exit-animation="fade-out-animation">
-					<h2>Delete selected items?</h2>
-					<p>This operation cannot be undone.</p>
-					<paper-checkbox class="select-checkbox" checked="{{deleteFavs}}">
-						Include favorites
-					</paper-checkbox>
-					<div class="buttons">
-						<paper-button dialog-dismiss autofocus>CANCEL</paper-button>
-						<paper-button dialog-confirm on-click="_deleteSelectedRows">DELETE</paper-button>
-					</div>
-				</paper-dialog>
-				<!-- Main list -->
-				<div id="clipList" class="flex-2">
-					<iron-selector id="ironSelector"
-					               on-iron-select="_onListItemSelected"
-					               on-iron-items-changed="_onSelectableChanged">
-						<template
-								is="dom-repeat"
-								id="listTemplate"
-								items="{{listItems}}"
-								as="listItem"
-								sort="_sortByDate"
-								filter="_filterByFav"
-								observe="clipItem.date">
-							<div class="list-item horizontal center layout" id="listItem[[index]]">
-								<paper-checkbox
-										class="select-checkbox"
-										checked="{{listItem.checked}}"
-										on-change="_onCheckedTapped"></paper-checkbox>
-								<div class="clip-body flex vertical layout" tabindex="-1">
-									<paper-item class="date-row center horizontal layout">
-										<paper-icon-button
-												icon="[[_computeFavIcon(listItem.clipItem.fav)]]"
-												style$="color: [[_computeFavColor(listItem.clipItem.fav)]];"
-												on-tap="_onFavTapped"></paper-icon-button>
-										<paper-item-body class="date-text center flex">
-											{{_computeDate(listItem.clipItem.date)}}
-										</paper-item-body>
-										<paper-icon-button
-												icon="myicons:content-copy"
-												on-tap="_onCopyTapped"></paper-icon-button>
-									</paper-item>
-									<paper-item class="clip-text-row">
-										<paper-item-body class="clip-text fit vertical start-justified layout">
-											[[listItem.clipItem.text]]
-										</paper-item-body>
-									</paper-item>
-								</div>
-							</div>
-						</template>
-					</iron-selector>
-				</div>
-				<!-- Clip Viewer -->
-				<div id="clipViewer" class="flex-3"></div>
-			</div>
-		</paper-material>
-	</template>
+    <paper-material elevation="1" class="page-content">
+      <!-- Tool bar -->
+      <paper-material elevation="1">
+        <paper-toolbar class="page-toolbar">
+          <span class="space"></span>
+          <div class="middle middle-container center horizontal layout flex">
+            <div class="flex">[[title]]</div>
+            <paper-icon-button id="fav" icon="[[_computeFavIcon(isFavFilter)]]"
+                               style$="color: [[_computeFavMenuColor(isFavFilter)]];"
+                               on-tap="_onFavFilterTapped"></paper-icon-button>
+            <paper-tooltip for="fav" position="left" offset="0">
+              [[_computeFavToolTip(isFavFilter)]]
+            </paper-tooltip>
+            <paper-icon-button id="select" icon="myicons:check-box"
+                               on-tap="_onSelectAllTapped"></paper-icon-button>
+            <paper-tooltip for="select" position="left" offset="0">Select all items</paper-tooltip>
+            <paper-icon-button id="deselect" icon="myicons:check-box-outline-blank"
+                               on-tap="_onDeselectAllTapped"></paper-icon-button>
+            <paper-tooltip for="deselect" position="left" offset="0">Deselect all items</paper-tooltip>
+            <paper-icon-button id="delete" icon="myicons:delete" on-tap="_onDeleteSelectedTapped"
+                               disabled$="[[!hasSelections]]"></paper-icon-button>
+            <paper-tooltip for="delete" position="left" offset="0">Delete selected items</paper-tooltip>
+          </div>
+        </paper-toolbar>
+      </paper-material>
+      <!-- Content -->
+      <div class="body-content horizontal layout">
+        <!-- Delete dialog -->
+        <paper-dialog id="deleteDialog" modal entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+          <h2>Delete selected items?</h2>
+          <p>This operation cannot be undone.</p>
+          <paper-checkbox class="select-checkbox" checked="{{deleteFavs}}">
+            Include favorites
+          </paper-checkbox>
+          <div class="buttons">
+            <paper-button dialog-dismiss autofocus>CANCEL</paper-button>
+            <paper-button dialog-confirm on-click="_deleteSelectedRows">DELETE</paper-button>
+          </div>
+        </paper-dialog>
+        <!-- Main list -->
+        <div id="clipList" class="flex-2">
+          <iron-selector id="ironSelector"
+                         on-iron-select="_onListItemSelected"
+                         on-iron-items-changed="_onSelectableChanged">
+            <template
+                is="dom-repeat"
+                id="listTemplate"
+                items="{{listItems}}"
+                as="listItem"
+                sort="_sortByDate"
+                filter="_filterByFav"
+                observe="clipItem.date">
+              <div class="list-item horizontal center layout" id="listItem[[index]]">
+                <paper-checkbox
+                    class="select-checkbox"
+                    checked="{{listItem.checked}}"
+                    on-change="_onCheckedTapped"></paper-checkbox>
+                <div class="clip-body flex vertical layout" tabindex="-1">
+                  <paper-item class="date-row center horizontal layout">
+                    <paper-icon-button
+                        icon="[[_computeFavIcon(listItem.clipItem.fav)]]"
+                        style$="color: [[_computeFavColor(listItem.clipItem.fav)]];"
+                        on-tap="_onFavTapped"></paper-icon-button>
+                    <paper-item-body class="date-text center flex">
+                      {{_computeDate(listItem.clipItem.date)}}
+                    </paper-item-body>
+                    <paper-icon-button
+                        icon="myicons:content-copy"
+                        on-tap="_onCopyTapped"></paper-icon-button>
+                  </paper-item>
+                  <paper-item class="clip-text-row">
+                    <paper-item-body class="clip-text fit vertical start-justified layout">
+                      [[listItem.clipItem.text]]
+                    </paper-item-body>
+                  </paper-item>
+                </div>
+              </div>
+            </template>
+          </iron-selector>
+        </div>
+        <!-- Clip Viewer -->
+        <div id="clipViewer" class="flex-3"></div>
+      </div>
+    </paper-material>
+  </template>
 </dom-module>
 
 <script>
@@ -419,6 +420,7 @@
       });
 
       const pos = this.listItems.indexOf(listItem);
+      this.set(`listItems.${pos}.clipItem._id`, clipItem._id);
       this.set(`listItems.${pos}.clipItem.date`, date);
       this.set(`listItems.${pos}.clipItem.remote`, remote);
 
@@ -450,6 +452,7 @@
       });
 
       const pos = this.listItems.indexOf(listItem);
+      this.set(`listItems.${pos}.clipItem._id`, clipItem._id);
       this.set(`listItems.${pos}.clipItem.fav`, fav);
     },
 
@@ -561,7 +564,7 @@
         const clipItem = listItem.clipItem;
         const pos = this.listItems.indexOf(listItem);
         this.splice('listItems', pos, 1);
-        keys.push(clipItem.text);
+        keys.push(clipItem._id);
       }
 
       if (keys.length) {
@@ -625,16 +628,20 @@
         const pos = this._getListItemPos(clip.text);
         if (pos !== -1) {
           const str = `listItems.${pos}.clipItem.`;
+          this.set(`${str}_id`, clip._id);
           this.set(`${str}fav`, clip.fav);
           this.set(`${str}date`, clip.date);
           this.set(`${str}remote`, clip.remote);
           this.set(`${str}device`, clip.device);
+        } else {
+          // shouldn't get here
+          Chrome.GA.error('Failed to update ClipItem', 'MainPage._addListItem');
         }
-        // shouldn't get here
       } else {
         // new clip, add it
         const clipItem = new app.ClipItem(clip.text, clip.date,
             clip.fav, clip.remote, clip.device);
+        clipItem._id = clip._id;
         this.push('listItems', {
           checked: false,
           clipItem: clipItem,

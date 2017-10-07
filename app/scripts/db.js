@@ -54,12 +54,13 @@ app.DB = (function() {
 
     // define database
     _db.version(_VER_ONE).stores({
-      clipItems: '&text,date',
+      clipItems: '&text, date',
     });
 
     // add labels support
     _db.version(_VER_TWO).stores({
-      labels: 'name',
+      clipItems: '++_id, &text, date',
+      labels: '++_id, &name',
     });
 
     _db.clipItems.mapToClass(app.ClipItem);
@@ -75,10 +76,30 @@ app.DB = (function() {
     /**
      * Get the database
      * @returns {Object} the Dexie db object
+     * @memberOf app.DB
      */
     get: function() {
       return _db;
     },
+    
+    /**
+     * Get the clipItems table
+     * @returns {Object} the clipItems table
+     * @memberOf app.DB
+     */
+    clips: function() {
+      return _db.clipItems;
+    },
+    
+    /**
+     * Get the labels table
+     * @returns {Object} the labels table
+     * @memberOf app.DB
+     */
+    labels: function() {
+      return _db.labels;
+    },
+    
   };
 })();
 

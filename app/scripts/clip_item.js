@@ -18,6 +18,7 @@
    * @param {boolean} fav - true if this has been marked as a favorite
    * @param {boolean} remote - true if this came from a device other than ours
    * @param {string} device - A String representing the source device
+   * @property {int} _id - database PK
    */
   const ClipItem = function(text, date, fav, remote, device) {
     this.text = text;
@@ -90,10 +91,10 @@
 
   /**
    * Put to the database or delete oldest non favorite if there is no room
-   * @returns {Promise<string>} primary key it was stored under
+   * @returns {Promise<int>} database PK
    */
   ClipItem.prototype._putOrDeleteOldest = function() {
-    return app.DB.get().clipItems.put(this).then((key) => {
+    return app.DB.clips().put(this).then((key) => {
       return Promise.resolve(key);
     }).catch((err) => {
       if (err.name === 'QuotaExceededError') {
@@ -145,7 +146,7 @@
     });
 
     // perform the save
-    return app.DB.get().transaction('rw', app.DB.get().clipItems, () => {
+    return app.DB.get().transaction('rw', app.DB.clips(), () => {
       return repeatFunc(MAX_DELETES);
     }).then(() => {
       return Promise.resolve(retKey);
@@ -161,8 +162,8 @@
    * @returns {Promise<boolean>} true if text exists
    */
   ClipItem.prototype.exists = function() {
-    return app.DB.get().clipItems.get(this.text).then((item) => {
-      return Promise.resolve((item !== undefined));
+    return app.DB.clips().where('text').equals(this.text).first((clipItem) => {
+      return Promise.resolve((clipItem !== undefined));
     });
   };
 
@@ -194,12 +195,12 @@
 
   /**
    * Remove the given keys from storage
-   * @param {string|string[]} keys - array of keys to delete
+   * @param {int|int[]} keys - array of primary keys to delete
    * @returns {Promise<void>} void
    */
   ClipItem.remove = function(keys) {
     const keyArray = Array.isArray(keys) ? keys : [keys];
-    return app.DB.get().clipItems.bulkDelete(keyArray);
+    return app.DB.clips().bulkDelete(keyArray);
   };
 
   /**
@@ -207,7 +208,7 @@
    * @returns {Promise<boolean>} true if no {@link ClipItem} objects
    */
   ClipItem.isEmpty = function() {
-    return app.DB.get().clipItems.count().then((count) => {
+    return app.DB.clips().count().then((count) => {
       return Promise.resolve(!count);
     });
   };
@@ -217,7 +218,7 @@
    * @returns {Promise<Array>} Array of {@link ClipItem} objects
    */
   ClipItem.loadAll = function() {
-    return app.DB.get().clipItems.toArray();
+    return app.DB.clips().toArray();
   };
 
   /**
@@ -249,7 +250,7 @@
    * @private
    */
   ClipItem._deleteOlderThan = function(time) {
-    return app.DB.get().clipItems.where('date').below(time)
+    return app.DB.clips().where('date').below(time)
     .filter((clipItem) => {
       return !clipItem.fav;
     }).delete().then((deleteCount) => {

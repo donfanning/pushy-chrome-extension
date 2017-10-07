@@ -91,6 +91,11 @@ window.app = window.app || {};
       ready: false, disabled: false, divider: false,
     },
     {
+      label: 'Manage labels', route: 'page-labels',
+      icon: 'myicons:label', obj: _showLabelsPage,
+      ready: false, disabled: false, divider: false,
+    },
+    {
       label: 'Settings', route: 'page-settings',
       icon: 'myicons:settings', obj: _showSettingsPage,
       ready: false, disabled: false, divider: false,
@@ -189,6 +194,13 @@ window.app = window.app || {};
    * @memberOf Main
    */
   let devicesPage;
+
+ /**
+   * lebels-page element
+   * @type {element}
+   * @memberOf Main
+   */
+  let labelsPage;
 
   /**
    *  Listen for template bound event to know when bindings
@@ -303,6 +315,8 @@ window.app = window.app || {};
       signInPage.onCurrentPage();
     } else if (t.route === 'page-devices') {
       devicesPage.onCurrentPage();
+    } else if (t.route === 'page-labels') {
+      labelsPage.onCurrentPage();
     }
   };
 
@@ -532,6 +546,23 @@ window.app = window.app || {};
       t.pages[index].ready = true;
       devicesPage = new app.DevicesPageFactory();
       Polymer.dom(t.$.devicesInsertion).appendChild(devicesPage);
+    }
+    t.route = t.pages[index].route;
+    _scrollPageToTop();
+  }
+
+  /**
+   * Show the labels page
+   * @param {int} index -  - index into {@link Main.pages}
+   * @private
+   * @memberOf Main
+   */
+  function _showLabelsPage(index) {
+    if (!t.pages[index].ready) {
+      // insert the page the first time
+      t.pages[index].ready = true;
+      labelsPage = new app.LabelsPageFactory();
+      Polymer.dom(t.$.labelsInsertion).appendChild(labelsPage);
     }
     t.route = t.pages[index].route;
     _scrollPageToTop();

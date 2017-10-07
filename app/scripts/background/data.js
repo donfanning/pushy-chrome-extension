@@ -86,10 +86,9 @@ app.Data = (function() {
   /**
    * Initial {@link ClipItem}
    * @type {string}
-   * @default
    * @const
    * @private
-   * @memberOf Background
+   * @memberOf app.Data
    */
   const INTRO_TEXT =
       `A clipboard manager with push notifications.
@@ -108,6 +107,15 @@ selecting "Options".
 
 It is a good idea to go to the "Settings" page and enter a nickname \
 for this device.`;
+
+  /**
+   * Labeled {@link ClipItem}
+   * @type {string}
+   * @const
+   * @private
+   * @memberOf app.Data
+   */
+  const EXAMPLE_LABEL = 'You can label items to categroize them.';
 
   /**
    * Save the [_DEFAULTS]{@link app.Data._DEFAULTS}, if they
@@ -141,11 +149,18 @@ for this device.`;
       introClip.save().catch((err) => {
         Chrome.Log.error(err.message, 'app.Data.initialize');
       });
+      
+      app.Label.add('Example').then((label) => {
+        return app.ClipItem.add(EXAMPLE_LABEL, Date.now() + 1, true, false,
+            app.Device.myName());
+      }).catch((err) => {
+        Chrome.Log.error(err.message, 'app.Data.initialize');
+      });
 
       app.User.setInfo().catch((err) => {
         Chrome.Log.error(err.message, 'app.Data.initialize');
       });
-      
+
       // and the last error
       Chrome.Storage.clearLastError().catch((err) => {
         Chrome.GA.error(err.message, 'Data.initialize');
