@@ -654,6 +654,7 @@
     /**
      * Remove a {@link MainPage.ListItem}
      * @param {app.ChromeMsg.Message} request - Chrome message request
+     * @private
      */
     _removeListItem(request) {
       const clip = request.item;
@@ -669,6 +670,7 @@
      * Get position of {@link MainPage.ListItem} with given text
      * @param {string} clipText - text to find
      * @returns {int} position in array, -1 if not found
+     * @private
      */
     _getListItemPos: function(clipText) {
       let pos = -1;
