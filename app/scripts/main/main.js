@@ -76,8 +76,8 @@ window.app = window.app || {};
    */
   t.pages_one = [
     {
-      label: 'Main', route: 'page-main',
-      icon: 'myicons:list', obj: null,
+      label: 'Clips', route: 'page-main',
+      icon: 'myicons:content-paste', obj: null,
       ready: true, disabled: false, divider: false,
     },
     {
@@ -544,7 +544,7 @@ window.app = window.app || {};
 
   /**
    * Show the devices page
-   * @param {int} index -  - index into {@link Main.pages}
+   * @param {int} index - index into {@link Main.pages}
    * @private
    * @memberOf Main
    */
@@ -561,7 +561,7 @@ window.app = window.app || {};
 
   /**
    * Show the labels page
-   * @param {int} index -  - index into {@link Main.pages}
+   * @param {int} index - index into {@link Main.pages}
    * @private
    * @memberOf Main
    */
@@ -573,6 +573,18 @@ window.app = window.app || {};
       Polymer.dom(t.$.labelsInsertion).appendChild(labelsPage);
     }
     t.route = t.pages[index].route;
+    _scrollPageToTop();
+  }
+
+  /**
+   * Show a label page
+   * @param {int} index - index into {@link Main.pages}
+   * @private
+   * @memberOf Main
+   */
+  function _showLabelPage(index) {
+    t.$.mainPage.setLabelName(t.pages[index].label);
+    t.route = 'page-main';
     _scrollPageToTop();
   }
 
@@ -685,12 +697,14 @@ window.app = window.app || {};
     return app.Label.loadAll().then((labels) => {
       labels = labels || [];
       const pages = [];
+      let count = 0;
       labels.forEach((label) => {
         pages.push({
-          label: label.name, route: 'page-main',
-          icon: 'myicons:label', obj: null,
+          label: label.name, route: `page-label${count}`,
+          icon: 'myicons:label', obj: _showLabelPage,
           ready: true, disabled: false, divider: false,
         });
+        count++;
       });
       return Promise.resolve(pages);
     });

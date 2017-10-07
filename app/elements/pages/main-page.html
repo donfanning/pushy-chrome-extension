@@ -172,7 +172,7 @@
                 items="{{listItems}}"
                 as="listItem"
                 sort="_sortByDate"
-                filter="_filterByFav"
+                filter="_filter"
                 observe="clipItem.date">
               <div class="list-item horizontal center layout" id="listItem[[index]]">
                 <paper-checkbox
@@ -229,10 +229,9 @@
        * Item in the main list
        * @typedef {Object} MainPage.ListItem
        * @property {boolean} checked - true if selected
-       * @property {ClipItem} clipItem - {@link ClipItem}
+       * @property {app.ClipItem} clipItem - {@link app.ClipItem}
        * @memberOf MainPage
        */
-
       listItems: {
         type: Array,
         value: [],
@@ -254,6 +253,18 @@
       isFavFilter: {
         type: Boolean,
         value: false,
+        notify: true,
+      },
+
+      isLabelFilter: {
+        type: Boolean,
+        value: false,
+        notify: true,
+      },
+
+      labelName: {
+        type: String,
+        value: '',
         notify: true,
       },
 
@@ -308,6 +319,15 @@
         this.set(`listItems.${i}.clipItem.date`, date - 1);
         this.set(`listItems.${i}.clipItem.date`, date);
       }
+    },
+
+    /**
+     * Set {@link app.Label} name for filtering
+     * @param {string} name - Label name
+     */
+    setLabelName: function(name) {
+      this.set('labelName', name);
+      this.set('isLabelFilter', !!name);
     },
 
     /**
@@ -695,13 +715,26 @@
     },
 
     /**
-     * Filter list by favorites only
-     * @param {ListItem} listItem - row to check
-     * @returns {boolean} true if row is favorite
+     * Filter list
+     * @param {MainPage.ListItem} listItem - row to check
+     * @returns {boolean} true if row is visible
      * @private
      */
-    _filterByFav: function(listItem) {
-      return this.isFavFilter ? listItem.clipItem.fav : true;
+    _filter: function(listItem) {
+      let ret = true;
+      if (this.isLabelFilter) {
+        ret = true;
+        // TODO fix after labels assigned
+//        ret = (this.labelName !== listItem.clipItem.hasLabel(this.labelName));
+        if (ret && this.isFavFilter) {
+          ret = listItem.clipItem.fav;
+        }
+      }
+      
+      if (ret && this.isFavFilter) {
+        ret = listItem.clipItem.fav;
+      }
+      return ret;
     },
 
     /**
