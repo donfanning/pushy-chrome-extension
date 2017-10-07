@@ -199,7 +199,8 @@
       _updateListLabel(model) {
         Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage._updateListLabel');
         const item = model.item;
-        const name = item.newName.trim();
+        let name = item.newName.trim();
+        name = name || '';
         const idx = this.items.findIndex((el) => {
           return el.label.name === item.label.name;
         });
