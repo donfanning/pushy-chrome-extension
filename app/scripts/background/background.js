@@ -40,9 +40,11 @@
       app.Data.initialize();
       app.Utils.showMainTab();
     } else if (details.reason === 'update') {
-      const label = `To: ${Chrome.Utils.getVersion()}` +
-          ` From: ${details.previousVersion}`;
-      Chrome.GA.event(Chrome.GA.EVENT.UPDATED, label);
+      if (Chrome.Utils.getVersion() === details.previousVersion) {
+        // spurious update: 
+        // https://bugs.chromium.org/p/chromium/issues/detail?id=303481
+        return;
+      }
       app.Data.update();
       _initializeFirebase().then(() => {
         return app.SW.update();
