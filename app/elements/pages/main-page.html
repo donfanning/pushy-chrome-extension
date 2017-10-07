@@ -569,7 +569,7 @@
 
       if (keys.length) {
         app.ClipItem.remove(keys).then(() => {
-          return app.ClipItem.isEmpty();
+          return app.ClipItem.isTableEmpty();
         }).then((isEmpty) => {
           this.set('selections', []);
           if (isEmpty) {

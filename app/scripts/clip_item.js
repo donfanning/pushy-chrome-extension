@@ -83,20 +83,37 @@
 
   /**
    * Save ourselves to storage
-   * @returns {Promise<string>} primary key it was stored under
+   * @returns {Promise<int>} database PK
    */
   ClipItem.prototype.save = function() {
     return this._safeSave();
   };
 
   /**
-   * Put to the database or delete oldest non favorite if there is no room
+   * Add if new or update if existing
+   * @returns {Promise<boolean>} true if updated
+   */
+  ClipItem.prototype._addOrUpdate = function() {
+    let updated = false;
+    return this._getId().then((id) => {
+      if (id) {
+        updated = true;
+        this._id = id;
+        return app.DB.clips().update(id, this);
+      } else {
+        return app.DB.clips().put(this);
+      }
+    }).then(() => {
+      return Promise.resolve(updated);
+    });
+  };
+
+  /**
+   * Save to the database or delete oldest non favorite if there is no room
    * @returns {Promise<int>} database PK
    */
-  ClipItem.prototype._putOrDeleteOldest = function() {
-    return app.DB.clips().put(this).then((key) => {
-      return Promise.resolve(key);
-    }).catch((err) => {
+  ClipItem.prototype._saveOrDeleteOldest = function() {
+    return this._addOrUpdate().catch((err) => {
       if (err.name === 'QuotaExceededError') {
         // failed to save, delete oldest non-fav item
         return ClipItem._deleteOldest();
@@ -133,7 +150,7 @@
       if (count === 0) {
         throw new Error(ClipItem.ERROR_DB_FULL);
       }
-      return this._putOrDeleteOldest().then(function(key) {
+      return this._saveOrDeleteOldest().then(function(key) {
         retKey = key;
         if (retKey) {
           return Promise.resolve();
@@ -159,11 +176,14 @@
 
   /**
    * Determine if {@link ClipItem} text exists in storage
-   * @returns {Promise<boolean>} true if text exists
+   * @returns {Promise<int|null>} database PK or null
    */
-  ClipItem.prototype.exists = function() {
+  ClipItem.prototype._getId = function() {
     return app.DB.clips().where('text').equals(this.text).first((clipItem) => {
-      return Promise.resolve((clipItem !== undefined));
+      if (clipItem !== undefined) {
+        return Promise.resolve(clipItem._id);
+      }
+      return Promise.resolve(null);
     });
   };
 
@@ -179,8 +199,8 @@
   ClipItem.add = function(text, date, fav, remote, device) {
     let updated;
     const clipItem = new ClipItem(text, date, fav, remote, device);
-    return clipItem.exists().then((isTrue) => {
-      updated = isTrue;
+    return clipItem._getId().then((id) => {
+      updated = !!id;
       return clipItem.save();
     }).then(() => {
       // let listeners know a ClipItem was added or updated
@@ -207,7 +227,7 @@
    * Return true is there are no stored {@link ClipItem} objects
    * @returns {Promise<boolean>} true if no {@link ClipItem} objects
    */
-  ClipItem.isEmpty = function() {
+  ClipItem.isTableEmpty = function() {
     return app.DB.clips().count().then((count) => {
       return Promise.resolve(!count);
     });
@@ -250,8 +270,7 @@
    * @private
    */
   ClipItem._deleteOlderThan = function(time) {
-    return app.DB.clips().where('date').below(time)
-    .filter((clipItem) => {
+    return app.DB.clips().where('date').below(time).filter((clipItem) => {
       return !clipItem.fav;
     }).delete().then((deleteCount) => {
       return Promise.resolve(!!deleteCount);
@@ -294,7 +313,7 @@
       return Promise.resolve();
     });
   };
-  
+
   window.app = window.app || {};
   window.app.ClipItem = ClipItem;
 })(window);
