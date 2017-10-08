@@ -45,6 +45,10 @@
       background-color: var(--drawer-menu-color);
       border-bottom: var(--drawer-toolbar-border-color);
     }
+    
+    #labelsItem {
+      color: var(--primary-text-color);;
+    }
 
     #drawerToolbar .menu-name {
       @apply(--paper-font-title);
@@ -78,7 +82,7 @@
             </paper-item>
           </template>
           <hr />
-          <paper-item>Labels</paper-item>
+          <paper-item id="labelsItem" disabled>Labels</paper-item>
           <template is="dom-repeat" items="[[pages_labels]]">
             <paper-item id="[[item.route]]" class="center horizontal layout"
                         on-tap="_onNavMenuItemTapped">

@@ -535,14 +535,14 @@ window.app = window.app || {};
   /**
    * Get the index into the {@link Main.pages} array
    * @param {string} route - {@link Main.page} route
-   * @returns {int} index into array
+   * @returns {int} index into array, -1 if not found
    * @private
    * @memberOf Main
    */
   function _getPageIdx(route) {
-    return t.pages.map(function(e) {
-      return e.route;
-    }).indexOf(route);
+    return t.pages.findIndex((page) => {
+      return page.route === route;
+    });
   }
 
   /**
