@@ -11,9 +11,9 @@ window.app = window.app || {};
 
   /**
    * Script for the main.html page
-   *  @namespace Main
+   * @namespace Main
    */
-
+  
   new ExceptionHandler();
 
   const chromep = new ChromePromise();
@@ -21,6 +21,7 @@ window.app = window.app || {};
   /**
    * Path to the extension in the Web Store
    * @type {string}
+   * @const
    * @memberOf Main
    */
   const EXT_URI =
@@ -29,7 +30,7 @@ window.app = window.app || {};
   /**
    * Path to the android app in the Play Store
    * @type {string}
-   * @default
+   * @const
    * @memberOf Main
    */
   const ANDROID_URI =
@@ -39,7 +40,7 @@ window.app = window.app || {};
   /**
    * Path to my screen saver extension
    * @type {string}
-   * @default
+   * @const
    * @memberOf Main
    */
   const SCREEN_SAVER_URI =
@@ -49,6 +50,7 @@ window.app = window.app || {};
   /**
    * Auto-binding template
    * @type {Object}
+   * @const
    * @memberOf Main
    */
   const t = document.querySelector('#t');
@@ -56,8 +58,7 @@ window.app = window.app || {};
   /**
    * Manage an html page that is inserted on demand<br>
    * May also be a url link to external site
-   * @typedef page
-   * @type {Object}
+   * @typedef {{}} Main.page
    * @property {string} label - label for Nav menu
    * @property {string} route - element name route to page
    * @property {string} icon - icon for Nav Menu
@@ -71,8 +72,8 @@ window.app = window.app || {};
   /**
    * Array of {@link Main.page} objects
    * @type {Main.page[]}
+   * @const
    * @memberOf Main
-   * @alias Main.pages_one
    */
   t.pages_one = [
     {
@@ -100,8 +101,8 @@ window.app = window.app || {};
   /**
    * Array of {@link Main.page} objects
    * @type {Main.page[]}
+   * @const
    * @memberOf Main
-   * @alias Main.pages_two
    */
   t.pages_two = [
     {
@@ -142,12 +143,11 @@ window.app = window.app || {};
   ];
 
   /**
-   * Array of {@link Main.page} objects for the {@link Label} objects
+   * Array of {@link Main.page} objects for the {@link app.Label} objects
    * @type {Main.page[]}
    * @memberOf Main
-   * @alias Main.pages_labels
    */
-  t.pages_labels;
+  t.pages_labels = [];
 
   /**
    * Error dialog title
@@ -188,9 +188,8 @@ window.app = window.app || {};
    * Array concatenation of {@link Main.page} objects
    * @type {Main.page[]}
    * @memberOf Main
-   * @alias Main.pages
    */
-  let pages;
+  let pages = [];
 
   /**
    * Previous route
@@ -238,15 +237,15 @@ window.app = window.app || {};
     Chrome.GA.page('/main.html');
 
     // concatenate all the pages
-    _buildPages();
+    _buildPages().then(() => {
+      // initialize menu states
+      _setDevicesMenuState();
+      _setErrorMenuState();
+      return Promise.resolve();
+    }).catch(() => {});
 
     // listen for Chrome messages
     Chrome.Msg.listen(_onChromeMessage);
-
-    // initialize menu states
-    let idx = _getPageIdx('page-devices');
-    pages[idx].disabled = !app.Utils.isSignedIn();
-    _setErrorMenuState();
 
     // listen for changes to chrome.storage
     chrome.storage.onChanged.addListener(function(changes) {
@@ -282,7 +281,7 @@ window.app = window.app || {};
               let idx = pages.findIndex((page) => {
                 return page.label === name;
               });
-              t.splice('pages', idx, 1);
+              pages.splice(idx, 1);
               idx = t.pages_labels.findIndex((page) => {
                 return page.label === name;
               });
@@ -714,12 +713,13 @@ window.app = window.app || {};
 
   /**
    * Build the menu items
+   * @returns {Promise<void>} void
    * @private
    * @memberOf Main
    */
   function _buildPages() {
     pages = t.pages_one;
-    _getLabelPages().then((labelPages) => {
+    return _getLabelPages().then((labelPages) => {
       labelPages = labelPages || [];
       t.set('pages_labels', labelPages);
       pages = pages.concat(t.pages_labels);
@@ -778,7 +778,7 @@ window.app = window.app || {};
     // disable error-page if no lastError
     Chrome.Storage.getLastError().then((lastError) => {
       const idx = _getPageIdx('page-error');
-      const el = document.getElementById(t.pages[idx].route);
+      const el = document.getElementById(pages[idx].route);
       if (el && !Chrome.Utils.isWhiteSpace(lastError.message)) {
         el.removeAttribute('disabled');
       } else if (el) {
