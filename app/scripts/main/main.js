@@ -187,6 +187,7 @@ window.app = window.app || {};
   /**
    * Array concatenation of {@link Main.page} objects
    * @type {Main.page[]}
+   * @alias Main.pages
    * @memberOf Main
    */
   let pages = [];
@@ -236,71 +237,33 @@ window.app = window.app || {};
     // track usage
     Chrome.GA.page('/main.html');
 
-    // concatenate all the pages
+    // concatenate all the pages for the main menu
     _buildPages().then(() => {
       // initialize menu states
       _setDevicesMenuState();
       _setErrorMenuState();
       return Promise.resolve();
-    }).catch(() => {});
+    }).catch((err) => {
+      Chrome.Log.error(err.message,
+          'Main._buildPages', 'Failed tp build menu.');
+    });
 
     // listen for Chrome messages
     Chrome.Msg.listen(_onChromeMessage);
 
-    // listen for changes to chrome.storage
-    chrome.storage.onChanged.addListener(function(changes) {
-      for (const key in changes) {
-        if (changes.hasOwnProperty(key)) {
-          if (key === 'lastError') {
-            _setErrorMenuState();
-            break;
-          }
-        }
-      }
-    });
+    // listen for changes to localStorage
+    addEventListener('storage', _onStorageChanged, false);
 
-    app.DB.get().on('changes', function(changes) {
-      console.log(changes);
-      changes.forEach(function(change) {
-        console.log(change);
-        switch (change.type) {
-          case 1: // CREATED
-            console.log('An object was created: ' + JSON.stringify(change.obj));
-            break;
-          case 2: // UPDATED
-            console.log('An object with key ' + change.key +
-                ' was updated with modifications: ' +
-                JSON.stringify(change.mods));
-            break;
-          case 3: // DELETED
-            if (change.table === 'labels') {
-              console.log('An object was deleted: ' +
-                  JSON.stringify(change.oldObj));
-              
-              const name = change.oldObj.name;
-              let idx = pages.findIndex((page) => {
-                return page.label === name;
-              });
-              pages.splice(idx, 1);
-              idx = t.pages_labels.findIndex((page) => {
-                return page.label === name;
-              });
-              t.splice('pages_labels', idx, 1);
-            }
-            break;
-          default:
-            break;
-        }
-      });
-    });
+    // listen for changes to chrome.storage
+    chrome.storage.onChanged.addListener(_onChromeStorageChanged);
+
+    // listen for changes to database
+    app.DB.get().on('changes', _onDBChanged);
 
     // listen for messages from the service worker
     navigator.serviceWorker.addEventListener('message', _onSWMessage);
 
-    // listen for changes to localStorage
-    addEventListener('storage', _onStorageChanged, false);
-
-    // listen for changes to highlighted tabs
+     // listen for changes to highlighted tabs
     chrome.tabs.onHighlighted.addListener(_onHighlighted);
 
     // check for optional permissions
@@ -505,6 +468,75 @@ window.app = window.app || {};
     } else if (event.key === 'photoURL') {
       t.avatar = Chrome.Storage.get('photoURL');
     }
+  }
+
+  /**
+   * Event: Fired when changes occur in Chrome.storage
+   * @see https://developer.chrome.com/apps/storage
+   * @param {[]} changes - storage changes
+   * @private
+   * @memberOf Main
+   */
+  function _onChromeStorageChanged(changes) {
+    for (const key in changes) {
+      if (changes.hasOwnProperty(key)) {
+        if (key === 'lastError') {
+          _setErrorMenuState();
+          break;
+        }
+      }
+    }
+  }
+
+    /**
+   * Event: Fired when changes occur in the Dexie database
+   * @see http://dexie.org/docs/Observable/Dexie.Observable.html
+   * @param {[]} changes - database changes
+   * @private
+   * @memberOf Main
+   */
+  function _onDBChanged(changes) {
+    changes.forEach(function(change) {
+      switch (change.type) {
+        case 1: // CREATED
+          if (change.table === 'labels') {
+            const name = change.obj.name;
+            const newPage = {
+              label: name, route: 'page-label',
+              icon: 'myicons:label', obj: null,
+              ready: true, disabled: false, divider: false,
+            };
+            pages.push(newPage);
+            t.push('pages_labels', newPage);
+          }
+          break;
+        case 2: // UPDATED
+          if (change.table === 'labels') {
+            const name = change.oldObj.name;
+            const newName = change.obj.name;
+            const idx = t.pages_labels.findIndex((page) => {
+              return page.label === name;
+            });
+            t.set(`pages_labels.${idx}.label`, newName);
+          }
+          break;
+        case 3: // DELETED
+          if (change.table === 'labels') {
+            const name = change.oldObj.name;
+            let idx = pages.findIndex((page) => {
+              return page.label === name;
+            });
+            pages.splice(idx, 1);
+            idx = t.pages_labels.findIndex((page) => {
+              return page.label === name;
+            });
+            t.splice('pages_labels', idx, 1);
+          }
+          break;
+        default:
+          break;
+      }
+    });
   }
 
   /**
@@ -725,8 +757,6 @@ window.app = window.app || {};
       pages = pages.concat(t.pages_labels);
       pages = pages.concat(t.pages_two);
       return Promise.resolve();
-    }).catch((err) => {
-      Chrome.Log.error(err.message, 'Main._buildPages', 'Failed to build menu');
     });
   }
 
@@ -740,14 +770,12 @@ window.app = window.app || {};
     return app.Label.loadAll().then((labels) => {
       labels = labels || [];
       const pages = [];
-      let count = 0;
       labels.forEach((label) => {
         pages.push({
-          label: label.name, route: `page-label${count}`,
+          label: label.name, route: 'page-label',
           icon: 'myicons:label', obj: null,
           ready: true, disabled: false, divider: false,
         });
-        count++;
       });
       return Promise.resolve(pages);
     });
