@@ -13,7 +13,7 @@ window.app = window.app || {};
    * Script for the main.html page
    * @namespace Main
    */
-  
+
   new ExceptionHandler();
 
   const chromep = new ChromePromise();
@@ -64,7 +64,9 @@ window.app = window.app || {};
    * @property {string} icon - icon for Nav Menu
    * @property {?Object|Function} obj - something to be done when selected
    * @property {boolean} ready - true if html is inserted
-   * @property {boolean} disabled - disabled state of Nav menu
+   * @property {?Function} factory - function to build page
+   * @property {?string} insertion - id of insertion point
+   * @property {?Element} el - Polymer element
    * @property {boolean} divider - true for divider before item
    * @memberOf Main
    */
@@ -78,23 +80,23 @@ window.app = window.app || {};
   t.pages_one = [
     {
       label: 'Clips', route: 'page-main',
-      icon: 'myicons:content-paste', obj: null,
-      ready: true, disabled: false, divider: false,
+      icon: 'myicons:content-paste', ready: true, divider: false,
+      obj: null, insertion: null, el: null,
     },
     {
       label: 'Manage account', route: 'page-signin',
-      icon: 'myicons:account-circle', obj: _showSignInPage,
-      ready: false, disabled: false, divider: false,
+      icon: 'myicons:account-circle', ready: false, divider: false,
+      obj: app.SignInPageFactory, insertion: 'signInInsertion', el: null,
     },
     {
       label: 'Manage devices', route: 'page-devices',
-      icon: 'myicons:phonelink', obj: _showDevicesPage,
-      ready: false, disabled: false, divider: false,
+      icon: 'myicons:phonelink', ready: false, divider: false,
+      obj: app.DevicesPageFactory, insertion: 'devicesInsertion', el: null,
     },
     {
       label: 'Manage labels', route: 'page-labels',
-      icon: 'myicons:label', obj: _showLabelsPage,
-      ready: false, disabled: false, divider: false,
+      icon: 'myicons:label', ready: false, divider: false,
+      obj: app.LabelsPageFactory, insertion: 'labelsInsertion', el: null,
     },
   ];
 
@@ -107,38 +109,38 @@ window.app = window.app || {};
   t.pages_two = [
     {
       label: 'Settings', route: 'page-settings',
-      icon: 'myicons:settings', obj: _showSettingsPage,
-      ready: false, disabled: false, divider: true,
+      icon: 'myicons:settings', ready: false, divider: true,
+      obj: app.SettingsPageFactory, insertion: 'settingsInsertion', el: null,
     },
     {
       label: 'Manage optional permissions', route: 'page-permissions',
-      icon: 'myicons:perm-data-setting', obj: _showPermissionsDialog,
-      ready: true, disabled: false, divider: false,
+      icon: 'myicons:perm-data-setting', ready: true, divider: false,
+      obj: _showPermissionsDialog, insertion: null, el: null,
     },
     {
       label: 'View last error', route: 'page-error',
-      icon: 'myicons:error', obj: _showErrorPage,
-      ready: false, disabled: false, divider: false,
+      icon: 'myicons:error', ready: false, divider: false,
+      obj: app.ErrorPageFactory, insertion: 'errorInsertion', el: null,
     },
     {
       label: 'Help & feedback', route: 'page-help',
-      icon: 'myicons:help', obj: _showHelpPage,
-      ready: false, disabled: false, divider: true,
+      icon: 'myicons:help', ready: false, divider: true,
+      obj: app.HelpPageFactory, insertion: 'helpInsertion', el: null,
     },
     {
       label: 'Get android app', route: 'page-android',
-      icon: 'myicons:android', obj: ANDROID_URI,
-      ready: true, disabled: false, divider: false,
+      icon: 'myicons:android', ready: true, divider: false, el: null,
+      obj: ANDROID_URI, insertion: null,
     },
     {
       label: 'Rate extension', route: 'page-rate',
-      icon: 'myicons:grade', obj: `${EXT_URI}reviews`,
-      ready: true, disabled: false, divider: false,
+      icon: 'myicons:grade', ready: true, divider: false,
+      obj: `${EXT_URI}reviews`, insertion: null, el: null,
     },
     {
       label: 'Try Photo Screen Saver', route: 'page-screensaver',
-      icon: 'myicons:extension', obj: SCREEN_SAVER_URI,
-      ready: true, disabled: false, divider: true,
+      icon: 'myicons:extension', ready: true, divider: true,
+      obj: SCREEN_SAVER_URI, insertion: null, el: null,
     },
   ];
 
@@ -207,27 +209,6 @@ window.app = window.app || {};
   let onHighlightRoute = 'page-main';
 
   /**
-   * signin-page element
-   * @type {element}
-   * @memberOf Main
-   */
-  let signInPage;
-
-  /**
-   * devices-page element
-   * @type {element}
-   * @memberOf Main
-   */
-  let devicesPage;
-
-  /**
-   * lebels-page element
-   * @type {element}
-   * @memberOf Main
-   */
-  let labelsPage;
-
-  /**
    * Event: Template Bound, bindings have resolved and content has been
    * stamped to the page
    * @private
@@ -263,7 +244,7 @@ window.app = window.app || {};
     // listen for messages from the service worker
     navigator.serviceWorker.addEventListener('message', _onSWMessage);
 
-     // listen for changes to highlighted tabs
+    // listen for changes to highlighted tabs
     chrome.tabs.onHighlighted.addListener(_onHighlighted);
 
     // check for optional permissions
@@ -305,7 +286,20 @@ window.app = window.app || {};
       chrome.tabs.create({url: page.obj});
     } else {
       // some pages have functions to view them
-      page.obj(idx);
+      if (page.insertion) {
+        if (!page.ready) {
+          // insert the page the first time
+          page.ready = true;
+          // eslint-disable-next-line new-cap
+          page.el = new page.obj();
+          const insertEl = document.getElementById(page.insertion);
+          Polymer.dom(insertEl).appendChild(page.el);
+        }
+      } else {
+        page.obj();
+      }
+      t.route = page.route;
+      _scrollPageToTop();
     }
   };
 
@@ -322,19 +316,24 @@ window.app = window.app || {};
   };
 
   /**
-   * Event: {@link Main.page} finished animating in
+   * Event: A {@link Main.page} finished animating in
    * @private
    * @memberOf Main
    */
   t._onPageAnimation = function() {
-    if (t.route === 'page-main') {
-      t.$.mainPage.onCurrentPage();
-    } else if (t.route === 'page-signin') {
-      signInPage.onCurrentPage();
-    } else if (t.route === 'page-devices') {
-      devicesPage.onCurrentPage();
-    } else if (t.route === 'page-labels') {
-      labelsPage.onCurrentPage();
+    const idx = _getPageIdx(t.route);
+    const page = pages[idx];
+    switch (t.route) {
+      case 'page-main':
+        t.$.mainPage.onCurrentPage();
+        break;
+      case 'page-signin':
+      case 'page-devices':
+      case 'page-labels':
+        page.el.onCurrentPage();
+        break;
+      default:
+        break;
     }
   };
 
@@ -473,14 +472,14 @@ window.app = window.app || {};
   /**
    * Event: Fired when changes occur in Chrome.storage
    * @see https://developer.chrome.com/apps/storage
-   * @param {[]} changes - storage changes
+   * @param {Array} changes - storage changes
    * @private
    * @memberOf Main
    */
   function _onChromeStorageChanged(changes) {
-    for (const key in changes) {
-      if (changes.hasOwnProperty(key)) {
-        if (key === 'lastError') {
+    for (const change in changes) {
+      if (changes.hasOwnProperty(change)) {
+        if (change === 'lastError') {
           _setErrorMenuState();
           break;
         }
@@ -488,10 +487,10 @@ window.app = window.app || {};
     }
   }
 
-    /**
+  /**
    * Event: Fired when changes occur in the Dexie database
    * @see http://dexie.org/docs/Observable/Dexie.Observable.html
-   * @param {[]} changes - database changes
+   * @param {Array} changes - database changes
    * @private
    * @memberOf Main
    */
@@ -501,10 +500,11 @@ window.app = window.app || {};
         case 1: // CREATED
           if (change.table === 'labels') {
             const name = change.obj.name;
+            const suffix = t.pages_labels.length;
             const newPage = {
-              label: name, route: 'page-label',
-              icon: 'myicons:label', obj: null,
-              ready: true, disabled: false, divider: false,
+              label: name, route: `page-label${suffix}`,
+              icon: 'myicons:label', ready: true, divider: false,
+              obj: null, insertion: null, el: null,
             };
             pages.push(newPage);
             t.push('pages_labels', newPage);
@@ -612,108 +612,6 @@ window.app = window.app || {};
   }
 
   /**
-   * Show the signin page
-   * @param {int} index - index into {@link Main.pages}
-   * @private
-   * @memberOf Main
-   */
-  function _showSignInPage(index) {
-    if (!pages[index].ready) {
-      // insert the page the first time
-      pages[index].ready = true;
-      signInPage = new app.SignInPageFactory();
-      Polymer.dom(t.$.signInInsertion).appendChild(signInPage);
-    }
-    t.route = pages[index].route;
-    _scrollPageToTop();
-  }
-
-  /**
-   * Show the devices page
-   * @param {int} index - index into {@link Main.pages}
-   * @private
-   * @memberOf Main
-   */
-  function _showDevicesPage(index) {
-    if (!pages[index].ready) {
-      // insert the page the first time
-      pages[index].ready = true;
-      devicesPage = new app.DevicesPageFactory();
-      Polymer.dom(t.$.devicesInsertion).appendChild(devicesPage);
-    }
-    t.route = pages[index].route;
-    _scrollPageToTop();
-  }
-
-  /**
-   * Show the labels page
-   * @param {int} index - index into {@link Main.pages}
-   * @private
-   * @memberOf Main
-   */
-  function _showLabelsPage(index) {
-    if (!pages[index].ready) {
-      // insert the page the first time
-      pages[index].ready = true;
-      labelsPage = new app.LabelsPageFactory();
-      Polymer.dom(t.$.labelsInsertion).appendChild(labelsPage);
-    }
-    t.route = pages[index].route;
-    _scrollPageToTop();
-  }
-
-  /**
-   * Show the settings page
-   * @param {int} index - index into {@link Main.pages}
-   * @private
-   * @memberOf Main
-   */
-  function _showSettingsPage(index) {
-    if (!pages[index].ready) {
-      // insert the page the first time
-      pages[index].ready = true;
-      const el = new app.SettingsPageFactory();
-      Polymer.dom(t.$.settingsInsertion).appendChild(el);
-    }
-    t.route = pages[index].route;
-    _scrollPageToTop();
-  }
-
-  /**
-   * Show the help page
-   * @param {int} index - index into {@link Main.pages}
-   * @private
-   * @memberOf Main
-   */
-  function _showHelpPage(index) {
-    if (!pages[index].ready) {
-      // insert the page the first time
-      pages[index].ready = true;
-      const el = new app.HelpPageFactory();
-      Polymer.dom(t.$.helpInsertion).appendChild(el);
-    }
-    t.route = pages[index].route;
-    _scrollPageToTop();
-  }
-
-  /**
-   * Show the error viewer page
-   * @param {int} index - index into {@link Main.pages}
-   * @private
-   * @memberOf Main
-   */
-  function _showErrorPage(index) {
-    if (!pages[index].ready) {
-      // insert the page the first time
-      pages[index].ready = true;
-      const el = new app.ErrorPageFactory();
-      Polymer.dom(t.$.errorInsertion).appendChild(el);
-    }
-    t.route = pages[index].route;
-    _scrollPageToTop();
-  }
-
-  /**
    * Show the permissions dialog
    * @private
    * @memberOf Main
@@ -770,12 +668,14 @@ window.app = window.app || {};
     return app.Label.loadAll().then((labels) => {
       labels = labels || [];
       const pages = [];
+      let count = 0;
       labels.forEach((label) => {
         pages.push({
-          label: label.name, route: 'page-label',
-          icon: 'myicons:label', obj: null,
-          ready: true, disabled: false, divider: false,
+          label: label.name, route: `page-label${count}`,
+          icon: 'myicons:label', ready: true, divider: false,
+          obj: null, insertion: null, el: null,
         });
+        count++;
       });
       return Promise.resolve(pages);
     });
