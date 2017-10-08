@@ -228,13 +228,15 @@ window.app = window.app || {};
   let labelsPage;
 
   /**
-   *  Listen for template bound event to know when bindings
-   *  have resolved and content has been stamped to the page
+   * Event: Template Bound, bindings have resolved and content has been
+   * stamped to the page
+   * @private
+   * @memberOf Main
    */
-  t.addEventListener('dom-change', () => {
+  function _onDomChange() {
     // track usage
     Chrome.GA.page('/main.html');
-    
+
     // concatenate all the pages
     _buildPages();
 
@@ -244,8 +246,6 @@ window.app = window.app || {};
     // initialize menu states
     let idx = _getPageIdx('page-devices');
     t.pages[idx].disabled = !app.Utils.isSignedIn();
-    
-    // initialize lastError enabled state
     _setErrorMenuState();
 
     // listen for changes to chrome.storage
@@ -261,42 +261,25 @@ window.app = window.app || {};
     });
 
     // listen for messages from the service worker
-    navigator.serviceWorker.addEventListener('message',
-        _onServiceWorkerMessage);
-    
+    navigator.serviceWorker.addEventListener('message', _onSWMessage);
+
+    // listen for changes to localStorage
+    addEventListener('storage', _onStorageChanged, false);
+
+    // listen for changes to highlighted tabs
+    chrome.tabs.onHighlighted.addListener(_onHighlighted);
+
     // check for optional permissions
     _checkOptionalPermissions();
-  });
-
-  /**
-   * Set the route from onHighlightRoute
-   * @private
-   * @memberOf Main
-   */
-  t._setHighlightRoute = function() {
-    prevRoute = t.route;
-    const idx = _getPageIdx(onHighlightRoute);
-    const page = t.pages[idx];
-    if (!page.ready) {
-      // insert and show
-      page.obj(idx);
-    } else {
-      // select it
-      t.route = onHighlightRoute;
-    }
-    t.$.mainMenu.select(onHighlightRoute);
-    if ((prevRoute === 'page-main') && (t.route === 'page-main')) {
-      t.$.mainPage.updateDates();
-    }
-    onHighlightRoute = 'page-main';
-  };
-
+  }
+  
   /**
    * Event: navigation menu selected
    * @param {Event} event - event
+   * @private
    * @memberOf Main
    */
-  t.onNavMenuItemTapped = function(event) {
+  t._onNavMenuItemTapped = function(event) {
     // Close drawer after menu item is selected
     _closeDrawer();
 
@@ -332,9 +315,10 @@ window.app = window.app || {};
   /**
    * Event: display error dialog
    * @param {Event} event - event
+   * @private
    * @memberOf Main
    */
-  t.onShowErrorDialog = function(event) {
+  t._onShowErrorDialog = function(event) {
     t.dialogTitle = event.detail.title;
     t.dialogText = event.detail.text;
     t.$.errorDialog.open();
@@ -342,9 +326,10 @@ window.app = window.app || {};
 
   /**
    * Event: {@link Main.page} finished animating in
+   * @private
    * @memberOf Main
    */
-  t.onPageAnimation = function() {
+  t._onPageAnimation = function() {
     if (t.route === 'page-main') {
       t.$.mainPage.onCurrentPage();
     } else if (t.route === 'page-signin') {
@@ -358,9 +343,10 @@ window.app = window.app || {};
 
   /**
    * Event: Clicked on accept permissions dialog button
+   * @private
    * @memberOf Main
    */
-  t.onAcceptPermissionsClicked = function() {
+  t._onAcceptPermissionsClicked = function() {
     app.Permissions.request().then((granted) => {
       t.permissions = Chrome.Storage.get('permissions');
       if (granted) {
@@ -368,20 +354,21 @@ window.app = window.app || {};
       }
       return Promise.resolve();
     }).catch((err) => {
-      Chrome.Log.error(err.message, 'Main.onAcceptPermissionsClicked');
+      Chrome.Log.error(err.message, 'Main._onAcceptPermissionsClicked');
     });
   };
 
   /**
    * Event: Clicked on deny permissions dialog button
+   * @private
    * @memberOf Main
    */
-  t.onDenyPermissionsClicked = function() {
+  t._onDenyPermissionsClicked = function() {
     app.Permissions.remove().then(() => {
       t.permissions = Chrome.Storage.get('permissions');
       return Promise.resolve();
     }).catch((err) => {
-      Chrome.Log.error(err.message, 'Main.onDenyPermissionsClicked');
+      Chrome.Log.error(err.message, 'Main._onDenyPermissionsClicked');
     });
   };
 
@@ -389,9 +376,10 @@ window.app = window.app || {};
    * Computed Binding: Determine content script permission status string
    * @param {string} permissions - current setting
    * @returns {string} display type
+   * @private
    * @memberOf Main
    */
-  t.computePermissionsStatus = function(permissions) {
+  t._computePermissionsStatus = function(permissions) {
     return `Current Status: ${permissions}`;
   };
 
@@ -399,9 +387,10 @@ window.app = window.app || {};
    * Computed Binding: Determine if avatar should be visible
    * @param {string} avatar - photo url
    * @returns {string} display type
+   * @private
    * @memberOf Main
    */
-  t.computeAvatarDisplay = function(avatar) {
+  t._computeAvatarDisplay = function(avatar) {
     let ret = 'inline';
     if (Chrome.Utils.isWhiteSpace(avatar)) {
       ret = 'none';
@@ -415,7 +404,7 @@ window.app = window.app || {};
    * @private
    * @memberOf Main
    */
-  function _onServiceWorkerMessage(event) {
+  function _onSWMessage(event) {
     if (event.data.message === 'route') {
       // highlight ourselves if needed, and set the current route
       onHighlightRoute = event.data.route;
@@ -424,11 +413,11 @@ window.app = window.app || {};
           chromep.tabs.update(tab.id, {'highlighted': true});
         } else {
           // already highlighted, set route
-          t._setHighlightRoute();
+          _setHighlightRoute();
         }
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.Log.error(err.message, 'Main.serviceWorkerMessage');
+        Chrome.Log.error(err.message, 'Main._onSWMessage');
       });
     }
   }
@@ -453,7 +442,7 @@ window.app = window.app || {};
           chromep.tabs.update(tab.id, {'highlighted': true});
         } else {
           // already highlighted, set route
-          t._setHighlightRoute();
+          _setHighlightRoute();
         }
         return Promise.resolve();
       }).catch((err) => {
@@ -498,7 +487,7 @@ window.app = window.app || {};
         const tabId = tabIds[i];
         if (tabId === tab.id) {
           // our tab
-          t._setHighlightRoute();
+          _setHighlightRoute();
           break;
         }
       }
@@ -506,6 +495,29 @@ window.app = window.app || {};
     }).catch((err) => {
       Chrome.Log.error(err.message, 'Main._onHighlighted');
     });
+  }
+
+  /**
+   * Set the route from onHighlightRoute
+   * @private
+   * @memberOf Main
+   */
+  function _setHighlightRoute() {
+    prevRoute = t.route;
+    const idx = _getPageIdx(onHighlightRoute);
+    const page = t.pages[idx];
+    if (!page.ready) {
+      // insert and show
+      page.obj(idx);
+    } else {
+      // select it
+      t.route = onHighlightRoute;
+    }
+    t.$.mainMenu.select(onHighlightRoute);
+    if ((prevRoute === 'page-main') && (t.route === 'page-main')) {
+      t.$.mainPage.updateDates();
+    }
+    onHighlightRoute = 'page-main';
   }
 
   /**
@@ -743,9 +755,6 @@ window.app = window.app || {};
     });
   }
 
-  // listen for changes to localStorage
-  addEventListener('storage', _onStorageChanged, false);
-
-  // listen for changes to highlighted tabs
-  chrome.tabs.onHighlighted.addListener(_onHighlighted);
+  // listen for dom-change
+  t.addEventListener('dom-change', _onDomChange);
 })(window);

@@ -65,14 +65,14 @@
           <img src="[[avatar]]"
                style$="height: 40px; width: 40px;
 						             border-radius: 20px; box-sizing: border-box;
-						             display: [[computeAvatarDisplay(avatar)]];">
+						             display: [[_computeAvatarDisplay(avatar)]];">
         </paper-toolbar>
         <!-- Drawer Content -->
         <paper-menu class="list" id="mainMenu" attr-for-selected="id" selected="[[route]]">
           <template is="dom-repeat" items="[[pages_one]]">
             <hr hidden$="[[!item.divider]]"/>
             <paper-item id="[[item.route]]" class="center horizontal layout"
-                        on-tap="onNavMenuItemTapped" disabled$="[[item.disabled]]">
+                        on-tap="_onNavMenuItemTapped" disabled$="[[item.disabled]]">
               <iron-icon icon="[[item.icon]]"></iron-icon>
               <span>[[item.label]]</span>
             </paper-item>
@@ -81,7 +81,7 @@
           <paper-item>Labels</paper-item>
           <template is="dom-repeat" items="[[pages_labels]]">
             <paper-item id="[[item.route]]" class="center horizontal layout"
-                        on-tap="onNavMenuItemTapped">
+                        on-tap="_onNavMenuItemTapped">
               <iron-icon icon="[[item.icon]]"></iron-icon>
               <span>[[item.label]]</span>
             </paper-item>
@@ -89,7 +89,7 @@
           <template is="dom-repeat" items="[[pages_two]]">
             <hr hidden$="[[!item.divider]]"/>
             <paper-item id="[[item.route]]" class="center horizontal layout"
-                        on-tap="onNavMenuItemTapped" disabled$="[[item.disabled]]">
+                        on-tap="_onNavMenuItemTapped" disabled$="[[item.disabled]]">
               <iron-icon icon="[[item.icon]]"></iron-icon>
               <span>[[item.label]]</span>
             </paper-item>
@@ -149,19 +149,19 @@ You can always change whether the extension has this permission from the Menu op
 
     Manage optional permissions
 
-<b>[[computePermissionsStatus(permissions)]]</b>
+<b>[[_computePermissionsStatus(permissions)]]</b>
 </pre>
           </paper-dialog-scrollable>
           <div class="buttons">
             <paper-button dialog-dismiss>CANCEL</paper-button>
-            <paper-button dialog-dismiss on-click="onDenyPermissionsClicked">DENY</paper-button>
-            <paper-button dialog-confirm autofocus on-click="onAcceptPermissionsClicked">ALLOW</paper-button>
+            <paper-button dialog-dismiss on-click="_onDenyPermissionsClicked">DENY</paper-button>
+            <paper-button dialog-confirm autofocus on-click="_onAcceptPermissionsClicked">ALLOW</paper-button>
           </div>
         </paper-dialog>
 
         <!-- All the pages -->
         <neon-animated-pages attr-for-selected="data-route" selected="{{route}}"
-                             on-neon-animation-finish="onPageAnimation"
+                             on-neon-animation-finish="_onPageAnimation"
                              entry-animation="fade-in-animation" exit-animation="fade-out-animation">
           <neon-animatable data-route="page-main">
             <section>
