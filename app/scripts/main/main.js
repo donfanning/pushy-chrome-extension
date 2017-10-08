@@ -13,7 +13,7 @@ window.app = window.app || {};
    * Script for the main.html page
    *  @namespace Main
    */
-  
+
   new ExceptionHandler();
 
   const chromep = new ChromePromise();
@@ -148,16 +148,8 @@ window.app = window.app || {};
    * @alias Main.pages_labels
    */
   t.pages_labels;
-  
+
   /**
-   * Array concatenation of {@link Main.page} objects
-   * @type {Main.page[]}
-   * @memberOf Main
-   * @alias Main.pages
-   */
-  t.pages;
-  
-    /**
    * Error dialog title
    * @type {string}
    * @memberOf Main
@@ -193,6 +185,14 @@ window.app = window.app || {};
   t.avatar = Chrome.Storage.get('photoURL');
 
   /**
+   * Array concatenation of {@link Main.page} objects
+   * @type {Main.page[]}
+   * @memberOf Main
+   * @alias Main.pages
+   */
+  let pages;
+
+  /**
    * Previous route
    * @type {string}
    * @memberOf Main
@@ -220,7 +220,7 @@ window.app = window.app || {};
    */
   let devicesPage;
 
- /**
+  /**
    * lebels-page element
    * @type {element}
    * @memberOf Main
@@ -245,7 +245,7 @@ window.app = window.app || {};
 
     // initialize menu states
     let idx = _getPageIdx('page-devices');
-    t.pages[idx].disabled = !app.Utils.isSignedIn();
+    pages[idx].disabled = !app.Utils.isSignedIn();
     _setErrorMenuState();
 
     // listen for changes to chrome.storage
@@ -260,6 +260,41 @@ window.app = window.app || {};
       }
     });
 
+    app.DB.get().on('changes', function(changes) {
+      console.log(changes);
+      changes.forEach(function(change) {
+        console.log(change);
+        switch (change.type) {
+          case 1: // CREATED
+            console.log('An object was created: ' + JSON.stringify(change.obj));
+            break;
+          case 2: // UPDATED
+            console.log('An object with key ' + change.key +
+                ' was updated with modifications: ' +
+                JSON.stringify(change.mods));
+            break;
+          case 3: // DELETED
+            if (change.table === 'labels') {
+              console.log('An object was deleted: ' +
+                  JSON.stringify(change.oldObj));
+              
+              const name = change.oldObj.name;
+              let idx = pages.findIndex((page) => {
+                return page.label === name;
+              });
+              t.splice('pages', idx, 1);
+              idx = t.pages_labels.findIndex((page) => {
+                return page.label === name;
+              });
+              t.splice('pages_labels', idx, 1);
+            }
+            break;
+          default:
+            break;
+        }
+      });
+    });
+
     // listen for messages from the service worker
     navigator.serviceWorker.addEventListener('message', _onSWMessage);
 
@@ -272,7 +307,7 @@ window.app = window.app || {};
     // check for optional permissions
     _checkOptionalPermissions();
   }
-  
+
   /**
    * Event: navigation menu selected
    * @param {Event} event - event
@@ -286,7 +321,7 @@ window.app = window.app || {};
     prevRoute = t.route;
 
     const idx = _getPageIdx(event.currentTarget.id);
-    const page = t.pages[idx];
+    const page = pages[idx];
 
     Chrome.GA.event(Chrome.GA.EVENT.MENU, page.route);
 
@@ -421,7 +456,7 @@ window.app = window.app || {};
       });
     }
   }
-  
+
   // noinspection JSUnusedLocalSymbols
   /**
    * Event: Fired when a message is sent from either an extension process<br>
@@ -505,7 +540,7 @@ window.app = window.app || {};
   function _setHighlightRoute() {
     prevRoute = t.route;
     const idx = _getPageIdx(onHighlightRoute);
-    const page = t.pages[idx];
+    const page = pages[idx];
     if (!page.ready) {
       // insert and show
       page.obj(idx);
@@ -540,7 +575,7 @@ window.app = window.app || {};
    * @memberOf Main
    */
   function _getPageIdx(route) {
-    return t.pages.findIndex((page) => {
+    return pages.findIndex((page) => {
       return page.route === route;
     });
   }
@@ -552,13 +587,13 @@ window.app = window.app || {};
    * @memberOf Main
    */
   function _showSignInPage(index) {
-    if (!t.pages[index].ready) {
+    if (!pages[index].ready) {
       // insert the page the first time
-      t.pages[index].ready = true;
+      pages[index].ready = true;
       signInPage = new app.SignInPageFactory();
       Polymer.dom(t.$.signInInsertion).appendChild(signInPage);
     }
-    t.route = t.pages[index].route;
+    t.route = pages[index].route;
     _scrollPageToTop();
   }
 
@@ -569,13 +604,13 @@ window.app = window.app || {};
    * @memberOf Main
    */
   function _showDevicesPage(index) {
-    if (!t.pages[index].ready) {
+    if (!pages[index].ready) {
       // insert the page the first time
-      t.pages[index].ready = true;
+      pages[index].ready = true;
       devicesPage = new app.DevicesPageFactory();
       Polymer.dom(t.$.devicesInsertion).appendChild(devicesPage);
     }
-    t.route = t.pages[index].route;
+    t.route = pages[index].route;
     _scrollPageToTop();
   }
 
@@ -586,13 +621,13 @@ window.app = window.app || {};
    * @memberOf Main
    */
   function _showLabelsPage(index) {
-    if (!t.pages[index].ready) {
+    if (!pages[index].ready) {
       // insert the page the first time
-      t.pages[index].ready = true;
+      pages[index].ready = true;
       labelsPage = new app.LabelsPageFactory();
       Polymer.dom(t.$.labelsInsertion).appendChild(labelsPage);
     }
-    t.route = t.pages[index].route;
+    t.route = pages[index].route;
     _scrollPageToTop();
   }
 
@@ -603,13 +638,13 @@ window.app = window.app || {};
    * @memberOf Main
    */
   function _showSettingsPage(index) {
-    if (!t.pages[index].ready) {
+    if (!pages[index].ready) {
       // insert the page the first time
-      t.pages[index].ready = true;
+      pages[index].ready = true;
       const el = new app.SettingsPageFactory();
       Polymer.dom(t.$.settingsInsertion).appendChild(el);
     }
-    t.route = t.pages[index].route;
+    t.route = pages[index].route;
     _scrollPageToTop();
   }
 
@@ -620,13 +655,13 @@ window.app = window.app || {};
    * @memberOf Main
    */
   function _showHelpPage(index) {
-    if (!t.pages[index].ready) {
+    if (!pages[index].ready) {
       // insert the page the first time
-      t.pages[index].ready = true;
+      pages[index].ready = true;
       const el = new app.HelpPageFactory();
       Polymer.dom(t.$.helpInsertion).appendChild(el);
     }
-    t.route = t.pages[index].route;
+    t.route = pages[index].route;
     _scrollPageToTop();
   }
 
@@ -637,13 +672,13 @@ window.app = window.app || {};
    * @memberOf Main
    */
   function _showErrorPage(index) {
-    if (!t.pages[index].ready) {
+    if (!pages[index].ready) {
       // insert the page the first time
-      t.pages[index].ready = true;
+      pages[index].ready = true;
       const el = new app.ErrorPageFactory();
       Polymer.dom(t.$.errorInsertion).appendChild(el);
     }
-    t.route = t.pages[index].route;
+    t.route = pages[index].route;
     _scrollPageToTop();
   }
 
@@ -683,18 +718,18 @@ window.app = window.app || {};
    * @memberOf Main
    */
   function _buildPages() {
-    t.pages = t.pages_one;
-    _getLabelPages().then((pages) => {
-      pages = pages || [];
-      t.set('pages_labels', pages);
-      t.pages = t.pages.concat(t.pages_labels);
-      t.pages = t.pages.concat(t.pages_two);
+    pages = t.pages_one;
+    _getLabelPages().then((labelPages) => {
+      labelPages = labelPages || [];
+      t.set('pages_labels', labelPages);
+      pages = pages.concat(t.pages_labels);
+      pages = pages.concat(t.pages_two);
       return Promise.resolve();
     }).catch((err) => {
       Chrome.Log.error(err.message, 'Main._buildPages', 'Failed to build menu');
     });
   }
-  
+
   /**
    * Build the menu items for {@link app.Label} objects
    * @returns {Promise<Main.page[]>} array of pages
@@ -717,7 +752,7 @@ window.app = window.app || {};
       return Promise.resolve(pages);
     });
   }
-  
+
   /**
    * Set enabled state of Devices menu item
    * @private
@@ -726,7 +761,7 @@ window.app = window.app || {};
   function _setDevicesMenuState() {
     // disable devices-page if not signed in
     const idx = _getPageIdx('page-devices');
-    const el = document.getElementById(t.pages[idx].route);
+    const el = document.getElementById(pages[idx].route);
     if (el && app.Utils.isSignedIn()) {
       el.removeAttribute('disabled');
     } else if (el) {
