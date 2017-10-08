@@ -27,6 +27,7 @@ const path = {
   bower: `${base.src}bower_components/`,
   bowerScripts: `${base.src}bower_components/chrome-extension-utils/`,
   bowerFirebase: `${base.src}bower_components/firebase/`,
+  bowerDexie: `${base.src}bower_components/dexie/`,
 };
 const files = {
   manifest: `${base.src}manifest.json`,
@@ -41,6 +42,8 @@ const files = {
     `${path.bowerFirebase}firebase-app.js`,
     `${path.bowerFirebase}firebase-auth.js`,
     `${path.bowerFirebase}firebase-messaging.js`,
+    `${path.bowerDexie}dist/dexie.js/dexie.min.js`,
+    `${path.bowerDexie}addons/Dexie.Observable/dist/dexie-observable.js/dexie-observable.min.js`,
   ],
   locales: `${path.locales}**/*.*`,
   bower: [

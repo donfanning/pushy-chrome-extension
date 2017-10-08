@@ -115,7 +115,7 @@ for this device.`;
    * @private
    * @memberOf app.Data
    */
-  const EXAMPLE_LABEL = 'You can label items to categroize them.';
+  const EXAMPLE_LABEL = 'You can label items to categorize them.';
 
   /**
    * Save the [_DEFAULTS]{@link app.Data._DEFAULTS}, if they
@@ -150,9 +150,13 @@ for this device.`;
         Chrome.Log.error(err.message, 'app.Data.initialize');
       });
       
-      app.Label.add('Example').then((label) => {
+      let label;
+      app.Label.add('Example').then((lbl) => {
+        label = lbl;
         return app.ClipItem.add(EXAMPLE_LABEL, Date.now() + 1, true, false,
             app.Device.myName());
+      }).then((clipItem) => {
+        return clipItem.addLabel(label);
       }).catch((err) => {
         Chrome.Log.error(err.message, 'app.Data.initialize');
       });

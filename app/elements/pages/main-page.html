@@ -256,12 +256,6 @@
         notify: true,
       },
 
-      isLabelFilter: {
-        type: Boolean,
-        value: false,
-        notify: true,
-      },
-
       labelName: {
         type: String,
         value: '',
@@ -326,8 +320,10 @@
      * @param {string} name - Label name
      */
     setLabelName: function(name) {
-      this.set('labelName', name);
-      this.set('isLabelFilter', !!name);
+      if (name !== this.labelName) {
+        this.set('labelName', name);
+        this._loadClipItems();
+      }
     },
 
     /**
@@ -549,7 +545,7 @@
     _loadClipItems: function() {
       this.set('listItems', []);
       this._clearClipViewer();
-      app.ClipItem.loadAll().then((clipItems) => {
+      app.ClipItem.loadAll(this.labelName).then((clipItems) => {
         // populate list
         let listItems = [];
         for (let i = 0; i < clipItems.length; i++) {
@@ -721,20 +717,7 @@
      * @private
      */
     _filter: function(listItem) {
-      let ret = true;
-      if (this.isLabelFilter) {
-        ret = true;
-        // TODO fix after labels assigned
-//        ret = (this.labelName !== listItem.clipItem.hasLabel(this.labelName));
-        if (ret && this.isFavFilter) {
-          ret = listItem.clipItem.fav;
-        }
-      }
-      
-      if (ret && this.isFavFilter) {
-        ret = listItem.clipItem.fav;
-      }
-      return ret;
+      return this.isFavFilter ? listItem.clipItem.fav : true;
     },
 
     /**

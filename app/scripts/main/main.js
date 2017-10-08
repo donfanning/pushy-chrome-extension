@@ -309,7 +309,15 @@ window.app = window.app || {};
 
     if (!page.obj) {
       // some pages are just pages
-      t.route = page.route;
+      if (page.route === 'page-main') {
+        t.$.mainPage.setLabelName('');
+        t.route = page.route;
+      } else if (page.route.includes('page-label')) {
+        t.$.mainPage.setLabelName(page.label);
+        t.route = 'page-main';
+      } else {
+        t.route = page.route;
+      }
       _scrollPageToTop();
     } else if (typeof page.obj === 'string') {
       // some pages are url links
@@ -577,18 +585,6 @@ window.app = window.app || {};
   }
 
   /**
-   * Show a label page
-   * @param {int} index - index into {@link Main.pages}
-   * @private
-   * @memberOf Main
-   */
-  function _showLabelPage(index) {
-    t.$.mainPage.setLabelName(t.pages[index].label);
-    t.route = 'page-main';
-    _scrollPageToTop();
-  }
-
-  /**
    * Show the settings page
    * @param {int} index - index into {@link Main.pages}
    * @private
@@ -701,7 +697,7 @@ window.app = window.app || {};
       labels.forEach((label) => {
         pages.push({
           label: label.name, route: `page-label${count}`,
-          icon: 'myicons:label', obj: _showLabelPage,
+          icon: 'myicons:label', obj: null,
           ready: true, disabled: false, divider: false,
         });
         count++;

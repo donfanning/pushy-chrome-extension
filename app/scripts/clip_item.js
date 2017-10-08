@@ -19,6 +19,7 @@
    * @param {boolean} remote - true if this came from a device other than ours
    * @param {string} device - A String representing the source device
    * @property {int} _id - database PK
+   * @property {int[]} labelsId - Array of label PK's
    */
   const ClipItem = function(text, date, fav, remote, device) {
     this.text = text;
@@ -26,6 +27,7 @@
     this.fav = fav;
     this.remote = remote;
     this.device = device;
+    this.labelsId = [];
   };
 
   /**
@@ -48,6 +50,27 @@
    * @type {string}
    */
   ClipItem.ERROR_REMOVE_FAILED = 'Failed to delete item(s).';
+
+  /**
+   * Error indicating Label add failed
+   * @const
+   * @type {string}
+   */
+  ClipItem.ERROR_ADD_LABEL = 'Failed to add Label.';
+
+  /**
+   * Error indicating Label remove failed
+   * @const
+   * @type {string}
+   */
+  ClipItem.ERROR_REMOVE_LABEL = 'Failed to remove Label.';
+
+  /**
+   * Error indicating Label id doesn't exist
+   * @const
+   * @type {string}
+   */
+  ClipItem._ERROR_NO_LABEL = 'Label not found.';
 
   /**
    * Set date
@@ -74,11 +97,63 @@
   };
 
   /**
+   * Do we contain a {@link app.Label}
+   * @param {string} name - {@link app.Label} name
+   * @returns {Promise<boolean>} true if we have Label
+   */
+  ClipItem.prototype.hasLabel = function(name) {
+    const label = new app.Label(name);
+    return label.getId().then((id) => {
+      if (id && this.labelsId.includes(id)) {
+        return Promise.resolve(true);
+      }
+      return Promise.resolve(false);
+    });
+  };
+
+  /**
    * Set remote
    * @param {boolean} remote - true if not from our {@link Device}
    */
   ClipItem.prototype.setRemote = function(remote) {
     this.remote = remote;
+  };
+
+  /**
+   * Add a label
+   * @param {Label} label - label to add
+   */
+  ClipItem.prototype.addLabel = function(label) {
+    label.getId().then((id) => {
+      if (id) {
+        this.labelsId.push(id);
+        return this.save();
+      }
+      return Promise.reject(new Error(ClipItem._ERROR_NO_LABEL));
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'ClipItem.addLabel',
+          ClipItem.ERROR_ADD_LABEL);
+    });
+  };
+
+  /**
+   * Remove a label
+   * @param {Label} label - label to remove
+   */
+  ClipItem.prototype.removeLabel = function(label) {
+    label.getId().then((id) => {
+      if (id) {
+        const index = this.labelsId.indexOf(id);
+        if (index !== -1) {
+          this.labelsId.splice(index, 1);
+          return this.save();
+        }
+      }
+      return Promise.reject(new Error(ClipItem._ERROR_NO_LABEL));
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'ClipItem.removeLabel',
+          ClipItem.ERROR_REMOVE_LABEL);
+    });
   };
 
   /**
@@ -235,10 +310,24 @@
 
   /**
    * Return all the {@link ClipItem} objects from storage
-   * @returns {Promise<Array>} Array of {@link ClipItem} objects
+   * @param {?string} [labelName=null] - optional {@link app.Label} name
+   * to filter on
+   * @returns {Promise<Array>} Array of {@link app.ClipItem} objects
    */
-  ClipItem.loadAll = function() {
-    return app.DB.clips().toArray();
+  ClipItem.loadAll = function(labelName) {
+    if (labelName) {
+      const label = new app.Label(labelName);
+      return label.getId().then((id) => {
+        if (id) {
+          // TODO filter
+          return app.DB.clips().where('labelsId').equals(id).toArray();
+        } else {
+          return app.DB.clips().toArray();
+        }
+      });
+    } else {
+      return app.DB.clips().toArray();
+    }
   };
 
   /**

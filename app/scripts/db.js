@@ -59,8 +59,8 @@ app.DB = (function() {
 
     // add labels support
     _db.version(_VER_TWO).stores({
-      clipItems: '++_id, &text, date',
       labels: '++_id, &name',
+      clipItems: '++_id, &text, date, *labelsId',
     });
 
     _db.clipItems.mapToClass(app.ClipItem);

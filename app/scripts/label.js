@@ -24,7 +24,7 @@
    * Get the PK for our name
    * @returns {Promise<int|null>} database PK or null if text not found
    */
-  Label.prototype._getId = function() {
+  Label.prototype.getId = function() {
     return app.DB.labels().where('name').equals(this.name).first((label) => {
       if (label !== undefined) {
         return Promise.resolve(label._id);
@@ -65,7 +65,7 @@
    */
   Label.prototype._addOrUpdate = function() {
     let updated = false;
-    return this._getId().then((id) => {
+    return this.getId().then((id) => {
       if (id) {
         updated = true;
         this._id = id;
@@ -110,7 +110,7 @@
       return Promise.reject(new Error(Label.ERROR_EMPTY_TEXT));
     }
     const label = new Label(name);
-    return label._getId().then((id) => {
+    return label.getId().then((id) => {
       if (id) {
         return Promise.reject(new Error(Label.ERROR_EXISTS));
       }
