@@ -81,15 +81,6 @@ app.ChromeMsg = (function() {
     UNREGISTER_FAILED: {
       message: 'unregisterFailed',
     },
-    CLIP_ADDED: {
-      message: 'clipAdded',
-      item: '',
-      updated: false,
-    },
-    CLIP_REMOVED: {
-      message: 'clipRemoved',
-      item: '',
-    },
     RELOAD_DB: {
       message: 'reloadDB',
     },
@@ -107,8 +98,6 @@ app.ChromeMsg = (function() {
     MSG_FAILED: _MSG.MSG_FAILED,
     REGISTER_FAILED: _MSG.REGISTER_FAILED,
     UNREGISTER_FAILED: _MSG.UNREGISTER_FAILED,
-    CLIP_ADDED: _MSG.CLIP_ADDED,
-    CLIP_REMOVED: _MSG.CLIP_REMOVED,
     RELOAD_DB: _MSG.RELOAD_DB,
   };
 })();

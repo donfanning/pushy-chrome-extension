@@ -248,9 +248,6 @@ window.app = window.app || {};
     // listen for messages from the service worker
     navigator.serviceWorker.addEventListener('message', _onSWMessage);
 
-    // listen for changes to highlighted tabs
-    chrome.tabs.onHighlighted.addListener(_onHighlighted);
-
     // check for optional permissions
     _checkOptionalPermissions();
   }
@@ -529,30 +526,6 @@ window.app = window.app || {};
         default:
           break;
       }
-    });
-  }
-
-  /**
-   * Event: Fired when the highlighted or selected tabs in a window changes.
-   * @see https://developer.chrome.com/extensions/tabs#event-onHighlighted
-   * @param {Object} highlightInfo - info
-   * @private
-   * @memberOf Main
-   */
-  function _onHighlighted(highlightInfo) {
-    const tabIds = highlightInfo.tabIds;
-    chromep.tabs.getCurrent().then((tab) => {
-      for (let i = 0; i < tabIds.length; i++) {
-        const tabId = tabIds[i];
-        if (tabId === tab.id) {
-          // our tab
-          _setHighlightRoute();
-          break;
-        }
-      }
-      return Promise.resolve();
-    }).catch((err) => {
-      Chrome.Log.error(err.message, 'Main._onHighlighted');
     });
   }
 

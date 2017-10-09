@@ -272,18 +272,8 @@
    * @returns {Promise<ClipItem>} A new {@link ClipItem}
    */
   ClipItem.add = function(text, date, fav, remote, device) {
-    let updated;
     const clipItem = new ClipItem(text, date, fav, remote, device);
-    return clipItem._getId().then((id) => {
-      updated = !!id;
-      return clipItem.save();
-    }).then(() => {
-      // let listeners know a ClipItem was added or updated
-      const msg = app.ChromeMsg.CLIP_ADDED;
-      msg.item = clipItem;
-      msg.updated = updated;
-      // eslint-disable-next-line promise/no-nesting
-      Chrome.Msg.send(msg).catch(() => {});
+    return clipItem.save().then(() => {
       return Promise.resolve(clipItem);
     });
   };
@@ -393,12 +383,6 @@
         throw new Error(ClipItem.ERROR_REMOVE_FAILED);
       }
     }).then(() => {
-      // let listeners know a ClipItem was removed
-      // Note: This will not be called if invoked by other than background.html
-      const msg = app.ChromeMsg.CLIP_REMOVED;
-      msg.item = clipItem;
-      // eslint-disable-next-line promise/no-nesting
-      Chrome.Msg.send(msg).catch(() => {});
       return Promise.resolve();
     });
   };
