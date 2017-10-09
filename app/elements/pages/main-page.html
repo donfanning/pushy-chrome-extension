@@ -161,6 +161,7 @@
             <paper-button dialog-confirm on-click="_deleteSelectedRows">DELETE</paper-button>
           </div>
         </paper-dialog>
+        
         <!-- Main list -->
         <div id="clipList" class="flex-2">
           <iron-selector id="ironSelector"
@@ -202,6 +203,7 @@
             </template>
           </iron-selector>
         </div>
+        
         <!-- Clip Viewer -->
         <div id="clipViewer" class="flex-3"></div>
       </div>
@@ -558,6 +560,7 @@
 
         this.$.ironSelector.selectIndex(0);
         this.$.clipList.scrollTop = 0;
+        this._setTitle();
         return Promise.resolve();
       }).catch((err) => {
         Chrome.Log.error(err.message, 'Main._loadClipItems');
@@ -635,6 +638,7 @@
     /**
      * Add or update a {@link MainPage.ListItem}
      * @param {app.ChromeMsg.Message} request - Chrome message request
+     * @private
      */
     _addListItem(request) {
       const clip = request.item;
@@ -737,20 +741,35 @@
      */
     _updateView: function() {
       this._clearClipViewer();
+      this._setTitle();
       this.updateDates();
       const el = this.$.ironSelector.selectedItem;
       const listItem = this.$.listTemplate.itemForElement(el);
       if (listItem) {
+        this._updateClipViewer(listItem.clipItem);
+      }
+    },
+
+    /**
+     * Set the title
+     * @private
+     */
+    _setTitle: function() {
+      const el = this.$.ironSelector.selectedItem;
+      const listItem = this.$.listTemplate.itemForElement(el);
+      let title = 'Clips: ';
+      if (!Chrome.Utils.isWhiteSpace(this.labelName)) {
+        title = `${this.labelName}: `;
+      }
+      if (listItem) {
         const clipItem = listItem.clipItem;
         if (clipItem.remote) {
-          this.set('title', `Remote clip - ${clipItem.device}`);
+          title += `Remote clip - ${clipItem.device}`;
         } else {
-          this.set('title', 'Local clip');
+          title += 'Local clip';
         }
-        this._updateClipViewer(clipItem);
-      } else {
-        this.set('title', '');
       }
+      this.set('title', title);
     },
 
     /**
