@@ -35,7 +35,7 @@ app.DB = (function() {
   const _VER_ONE = 1;
 
   /**
-   * The second Dexie database version - adding {@link app.Label} support
+   * The second Dexie database version - adding {@link Label} support
    * @const
    * @type {int}
    * @private

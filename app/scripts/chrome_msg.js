@@ -23,9 +23,9 @@ app.ChromeMsg = (function() {
    * @property {Chrome.Msg.Message} DEVICES_CHANGED - list of {@link
    *     app.Devices} changed
    * @property {Chrome.Msg.Message} PING - ping our {@link app.Devices}
-   * @property {Chrome.Msg.Message} COPY_TO_CLIPBOARD - copy {@link
-   *     app.ClipItem} to clipboard
-   * @property {Chrome.Msg.Message} COPIED_TO_CLIPBOARD - {@link app.ClipItem}
+   * @property {Chrome.Msg.Message} COPY_TO_CLIPBOARD - copy {@link ClipItem}
+   * to clipboard
+   * @property {Chrome.Msg.Message} COPIED_TO_CLIPBOARD - {@link ClipItem}
    *     copied to clipboard
    * @property {Chrome.Msg.Message} SIGN_IN - {@link app.User} sign in
    * @property {Chrome.Msg.Message} SIGN_OUT - {@link app.User} sign out
@@ -36,11 +36,11 @@ app.ChromeMsg = (function() {
    *     failed
    * @property {Chrome.Msg.Message} UNREGISTER_FAILED - unregister with server
    *     failed
-   * @property {Chrome.Msg.Message} CLIP_ADDED - a {@link app.ClipItem} was
+   * @property {Chrome.Msg.Message} CLIP_ADDED - a {@link ClipItem} was
    *     added or updated
-   * @property {Chrome.Msg.Message} CLIP_REMOVED - a {@link app.ClipItem} was
+   * @property {Chrome.Msg.Message} CLIP_REMOVED - a {@link ClipItem} was
    *     deleted
-   * @property {Chrome.Msg.Message} RELOAD_DB - reload the {@link app.ClipItem}
+   * @property {Chrome.Msg.Message} RELOAD_DB - reload the {@link ClipItem}
    * database
    * @const
    * @memberOf app.ChromeMsg

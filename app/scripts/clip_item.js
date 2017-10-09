@@ -98,15 +98,15 @@
   
   /**
    * Get our labels
-   * @returns {Promise<Label[]>} Array of {@link app.Label} objects
+   * @returns {Promise<Label[]>} Array of {@link Label} objects
    */
   ClipItem.prototype.getLabels = function() {
     return app.DB.labels().where('_id').anyOf(this.labelsId).sortBy('name');
   };
 
   /**
-   * Do we contain a {@link app.Label}
-   * @param {string} name - {@link app.Label} name
+   * Do we contain a {@link Label}
+   * @param {string} name - {@link Label} name
    * @returns {Promise<boolean>} true if we have Label
    */
   ClipItem.prototype.hasLabel = function(name) {
@@ -127,7 +127,7 @@
     this.remote = remote;
   };
   /**
-   * Set our {@link app.Label} ids
+   * Set our {@link Label} ids
    * @param {string[]} labelNames - names of labels
    * @returns {Promise<int>} our database PK
    */
@@ -326,9 +326,9 @@
 
   /**
    * Return all the {@link ClipItem} objects from storage
-   * @param {?string} [labelName=null] - optional {@link app.Label} name
+   * @param {?string} [labelName=null] - optional {@link Label} name
    * to filter on
-   * @returns {Promise<Array>} Array of {@link app.ClipItem} objects
+   * @returns {Promise<Array>} Array of {@link ClipItem} objects
    */
   ClipItem.loadAll = function(labelName) {
     if (labelName) {

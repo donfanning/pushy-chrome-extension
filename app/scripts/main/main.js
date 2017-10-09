@@ -145,7 +145,7 @@ window.app = window.app || {};
   ];
 
   /**
-   * Array of {@link Main.page} objects for the {@link app.Label} objects
+   * Array of {@link Main.page} objects for the {@link Label} objects
    * @type {Main.page[]}
    * @memberOf Main
    */
@@ -646,7 +646,7 @@ window.app = window.app || {};
   }
 
   /**
-   * Build the menu items for {@link app.Label} objects
+   * Build the menu items for {@link Label} objects
    * @returns {Promise<Main.page[]>} array of pages
    * @private
    * @memberOf Main

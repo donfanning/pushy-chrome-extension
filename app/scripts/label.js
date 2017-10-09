@@ -10,7 +10,7 @@
   new ExceptionHandler();
 
   /**
-   * A Label for a {@link app.ClipItem}
+   * A Label for a {@link ClipItem}
    * @constructor
    * @alias Label
    * @param {string} name - label name
