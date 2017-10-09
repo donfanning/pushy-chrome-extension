@@ -95,6 +95,14 @@
   ClipItem.prototype.setFav = function(fav) {
     this.fav = fav;
   };
+  
+  /**
+   * Get our labels
+   * @returns {Promise<Label[]>} Array of {@link app.Label} objects
+   */
+  ClipItem.prototype.getLabels = function() {
+    return app.DB.labels().where('_id').anyOf(this.labelsId).sortBy('name');
+  };
 
   /**
    * Do we contain a {@link app.Label}
@@ -117,6 +125,24 @@
    */
   ClipItem.prototype.setRemote = function(remote) {
     this.remote = remote;
+  };
+  /**
+   * Set our {@link app.Label} ids
+   * @param {string[]} labelNames - names of labels
+   * @returns {Promise<int>} our database PK
+   */
+  ClipItem.prototype.setLabels = function(labelNames) {
+    labelNames = labelNames || [];
+    return app.Label.loadAll().then((labels) => {
+      labels = labels || [];
+      this.labelsId = [];
+      labels.forEach((label) => {
+        if (labelNames.includes(label.name)) {
+          this.labelsId.push(label._id);
+        }
+      });
+      return this.save();
+    });
   };
 
   /**
@@ -309,14 +335,14 @@
       const label = new app.Label(labelName);
       return label.getId().then((id) => {
         if (id) {
-          // TODO filter
-          return app.DB.clips().where('labelsId').equals(id).toArray();
+          // filter by label
+          return app.DB.clips().where('labelsId').equals(id).sortBy('date');
         } else {
-          return app.DB.clips().toArray();
+          return app.DB.clips().orderBy('date').toArray();
         }
       });
     } else {
-      return app.DB.clips().toArray();
+      return app.DB.clips().orderBy('date').toArray();
     }
   };
 

@@ -274,7 +274,7 @@ window.app = window.app || {};
       if (page.route === 'page-main') {
         t.$.mainPage.setLabelName('');
         t.route = page.route;
-      } else if (page.route.includes('page-label')) {
+      } else if (page.route.includes('page-main-labeled')) {
         t.$.mainPage.setLabelName(page.label);
         t.route = 'page-main';
       } else {
@@ -492,7 +492,7 @@ window.app = window.app || {};
             const name = change.obj.name;
             const suffix = t.pages_labels.length;
             const newPage = {
-              label: name, route: `page-label${suffix}`,
+              label: name, route: `page-main-labeled${suffix}`,
               icon: 'myicons:label', ready: true, divider: false,
               obj: null, insertion: null, el: null,
             };
@@ -658,7 +658,7 @@ window.app = window.app || {};
       let count = 0;
       labels.forEach((label) => {
         pages.push({
-          label: label.name, route: `page-label${count}`,
+          label: label.name, route: `page-main-labeled${count}`,
           icon: 'myicons:label', ready: true, divider: false,
           obj: null, insertion: null, el: null,
         });

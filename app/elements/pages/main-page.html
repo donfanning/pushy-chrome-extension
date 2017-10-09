@@ -16,7 +16,10 @@
 <link rel="import" href="../../bower_components/paper-toggle-button/paper-toggle-button.html">
 <link rel="import" href="../../bower_components/paper-tooltip/paper-tooltip.html">
 <link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
@@ -61,6 +64,10 @@
         border-right-style: solid;
         padding: 0 0 32px;
         margin: 0;
+      }
+
+      #selectLabelsDialog {
+        min-width: 25vw;
       }
 
       #clipViewer {
@@ -122,6 +129,7 @@
     </style>
 
     <paper-material elevation="1" class="page-content">
+      
       <!-- Tool bar -->
       <paper-material elevation="1">
         <paper-toolbar class="page-toolbar">
@@ -134,6 +142,9 @@
             <paper-tooltip for="fav" position="left" offset="0">
               [[_computeFavToolTip(isFavFilter)]]
             </paper-tooltip>
+            <paper-icon-button id="labels" icon="myicons:label"
+                               on-tap="_onSelectLabelsTapped"></paper-icon-button>
+            <paper-tooltip for="labels" position="left" offset="0">Select labels</paper-tooltip>
             <paper-icon-button id="select" icon="myicons:check-box"
                                on-tap="_onSelectAllTapped"></paper-icon-button>
             <paper-tooltip for="select" position="left" offset="0">Select all items</paper-tooltip>
@@ -146,8 +157,10 @@
           </div>
         </paper-toolbar>
       </paper-material>
+      
       <!-- Content -->
       <div class="body-content horizontal layout">
+        
         <!-- Delete dialog -->
         <paper-dialog id="deleteDialog" modal entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation">
@@ -159,6 +172,29 @@
           <div class="buttons">
             <paper-button dialog-dismiss autofocus>CANCEL</paper-button>
             <paper-button dialog-confirm on-click="_onDeleteSelectedRows">DELETE</paper-button>
+          </div>
+        </paper-dialog>
+
+        <!-- Select labels dialog -->
+        <paper-dialog id="selectLabelsDialog" modal
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+          <h2 class="vertical layout center">Select labels</h2>
+          <paper-dialog-scrollable>
+            <paper-listbox id="labelList" multi attr-for-selected="id"
+                           selected-values="{{selectedLabelItems}}"
+                           on-selected-items-changed="_onSelectedLabelsChanged">
+              <template is="dom-repeat" id="labelListTemplate"
+                        items="{{labelItems}}" as="labelItem">
+                <paper-icon-item id="[[labelItem]]">
+                  <iron-icon icon="myicons:label" item-icon></iron-icon>
+                  [[labelItem]]
+                </paper-icon-item>
+              </template>
+            </paper-listbox>
+          </paper-dialog-scrollable>
+          <div class="buttons">
+            <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
           </div>
         </paper-dialog>
 
@@ -206,6 +242,7 @@
 
         <!-- Clip Viewer -->
         <div id="clipViewer" class="flex-3"></div>
+        
       </div>
     </paper-material>
   </template>
@@ -229,6 +266,11 @@
       is: 'main-page',
 
       properties: {
+
+        title: {
+          type: String,
+          value: '',
+        },
 
         /**
          * Item in the main list
@@ -273,9 +315,21 @@
           notify: true,
         },
 
-        title: {
-          type: String,
-          value: '',
+        labelItems: {
+          type: Array,
+          value: [],
+          notify: true,
+        },
+
+        /**
+         * Item in the main list
+         * @typedef {string[]} MainPage.selectedLabelItems
+         * @memberOf MainPage
+         */
+        selectedLabelItems: {
+          type: Array,
+          value: [],
+          notify: true,
         },
       },
 
@@ -303,7 +357,7 @@
       },
 
       /**
-       * Event: We have animated in and are now the current page
+       * We have animated in and are now the current page
        */
       onCurrentPage: function() {
         this.updateDates();
@@ -317,6 +371,17 @@
           const date = this.listItems[i].clipItem.date;
           this.set(`listItems.${i}.clipItem.date`, date - 1);
           this.set(`listItems.${i}.clipItem.date`, date);
+        }
+      },
+      
+      /**
+       * Set {@link app.Label} name for filtering
+       * @param {string} name - Label name
+       */
+      setLabelName: function(name) {
+        if (name !== this.labelName) {
+          this.set('labelName', name);
+          this._loadClipItems();
         }
       },
 
@@ -336,14 +401,27 @@
                     new app.ClipItem(c.text, c.date, c.fav, c.remote, c.device);
                 clipItem._id = c._id;
                 clipItem.labelsId = c.labelsId;
-                if (Chrome.Utils.isWhiteSpace(self.labelName) ||
-                    (clipItem.hasLabel(self.labelName))) {
+                if (Chrome.Utils.isWhiteSpace(self.labelName)) {
                   self.push('listItems', {
                     checked: false,
                     clipItem: clipItem,
                   });
                   // select first row and update UI
                   self._selectFirst();
+                } else {
+                  clipItem.hasLabel(self.labelName).then((isTrue) => {
+                    if (isTrue) {
+                      self.push('listItems', {
+                        checked: false,
+                        clipItem: clipItem,
+                      });
+                      // select first row and update UI
+                      self._selectFirst();
+                    }
+                    return Promise.resolve();
+                  }).catch((err) => {
+                    Chrome.Log.error(err.message, 'MainPage._onDBChanged');
+                  });
                 }
               }
               break;
@@ -376,6 +454,52 @@
             default:
               break;
           }
+        });
+      },
+
+      /**
+       * Event: Select labels menu icon tapped
+       * @private
+       */
+      _onSelectLabelsTapped: function() {
+        const el = this.$.ironSelector.selectedItem;
+        const listItem = this.$.listTemplate.itemForElement(el);
+        const clipItem = listItem.clipItem;
+        app.Label.loadAll().then((labels) => {
+          labels = labels || [];
+          this.splice('labelItems', 0, this.labelItems.length);
+          labels.forEach((label) => {
+            this.push('labelItems', label.name);
+          });
+          return Promise.resolve();
+        }).then(() => {
+          return clipItem.getLabels();
+        }).then((labels) => {
+          labels = labels || [];
+          this.splice('selectedLabelItems', 0, this.selectedLabelItems.length);
+          labels.forEach((label) => {
+            this.push('selectedLabelItems', label.name);
+          });
+          this.$.selectLabelsDialog.open();
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, 'MainPage._onSelectLabelsTapped',
+          'Failed to load labels');
+        });
+      },
+      
+      /**
+       * Event: paper-listbox select values changed
+       * @param {event} event - event
+       * @private
+       */
+      _onSelectedLabelsChanged: function(event) {
+        const el = this.$.ironSelector.selectedItem;
+        const listItem = this.$.listTemplate.itemForElement(el);
+        const clipItem = listItem.clipItem;
+        clipItem.setLabels(this.selectedLabelItems).catch((err) => {
+          Chrome.Log.error(err.errorMessage, 'MainPage._onSelectedLabelsChanged',
+          'Failed to set labels.');
         });
       },
 
@@ -613,17 +737,6 @@
        */
       _computeFavToolTip: function(isFilter) {
         return isFilter ? 'Show all' : 'Show favorites';
-      },
-
-      /**
-       * Set {@link app.Label} name for filtering
-       * @param {string} name - Label name
-       */
-      setLabelName: function(name) {
-        if (name !== this.labelName) {
-          this.set('labelName', name);
-          this._loadClipItems();
-        }
       },
 
       /**

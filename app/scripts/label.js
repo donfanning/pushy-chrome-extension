@@ -135,7 +135,7 @@
    * @returns {Promise<Array>} Array of {@link Label} objects
    */
   Label.loadAll = function() {
-    return app.DB.labels().toArray();
+    return app.DB.labels().orderBy('name').toArray();
   };
 
   window.app = window.app || {};
