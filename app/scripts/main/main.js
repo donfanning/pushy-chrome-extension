@@ -223,12 +223,16 @@ window.app = window.app || {};
       // initialize menu states
       _setDevicesMenuState();
       _setErrorMenuState();
+      
+      // select menu
+      t.$.mainMenu.select(t.route);
+      
       return Promise.resolve();
     }).catch((err) => {
       Chrome.Log.error(err.message,
           'Main._buildPages', 'Failed tp build menu.');
     });
-
+    
     // listen for Chrome messages
     Chrome.Msg.listen(_onChromeMessage);
 
@@ -286,18 +290,7 @@ window.app = window.app || {};
       chrome.tabs.create({url: page.obj});
     } else {
       // some pages have functions to view them
-      if (page.insertion) {
-        if (!page.ready) {
-          // insert the page the first time
-          page.ready = true;
-          // eslint-disable-next-line new-cap
-          page.el = new page.obj();
-          const insertEl = document.getElementById(page.insertion);
-          Polymer.dom(insertEl).appendChild(page.el);
-        }
-      } else {
-        page.obj();
-      }
+      _showPage(page);
       t.route = page.route;
       _scrollPageToTop();
     }
@@ -572,30 +565,18 @@ window.app = window.app || {};
     prevRoute = t.route;
     const idx = _getPageIdx(onHighlightRoute);
     const page = pages[idx];
-    if (!page.ready) {
-      // insert and show
-      page.obj(idx);
+    if (onHighlightRoute === 'page-main') {
+      t.$.mainPage.setLabelName('');
+      if ((prevRoute === 'page-main')) {
+        t.$.mainPage.updateDates();
+      }
     } else {
-      // select it
-      t.route = onHighlightRoute;
+      _showPage(page);
     }
+    t.route = onHighlightRoute;
     t.$.mainMenu.select(onHighlightRoute);
-    if ((prevRoute === 'page-main') && (t.route === 'page-main')) {
-      t.$.mainPage.updateDates();
-    }
+    _scrollPageToTop();
     onHighlightRoute = 'page-main';
-  }
-
-  /**
-   * Display dialog to prompt for accepting optional permissions
-   * if it has not been set yet
-   * @memberOf Main
-   * @private
-   */
-  function _checkOptionalPermissions() {
-    if (Chrome.Storage.get('permissions') === app.Permissions.NOT_SET) {
-      _showPermissionsDialog();
-    }
   }
 
   /**
@@ -609,6 +590,39 @@ window.app = window.app || {};
     return pages.findIndex((page) => {
       return page.route === route;
     });
+  }
+
+  /**
+   * Show a {@link Main.page}
+   * @param {Main.page} page - a {@link Main.page}
+   * @private
+   * @memberOf Main
+   */
+  function _showPage(page) {
+    if (page.insertion) {
+      if (!page.ready) {
+        // insert the page the first time
+        page.ready = true;
+        // eslint-disable-next-line new-cap
+        page.el = new page.obj();
+        const insertEl = document.getElementById(page.insertion);
+        Polymer.dom(insertEl).appendChild(page.el);
+      }
+    } else {
+      page.obj();
+    }
+  }
+  
+  /**
+   * Display dialog to prompt for accepting optional permissions
+   * if it has not been set yet
+   * @memberOf Main
+   * @private
+   */
+  function _checkOptionalPermissions() {
+    if (Chrome.Storage.get('permissions') === app.Permissions.NOT_SET) {
+      _showPermissionsDialog();
+    }
   }
 
   /**
