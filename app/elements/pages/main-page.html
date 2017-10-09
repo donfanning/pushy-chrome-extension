@@ -54,6 +54,17 @@
       .body-content {
         padding-top: 0;
       }
+      
+      iron-icon {
+        color: var(--accent-color);
+      }
+
+      paper-icon-item {
+        /*stupid documentation*/
+        --paper-item-focused-before: {
+          background: transparent;
+        };
+      }
 
       #clipList {
         min-width: 600px;
@@ -203,14 +214,9 @@
           <iron-selector id="ironSelector"
                          on-iron-select="_onListItemSelected"
                          on-iron-items-changed="_onSelectableChanged">
-            <template
-                is="dom-repeat"
-                id="listTemplate"
-                items="{{listItems}}"
-                as="listItem"
-                sort="_sortByDate"
-                filter="_filter"
-                observe="clipItem.date">
+            <template is="dom-repeat" id="listTemplate"
+                items="{{listItems}}" as="listItem"
+                sort="_sortByDate" filter="_filter">
               <div class="list-item horizontal center layout" id="listItem[[index]]">
                 <paper-checkbox
                     class="select-checkbox"
@@ -376,12 +382,14 @@
       
       /**
        * Set {@link app.Label} name for filtering
-       * @param {string} name - Label name
+       * @param {string} labelName - Label name
        */
-      setLabelName: function(name) {
-        if (name !== this.labelName) {
-          this.set('labelName', name);
+      setLabelName: function(labelName) {
+        if (labelName !== this.labelName) {
+          this.set('labelName', labelName);
           this._loadClipItems();
+        } else {
+          this.updateDates();
         }
       },
 
@@ -489,15 +497,22 @@
       },
       
       /**
-       * Event: paper-listbox select values changed
-       * @param {event} event - event
+       * Event: paper-listbox selected-values-changed
        * @private
        */
-      _onSelectedLabelsChanged: function(event) {
+      _onSelectedLabelsChanged: function() {
         const el = this.$.ironSelector.selectedItem;
         const listItem = this.$.listTemplate.itemForElement(el);
         const clipItem = listItem.clipItem;
-        clipItem.setLabels(this.selectedLabelItems).catch((err) => {
+        clipItem.setLabels(this.selectedLabelItems).then(() => {
+          if (!Chrome.Utils.isWhiteSpace(this.labelName) &&
+              !this.selectedLabelItems.includes(this.labelName)) {
+            // deselected our label
+            this._loadClipItems();
+            this.$.selectLabelsDialog.close();
+          }
+          return Promise.resolve();
+        }).catch((err) => {
           Chrome.Log.error(err.errorMessage, 'MainPage._onSelectedLabelsChanged',
           'Failed to set labels.');
         });
