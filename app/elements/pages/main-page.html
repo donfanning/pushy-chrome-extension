@@ -331,7 +331,11 @@
           switch (change.type) {
             case 1: // CREATED
               if (change.table === 'clipItems') {
-                const clipItem = change.obj;
+                const c = change.obj;
+                const clipItem =
+                    new app.ClipItem(c.text, c.date, c.fav, c.remote, c.device);
+                clipItem._id = c._id;
+                clipItem.labelsId = c.labelsId;
                 if (Chrome.Utils.isWhiteSpace(self.labelName) ||
                     (clipItem.hasLabel(self.labelName))) {
                   self.push('listItems', {
@@ -344,14 +348,19 @@
               }
               break;
             case 2: // UPDATED
-//            if (change.table === 'labels') {
-//              const name = change.oldObj.name;
-//              const newName = change.obj.name;
-//              const idx = t.pages_labels.findIndex((page) => {
-//                return page.label === name;
-//              });
-//              t.set(`pages_labels.${idx}.label`, newName);
-//            }
+              if (change.table === 'clipItems') {
+                const clipItem = change.obj;
+                const pos = self._getListItemPos(clipItem.text);
+                if (pos !== -1) {
+                  const str = `listItems.${pos}.clipItem.`;
+                  self.set(`${str}_id`, clipItem._id);
+                  self.set(`${str}fav`, clipItem.fav);
+                  self.set(`${str}date`, clipItem.date);
+                  self.set(`${str}remote`, clipItem.remote);
+                  self.set(`${str}device`, clipItem.device);
+                  self.set(`${str}labelsId`, clipItem.labelsId);
+                }
+              }
               break;
             case 3: // DELETED
               if (change.table === 'tables') {
@@ -474,16 +483,10 @@
         const remote = false;
         clipItem.setDate(date);
         clipItem.setRemote(remote);
-        // persist value
         clipItem.save().catch((err) => {
           Chrome.Log.error(err.message, 'Main._onCopyTapped');
         });
-
-        const pos = this.listItems.indexOf(listItem);
-        this.set(`listItems.${pos}.clipItem._id`, clipItem._id);
-        this.set(`listItems.${pos}.clipItem.date`, date);
-        this.set(`listItems.${pos}.clipItem.remote`, remote);
-
+        
         // prevent row selection
         event.stopPropagation();
 
@@ -510,10 +513,6 @@
         clipItem.save().catch((err) => {
           Chrome.Log.error(err.message, 'Main._onFavTapped');
         });
-
-        const pos = this.listItems.indexOf(listItem);
-        this.set(`listItems.${pos}.clipItem._id`, clipItem._id);
-        this.set(`listItems.${pos}.clipItem.fav`, fav);
       },
 
       /**
@@ -687,7 +686,7 @@
           }
         }
       },
-      
+
       /**
        * Get position of {@link MainPage.ListItem} with given text
        * @param {string} clipText - text to find
