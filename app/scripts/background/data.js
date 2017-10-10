@@ -7,7 +7,7 @@
 window.app = window.app || {};
 
 /**
- * The extension's localStorage data
+ * Manage the extension's data sources
  * @namespace
  */
 app.Data = (function() {
@@ -18,12 +18,11 @@ app.Data = (function() {
   /**
    * Version of data - update when items are added, removed, changed
    * @type {int}
-   * @default
    * @const
    * @private
    * @memberOf app.Data
    */
-  const _VERSION = 5;
+  const _VERSION = 6;
 
   /**
    * The data items saved to localStorage
@@ -90,8 +89,9 @@ app.Data = (function() {
    * @private
    * @memberOf app.Data
    */
-  const INTRO_TEXT =
-      `A clipboard manager with push notifications.
+  const _INTRO_TEXT =
+      `A clipboard manager that can share with all your devices.
+https://pushy-clipboard.github.io/index.html
 
 Please signin from the "Manage Account" page to share with your \
 other devices.
@@ -106,7 +106,14 @@ You can display this page by right clicking on the toolbar icon and \
 selecting "Options".
 
 It is a good idea to go to the "Settings" page and enter a nickname \
-for this device.`;
+for this device.
+
+Contact me for support or to provide feedback pushyclipboard@gmail.com
+
+I write free, open source software for fun and hope it benefits others.
+If you find the extension of value please rate it. Thanks. \
+
+`;
 
   /**
    * Labeled {@link ClipItem}
@@ -115,11 +122,19 @@ for this device.`;
    * @private
    * @memberOf app.Data
    */
-  const EXAMPLE_LABEL = 'You can label items to categorize them.';
+  const _EXAMPLE_LABEL = 'You can label items to categorize them.';
 
   /**
-   * Save the [_DEFAULTS]{@link app.Data._DEFAULTS}, if they
-   * do not already exist
+   * Labeled {@link ClipItem}
+   * @type {string}
+   * @const
+   * @private
+   * @memberOf app.Data
+   */
+  const _ERROR_INITIALIZE = 'Data initialization error.';
+
+  /**
+   * Save the [_DEFAULTS]{@link app.Data._DEFAULTS} if they don't exist
    * @private
    * @memberOf app.Data
    */
@@ -135,6 +150,70 @@ for this device.`;
     }
   }
 
+  /**
+   * Add a {@link ClipItem} with a {@link Label}
+   * @private
+   * @memberOf app.Data
+   */
+  function _addLabelExample() {
+    let label;
+    app.Label.add('Example').then((lbl) => {
+      label = lbl;
+      return app.ClipItem.add(_EXAMPLE_LABEL, Date.now() - 1000, true, false,
+          app.Device.myName());
+    }).then((clipItem) => {
+      return clipItem.addLabel(label);
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INITIALIZE);
+    });
+  }
+
+  /**
+   * Event: Fired when changes occur in the Dexie database
+   * @see http://dexie.org/docs/Observable/Dexie.Observable.html
+   * @param {Array} changes - database changes
+   * @private
+   * @memberOf app.Data
+   */
+  function _onDBChanged(changes) {
+    let actionLabel;
+    changes.forEach(function(change) {
+      switch (change.type) {
+        case 1: // CREATED
+          actionLabel = `Created item in ${change.table}`;
+          break;
+        case 2: // UPDATED
+          actionLabel = `Updated item in ${change.table}`;
+          break;
+        case 3: // DELETED
+          actionLabel = `Deleted item in ${change.table}`;
+          if (change.table === 'labels') {
+            // remove it from all the clips
+            app.ClipItem.removeLabel(change.oldObj._id);
+          }
+          break;
+        default:
+          break;
+      }
+      Chrome.GA.event(app.GA.EVENT.DB_CHANGED, actionLabel);
+    });
+  }
+
+  /**
+   * Event: called when document and resources are loaded<br />
+   * Listen for database changes
+   * @private
+   * @memberOf app.Data
+   */
+  function _onLoad() {
+    // listen for changes to database
+    app.DB.get().on('changes', _onDBChanged);
+
+  }
+
+  // listen for document and resources loaded
+  window.addEventListener('load', _onLoad);
+
   return {
     /**
      * Initialize the data saved in localStorage
@@ -143,31 +222,22 @@ for this device.`;
     initialize: function() {
       _addDefaults();
 
+      _addLabelExample();
+
       const introClip =
-          new app.ClipItem(INTRO_TEXT, Date.now(), true,
+          new app.ClipItem(_INTRO_TEXT, Date.now(), true,
               false, app.Device.myName());
       introClip.save().catch((err) => {
-        Chrome.Log.error(err.message, 'app.Data.initialize');
-      });
-      
-      let label;
-      app.Label.add('Example').then((lbl) => {
-        label = lbl;
-        return app.ClipItem.add(EXAMPLE_LABEL, Date.now() + 1, true, false,
-            app.Device.myName());
-      }).then((clipItem) => {
-        return clipItem.addLabel(label);
-      }).catch((err) => {
-        Chrome.Log.error(err.message, 'app.Data.initialize');
+        Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INITIALIZE);
       });
 
       app.User.setInfo().catch((err) => {
-        Chrome.Log.error(err.message, 'app.Data.initialize');
+        Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INITIALIZE);
       });
 
       // and the last error
       Chrome.Storage.clearLastError().catch((err) => {
-        Chrome.GA.error(err.message, 'Data.initialize');
+        Chrome.Log.error(err.message, 'Data.initialize', _ERROR_INITIALIZE);
       });
     },
 
@@ -202,15 +272,19 @@ for this device.`;
         if (lastError) {
           // transfer to chrome.storage.local
           Chrome.Storage.setLastError(lastError).catch((err) => {
-            Chrome.GA.error(err.message, 'Data.update');
+            Chrome.Log.error(err.message, 'Data.update', _ERROR_INITIALIZE);
           });
           localStorage.removeItem('lastError');
         } else {
           // add empty
           Chrome.Storage.clearLastError().catch((err) => {
-            Chrome.GA.error(err.message, 'Data.update');
+            Chrome.Log.error(err.message, 'Data.update', _ERROR_INITIALIZE);
           });
         }
+      }
+
+      if (oldVersion < 6) {
+        _addLabelExample();
       }
 
       _addDefaults();

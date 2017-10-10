@@ -66,6 +66,11 @@ app.GA = (function() {
       eventAction: 'refreshed',
       eventLabel: '',
     },
+    DB_CHANGED: {
+      eventCategory: 'database',
+      eventAction: 'changed',
+      eventLabel: '',
+    },
   };
 
   /**

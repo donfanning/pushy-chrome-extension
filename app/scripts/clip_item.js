@@ -312,6 +312,29 @@
   };
 
   /**
+   * Remove the given {@link Label} PK from all {@link ClipItem} objects
+   * @param {int} labelId - Label PK to delete
+   */
+  ClipItem.removeLabel = function(labelId) {
+    ClipItem.loadAll().then((clipItems) => {
+      clipItems = clipItems || [];
+      clipItems.forEach((clipItem) => {
+        const index = clipItem.labelsId.indexOf(labelId);
+        if (index !== -1) {
+          clipItem.labelsId.splice(index, 1);
+          clipItem.save().catch((err) => {
+            throw err;
+          });
+        }
+      });
+      return Promise.resolve();
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'ClipItem.removeLabel',
+          'Failed to remove label from Clip Items.');
+    });
+  };
+
+  /**
    * Is the database table empty
    * @returns {Promise<boolean>} true if no {@link ClipItem} objects
    */

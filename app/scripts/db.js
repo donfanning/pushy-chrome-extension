@@ -9,7 +9,7 @@ window.app = window.app || {};
 /**
  * Manage the Dexie database
  * @see http://dexie.org/
- *  @namespace
+ * @namespace
  */
 app.DB = (function() {
   'use strict';
@@ -67,9 +67,7 @@ app.DB = (function() {
     _db.labels.mapToClass(app.Label);
   }
 
-  /**
-   * listen for document and resources loaded
-   */
+  // listen for document and resources loaded
   window.addEventListener('load', _onLoad);
 
   return {
@@ -81,25 +79,24 @@ app.DB = (function() {
     get: function() {
       return _db;
     },
-    
+
     /**
      * Get the clipItems table
-     * @returns {Object} the clipItems table
+     * @returns {Object}
      * @memberOf app.DB
      */
     clips: function() {
       return _db.clipItems;
     },
-    
+
     /**
      * Get the labels table
-     * @returns {Object} the labels table
+     * @returns {Object}
      * @memberOf app.DB
      */
     labels: function() {
       return _db.labels;
     },
-    
   };
 })();
 
