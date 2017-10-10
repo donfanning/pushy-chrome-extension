@@ -46,6 +46,8 @@
     "chrome-extension-utils": "opus1269/chrome-extension-utils#^3.0.0",
     "setting-elements": "opus1269/setting-elements#^3.0.0",
     "firebase": "^4.0.0",
-    "dexie": "^1.0.0"
+    "dexie": "^1.0.0",
+    "linkifyjs": "^2.1.5",
+    "moment": "^2.19.0"
   }
 }
