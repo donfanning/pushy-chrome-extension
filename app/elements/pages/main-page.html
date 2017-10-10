@@ -618,10 +618,8 @@
       _onCopyTapped: function(event) {
         const listItem = event.model.listItem;
         const clipItem = listItem.clipItem;
-        const date = Date.now();
-        const remote = false;
-        clipItem.setDate(date);
-        clipItem.setRemote(remote);
+        clipItem.date = Date.now();
+        clipItem.remote = false;
         clipItem.save().catch((err) => {
           Chrome.Log.error(err.message, 'Main._onCopyTapped');
         });
@@ -647,8 +645,7 @@
       _onFavTapped: function(event) {
         const listItem = event.model.listItem;
         const clipItem = listItem.clipItem;
-        const fav = !clipItem.getFav();
-        clipItem.setFav(fav);
+        clipItem.fav = !clipItem.fav;
         clipItem.save().catch((err) => {
           Chrome.Log.error(err.message, 'Main._onFavTapped');
         });

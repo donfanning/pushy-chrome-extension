@@ -4,7 +4,7 @@
  *  https://opensource.org/licenses/BSD-3-Clause
  *  https://github.com/opus1269/photo-screen-saver/blob/master/LICENSE.md
  */
-(function() {
+(function(window) {
   'use strict';
 
   new ExceptionHandler();
@@ -22,7 +22,7 @@
 
   /**
    * Get the PK for our name
-   * @returns {Promise<int|null>} database PK or null if text not found
+   * @returns {Promise<int|null>} database PK or null if name not found
    */
   Label.prototype.getId = function() {
     return app.DB.labels().where('name').equals(this.name).first((label) => {
@@ -35,7 +35,7 @@
 
   /**
    * Update our name
-   * @param {string} name - new name
+   * @param {string} name
    * @returns {Promise<boolean>} true if database updated
    */
   Label.prototype.setName = function(name) {
@@ -49,33 +49,6 @@
    */
   Label.prototype.save = function() {
     return app.DB.labels().put(this);
-  };
-
-  /**
-   * Update database
-   * @returns {Promise<int>} database PK
-   */
-  Label.prototype.save = function() {
-    return app.DB.labels().put(this);
-  };
-
-  /**
-   * Add if new or update if existing
-   * @returns {Promise<boolean>} true if updated
-   */
-  Label.prototype._addOrUpdate = function() {
-    let updated = false;
-    return this.getId().then((id) => {
-      if (id) {
-        updated = true;
-        this._id = id;
-        return app.DB.labels().update(id, this);
-      } else {
-        return app.DB.labels().put(this);
-      }
-    }).then(() => {
-      return Promise.resolve(updated);
-    });
   };
 
   /**
@@ -140,4 +113,4 @@
 
   window.app = window.app || {};
   window.app.Label = Label;
-})();
+})(window);

@@ -73,30 +73,6 @@
   ClipItem._ERROR_NO_LABEL = 'Label not found.';
 
   /**
-   * Set date
-   * @param {int} date - millis from epoch
-   */
-  ClipItem.prototype.setDate = function(date) {
-    this.date = date;
-  };
-
-  /**
-   * Get fav
-   * @returns {boolean} fav
-   */
-  ClipItem.prototype.getFav = function() {
-    return this.fav;
-  };
-
-  /**
-   * Set favorite
-   * @param {boolean} fav - is item a favorite
-   */
-  ClipItem.prototype.setFav = function(fav) {
-    this.fav = fav;
-  };
-  
-  /**
    * Get our labels
    * @returns {Promise<Label[]>} Array of {@link Label} objects
    */
@@ -120,13 +96,6 @@
   };
 
   /**
-   * Set remote
-   * @param {boolean} remote - true if not from our {@link Device}
-   */
-  ClipItem.prototype.setRemote = function(remote) {
-    this.remote = remote;
-  };
-  /**
    * Set our {@link Label} ids
    * @param {string[]} labelNames - names of labels
    * @returns {Promise<int>} our database PK
@@ -147,7 +116,7 @@
 
   /**
    * Add a label
-   * @param {Label} label - label to add
+   * @param {Label} label
    */
   ClipItem.prototype.addLabel = function(label) {
     label.getId().then((id) => {
@@ -164,7 +133,7 @@
 
   /**
    * Remove a label
-   * @param {Label} label - label to remove
+   * @param {Label} label
    */
   ClipItem.prototype.removeLabel = function(label) {
     label.getId().then((id) => {
@@ -192,7 +161,7 @@
 
   /**
    * Add if new or update if existing
-   * @returns {Promise<boolean>} true if updated
+   * @returns {Promise<int>} database PK
    */
   ClipItem.prototype._addOrUpdate = function() {
     let updated = false;
@@ -202,10 +171,13 @@
         this._id = id;
         return app.DB.clips().update(id, this);
       } else {
-        return app.DB.clips().put(this);
+        return app.DB.clips().add(this);
       }
-    }).then(() => {
-      return Promise.resolve(updated);
+    }).then((id) => {
+      if (!updated) {
+        this._id = id;
+      }
+      return Promise.resolve(this._id);
     });
   };
 
@@ -232,8 +204,8 @@
   };
 
   /**
-   * Save to storage, deleting old items if needed
-   * @returns {Promise<string>} primary key it was stored under
+   * Save to database, deleting old items if needed
+   * @returns {Promise<string>} database PK
    */
   ClipItem.prototype._safeSave = function() {
     if (Chrome.Utils.isWhiteSpace(this.text)) {
@@ -245,7 +217,7 @@
     /**
      * Repeat function call up to count equals 0
      * @param {int} count - track number of calls
-     * @returns {Promise<void>} void
+     * @returns {Promise<void>}
      */
     const repeatFunc = ((count) => {
       if (count === 0) {
@@ -276,7 +248,7 @@
   };
 
   /**
-   * Get the PK for our text
+   * Get our PK
    * @returns {Promise<int|null>} database PK or null if text not found
    */
   ClipItem.prototype._getId = function() {
@@ -306,8 +278,8 @@
 
   /**
    * Remove the given keys from storage
-   * @param {int|int[]} keys - array of primary keys to delete
-   * @returns {Promise<void>} void
+   * @param {int|int[]} keys - array of PK's to delete
+   * @returns {Promise<void>}
    */
   ClipItem.remove = function(keys) {
     const keyArray = Array.isArray(keys) ? keys : [keys];
@@ -315,7 +287,7 @@
   };
 
   /**
-   * Return true is there are no stored {@link ClipItem} objects
+   * Is the database table empty
    * @returns {Promise<boolean>} true if no {@link ClipItem} objects
    */
   ClipItem.isTableEmpty = function() {
@@ -326,11 +298,11 @@
 
   /**
    * Return all the {@link ClipItem} objects from storage
-   * @param {?string} [labelName=null] - optional {@link Label} name
+   * @param {string} [labelName=''] - optional {@link Label} name
    * to filter on
-   * @returns {Promise<Array>} Array of {@link ClipItem} objects
+   * @returns {Promise<ClipItem[]>}
    */
-  ClipItem.loadAll = function(labelName) {
+  ClipItem.loadAll = function(labelName = '') {
     if (labelName) {
       const label = new app.Label(labelName);
       return label.getId().then((id) => {
@@ -384,7 +356,7 @@
 
   /**
    * Delete the oldest non favorite
-   * @returns {Promise<void>} void
+   * @returns {Promise<void>}
    */
   ClipItem._deleteOldest = function() {
     let clipItem = null;

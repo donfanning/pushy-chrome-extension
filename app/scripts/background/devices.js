@@ -18,13 +18,14 @@ app.Devices = (function() {
   /**
    * A Map of {@link Device} objects keyed by their unique names
    * @type {Map}
+   * @private
    * @memberOf app.Devices
    */
   let _devices = new Map();
 
   /**
    * Convert Map to Object
-   * @param {Map} map - a Map
+   * @param {Map} map
    * @returns {Object} as Object
    * @private
    * @memberOf app.Devices
@@ -106,20 +107,16 @@ app.Devices = (function() {
     return ret;
   }
 
-  /**
-   * listen for document and resources loaded
-   */
+  // listen for document and resources loaded
   window.addEventListener('load', _onLoad);
 
-  /**
-   * Listen for Chrome messages
-   */
+  // listen for Chrome messages
   Chrome.Msg.listen(_onChromeMessage);
 
   return {
     /**
      * Get an {@link Iterator} on the Devices
-     * @returns {Iterator.<Device>} Iterator
+     * @returns {Iterator.<Device>}
      * @memberOf app.Devices
      */
     entries: function() {
@@ -128,7 +125,7 @@ app.Devices = (function() {
 
     /**
      * Add a new {@link Device}
-     * @param {Device} device - {@link Device} to add
+     * @param {Device} device
      * @memberOf app.Devices
      */
     add: function(device) {
@@ -138,7 +135,7 @@ app.Devices = (function() {
 
     /**
      * Remove a {@link Device}
-     * @param {Device} device - {@link Device} to remove
+     * @param {Device} device
      * @memberOf app.Devices
      */
     remove: function(device) {
@@ -147,7 +144,7 @@ app.Devices = (function() {
 
     /**
      * Remove a {@link Device} with the given unique name
-     * @param {string} uniqueName - Name of Device to remove
+     * @param {string} uniqueName
      * @memberOf app.Devices
      */
     removeByName: function(uniqueName) {
