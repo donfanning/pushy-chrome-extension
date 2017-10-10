@@ -36,12 +36,6 @@ app.ChromeMsg = (function() {
    *     failed
    * @property {Chrome.Msg.Message} UNREGISTER_FAILED - unregister with server
    *     failed
-   * @property {Chrome.Msg.Message} CLIP_ADDED - a {@link ClipItem} was
-   *     added or updated
-   * @property {Chrome.Msg.Message} CLIP_REMOVED - a {@link ClipItem} was
-   *     deleted
-   * @property {Chrome.Msg.Message} RELOAD_DB - reload the {@link ClipItem}
-   * database
    * @const
    * @memberOf app.ChromeMsg
    */
@@ -81,9 +75,6 @@ app.ChromeMsg = (function() {
     UNREGISTER_FAILED: {
       message: 'unregisterFailed',
     },
-    RELOAD_DB: {
-      message: 'reloadDB',
-    },
   };
 
   return {
@@ -98,6 +89,5 @@ app.ChromeMsg = (function() {
     MSG_FAILED: _MSG.MSG_FAILED,
     REGISTER_FAILED: _MSG.REGISTER_FAILED,
     UNREGISTER_FAILED: _MSG.UNREGISTER_FAILED,
-    RELOAD_DB: _MSG.RELOAD_DB,
   };
 })();

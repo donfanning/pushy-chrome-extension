@@ -81,21 +81,6 @@
   };
 
   /**
-   * Do we contain a {@link Label}
-   * @param {string} name - {@link Label} name
-   * @returns {Promise<boolean>} true if we have Label
-   */
-  ClipItem.prototype.hasLabel = function(name) {
-    const label = new app.Label(name);
-    return label.getId().then((id) => {
-      if (id && this.labelsId.includes(id)) {
-        return Promise.resolve(true);
-      }
-      return Promise.resolve(false);
-    });
-  };
-
-  /**
    * Set our {@link Label} ids
    * @param {string[]} labelNames - names of labels
    * @returns {Promise<int>} our database PK
@@ -111,6 +96,21 @@
         }
       });
       return this.save();
+    });
+  };
+  
+  /**
+   * Do we contain a {@link Label}
+   * @param {string} name - {@link Label} name
+   * @returns {Promise<boolean>} true if we have Label
+   */
+  ClipItem.prototype.hasLabel = function(name) {
+    const label = new app.Label(name);
+    return label.getId().then((id) => {
+      if (id && this.labelsId.includes(id)) {
+        return Promise.resolve(true);
+      }
+      return Promise.resolve(false);
     });
   };
 
@@ -152,11 +152,20 @@
   };
 
   /**
-   * Save ourselves to storage
-   * @returns {Promise<int>} database PK
+   * Save to the database
+   * @returns {Promise<void>}
    */
   ClipItem.prototype.save = function() {
     return this._safeSave();
+  };
+  
+  /**
+   * Update the database
+   * @param {Object} changes - properties to change
+   * @returns {Promise<int>} number of properties changed
+   */
+  ClipItem.prototype.update = function(changes) {
+    return app.DB.clips().update(this._id, changes);
   };
 
   /**
@@ -183,7 +192,7 @@
 
   /**
    * Save to the database or delete oldest non favorite if there is no room
-   * @returns {Promise<int>} database PK
+   * @returns {Promise<int>} database PK if saved, nothing otherwise
    */
   ClipItem.prototype._saveOrDeleteOldest = function() {
     return this._addOrUpdate().catch((err) => {
@@ -205,14 +214,13 @@
 
   /**
    * Save to database, deleting old items if needed
-   * @returns {Promise<string>} database PK
+   * @returns {Promise<void>}
    */
   ClipItem.prototype._safeSave = function() {
     if (Chrome.Utils.isWhiteSpace(this.text)) {
       throw new Error(ClipItem.ERROR_EMPTY_TEXT);
     }
     const MAX_DELETES = 100;
-    let retKey = '';
 
     /**
      * Repeat function call up to count equals 0
@@ -224,8 +232,7 @@
         throw new Error(ClipItem.ERROR_DB_FULL);
       }
       return this._saveOrDeleteOldest().then(function(key) {
-        retKey = key;
-        if (retKey) {
+        if (key) {
           return Promise.resolve();
         }
         return repeatFunc(count - 1);
@@ -239,11 +246,7 @@
     return app.DB.get().transaction('rw', app.DB.clips(), () => {
       return repeatFunc(MAX_DELETES);
     }).then(() => {
-      return Promise.resolve(retKey);
-    }).catch((err) => {
-      // eslint-disable-next-line promise/no-nesting
-      Chrome.Msg.send(app.ChromeMsg.RELOAD_DB).catch(() => {});
-      throw err;
+      return Promise.resolve();
     });
   };
 
@@ -312,29 +315,6 @@
   };
 
   /**
-   * Remove the given {@link Label} PK from all {@link ClipItem} objects
-   * @param {int} labelId - Label PK to delete
-   */
-  ClipItem.removeLabel = function(labelId) {
-    ClipItem.loadAll().then((clipItems) => {
-      clipItems = clipItems || [];
-      clipItems.forEach((clipItem) => {
-        const index = clipItem.labelsId.indexOf(labelId);
-        if (index !== -1) {
-          clipItem.labelsId.splice(index, 1);
-          clipItem.save().catch((err) => {
-            throw err;
-          });
-        }
-      });
-      return Promise.resolve();
-    }).catch((err) => {
-      Chrome.Log.error(err.message, 'ClipItem.removeLabel',
-          'Failed to remove label from Clip Items.');
-    });
-  };
-
-  /**
    * Is the database table empty
    * @returns {Promise<boolean>} true if no {@link ClipItem} objects
    */
@@ -364,6 +344,38 @@
     } else {
       return app.DB.clips().orderBy('date').toArray();
     }
+  };
+    
+  /**
+   * Remove the given {@link Label} PK from all {@link ClipItem} objects
+   * @param {int} labelId - Label PK to delete
+   */
+  ClipItem.removeLabel = function(labelId) {
+    app.DB.get().transaction('rw', app.DB.clips(), () => {
+      ClipItem.loadAll().then((clipItems) => {
+        clipItems = clipItems || [];
+        const changedClipItems = [];
+        clipItems.forEach((clipItem) => {
+          const index = clipItem.labelsId.indexOf(labelId);
+          if (index !== -1) {
+            clipItem.labelsId.splice(index, 1);
+            changedClipItems.push(clipItem);
+          }
+        });
+        return Promise.resolve(changedClipItems);
+      }).then((clipItems) => {
+        clipItems = clipItems || [];
+        clipItems.forEach((clipItem) => {
+          clipItem.save();
+        });
+        return Promise.resolve();
+      }).catch((err) => {
+        return Promise.reject(err);
+      });
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'ClipItem.removeLabel',
+          'Failed to remove label from Clip Items.');
+    });
   };
 
   /**
