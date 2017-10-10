@@ -261,23 +261,48 @@
   };
 
   /**
+   * Get the {@link ClipItem} from the database
+   * @param {string} text - The text of the clip
+   * @returns {Promise<ClipItem|undefined>} A new {@link ClipItem},
+   * undefined if not found
+   */
+  ClipItem.get = function(text) {
+    return app.DB.clips().where('text').equals(text).first();
+  };
+
+  /**
    * Add new {@link ClipItem} to storage
    * @param {string} text - The text of the clip
    * @param {int} date - Time in milliSecs from epoch
    * @param {boolean} fav - true if this has been marked as a favorite
    * @param {boolean} remote - true if this came from a device other than ours
    * @param {string} device - A String representing the source device
+   * @param {boolean} [keepFav=false] - if true don't override fav if it is true
    * @returns {Promise<ClipItem>} A new {@link ClipItem}
    */
-  ClipItem.add = function(text, date, fav, remote, device) {
+  ClipItem.add = function(text, date, fav, remote, device, keepFav = false) {
     const clipItem = new ClipItem(text, date, fav, remote, device);
-    return clipItem.save().then(() => {
-      return Promise.resolve(clipItem);
-    });
+    if (keepFav) {
+      // make sure fav stays true
+      return ClipItem.get(text).then((clip) => {
+        if ((clip !== undefined) && clip.fav) {
+          clipItem.fav = true;
+        }
+        return clipItem.save();
+      }).then((id) => {
+        clipItem._id = id;
+        return Promise.resolve(clipItem);
+      });
+    } else {
+      return clipItem.save().then((id) => {
+        clipItem._id = id;
+        return Promise.resolve(clipItem);
+      });
+    }
   };
 
   /**
-   * Remove the given keys from storage
+   * Remove the given keys from the database
    * @param {int|int[]} keys - array of PK's to delete
    * @returns {Promise<void>}
    */

@@ -59,7 +59,7 @@ app.CB = (function() {
 
       // Persist
       app.ClipItem.add(text, Date.now(), false, false,
-          app.Device.myName()).then((clipItem) => {
+          app.Device.myName(), true).then((clipItem) => {
         // send to our devices
         _sendLocalClipItem(clipItem);
         return Promise.resolve();

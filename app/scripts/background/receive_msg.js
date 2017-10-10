@@ -61,7 +61,7 @@
       app.Devices.add(device);
       const fav = (data.fav === '1');
       // persist
-      app.ClipItem.add(data.m, Date.now(), fav, true, device.getName()).
+      app.ClipItem.add(data.m, Date.now(), fav, true, device.getName(), true).
           catch((err) => {
             Chrome.Log.error(err.message, 'ReceiveMsg._process');
           });

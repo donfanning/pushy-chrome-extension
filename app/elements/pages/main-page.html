@@ -438,6 +438,7 @@
                 const clipItem = change.obj;
                 const pos = self._getListItemPos(clipItem.text);
                 if (pos !== -1) {
+                  const oldDate = self.listItems[pos];
                   const str = `listItems.${pos}.clipItem.`;
                   self.set(`${str}_id`, clipItem._id);
                   self.set(`${str}fav`, clipItem.fav);
@@ -445,6 +446,10 @@
                   self.set(`${str}remote`, clipItem.remote);
                   self.set(`${str}device`, clipItem.device);
                   self.set(`${str}labelsId`, clipItem.labelsId);
+                  if (oldDate !== clipItem.date) {
+                    // select first row and update UI
+                    self._selectFirst();
+                  }
                 }
               }
               break;
