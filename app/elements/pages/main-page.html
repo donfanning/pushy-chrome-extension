@@ -83,12 +83,19 @@
 
       #clipViewer {
         height: 82vh;
-        @apply(--paper-font-subhead);
-        white-space: pre-wrap;
         overflow: hidden;
         overflow-y: scroll;
         padding: 16px;
         margin: 0;
+      }
+
+      #clipViewerText {
+        @apply(--paper-font-subhead);
+        white-space: pre-wrap;
+      }
+
+      #clipViewerLabels {
+        @apply(--paper-font-subhead);
       }
 
       .list-item {
@@ -247,7 +254,16 @@
         </div>
 
         <!-- Clip Viewer -->
-        <div id="clipViewer" class="flex-3"></div>
+        <div id="clipViewer" class="flex-3 vertical layout">
+          <div id="clipViewerLabels" class="horizontal layout">
+            <template is="dom-repeat" id="labelsTemplate"
+                      items="{{selectedLabelItems}}" as="selectedLabelItem">
+              <paper-item>[[selectedLabelItem]]</paper-item>
+            </template>
+          </div>
+          <hr/>
+          <div id="clipViewerText"></div>
+        </div>
 
       </div>
     </paper-material>
@@ -470,22 +486,16 @@
        * @private
        */
       _onSelectLabelsTapped: function() {
-        const clipItem = this._getSelectedClipItem();
         app.Label.loadAll().then((labels) => {
-          labels = labels || [];
-          this.splice('labelItems', 0, this.labelItems.length);
+          this.set('labelItems', []);
           labels.forEach((label) => {
             this.push('labelItems', label.name);
           });
           return Promise.resolve();
         }).then(() => {
-          return clipItem.getLabels();
-        }).then((labels) => {
-          labels = labels || [];
-          this.splice('selectedLabelItems', 0, this.selectedLabelItems.length);
-          labels.forEach((label) => {
-            this.push('selectedLabelItems', label.name);
-          });
+          const clipItem = this._getSelectedClipItem();
+          return this._setSelectedLabels(clipItem);
+        }).then(() => {
           this.$.selectLabelsDialog.open();
           return Promise.resolve();
         }).catch((err) => {
@@ -664,8 +674,7 @@
 
         let keys = [];
         this.selections.forEach((selection) => {
-          const clipItem = selection.clipItem;
-          keys.push(clipItem._id);
+          keys.push(selection.clipItem._id);
         });
 
         if (keys.length) {
@@ -745,13 +754,14 @@
         this._clearClipViewer();
         app.ClipItem.loadAll(this.labelName).then((clipItems) => {
           // populate list
-          let listItems = [];
-          for (let i = 0; i < clipItems.length; i++) {
-            let listItem = {};
-            listItem.checked = false;
-            listItem.clipItem = clipItems[i];
+          const listItems = [];
+          clipItems.forEach((clipItem) => {
+            const listItem = {
+              checked: false,
+              clipItem: clipItem,
+            };
             listItems.push(listItem);
-          }
+          });
           this.set('listItems', listItems);
 
           this.$.ironSelector.selectIndex(0);
@@ -759,7 +769,8 @@
           this._setTitle();
           return Promise.resolve();
         }).catch((err) => {
-          Chrome.Log.error(err.message, 'Main._loadClipItems');
+          Chrome.Log.error(err.message, 'Main._loadClipItems',
+              'Failed to load clips from database.');
         });
       },
 
@@ -876,11 +887,11 @@
        * @private
        */
       _setTitle: function() {
-        const clipItem = this._getSelectedClipItem();
         let title = 'Clips: ';
         if (!Chrome.Utils.isWhiteSpace(this.labelName)) {
           title = `${this.labelName}: `;
         }
+        const clipItem = this._getSelectedClipItem();
         if (clipItem) {
           if (clipItem.remote) {
             title += `Remote clip - ${clipItem.device}`;
@@ -892,11 +903,27 @@
       },
 
       /**
+       * Set the labels for the selected {@link ClipItem}
+       * @param {ClipItem} clipItem
+       * @returns {Promise<void>}
+       * @private
+       */
+      _setSelectedLabels: function(clipItem) {
+        return clipItem.getLabels().then((labels) => {
+          this.set('selectedLabelItems', []);
+          labels.forEach((label) => {
+            this.push('selectedLabelItems', label.name);
+          });
+          return Promise.resolve();
+        });
+      },
+
+      /**
        * Delete all elements created in the ClipViewer
        * @private
        */
       _clearClipViewer: function() {
-        const el = this.$.clipViewer;
+        const el = this.$.clipViewerText;
         while (el.firstChild) {
           // delete all children previous linkify created
           el.removeChild(el.firstChild);
@@ -905,15 +932,16 @@
 
       /**
        * Set the ClipViewer contents
-       * @param {ClipItem} clipItem - use this text
+       * @param {ClipItem} clipItem
        * @private
        */
       _updateClipViewer: function(clipItem) {
         this._clearClipViewer();
-        const el = this.$.clipViewer;
+        const el = this.$.clipViewerText;
         el.textContent = clipItem.text;
         // linkify it - creates element children
         linkifyElement(el);
+        this._setSelectedLabels(clipItem).catch(() => {});
       },
     });
   })();
