@@ -410,6 +410,7 @@
                   self._selectFirst();
                 } else {
                   clipItem.hasLabel(self.labelName).then((isTrue) => {
+                    // only add if it has our label
                     if (isTrue) {
                       self.push('listItems', {
                         checked: false,
@@ -446,11 +447,15 @@
               }
               break;
             case 3: // DELETED
-              if (change.table === 'tables') {
+              if (change.table === 'clipItems') {
                 const clipItem = change.oldObj;
                 const pos = self._getListItemPos(clipItem.text);
                 if (pos !== -1) {
                   self.splice('listItems', pos, 1);
+                  if (!self.listItems.length) {
+                    // no items
+                    self._clearClipViewer();
+                  }
                 }
               }
               break;
@@ -571,17 +576,12 @@
       _onSelectableChanged: function(event) {
         const deleted = !!event.detail.removedNodes.length;
         if (deleted) {
-          const count = this.listItems.length;
           const selector = this.$.ironSelector;
           const idx = selector.indexOf(selector.selectedItem);
-          if (idx === -1) {
-            if (count) {
-              // select last row if none is selected
-              selector.selectIndex(count - 1);
-            } else {
-              // no items
-              this._clearClipViewer();
-            }
+          const len = this.listItems.length;
+          if ((idx === -1) && len) {
+            // select last row if none is selected
+            selector.selectIndex(len - 1);
           }
         }
       },
@@ -607,8 +607,7 @@
        * @private
        */
       _onCopyTapped: function(event) {
-        const listItem = event.model.listItem;
-        const clipItem = listItem.clipItem;
+        const clipItem = event.model.listItem.clipItem;
         clipItem.date = Date.now();
         clipItem.remote = false;
         clipItem.save().then(() => {
@@ -664,22 +663,14 @@
         }
 
         let keys = [];
-        for (let i = 0; i < this.selections.length; i++) {
-          const listItem = this.selections[i];
-          const clipItem = listItem.clipItem;
-          const pos = this.listItems.indexOf(listItem);
-          this.splice('listItems', pos, 1);
+        this.selections.forEach((selection) => {
+          const clipItem = selection.clipItem;
           keys.push(clipItem._id);
-        }
+        });
 
         if (keys.length) {
           app.ClipItem.remove(keys).then(() => {
-            return app.ClipItem.isTableEmpty();
-          }).then((isEmpty) => {
             this.set('selections', []);
-            if (isEmpty) {
-              this._updateView();
-            }
             return Promise.resolve();
           }).catch((err) => {
             Chrome.Log.error(err.message, 'Main._onDeleteSelectedRows');
@@ -924,7 +915,6 @@
         // linkify it - creates element children
         linkifyElement(el);
       },
-
     });
   })();
 </script>
