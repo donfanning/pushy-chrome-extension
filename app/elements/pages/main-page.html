@@ -240,7 +240,7 @@
                          on-iron-items-changed="_onSelectableChanged">
             <template is="dom-repeat" id="listTemplate"
                       items="{{listItems}}" as="listItem"
-                      sort="_sortByDate" filter="_filter">
+                      sort="_sortByDate" filter="_filter" observe="clipItem.date">
               <div class="list-item horizontal center layout" id="listItem[[index]]">
                 <paper-checkbox
                     class="select-checkbox"

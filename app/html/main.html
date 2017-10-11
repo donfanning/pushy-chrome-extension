@@ -71,6 +71,7 @@
 						             border-radius: 20px; box-sizing: border-box;
 						             display: [[_computeAvatarDisplay(avatar)]];">
         </paper-toolbar>
+        
         <!-- Drawer Content -->
         <paper-menu class="list" id="mainMenu" attr-for-selected="id" selected="[[route]]">
           <template is="dom-repeat" items="[[pages_one]]">
@@ -83,7 +84,7 @@
           </template>
           <hr />
           <paper-item id="labelsItem" disabled>Labels</paper-item>
-          <template is="dom-repeat" items="[[pages_labels]]">
+          <template is="dom-repeat" items="[[pages_labels]]" sort="_onSortLabelPages" observe="label">
             <paper-item id="[[item.route]][[item.index]]" class="center horizontal layout"
                         on-tap="_onNavMenuItemTapped">
               <iron-icon icon="[[item.icon]]"></iron-icon>

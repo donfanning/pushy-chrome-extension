@@ -211,7 +211,6 @@ window.app = window.app || {};
   /**
    * Event: Template Bound, bindings have resolved and content has been
    * stamped to the page
-   * @private
    * @memberOf Main
    */
   function _onDomChange() {
@@ -248,14 +247,16 @@ window.app = window.app || {};
     // listen for messages from the service worker
     navigator.serviceWorker.addEventListener('message', _onSWMessage);
 
+    // listen for changes to highlighted tabs
+    chrome.tabs.onHighlighted.addListener(_onHighlighted);
+
     // check for optional permissions
     _checkOptionalPermissions();
   }
 
   /**
    * Event: navigation menu selected
-   * @param {Event} event - event
-   * @private
+   * @param {Event} event
    * @memberOf Main
    */
   t._onNavMenuItemTapped = function(event) {
@@ -295,8 +296,7 @@ window.app = window.app || {};
 
   /**
    * Event: display error dialog
-   * @param {Event} event - event
-   * @private
+   * @param {Event} event
    * @memberOf Main
    */
   t._onShowErrorDialog = function(event) {
@@ -307,7 +307,6 @@ window.app = window.app || {};
 
   /**
    * Event: A {@link Main.page} finished animating in
-   * @private
    * @memberOf Main
    */
   t._onPageAnimation = function() {
@@ -329,7 +328,6 @@ window.app = window.app || {};
 
   /**
    * Event: Clicked on accept permissions dialog button
-   * @private
    * @memberOf Main
    */
   t._onAcceptPermissionsClicked = function() {
@@ -346,7 +344,6 @@ window.app = window.app || {};
 
   /**
    * Event: Clicked on deny permissions dialog button
-   * @private
    * @memberOf Main
    */
   t._onDenyPermissionsClicked = function() {
@@ -359,10 +356,28 @@ window.app = window.app || {};
   };
 
   /**
+   * Event: Sort the label pages alphabetically
+   * @param {Main.page} pageA
+   * @param {Main.page} pageB
+   * @returns {int} 0 if same, -1 if lower, 1 if higher
+   * @memberOf Main
+   */
+  t._onSortLabelPages = function(pageA, pageB) {
+    const a = pageA.label.toLowerCase();
+    const b = pageB.label.toLowerCase();
+    if (a < b) {
+      return -1;
+    }
+    if (a > b) {
+      return 1;
+    }
+    return 0;
+  };
+
+  /**
    * Computed Binding: Determine content script permission status string
    * @param {string} permissions - current setting
-   * @returns {string} display type
-   * @private
+   * @returns {string}
    * @memberOf Main
    */
   t._computePermissionsStatus = function(permissions) {
@@ -373,7 +388,6 @@ window.app = window.app || {};
    * Computed Binding: Determine if avatar should be visible
    * @param {string} avatar - photo url
    * @returns {string} display type
-   * @private
    * @memberOf Main
    */
   t._computeAvatarDisplay = function(avatar) {
@@ -386,8 +400,7 @@ window.app = window.app || {};
 
   /**
    * Event: Fired when a message is posted from out service worker
-   * @param {Event} event - the event
-   * @private
+   * @param {Event} event
    * @memberOf Main
    */
   function _onSWMessage(event) {
@@ -403,7 +416,7 @@ window.app = window.app || {};
         }
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.Log.error(err.message, 'Main._onSWMessage');
+        Chrome.GA.error(err.message, 'Main._onSWMessage');
       });
     }
   }
@@ -416,7 +429,6 @@ window.app = window.app || {};
    * @param {Chrome.Msg.Message} request - details for the
    * @param {Object} sender - MessageSender object
    * @param {function} response - function to call once after processing
-   * @private
    * @memberOf Main
    */
   function _onChromeMessage(request, sender, response) {
@@ -448,7 +460,6 @@ window.app = window.app || {};
    * @see https://developer.mozilla.org/en-US/docs/Web/Events/storage
    * @param {Event} event - storage event
    * @param {string} event.key - value that changed
-   * @private
    * @memberOf Main
    */
   function _onStorageChanged(event) {
@@ -463,7 +474,6 @@ window.app = window.app || {};
    * Event: Fired when changes occur in Chrome.storage
    * @see https://developer.chrome.com/apps/storage
    * @param {Array} changes - storage changes
-   * @private
    * @memberOf Main
    */
   function _onChromeStorageChanged(changes) {
@@ -481,7 +491,6 @@ window.app = window.app || {};
    * Event: Fired when changes occur in the Dexie database
    * @see http://dexie.org/docs/Observable/Dexie.Observable.html
    * @param {Array} changes - database changes
-   * @private
    * @memberOf Main
    */
   function _onDBChanged(changes) {
@@ -530,8 +539,30 @@ window.app = window.app || {};
   }
 
   /**
+   * Event: Fired when the highlighted or selected tabs in a window changes.
+   * @see https://developer.chrome.com/extensions/tabs#event-onHighlighted
+   * @param {Object} highlightInfo - info
+   * @memberOf Main
+   */
+  function _onHighlighted(highlightInfo) {
+    const tabIds = highlightInfo.tabIds;
+    chromep.tabs.getCurrent().then((tab) => {
+      for (let i = 0; i < tabIds.length; i++) {
+        const tabId = tabIds[i];
+        if (tabId === tab.id) {
+          // our tab
+          _setHighlightRoute();
+          break;
+        }
+      }
+      return Promise.resolve();
+    }).catch((err) => {
+      Chrome.GA.error(err.message, 'Main._onHighlighted');
+    });
+  }
+
+  /**
    * Set the route from onHighlightRoute
-   * @private
    * @memberOf Main
    */
   function _setHighlightRoute() {
@@ -556,7 +587,6 @@ window.app = window.app || {};
    * Get the index into the {@link Main.pages} array
    * @param {string} route - {@link Main.page} route
    * @returns {int} index into array, -1 if not found
-   * @private
    * @memberOf Main
    */
   function _getPageIdx(route) {
@@ -567,8 +597,7 @@ window.app = window.app || {};
 
   /**
    * Show a {@link Main.page}
-   * @param {Main.page} page - a {@link Main.page}
-   * @private
+   * @param {Main.page} page
    * @memberOf Main
    */
   function _showPage(page) {
@@ -590,7 +619,6 @@ window.app = window.app || {};
    * Display dialog to prompt for accepting optional permissions
    * if it has not been set yet
    * @memberOf Main
-   * @private
    */
   function _checkOptionalPermissions() {
     if (Chrome.Storage.get('permissions') === app.Permissions.NOT_SET) {
@@ -600,7 +628,6 @@ window.app = window.app || {};
 
   /**
    * Show the permissions dialog
-   * @private
    * @memberOf Main
    */
   function _showPermissionsDialog() {
@@ -609,7 +636,6 @@ window.app = window.app || {};
 
   /**
    * Scroll Main Panel to top
-   * @private
    * @memberOf Main
    */
   function _scrollPageToTop() {
@@ -618,7 +644,6 @@ window.app = window.app || {};
 
   /**
    * Close drawer if drawerPanel is narrow
-   * @private
    * @memberOf Main
    */
   function _closeDrawer() {
@@ -630,8 +655,7 @@ window.app = window.app || {};
 
   /**
    * Build the menu items
-   * @returns {Promise<void>} void
-   * @private
+   * @returns {Promise<void>}
    * @memberOf Main
    */
   function _buildPages() {
@@ -647,8 +671,7 @@ window.app = window.app || {};
 
   /**
    * Build the menu items for {@link Label} objects
-   * @returns {Promise<Main.page[]>} array of pages
-   * @private
+   * @returns {Promise<Main.page[]>}
    * @memberOf Main
    */
   function _getLabelPages() {
@@ -670,7 +693,6 @@ window.app = window.app || {};
 
   /**
    * Set enabled state of Devices menu item
-   * @private
    * @memberOf Main
    */
   function _setDevicesMenuState() {
@@ -686,7 +708,6 @@ window.app = window.app || {};
 
   /**
    * Set enabled state of Error Viewer menu item
-   * @private
    * @memberOf Main
    */
   function _setErrorMenuState() {
