@@ -7,66 +7,13 @@
 window.app = window.app || {};
 
 /**
- * Send messages to the gae server MessagingEndpoint for delivery
+ * Send messages to the GAE server MessagingEndpoint for delivery
  * @namespace
  */
 app.Msg = (function() {
   'use strict';
 
   new ExceptionHandler();
-
-  /**
-   * Base path of MessagingEndpoint
-   * @const
-   * @private
-   * @memberOf app.Msg
-   */
-  const URL_BASE = `${app.Gae.GAE_ROOT}/messaging/v1/send/`;
-
-  /**
-   * Max message length. Server may reduce it more
-   * @const
-   * @default
-   * @private
-   * @memberOf app.Msg
-   */
-  const MAX_MSG_LEN = 4096;
-
-  /**
-   * Message action
-   * @type {{MESSAGE: string,
-   * PING: string,
-   * DEVICE_ADDED: string,
-   * DEVICE_REMOVED: string}}
-   * @const
-   * @default
-   * @memberOf app.Msg
-   */
-  const ACTION = {
-    MESSAGE: 'm',
-    PING: 'ping_others',
-    PING_RESPONSE: 'respond_to_ping',
-    DEVICE_ADDED: 'add_our_device',
-    DEVICE_REMOVED: 'remove_our_device',
-  };
-
-  /**
-   * Message body
-   * @type {{PING: string,
-   * PING_RESPONSE: string,
-   * DEVICE_ADDED: string,
-   * DEVICE_REMOVED: string}}
-   * @const
-   * @default
-   * @private
-   * @memberOf app.Msg
-   */
-  const BODY = {
-    PING: 'Contacting other devices...',
-    PING_RESPONSE: 'Device is online',
-    DEVICE_ADDED: 'New device added',
-    DEVICE_REMOVED: 'Device removed',
-  };
 
   /**
    * Data packet sent to server
@@ -83,10 +30,63 @@ app.Msg = (function() {
    */
 
   /**
+   * Base path of MessagingEndpoint
+   * @const
+   * @private
+   * @memberOf app.Msg
+   */
+  const _URL_BASE = `${app.Gae.GAE_ROOT}/messaging/v1/send/`;
+
+  /**
+   * Max message length. Server may reduce it more
+   * @const
+   * @private
+   * @memberOf app.Msg
+   */
+  const _MAX_MSG_LEN = 4096;
+
+  /**
+   * Message action
+   * @type {{}}
+   * @property {string} MESSAGE
+   * @property {string} PING
+   * @property {string} PING_RESPONSE
+   * @property {string} DEVICE_ADDED
+   * @property {string} DEVICE_REMOVED
+   * @const
+   * @memberOf app.Msg
+   */
+  const _ACTION = {
+    MESSAGE: 'm',
+    PING: 'ping_others',
+    PING_RESPONSE: 'respond_to_ping',
+    DEVICE_ADDED: 'add_our_device',
+    DEVICE_REMOVED: 'remove_our_device',
+  };
+
+  /**
+   * Message body
+   * @type {{}}
+   * @property {string} PING
+   * @property {string} PING_RESPONSE
+   * @property {string} DEVICE_ADDED
+   * @property {string} DEVICE_REMOVED
+   * @const
+   * @private
+   * @memberOf app.Msg
+   */
+  const _BODY = {
+    PING: 'Contacting other devices...',
+    PING_RESPONSE: 'Device is online',
+    DEVICE_ADDED: 'New device added',
+    DEVICE_REMOVED: 'Device removed',
+  };
+
+  /**
    * Get the data packet we will send
    * @param {string} action - message type
    * @param {string} body - message body
-   * @returns {app.Msg.GaeMsg} data packet
+   * @returns {app.Msg.GaeMsg}
    * @private
    * @memberOf app.Msg
    */
@@ -135,7 +135,7 @@ app.Msg = (function() {
     }).then((regId) => {
       const json = encodeURIComponent(JSON.stringify(data));
       const highPriority = Chrome.Storage.getBool('highPriority');
-      url = `${URL_BASE}${regId}/${json}/${highPriority}`;
+      url = `${_URL_BASE}${regId}/${json}/${highPriority}`;
       return app.Gae.doPost(url, true);
     }).then(() => {
       if (type && notify && app.Notify.onSend()) {
@@ -147,12 +147,12 @@ app.Msg = (function() {
   }
 
   return {
-    ACTION: ACTION,
+    ACTION: _ACTION,
 
     /**
      * Send clipboard contents as represented by a {@link ClipItem}
      * @param {ClipItem} clipItem - contents of clipboard
-     * @returns {Promise<void>} void
+     * @returns {Promise<void>}
      * @memberOf app.Msg
      */
     sendClipItem: function(clipItem) {
@@ -161,33 +161,33 @@ app.Msg = (function() {
       }
 
       let text = clipItem.text;
-      if (text.length > MAX_MSG_LEN) {
+      if (text.length > _MAX_MSG_LEN) {
         // limit message size. Server may limit more
-        text = text.substring(0, MAX_MSG_LEN - 1);
+        text = text.substring(0, _MAX_MSG_LEN - 1);
       }
 
-      const data = _getData(ACTION.MESSAGE, text);
-      data.FAV = clipItem.fav ? '1' : '0';
+      const data = _getData(_ACTION.MESSAGE, text);
+      data.fav = clipItem.fav ? '1' : '0';
       return _sendMessage(data, true, app.Notify.TYPE.MESSAGE_SENT);
     },
 
     /**
      * Send message for adding our {@link Device}
-     * @returns {Promise<void>} void
+     * @returns {Promise<void>}
      * @memberOf app.Msg
      */
     sendDeviceAdded: function() {
-      const data = _getData(ACTION.DEVICE_ADDED, BODY.DEVICE_ADDED);
+      const data = _getData(_ACTION.DEVICE_ADDED, _BODY.DEVICE_ADDED);
       return _sendMessage(data, true, app.Notify.TYPE.DEVICE_ADDED);
     },
 
     /**
      * Send message for removing our {@link Device}
-     * @returns {Promise<void>} void
+     * @returns {Promise<void>}
      * @memberOf app.Msg
      */
     sendDeviceRemoved: function() {
-      const data = _getData(ACTION.DEVICE_REMOVED, BODY.DEVICE_REMOVED);
+      const data = _getData(_ACTION.DEVICE_REMOVED, _BODY.DEVICE_REMOVED);
       return _sendMessage(data, true, app.Notify.TYPE.DEVICE_REMOVED);
     },
 
@@ -197,25 +197,25 @@ app.Msg = (function() {
      * @memberOf app.Msg
      */
     sendPing: function() {
-      const data = _getData(ACTION.PING, BODY.PING);
+      const data = _getData(_ACTION.PING, _BODY.PING);
       return _sendMessage(data, false);
     },
 
     /**
-     * Respond to a ping from one of our {@link app.Devices}
+     * Respond to a ping from a {@link Device}
      * @param {string} srcRegId - source of ping
-     * @returns {Promise<void>} void
+     * @returns {Promise<void>}
      * @memberOf app.Msg
      */
     sendPingResponse: function(srcRegId) {
-      const data = _getData(ACTION.PING_RESPONSE, BODY.PING_RESPONSE);
+      const data = _getData(_ACTION.PING_RESPONSE, _BODY.PING_RESPONSE);
       data.srcRegId = srcRegId;
       return _sendMessage(data, false);
     },
 
     /**
      * Display notification that send message failed
-     * @param {Error} err - what caused the failure
+     * @param {Error} err
      * @memberOf app.Msg
      */
     sendFailed: function(err) {
