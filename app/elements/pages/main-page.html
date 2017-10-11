@@ -95,7 +95,24 @@
       }
 
       #clipViewerLabels {
+        cursor: pointer;
+        margin: 0;
+        padding-bottom: 16px;
+      }
+
+      #clipViewerLabels paper-item {
         @apply(--paper-font-subhead);
+        --paper-item: {
+          min-height: 0;
+          border: 2px solid rgba(0, 0, 0, .1);
+          border-radius: 5px;
+          background-color: rgba(0, 0, 0, .1);
+          margin-right: 8px;
+          margin-bottom: 8px;
+          padding-left: 4px;
+          padding-right: 4px;
+        };
+        --paper-item-disabled-color: var(--primary-text-color);
       }
 
       .list-item {
@@ -255,13 +272,15 @@
 
         <!-- Clip Viewer -->
         <div id="clipViewer" class="flex-3 vertical layout">
-          <div id="clipViewerLabels" class="horizontal layout">
-            <template is="dom-repeat" id="labelsTemplate"
-                      items="{{selectedLabelItems}}" as="selectedLabelItem">
-              <paper-item>[[selectedLabelItem]]</paper-item>
-            </template>
+          <div id="clipViewerLabels" on-tap="_onLabelsTapped">
+            <div class="horizontal layout">
+              <template is="dom-repeat" id="labelsTemplate"
+                        items="{{selectedLabelItems}}" as="selectedLabelItem">
+                <paper-item disabled>[[selectedLabelItem]]</paper-item>
+              </template>
+            </div>
+            <hr/>
           </div>
-          <hr/>
           <div id="clipViewerText"></div>
         </div>
 
@@ -296,7 +315,7 @@
 
         /**
          * Item in the main list
-         * @typedef {Object} MainPage.ListItem
+         * @typedef {Object} ListItem
          * @property {boolean} checked - true if selected
          * @property {app.ClipItem} clipItem - {@link ClipItem}
          * @memberOf MainPage
@@ -486,22 +505,15 @@
        * @private
        */
       _onSelectLabelsTapped: function() {
-        app.Label.loadAll().then((labels) => {
-          this.set('labelItems', []);
-          labels.forEach((label) => {
-            this.push('labelItems', label.name);
-          });
-          return Promise.resolve();
-        }).then(() => {
-          const clipItem = this._getSelectedClipItem();
-          return this._setSelectedLabels(clipItem);
-        }).then(() => {
-          this.$.selectLabelsDialog.open();
-          return Promise.resolve();
-        }).catch((err) => {
-          Chrome.Log.error(err.message, 'MainPage._onSelectLabelsTapped',
-              'Failed to load labels');
-        });
+        this._showLabelsSelectDialog();
+      },
+
+      /**
+       * Event: Labels section of ClipViewer tapped
+       * @private
+       */
+      _onLabelsTapped: function() {
+        this._showLabelsSelectDialog();
       },
 
       /**
@@ -514,8 +526,15 @@
           if (!Chrome.Utils.isWhiteSpace(this.labelName) &&
               !this.selectedLabelItems.includes(this.labelName)) {
             // deselected our label
-            this._loadClipItems();
+            this._loadClipItems('');
             this.$.selectLabelsDialog.close();
+          } else {
+            // set Labels section visibility
+            if (this.selectedLabelItems.length) {
+              this.$.clipViewerLabels.style.display = 'block';
+            } else {
+              this.$.clipViewerLabels.style.display = 'none';
+            }
           }
           return Promise.resolve();
         }).catch((err) => {
@@ -568,6 +587,8 @@
           this._deselectNonFavorites();
         }
         this.$.listTemplate.render();
+        this._updateView();
+
       },
 
       /**
@@ -579,7 +600,8 @@
       },
 
       /**
-       * Event: iron-selector selectable items changed
+       * Event: iron-selector selectable items changed<br />
+       * ListItem selector
        * @param {Event} event
        * @private
        */
@@ -589,9 +611,14 @@
           const selector = this.$.ironSelector;
           const idx = selector.indexOf(selector.selectedItem);
           const len = this.listItems.length;
-          if ((idx === -1) && len) {
-            // select last row if none is selected
-            selector.selectIndex(len - 1);
+          if (idx === -1) {
+            if (len) {
+              // select last row if none is selected
+              selector.selectIndex(len - 1);
+            } else {
+              // no items
+              this._clearClipViewer();
+            }
           }
         }
       },
@@ -858,6 +885,29 @@
       },
 
       /**
+       * Show Labels select dialog
+       * @private
+       */
+      _showLabelsSelectDialog: function() {
+        app.Label.loadAll().then((labels) => {
+          this.set('labelItems', []);
+          labels.forEach((label) => {
+            this.push('labelItems', label.name);
+          });
+          return Promise.resolve();
+        }).then(() => {
+          const clipItem = this._getSelectedClipItem();
+          return this._setSelectedLabels(clipItem);
+        }).then(() => {
+          this.$.selectLabelsDialog.open();
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, 'MainPage._showLabelsSelectDialog',
+              'Failed to load labels');
+        });
+      },
+        
+    /**
        * Get selected row's {@link ClipItem}
        * @returns {?ClipItem}
        * @private
@@ -914,6 +964,12 @@
           labels.forEach((label) => {
             this.push('selectedLabelItems', label.name);
           });
+          // set visibility
+          if (this.selectedLabelItems.length) {
+            this.$.clipViewerLabels.style.display = 'block';
+          } else {
+            this.$.clipViewerLabels.style.display = 'none';
+          }
           return Promise.resolve();
         });
       },
