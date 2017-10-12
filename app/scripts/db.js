@@ -55,13 +55,8 @@ app.DB = (function() {
       });
     });
 
-    // create new clipItems table
-    _db.version(3).stores({
-      clipItems: '++_id, &text, date, *labelsId',
-    });
-
     // add new clip table, copy in old items and delete tmp table
-    _db.version(4).stores({
+    _db.version(3).stores({
       clipItems: '++_id, &text, date, *labelsId',
     }).upgrade(function(t) {
       let clipItems;
