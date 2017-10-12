@@ -69,7 +69,7 @@ app.DB = (function() {
         clipItems = clips;
         clips.forEach((clipItem) => {
           clipItem.labelsId = [];
-        });// return t.db.clipItems.bulkPut(clips);
+        });
         return t.idbtrans.objectStore('clipItems');
       }).then((clipItemsTable) => {
         clipItems.forEach((clipItem) => clipItemsTable.put(clipItem));
