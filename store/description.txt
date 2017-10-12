@@ -1,12 +1,17 @@
 A clipboard manager with push notifications.
 
-Monitor and store all text placed on the clipboard.
+Monitor, store, and manage all text placed on the clipboard.
+
 Mark favorite items for easy access.
 
 Share with the following devices using push notifications:
-Any desktop hardware that supports the Chrome Browser
-Android phones and tablets using the companion app:
+* Any desktop hardware that supports the Chrome Browser
+* Android phones and tablets using the companion app:
   https://play.google.com/store/apps/details?id=com.weebly.opus1269.clipman
+
+Mark favorite entries for easy access.
+
+Label entries to view by category.
 
 
 REQUIRED PERMISSIONS:
