@@ -1,8 +1,4 @@
-A clipboard manager with push notifications.
-
 Monitor, store, and manage all text placed on the clipboard.
-
-Mark favorite items for easy access.
 
 Share with the following devices using push notifications:
 * Any desktop hardware that supports the Chrome Browser
@@ -44,4 +40,3 @@ https://github.com/Pushy-Clipboard/pushy-chrome-extension/blob/master/PRIVACY.md
 Free and advertising free. I write software for fun and hope it benefits others.
 Open source code
 https://github.com/Pushy-Clipboard/pushy-chrome-extension
-
