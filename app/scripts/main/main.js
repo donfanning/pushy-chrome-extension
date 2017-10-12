@@ -77,7 +77,7 @@ window.app = window.app || {};
    * @const
    * @memberOf Main
    */
-  t.pages_one = [
+  t.pagesOne = [
     {
       label: 'Clips', route: 'page-main',
       icon: 'myicons:content-paste', ready: true, divider: false,
@@ -106,7 +106,7 @@ window.app = window.app || {};
    * @const
    * @memberOf Main
    */
-  t.pages_two = [
+  t.pagesTwo = [
     {
       label: 'Settings', route: 'page-settings',
       icon: 'myicons:settings', ready: false, divider: true,
@@ -149,7 +149,7 @@ window.app = window.app || {};
    * @type {Main.page[]}
    * @memberOf Main
    */
-  t.pages_labels = [];
+  t.pagesLabels = [];
 
   /**
    * Error dialog title
@@ -499,24 +499,27 @@ window.app = window.app || {};
         case 1: // CREATED
           if (change.table === 'labels') {
             const name = change.obj.name;
-            const suffix = t.pages_labels.length;
+            const idx = _getPagesLabelsIdx(name);
+            if (idx !== -1) {
+              // already exists
+              break;
+            }
+            const suffix = t.pagesLabels.length;
             const newPage = {
               label: name, route: `page-main-labeled${suffix}`,
               icon: 'myicons:label', ready: true, divider: false,
               obj: null, insertion: null, el: null,
             };
             pages.push(newPage);
-            t.push('pages_labels', newPage);
+            t.push('pagesLabels', newPage);
           }
           break;
         case 2: // UPDATED
           if (change.table === 'labels') {
             const name = change.oldObj.name;
             const newName = change.obj.name;
-            const idx = t.pages_labels.findIndex((page) => {
-              return page.label === name;
-            });
-            t.set(`pages_labels.${idx}.label`, newName);
+            const idx = _getPagesLabelsIdx(name);
+            t.set(`pagesLabels.${idx}.label`, newName);
           }
           break;
         case 3: // DELETED
@@ -526,10 +529,10 @@ window.app = window.app || {};
               return page.label === name;
             });
             pages.splice(idx, 1);
-            idx = t.pages_labels.findIndex((page) => {
+            idx = t.pagesLabels.findIndex((page) => {
               return page.label === name;
             });
-            t.splice('pages_labels', idx, 1);
+            t.splice('pagesLabels', idx, 1);
           }
           break;
         default:
@@ -592,6 +595,18 @@ window.app = window.app || {};
   function _getPageIdx(route) {
     return pages.findIndex((page) => {
       return page.route === route;
+    });
+  }
+
+  /**
+   * Get the index into the label pages array
+   * @param {string} label - {@link Main.page} route
+   * @returns {int} index into array, -1 if not found
+   * @memberOf Main
+   */
+  function _getPagesLabelsIdx(label) {
+    return t.pagesLabels.findIndex((page) => {
+      return page.label === label;
     });
   }
 
@@ -659,12 +674,12 @@ window.app = window.app || {};
    * @memberOf Main
    */
   function _buildPages() {
-    pages = t.pages_one;
+    pages = t.pagesOne;
     return _getLabelPages().then((labelPages) => {
       labelPages = labelPages || [];
-      t.set('pages_labels', labelPages);
-      pages = pages.concat(t.pages_labels);
-      pages = pages.concat(t.pages_two);
+      t.set('pagesLabels', labelPages);
+      pages = pages.concat(t.pagesLabels);
+      pages = pages.concat(t.pagesTwo);
       return Promise.resolve();
     });
   }
