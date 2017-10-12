@@ -317,7 +317,7 @@
 
         /**
          * Item in the main list
-         * @typedef {Object} ListItem
+         * @typedef {Object} MainPage.ListItem
          * @property {boolean} checked - true if selected
          * @property {app.ClipItem} clipItem - {@link ClipItem}
          * @memberOf MainPage
@@ -422,7 +422,7 @@
           this.set('labelName', labelName);
           this._loadClipItems();
         } else {
-          this.updateDates();
+          this._updateView();
         }
       },
 
@@ -803,9 +803,13 @@
           });
           this.set('listItems', listItems);
 
-          this.$.ironSelector.selectIndex(0);
-          this.$.clipList.scrollTop = 0;
           this._setTitle();
+          
+          if (this.listItems.length > 0) {
+            this.$.ironSelector.selectIndex(0);
+            this.$.clipList.scrollTop = 0;
+          }
+
           return Promise.resolve();
         });
       },
@@ -988,6 +992,7 @@
        * @private
        */
       _clearClipViewer: function() {
+        this.$.clipViewerLabels.style.display = 'none';
         const el = this.$.clipViewerText;
         while (el.firstChild) {
           // delete all children previous linkify created
@@ -1002,11 +1007,15 @@
        */
       _updateClipViewer: function(clipItem) {
         this._clearClipViewer();
-        const el = this.$.clipViewerText;
-        el.textContent = clipItem.text;
-        // linkify it - creates element children
-        linkifyElement(el);
-        this._setSelectedLabels(clipItem).catch(() => {});
+        this._setSelectedLabels(clipItem).then(() => {
+          const el = this.$.clipViewerText;
+          el.textContent = clipItem.text;
+          // linkify it - creates element children
+          linkifyElement(el);
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.GA.error(err.message, 'MainPage._updateClipViewer');
+        });
       },
     });
   })();
