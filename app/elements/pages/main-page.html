@@ -294,6 +294,8 @@
     'use strict';
 
     new ExceptionHandler();
+    
+    const _ERR_LOAD = 'Failed to load Clips.';
 
     let self;
 
@@ -381,14 +383,18 @@
       /** Element is ready */
       ready: function() {
         self = this;
-        this._loadClipItems();
+        this._loadClipItems().then(() => {
+          // listen for changes to database
+          app.DB.get().on('changes', this._onDBChanged);
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, 'MainPage.ready', _ERR_LOAD);
+        });
 
         // listen for copy and cut events on document
         document.addEventListener('cut', this._onCopy, true);
         document.addEventListener('copy', this._onCopy, true);
 
-        // listen for changes to database
-        app.DB.get().on('changes', this._onDBChanged);
       },
 
       /** We have animated in and are now the current page */
@@ -432,6 +438,11 @@
             case 1: // CREATED
               if (change.table === 'clipItems') {
                 const c = change.obj;
+                const pos = self._getListItemPos(c.text);
+                if (pos !== -1) {
+                  // already in list
+                  break;
+                }
                 const clipItem =
                     new app.ClipItem(c.text, c.date, c.fav, c.remote, c.device);
                 clipItem._id = change.key;
@@ -526,7 +537,7 @@
           if (!Chrome.Utils.isWhiteSpace(this.labelName) &&
               !this.selectedLabelItems.includes(this.labelName)) {
             // deselected our label
-            this._loadClipItems('');
+            this._loadClipItems();
             this.$.selectLabelsDialog.close();
           } else {
             // set Labels section visibility
@@ -774,12 +785,13 @@
 
       /**
        * Load the {@link ClipItem} objects
+       * @returns {Promise<void>}
        * @private
        */
       _loadClipItems: function() {
         this.set('listItems', []);
         this._clearClipViewer();
-        app.ClipItem.loadAll(this.labelName).then((clipItems) => {
+        return app.ClipItem.loadAll(this.labelName).then((clipItems) => {
           // populate list
           const listItems = [];
           clipItems.forEach((clipItem) => {
@@ -795,9 +807,6 @@
           this.$.clipList.scrollTop = 0;
           this._setTitle();
           return Promise.resolve();
-        }).catch((err) => {
-          Chrome.Log.error(err.message, 'Main._loadClipItems',
-              'Failed to load clips from database.');
         });
       },
 
