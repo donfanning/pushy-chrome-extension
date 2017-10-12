@@ -40,11 +40,11 @@
       app.Data.initialize();
       app.Utils.showMainTab();
     } else if (details.reason === 'update') {
-      if (Chrome.Utils.getVersion() === details.previousVersion) {
-        // spurious update: 
-        // https://bugs.chromium.org/p/chromium/issues/detail?id=303481
-        return;
-      }
+      // if (Chrome.Utils.getVersion() === details.previousVersion) {
+      //   // spurious update: 
+      //   // https://bugs.chromium.org/p/chromium/issues/detail?id=303481
+      //   return;
+      // }
       app.Data.update();
       _initializeFirebase().then(() => {
         return app.SW.update();
