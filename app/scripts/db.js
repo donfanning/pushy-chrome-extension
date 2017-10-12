@@ -53,18 +53,153 @@ app.DB = (function() {
     _db = new Dexie('ClipItemsDB');
 
     // define database
-    _db.version(_VER_ONE).stores({
+    _db.version(1).stores({
       clipItems: '&text, date',
     });
 
     // add labels support
-    _db.version(_VER_TWO).stores({
+    _db.version(2).stores({
+      clipItemsTmp: '&text, date',
       labels: '++_id, &name',
+    }).upgrade(function(t) {
+      let objects;
+      return t.db.clipItems.toArray().then((ob) => {
+        objects = ob;
+        return t.idbtrans.objectStore('clipItemsTmp');
+      }).then((clipItemsTmp) => {
+        objects.forEach((o) => clipItemsTmp.put(o));
+        return Promise.resolve();
+      });
+    });
+
+    // add labels support
+    _db.version(3).stores({
+      clipItems: null,
+    });
+
+    // add labels support
+    _db.version(4).stores({
       clipItems: '++_id, &text, date, *labelsId',
+    }).upgrade(function(t) {
+
+      return Promise.resolve().then(() => {
+        // return t.idbtrans.objectStore('clipItemsTmp').getAll();
+        return t.db.clipItemsTmp.toArray();
+      }).then((objects) => {
+        objects.forEach((o) => {
+          o.labelsId = [];
+        });
+        return t.db.clipItems.bulkPut(objects);
+      });
+    });
+
+    // // add labels support
+    // _db.version(5).stores({
+    //   clipItemsTmp: null,
+    // });
+
+    // // add labels support
+    // _db.version(3).stores({
+    //   clipItemsTmp: '&text, date',
+    //   labels: '++_id, &name',
+    // }).upgrade(function(t) {
+    //   console.log(t);
+    //   console.log(t.db);
+    //   console.log(t.db.clipItemsTmp);
+    //
+    //   let objects;
+    //   return t.db.clipItems.toArray().then((ob) => {
+    //     objects = ob;
+    //     return t.idbtrans.objectStore('clipItemsTmp');
+    //   }).then((clipItemsTmp) => {
+    //     objects.forEach((o) => clipItemsTmp.put(o));
+    //     return Promise.resolve();
+    //   });
+    // });
+
+    // add labels support
+    // _db.version(4).stores({
+    //   clipItemsTmp: '&text, date',
+    //   labels: '++_id, &name',
+    // }).upgrade(function(t) {
+    //   console.log(t);
+    //   console.log(t.db);
+    //   console.log(t.db.clipItemsTmp);
+    //
+    //   let objects;
+    //   return t.idbtrans.objectStore('clipItemsTmp').getAll().then((ob) => {
+    //     objects = ob;
+    //     return t.idbtrans.objectStore('clipItemsTmp');
+    //   }).then((clipItemsTmp) => {
+    //     objects.forEach((o) => clipItemsTmp.put(o));
+    //     return Promise.resolve();
+    //   });
+    // });
+
+    // // add labels support
+    // _db.version(3).stores({
+    //   clipItemsTmp: '&text, date',
+    //   labels: '++_id, &name',
+    // });
+    //
+    // // add labels support
+    // _db.version(4).stores({
+    //   clipItemsTmp: '&text, date',
+    //   labels: '++_id, &name',
+    // });
+    //
+    // // add labels support
+    // _db.version(5).stores({
+    //   clipItems: '&text, date',
+    // }).upgrade(function(t) {
+    //   console.log(t);
+    //   console.log(t.db);
+    //   console.log(t.clipItems);
+    //  
+    //   // Will only be executed if a version below 2 was installed.
+    //   return t.db.clipItemsTmp.put({text: 'text', date: 1222222});
+    //   // return t.db.clipItems.toCollection().modify(function(clipItem) {
+    //   //   // Modify each clipItem:
+    //   //   clipItem.fav = true;
+    //   // });
+    // });
+
+    _db.open();
+    _db.on('error', function(error) {
+      console.log('Oh no! - ' + error);
     });
 
     _db.clipItems.mapToClass(app.ClipItem);
     _db.labels.mapToClass(app.Label);
+
+    // _db.version(_VER_TWO).stores({
+    //   clipItemsTmp: '&text, date',
+    //   labels: '++_id, &name',
+    // }).upgrade(function() {
+    //   // Will only be executed if a version below 2 was installed.
+    //   return _db.clipItemsTmp.put({text: 'text', date: 100001});
+    // });
+
+    // .upgrade(() => {
+    //   return _db.clipItems.toArray().then((objects) => {
+    //     return _db.clipItemsTmp.bulkPut(objects);
+    //   }).then(() => {
+    //     _db.clipItems.mapToClass(app.ClipItem);
+    //     _db.labels.mapToClass(app.Label);
+    //     return Promise.resolve();
+    //   });
+    // });
+
+    // // add labels support
+    // _db.version(3).stores({
+    //   clipItems: '++_id, &text, date, *labelsId',
+    // });
+
+    // // add labels support
+    // _db.version(3).stores({
+    //   clipItems: '++_id, &text, date, *labelsId',
+    // });
+
   }
 
   // listen for document and resources loaded
@@ -99,5 +234,3 @@ app.DB = (function() {
     },
   };
 })();
-
-
