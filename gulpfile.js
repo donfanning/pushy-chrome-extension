@@ -22,12 +22,13 @@ const path = {
   styles: `${base.src}styles/`,
   images: `${base.src}images/`,
   assets: `${base.src}assets/`,
-  lib: `${base.src}lib/`,
   locales: `${base.src}_locales/`,
   bower: `${base.src}bower_components/`,
   bowerScripts: `${base.src}bower_components/chrome-extension-utils/`,
   bowerFirebase: `${base.src}bower_components/firebase/`,
   bowerDexie: `${base.src}bower_components/dexie/`,
+  bowerMoment: `${base.src}bower_components/moment/`,
+  bowerLinkify: `${base.src}bower_components/linkifyjs/`,
 };
 const files = {
   manifest: `${base.src}manifest.json`,
@@ -38,21 +39,25 @@ const files = {
   images: `${path.images}*.*`,
   assets: `${path.assets}*.*`,
   lib: [
-    `${path.lib}**/*.*`,
     `${path.bowerFirebase}firebase-app.js`,
     `${path.bowerFirebase}firebase-auth.js`,
     `${path.bowerFirebase}firebase-messaging.js`,
-    `${path.bowerDexie}dist/dexie.js/dexie.min.js`,
-    `${path.bowerDexie}addons/Dexie.Observable/dist/dexie-observable.js/dexie-observable.min.js`,
+    `${path.bowerDexie}dist/dexie.min.js`,
+    `${path.bowerDexie}addons/Dexie.Observable/dist/dexie-observable.min.js`,
+    `${path.bowerMoment}min/moment.min.js`,
+    `${path.bowerLinkify}linkify.min.js`,
+    `${path.bowerLinkify}linkify-element.min.js`,
   ],
   locales: `${path.locales}**/*.*`,
   bower: [
     `${path.bower}**/*`,
     `!${path.bower}**/test/*`,
     `!${path.bower}**/demo/*`,
-    `!${path.bowerFirebase}firebase-app.js`,
-    `!${path.bowerFirebase}firebase-auth.js`,
-    `!${path.bowerFirebase}firebase-messaging.js`,
+    `!${path.bower}jquery/**`,
+    `!${path.bowerFirebase}**`,
+    `!${path.bowerDexie}**`,
+    `!${path.bowerMoment}**`,
+    `!${path.bowerLinkify}**`,
   ],
   bowerScripts: `${path.bowerScripts}**/*.js`,
 };
@@ -344,4 +349,3 @@ gulp.task('zip', () => {
           'store-test.zip')).
       pipe(!isProdTest ? gulp.dest(base.store) : gulp.dest(base.dist));
 });
-
