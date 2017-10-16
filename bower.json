@@ -42,6 +42,7 @@
     "paper-tooltip": "PolymerElements/paper-tooltip#^1.0.0",
     "paper-listbox": "PolymerElements/paper-listbox#^1.0.0",
     "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#^1.0.0",
+    "paper-toast": "PolymerElements/paper-toast#^1.0.0",
     "neon-animation": "PolymerElements/neon-animation#^1.0.0",
     "chrome-extension-utils": "opus1269/chrome-extension-utils#^3.0.0",
     "setting-elements": "opus1269/setting-elements#^3.0.0",

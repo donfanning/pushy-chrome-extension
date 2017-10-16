@@ -23,7 +23,7 @@
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
 <link rel="import" href="../my_icons.html">
 
@@ -77,10 +77,44 @@
         margin: 0;
       }
 
-      #selectLabelsDialog {
-        min-width: 25vw;
+      .clip-item {
+        position: relative;
+        border: 1px #CCCCCC;
+        border-bottom-style: solid;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
       }
 
+      .clip-item paper-item {
+        /*stupid documentation*/
+        --paper-item-focused-before: {
+          background: transparent;
+        };
+      }
+
+      .clip-text-row {
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .clip-text {
+        line-height: 1.2em;
+        height: 2.4em;
+        overflow: hidden;
+        margin-left: 16px;
+        margin-right: 16px;
+      }
+
+      .date-row {
+        padding: 0 8px;
+      }
+
+      .date-text {
+        color: var(--accent-color);
+        text-align: center;
+      }
+      
       #clipViewer {
         height: 82vh;
         overflow: hidden;
@@ -115,46 +149,14 @@
         --paper-item-disabled-color: var(--primary-text-color);
       }
 
-      .list-item {
-        position: relative;
-        border: 1px #CCCCCC;
-        border-bottom-style: solid;
-        padding: 0;
-        margin: 0;
-        cursor: pointer;
+      #labelsDialog {
+        min-width: 25vw;
       }
 
-      .list-item paper-item {
-        /*stupid documentation*/
-        --paper-item-focused-before: {
-          background: transparent;
-        };
-      }
-
-      .date-row {
-        padding: 0 8px;
-      }
-
-      .date-text {
-        color: var(--accent-color);
-        text-align: center;
-      }
-
-      .clip-text-row {
-        padding-left: 0;
-        padding-right: 0;
-      }
-
-      .clip-text {
-        line-height: 1.2em;
-        height: 2.4em;
-        overflow: hidden;
-        margin-left: 16px;
-        margin-right: 16px;
-      }
-
-      .select-checkbox {
-        padding-left: 28px;
+      #undoToastButton {
+        margin-top: 0;
+        margin-bottom: 0;
+        color: yellow;
       }
 
       .iron-selected {
@@ -170,24 +172,31 @@
         <paper-toolbar class="page-toolbar">
           <span class="space"></span>
           <div class="middle middle-container center horizontal layout flex">
-            <div class="flex">[[title]]</div>
-            <paper-icon-button id="fav" icon="[[_computeFavIcon(isFavFilter)]]"
-                               style$="color: [[_computeFavMenuColor(isFavFilter)]];"
-                               on-tap="_onFavFilterTapped"></paper-icon-button>
+            <div class="flex">[[_computeTitle(currentClip, labelFilter)]]</div>
+            <paper-icon-button
+                id="fav" icon="[[_computeFavIcon(isFavFilter)]]"
+                style$="color: [[_computeFavMenuColor(isFavFilter)]];"
+                on-tap="_onFavFilterTapped"></paper-icon-button>
             <paper-tooltip for="fav" position="left" offset="0">
               [[_computeFavToolTip(isFavFilter)]]
             </paper-tooltip>
-            <paper-icon-button id="labels" icon="myicons:label"
-                               on-tap="_onSelectLabelsTapped"></paper-icon-button>
-            <paper-tooltip for="labels" position="left" offset="0">Select labels</paper-tooltip>
-            <paper-icon-button id="select" icon="myicons:check-box"
-                               on-tap="_onSelectAllTapped"></paper-icon-button>
+            <paper-icon-button
+                id="select" icon="myicons:check-box"
+                on-tap="_onSelectAllTapped"></paper-icon-button>
             <paper-tooltip for="select" position="left" offset="0">Select all items</paper-tooltip>
-            <paper-icon-button id="deselect" icon="myicons:check-box-outline-blank"
-                               on-tap="_onDeselectAllTapped"></paper-icon-button>
+            <paper-icon-button
+                id="deselect" icon="myicons:check-box-outline-blank"
+                on-tap="_onDeselectAllTapped"></paper-icon-button>
             <paper-tooltip for="deselect" position="left" offset="0">Deselect all items</paper-tooltip>
-            <paper-icon-button id="delete" icon="myicons:delete" on-tap="_onDeleteSelectedTapped"
-                               disabled$="[[!hasSelections]]"></paper-icon-button>
+            <paper-icon-button
+                id="labels" icon="myicons:label"
+                disabled$="[[!hasSelections]]"
+                on-tap="_onSelectLabelsTapped"></paper-icon-button>
+            <paper-tooltip for="labels" position="left" offset="0">Set labels for selected items</paper-tooltip>
+            <paper-icon-button
+                id="delete" icon="myicons:delete"
+                disabled$="[[!hasSelections]]"
+                on-tap="_onDeleteSelectedTapped"></paper-icon-button>
             <paper-tooltip for="delete" position="left" offset="0">Delete selected items</paper-tooltip>
           </div>
         </paper-toolbar>
@@ -196,34 +205,22 @@
       <!-- Content -->
       <div class="body-content horizontal layout">
 
-        <!-- Delete dialog -->
-        <paper-dialog id="deleteDialog" modal entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-          <h2>Delete selected items?</h2>
-          <p>This operation cannot be undone.</p>
-          <paper-checkbox class="select-checkbox" checked="{{deleteFavs}}">
-            Include favorites
-          </paper-checkbox>
-          <div class="buttons">
-            <paper-button dialog-dismiss autofocus>CANCEL</paper-button>
-            <paper-button dialog-confirm on-click="_onDeleteSelectedRows">DELETE</paper-button>
-          </div>
-        </paper-dialog>
-
         <!-- Select labels dialog -->
-        <paper-dialog id="selectLabelsDialog" modal
-                      entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-          <h2 class="vertical layout center">Select labels</h2>
+        <paper-dialog
+            id="labelsDialog" modal
+            entry-animation="scale-up-animation"
+            exit-animation="fade-out-animation">
+          <h2 class="vertical layout center">
+            [[_computeLabelsDialogTitle(isMultiLabelsEdit, selectedClips, selectedClips.splices)]]</h2>
           <paper-dialog-scrollable>
-            <paper-listbox id="labelList" multi attr-for-selected="id"
-                           selected-values="{{selectedLabelItems}}"
-                           on-selected-items-changed="_onSelectedLabelsChanged">
-              <template is="dom-repeat" id="labelListTemplate"
-                        items="{{labelItems}}" as="labelItem">
-                <paper-icon-item id="[[labelItem]]">
+            <paper-listbox
+                multi attr-for-selected="id"
+                selected-values="{{selectedDialogLabels}}">
+              <template is="dom-repeat"
+                        items="{{labels}}" as="label">
+                <paper-icon-item id="[[label]]">
                   <iron-icon icon="myicons:label" item-icon></iron-icon>
-                  [[labelItem]]
+                  [[label]]
                 </paper-icon-item>
               </template>
             </paper-listbox>
@@ -233,27 +230,42 @@
           </div>
         </paper-dialog>
 
+        <!-- Undo delete toast -->
+        <paper-toast id="undoToast" duration="0">
+          <div class="horizontal center layout">
+            <span id="undoToastText">[[undoText]]</span>
+            <paper-button
+                id="undoToastButton"
+                on-tap="_onUndoDeleteTapped">UNDO
+            </paper-button>
+            <paper-icon-button
+                id="undoIcon"
+                icon="myicons:close"
+                on-tap="_onCloseToastTapped"></paper-icon-button>
+          </div>
+        </paper-toast>
+
         <!-- Main list -->
         <div id="clipList" class="flex-2">
-          <iron-selector id="ironSelector"
-                         on-iron-select="_onListItemSelected"
-                         on-iron-items-changed="_onSelectableChanged">
-            <template is="dom-repeat" id="listTemplate"
-                      items="{{listItems}}" as="listItem"
-                      sort="_sortByDate" filter="_filter" observe="clipItem.date">
-              <div class="list-item horizontal center layout" id="listItem[[index]]">
-                <paper-checkbox
-                    class="select-checkbox"
-                    checked="{{listItem.checked}}"
-                    on-change="_onCheckedTapped"></paper-checkbox>
+          <iron-selector
+              multi attr-for-selected="clip"
+              selected-values="{{selectedClips}}">
+            <template
+                is="dom-repeat" id="clipsTemplate"
+                items="{{clips}}" as="clip"
+                sort="_sortByDate" filter="_filter" observe="date">
+              <div
+                  class="clip-item"
+                  id="clip[[index]]"
+                  clip="{{clip}}">
                 <div class="clip-body flex vertical layout" tabindex="-1">
                   <paper-item class="date-row center horizontal layout">
                     <paper-icon-button
-                        icon="[[_computeFavIcon(listItem.clipItem.fav)]]"
-                        style$="color: [[_computeFavColor(listItem.clipItem.fav)]];"
+                        icon="[[_computeFavIcon(clip.fav)]]"
+                        style$="color: [[_computeFavColor(clip.fav)]];"
                         on-tap="_onFavTapped"></paper-icon-button>
                     <paper-item-body class="date-text center flex">
-                      {{_computeDate(listItem.clipItem.date)}}
+                      {{_computeDate(clip.date)}}
                     </paper-item-body>
                     <paper-icon-button
                         icon="myicons:content-copy"
@@ -261,7 +273,7 @@
                   </paper-item>
                   <paper-item class="clip-text-row">
                     <paper-item-body class="clip-text fit vertical start-justified layout">
-                      [[listItem.clipItem.text]]
+                      [[clip.text]]
                     </paper-item-body>
                   </paper-item>
                 </div>
@@ -271,12 +283,13 @@
         </div>
 
         <!-- Clip Viewer -->
-        <div id="clipViewer" class="flex-3 vertical layout">
+        <div id="clipViewer" class="flex-3">
           <div id="clipViewerLabels" on-tap="_onLabelsTapped">
             <div class="horizontal layout">
-              <template is="dom-repeat" id="labelsTemplate"
-                        items="{{selectedLabelItems}}" as="selectedLabelItem">
-                <paper-item disabled>[[selectedLabelItem]]</paper-item>
+              <template
+                  is="dom-repeat" id="labelsTemplate"
+                  items="{{currentLabels}}" as="currentLabel">
+                <paper-item disabled>[[currentLabel]]</paper-item>
               </template>
             </div>
             <hr/>
@@ -294,8 +307,8 @@
     'use strict';
 
     new ExceptionHandler();
-    
-    const _ERR_LOAD = 'Failed to load Clips.';
+
+    const _ERR_LOAD = 'Failed to load Clips';
 
     let self;
 
@@ -309,26 +322,32 @@
       is: 'main-page',
 
       properties: {
-
-        title: {
-          type: String,
-          value: '',
+        /**
+         * {@link ClipItem} currently being viewed
+         * @typedef {ClipItem}
+         */
+        currentClip: {
+          type: Object,
+          value: null,
+          notify: true,
+          observer: '_currentClipChanged',
         },
 
         /**
-         * Item in the main list
-         * @typedef {Object} MainPage.ListItem
-         * @property {boolean} checked - true if selected
-         * @property {app.ClipItem} clipItem - {@link ClipItem}
-         * @memberOf MainPage
+         * Array of {@link ClipItem} objects filtered by {@link labelFilter}
+         * @typedef {ClipItem[]}
          */
-        listItems: {
+        clips: {
           type: Array,
           value: [],
           notify: true,
         },
 
-        selections: {
+        /**
+         * Array of selected {@link ClipItem} objects
+         * @typedef {ClipItem[]}
+         */
+        selectedClips: {
           type: Array,
           value: [],
           notify: true,
@@ -336,7 +355,23 @@
 
         hasSelections: {
           type: Boolean,
-          value: false,
+          computed:
+              '_computeHasSelections(selectedClips.splices)',
+        },
+
+        /**
+         * Array of {@link ClipItem} objects that have been deleted
+         * @typedef {ClipItem[]}
+         */
+        undoClips: {
+          type: Array,
+          value: [],
+          notify: true,
+        },
+
+        undoText: {
+          type: String,
+          value: '',
           notify: true,
         },
 
@@ -346,38 +381,57 @@
           notify: true,
         },
 
-        labelName: {
+        // Label name for filtering
+        labelFilter: {
           type: String,
-          value: '',
+          value: null,
           notify: true,
         },
 
-        deleteFavs: {
-          type: Boolean,
-          value: false,
-          notify: true,
-        },
-
-        labelItems: {
+        /**
+         * Array of all {@link Label} names
+         * @typedef {string[]}
+         */
+        labels: {
           type: Array,
           value: [],
           notify: true,
         },
 
         /**
-         * Item in the main list
-         * @typedef {string[]} MainPage.selectedLabelItems
-         * @memberOf MainPage
+         * Array of all {@link Label} names for the current clip
+         * @typedef {string[]}
          */
-        selectedLabelItems: {
+        currentLabels: {
           type: Array,
           value: [],
+          notify: true,
+        },
+
+        /**
+         * Array of all selected {@link Label} names in the dialog
+         * @typedef {string[]}
+         */
+        selectedDialogLabels: {
+          type: Array,
+          value: [],
+          notify: true,
+        },
+
+        /**
+         * True if label changes in dialog should apply to all selectedClips
+         * @typedef {Boolean}
+         */
+        isMultiLabelsEdit: {
+          type: Boolean,
+          value: false,
           notify: true,
         },
       },
 
       observers: [
-        '_selectionsAddedOrRemoved(selections.splices)',
+        '_selectedClipsAddedOrRemoved(selectedClips.splices)',
+        '_selectedDialogLabelsAddedOrRemoved(selectedDialogLabels.splices)',
       ],
 
       /** Element is ready */
@@ -399,30 +453,36 @@
 
       /** We have animated in and are now the current page */
       onCurrentPage: function() {
+        this._selectFirst(true);
         this.updateDates();
+      },
+
+      /** We are not going to be current anymore */
+      onLeavePage: function() {
+        this._closeUndoToast();
       },
 
       /**
        * Update the relative dates
        */
       updateDates: function() {
-        for (let i = 0; i < this.listItems.length; i++) {
-          const date = this.listItems[i].clipItem.date;
-          this.set(`listItems.${i}.clipItem.date`, date - 1);
-          this.set(`listItems.${i}.clipItem.date`, date);
+        for (let i = 0; i < this.clips.length; i++) {
+          const date = this.clips[i].date;
+          this.set(`clips.${i}.date`, date - 1);
+          this.set(`clips.${i}.date`, date);
         }
       },
 
       /**
        * Set {@link Label} name for filtering
-       * @param {string} labelName
+       * @param {?string} labelName
        */
-      setLabelName: function(labelName) {
-        if (labelName !== this.labelName) {
-          this.set('labelName', labelName);
-          this._loadClipItems();
-        } else {
-          this._updateView();
+      setLabelFilter: function(labelName) {
+        if (labelName !== this.labelFilter) {
+          this.set('labelFilter', labelName);
+          this._loadClipItems().catch((err) => {
+            Chrome.Log.error(err.message, 'MainPage.setLabelFilter', _ERR_LOAD);
+          });
         }
       },
 
@@ -438,47 +498,41 @@
             case 1: // CREATED
               if (change.table === 'clipItems') {
                 const c = change.obj;
-                const pos = self._getListItemPos(c.text);
-                if (pos !== -1) {
+                if (self._getClipPos(c.text) !== -1) {
                   // already in list
                   break;
                 }
+
                 const clipItem =
                     new app.ClipItem(c.text, c.date, c.fav, c.remote, c.device);
                 clipItem._id = change.key;
                 clipItem.labelsId = c.labelsId;
-                if (Chrome.Utils.isWhiteSpace(self.labelName)) {
-                  self.push('listItems', {
-                    checked: false,
-                    clipItem: clipItem,
-                  });
-                  // select first row and update UI
-                  self._selectFirst();
-                } else {
-                  clipItem.hasLabel(self.labelName).then((isTrue) => {
+                if (self.labelFilter) {
+                  clipItem.hasLabel(self.labelFilter).then((isTrue) => {
                     // only add if it has our label
                     if (isTrue) {
-                      self.push('listItems', {
-                        checked: false,
-                        clipItem: clipItem,
-                      });
-                      // select first row and update UI
-                      self._selectFirst();
+                      self.push('clips', clipItem);
+                      self.updateDates();
+                      self._select(clipItem);
                     }
                     return Promise.resolve();
                   }).catch((err) => {
                     Chrome.Log.error(err.message, 'MainPage._onDBChanged');
                   });
+                } else {
+                  self.push('clips', clipItem);
+                  self.updateDates();
+                  self._select(clipItem);
                 }
               }
               break;
             case 2: // UPDATED
               if (change.table === 'clipItems') {
                 const clipItem = change.obj;
-                const pos = self._getListItemPos(clipItem.text);
+                const pos = self._getClipPos(clipItem.text);
                 if (pos !== -1) {
-                  const oldDate = self.listItems[pos].clipItem.date;
-                  const str = `listItems.${pos}.clipItem.`;
+                  const oldDate = self.clips[pos].date;
+                  const str = `clips.${pos}.`;
                   self.set(`${str}_id`, clipItem._id);
                   self.set(`${str}fav`, clipItem.fav);
                   self.set(`${str}date`, clipItem.date);
@@ -486,8 +540,13 @@
                   self.set(`${str}device`, clipItem.device);
                   self.set(`${str}labelsId`, clipItem.labelsId);
                   if (oldDate !== clipItem.date) {
-                    // select first row and update UI
-                    self._selectFirst();
+                    self.updateDates();
+                  }
+                  if (self.currentClip &&
+                      (clipItem.text === self.currentClip.text)) {
+                    // bypass dirty checking
+                    self.set('currentClip', null);
+                    self.set('currentClip', self.clips[pos]);
                   }
                 }
               }
@@ -495,13 +554,9 @@
             case 3: // DELETED
               if (change.table === 'clipItems') {
                 const clipItem = change.oldObj;
-                const pos = self._getListItemPos(clipItem.text);
+                const pos = self._getClipPos(clipItem.text);
                 if (pos !== -1) {
-                  self.splice('listItems', pos, 1);
-                  if (!self.listItems.length) {
-                    // no items
-                    self._clearClipViewer();
-                  }
+                  self.splice('clips', pos, 1);
                 }
               }
               break;
@@ -516,7 +571,7 @@
        * @private
        */
       _onSelectLabelsTapped: function() {
-        this._showLabelsSelectDialog();
+        this._showLabelsSelectDialog(true);
       },
 
       /**
@@ -524,33 +579,36 @@
        * @private
        */
       _onLabelsTapped: function() {
-        this._showLabelsSelectDialog();
+        this._showLabelsSelectDialog(false);
       },
 
       /**
-       * Event: paper-listbox selected-values-changed
+       * Event: Undo Toast close button tapped
        * @private
        */
-      _onSelectedLabelsChanged: function() {
-        const clipItem = this._getSelectedClipItem();
-        clipItem.setLabels(this.selectedLabelItems).then(() => {
-          if (!Chrome.Utils.isWhiteSpace(this.labelName) &&
-              !this.selectedLabelItems.includes(this.labelName)) {
-            // deselected our label
-            this._loadClipItems();
-            this.$.selectLabelsDialog.close();
-          } else {
-            // set Labels section visibility
-            if (this.selectedLabelItems.length) {
-              this.$.clipViewerLabels.style.display = 'block';
-            } else {
-              this.$.clipViewerLabels.style.display = 'none';
-            }
-          }
+      _onCloseToastTapped: function() {
+        this._closeUndoToast();
+      },
+
+      /**
+       * Event: Undo Toast button tapped<br />
+       * Restore the deleted Items
+       * @private
+       */
+      _onUndoDeleteTapped: function() {
+        const addItems = [];
+        this.undoClips.forEach((undoClip) => {
+          addItems.push(undoClip);
+        });
+        app.ClipItem.bulkPut(addItems).then(() => {
+          this._closeUndoToast();
           return Promise.resolve();
         }).catch((err) => {
-          Chrome.Log.error(err.errorMessage, 'MainPage._onSelectedLabelsChanged',
-              'Failed to set label.');
+          // some may have failed if the same clipItem text was added again
+          // we'll go ahead and commit the successes
+          Chrome.Log.error(err.message, 'MainPage.onUndoDeleteTapped',
+              'Failed to undo all deletes.');
+          this._closeUndoToast();
         });
       },
 
@@ -559,12 +617,16 @@
        * @private
        */
       _onSelectAllTapped: function() {
-        let selections = [];
-        for (let i = 0; i < this.listItems.length; i++) {
-          this.set(`listItems.${i}.checked`, true);
-          selections.push(this.listItems[i]);
-        }
-        this.set('selections', selections);
+        this.splice('selectedClips', 0, this.selectedClips.length);
+        this.clips.forEach((clip) => {
+          if (this.isFavFilter) {
+            if (clip.fav) {
+              this.push('selectedClips', clip);
+            }
+          } else {
+            this.push('selectedClips', clip);
+          }
+        });
       },
 
       /**
@@ -572,10 +634,7 @@
        * @private
        */
       _onDeselectAllTapped: function() {
-        for (let i = 0; i < this.listItems.length; i++) {
-          this.set(`listItems.${i}.checked`, false);
-        }
-        this.set('selections', []);
+        this.splice('selectedClips', 0, this.selectedClips.length);
       },
 
       /**
@@ -583,8 +642,27 @@
        * @private
        */
       _onDeleteSelectedTapped: function() {
-        this.set('deleteFavs', false);
-        this.$.deleteDialog.open();
+        this.splice('undoClips', 0, this.undoClips.length);
+
+        let keys = [];
+        this.selectedClips.forEach((selectedClip) => {
+          keys.push(selectedClip._id);
+          this.push('undoClips', selectedClip);
+        });
+
+        if (keys.length) {
+          app.ClipItem.remove(keys).then(() => {
+            this.splice('selectedClips', 0, this.selectedClips.length);
+            const len = this.undoClips.length;
+            let toastText =
+                (len === 1) ? 'Deleted 1 item.' : `Deleted ${len} items.`;
+            this.set('undoText', toastText);
+            this.$.undoToast.show();
+            return Promise.resolve();
+          }).catch((err) => {
+            Chrome.Log.error(err.message, 'Main._onDeleteSelectedRows');
+          });
+        }
       },
 
       /**
@@ -595,74 +673,37 @@
         this.set('isFavFilter', !this.isFavFilter);
         if (this.isFavFilter) {
           // deselect any selected non-fav rows
-          this._deselectNonFavorites();
-        }
-        this.$.listTemplate.render();
-        this._updateView();
-
-      },
-
-      /**
-       * Event: listItem was selected
-       * @private
-       */
-      _onListItemSelected: function() {
-        this._updateView();
-      },
-
-      /**
-       * Event: iron-selector selectable items changed<br />
-       * ListItem selector
-       * @param {Event} event
-       * @private
-       */
-      _onSelectableChanged: function(event) {
-        const deleted = !!event.detail.removedNodes.length;
-        if (deleted) {
-          const selector = this.$.ironSelector;
-          const idx = selector.indexOf(selector.selectedItem);
-          const len = this.listItems.length;
-          if (idx === -1) {
-            if (len) {
-              // select last row if none is selected
-              selector.selectIndex(len - 1);
-            } else {
-              // no items
-              this._clearClipViewer();
+          if (this.hasSelections) {
+            const len = this.selectedClips.length;
+            for (let i = len - 1; i >= 0; i--) {
+              if (!this.selectedClips[i].fav) {
+                this.splice('selectedClips', i, 1);
+              }
             }
           }
         }
-      },
+        this.$.clipsTemplate.render();
 
-      /**
-       * Event: Toggle checked state of a list row
-       * @param {Event} event
-       * @private
-       */
-      _onCheckedTapped: function(event) {
-        const listItem = event.model.listItem;
-        if (listItem.checked) {
-          this.push('selections', listItem);
-        } else {
-          const pos = this.selections.indexOf(listItem);
-          this.splice('selections', pos, 1);
-        }
       },
 
       /**
        * Event: Copy list row to clipboard
        * @param {Event} event
+       * @param {ClipItem} event.model.clip
        * @private
        */
       _onCopyTapped: function(event) {
-        const clipItem = event.model.listItem.clipItem;
+        const clipItem = event.model.clip;
         clipItem.date = Date.now();
         clipItem.remote = false;
+        if (this._isSelected(clipItem)) {
+          // deselect if we are selected
+          const pos = this.selectedClips.indexOf(clipItem);
+          this.splice('selectedClips', pos, 1);
+        }
         clipItem.save().then(() => {
-          // select first row and update UI
           this._selectFirst();
-
-          // copy to clipboard
+          // send message to copy to clipboard
           const msg =
               Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
           msg.item = clipItem;
@@ -679,17 +720,20 @@
       },
 
       /**
-       * Event: Toggle favorite state of {@link MainPage.ListItem}
+       * Event: Toggle favorite state of row
        * @param {Event} event
        * @private
        */
       _onFavTapped: function(event) {
-        const clipItem = event.model.listItem.clipItem;
+        const clipItem = event.model.clip;
         if (clipItem) {
           clipItem.update({fav: !clipItem.fav}).catch((err) => {
             Chrome.Log.error(err.message, 'Main._onFavTapped');
           });
         }
+
+        // prevent row selection
+        event.stopPropagation();
       },
 
       /**
@@ -701,36 +745,150 @@
       },
 
       /**
-       * Event: Delete the selected list rows, optionally including the favorites
+       * Observer:
        * @private
        */
-      _onDeleteSelectedRows: function() {
-        if (!this.deleteFavs) {
-          // don't delete favs
-          this._deselectFavorites();
+      _currentClipChanged: function() {
+        const el = this.$.clipViewerText;
+        while (el.firstChild) {
+          // delete all children previous linkify created
+          el.removeChild(el.firstChild);
         }
 
-        let keys = [];
-        this.selections.forEach((selection) => {
-          keys.push(selection.clipItem._id);
-        });
+        // set the current labels
 
-        if (keys.length) {
-          app.ClipItem.remove(keys).then(() => {
-            this.set('selections', []);
-            return Promise.resolve();
+        // not guaranteed to be initialized yet
+        if (this.currentLabels === undefined) {
+          this.currentLabels = [];
+        }
+
+        const clipItem = this.currentClip;
+        this.splice('currentLabels', 0, this.currentLabels.length);
+        if (!clipItem) {
+          this.$.clipViewerLabels.style.display = 'none';
+          return;
+        }
+
+        clipItem.getLabels().then((labels) => {
+          labels.forEach((label) => {
+            if (!this.currentLabels.includes(label.name)) {
+              this.push('currentLabels', label.name);
+            }
+          });
+          // visibility
+          if (this.currentLabels && this.currentLabels.length) {
+            this.$.clipViewerLabels.style.display = 'block';
+          } else {
+            this.$.clipViewerLabels.style.display = 'none';
+          }
+
+          // set text
+          const el = this.$.clipViewerText;
+          el.textContent = clipItem.text;
+          // linkify it - creates element children
+          linkifyElement(el);
+
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, 'MainPage._currentClipChanged');
+        });
+      },
+
+      /**
+       * Observer: selectedClips Array mutations
+       * @param {{}} changeRecord
+       * @private
+       */
+      _selectedClipsAddedOrRemoved: function(changeRecord) {
+        if (changeRecord) {
+          let currentItem = null;
+          if (this.selectedClips && this.selectedClips.length) {
+            currentItem = this.selectedClips[this.selectedClips.length - 1];
+          }
+          this.set('currentClip', currentItem);
+        }
+      },
+
+      /**
+       * Observer: selectedDialogLabels Array mutations
+       * @param {{}} changeRecord
+       * @private
+       */
+      _selectedDialogLabelsAddedOrRemoved: function(changeRecord) {
+        if (changeRecord) {
+          const promises = [];
+          if (this.isMultiLabelsEdit) {
+            this.selectedClips.forEach((clipItem) => {
+              promises.push(clipItem.setLabels(this.selectedDialogLabels));
+            });
+          } else {
+            const clipItem = this.currentClip;
+            promises.push(clipItem.setLabels(this.selectedDialogLabels));
+          }
+
+          Promise.all(promises).then(() => {
+            if (this.labelFilter &&
+                !this.selectedDialogLabels.includes(this.labelFilter)) {
+              // deleted current label from item(s) 
+              this.$.labelsDialog.close();
+              return this._loadClipItems();
+            } else {
+              return Promise.resolve();
+            }
           }).catch((err) => {
-            Chrome.Log.error(err.message, 'Main._onDeleteSelectedRows');
+            Chrome.Log.error(err.errorMessage,
+                'MainPage._onSelectedLabelsChanged', 'Failed to set label.');
           });
         }
       },
 
       /**
-       * Observer: track if there are selected items
+       * Computed Property: Do we have selected items
+       * @returns {boolean}
        * @private
        */
-      _selectionsAddedOrRemoved: function() {
-        this.set('hasSelections', !!this.selections.length);
+      _computeHasSelections: function() {
+        let ret = false;
+        if (this.selectedClips && this.selectedClips.length) {
+          ret = true;
+        }
+        return ret;
+      },
+
+      /**
+       * Computed Binding
+       * @param {ClipItem} clipItem
+       * @param {string} labelName
+       * @returns {string} Page title
+       * @private
+       */
+      _computeTitle: function(clipItem, labelName) {
+        let title = 'Clips: ';
+        if (!Chrome.Utils.isWhiteSpace(labelName)) {
+          title = `${labelName}: `;
+        }
+        if (clipItem) {
+          if (clipItem.remote) {
+            title += `Remote clip - ${clipItem.device}`;
+          } else {
+            title += 'Local clip';
+          }
+        }
+        return title;
+      },
+
+      /**
+       * Computed Binding: Title of Labels Dialog
+       * @param {boolean} multi - true if dialog applies to all selectedClips
+       * @returns {string} Dialog title
+       * @private
+       */
+      _computeLabelsDialogTitle: function(multi) {
+        if (multi && this.selectedClips && (this.selectedClips.length > 1)) {
+          return 'Set labels for all selected items (will replace existing)';
+        } else {
+          return 'Edit labels for current item';
+        }
       },
 
       /**
@@ -789,233 +947,158 @@
        * @private
        */
       _loadClipItems: function() {
-        this.set('listItems', []);
-        this._clearClipViewer();
-        return app.ClipItem.loadAll(this.labelName).then((clipItems) => {
+        this.splice('clips', 0, this.clips.length);
+        this.splice('selectedClips', 0, this.selectedClips.length);
+        this._closeUndoToast();
+        return app.ClipItem.loadAll(this.labelFilter).then((clipItems) => {
           // populate list
-          const listItems = [];
+          const clips = [];
           clipItems.forEach((clipItem) => {
-            const listItem = {
-              checked: false,
-              clipItem: clipItem,
-            };
-            listItems.push(listItem);
+            clips.push(clipItem);
           });
-          this.set('listItems', listItems);
+          this.set('clips', clips);
 
-          this._setTitle();
-          
-          if (this.listItems.length > 0) {
-            this.$.ironSelector.selectIndex(0);
+          if (this.clips.length > 0) {
+            this.push('selectedClips', this.clips[this.clips.length - 1]);
             this.$.clipList.scrollTop = 0;
           }
-
           return Promise.resolve();
         });
       },
 
       /**
-       * Deselect all rows that aren't favorites
-       * @private
-       */
-      _deselectNonFavorites: function() {
-        this._deselect(false);
-      },
-
-      /**
-       * Deselect all rows that are favorites
-       * @private
-       */
-      _deselectFavorites: function() {
-        this._deselect(true);
-      },
-
-      /**
-       * Deselect rows by favorite type
-       * @param {boolean} fav - true deselect favs, false non-favs
-       * @private
-       */
-      _deselect: function(fav) {
-        const len = this.selections.length;
-        for (let i = len - 1; i >= 0; i--) {
-          const listItem = this.selections[i];
-          const clipItem = listItem.clipItem;
-          if (clipItem.fav === fav) {
-            const pos = this.listItems.indexOf(listItem);
-            this.set(`listItems.${pos}.checked`, false);
-            this.splice('selections', i, 1);
-          }
-        }
-      },
-
-      /**
-       * Get position of {@link MainPage.ListItem} with given text
+       * Get position of row with given text
        * @param {string} clipText - text to find
        * @returns {int} position in array, -1 if not found
        * @private
        */
-      _getListItemPos: function(clipText) {
-        let pos = -1;
-        for (let i = 0; i < this.listItems.length; i++) {
-          if (clipText === this.listItems[i].clipItem.text) {
-            pos = i;
-            break;
-          }
-        }
-        return pos;
+      _getClipPos: function(clipText) {
+        return this.clips.findIndex((clipItem) => {
+          return (clipText === clipItem.text);
+        });
       },
 
       /**
        * Sort list by date
-       * @param {ListItem} listItemA - row to compare
-       * @param {ListItem} listItemB - next row to compare
+       * @param {ClipItem} clipA - row to compare
+       * @param {ClipItem} clipB - next row to compare
        * @returns {int} difference in dates
        * @private
        */
-      _sortByDate: function(listItemA, listItemB) {
-        return listItemB.clipItem.date - listItemA.clipItem.date;
+      _sortByDate: function(clipA, clipB) {
+        return clipB.date - clipA.date;
       },
 
       /**
        * Filter list
-       * @param {MainPage.ListItem} listItem - row to check
+       * @param {ClipItem} clip - row to check
        * @returns {boolean} true if row is visible
        * @private
        */
-      _filter: function(listItem) {
-        return this.isFavFilter ? listItem.clipItem.fav : true;
+      _filter: function(clip) {
+        return this.isFavFilter ? clip.fav : true;
       },
 
       /**
-       * Select first item in list
+       * Is a {@link ClipItem} selected
+       * @param {ClipItem} clipItem
+       * @returns {boolean}
        * @private
        */
-      _selectFirst: function() {
-        this.$.listTemplate.render();
-        this.$.ironSelector.selectIndex(0);
-        this.$.clipList.scrollTop = 0;
-        this._updateView();
+      _isSelected: function(clipItem) {
+        const idx = this.selectedClips.findIndex((clip) => {
+          return (clip.text === clipItem.text);
+        });
+        return (idx !== -1);
+      },
+
+      /**
+       * Select {@link ClipItem} if not already
+       * @param {ClipItem} clipItem
+       * @private
+       */
+      _select: function(clipItem) {
+        if (!this._isSelected(clipItem)) {
+          this.push('selectedClips', clipItem);
+        }
+      },
+
+      /**
+       * Select first item in list, if it is not already
+       * @param {boolean} [ifNoSelections=false] - if true,
+       * only do if no selections
+       * @private
+       */
+      _selectFirst: function(ifNoSelections = false) {
+        this.$.clipsTemplate.render();
+        if (ifNoSelections && this.selectedClips.length) {
+          return;
+        }
+        const el = this.$$('#clip0');
+        if (el) {
+          const clipItem = this.$.clipsTemplate.itemForElement(el);
+          if (!this._isSelected(clipItem)) {
+            this.push('selectedClips', clipItem);
+          }
+        }
       },
 
       /**
        * Show Labels select dialog
+       * @param {boolean} multi - if true apply changes to all selectItems
        * @private
        */
-      _showLabelsSelectDialog: function() {
+      _showLabelsSelectDialog: function(multi) {
+        this.set('isMultiLabelsEdit', multi);
         app.Label.loadAll().then((labels) => {
-          this.set('labelItems', []);
+          this.splice('labels', 0, this.labels.length);
           labels.forEach((label) => {
-            this.push('labelItems', label.name);
+            this.push('labels', label.name);
           });
           return Promise.resolve();
         }).then(() => {
-          const clipItem = this._getSelectedClipItem();
-          return this._setSelectedLabels(clipItem);
+          if (multi && (this.selectedClips.length > 1)) {
+            // for multi mode, will apply to all selectedClips
+            this.set('selectedDialogLabels', []);
+            return Promise.resolve();
+          } else {
+            return this._setSelectedLabels(this.currentClip);
+          }
         }).then(() => {
-          this.$.selectLabelsDialog.open();
+          this.$.labelsDialog.open();
           return Promise.resolve();
         }).catch((err) => {
           Chrome.Log.error(err.message, 'MainPage._showLabelsSelectDialog',
               'Failed to load labels');
         });
       },
-        
-    /**
-       * Get selected row's {@link ClipItem}
-       * @returns {?ClipItem}
-       * @private
-       */
-      _getSelectedClipItem: function() {
-        const el = this.$.ironSelector.selectedItem;
-        const listItem = this.$.listTemplate.itemForElement(el);
-        return (listItem ? listItem.clipItem : null);
-      },
 
       /**
-       * Update the UI state
-       * @private
-       */
-      _updateView: function() {
-        this._clearClipViewer();
-        this._setTitle();
-        this.updateDates();
-        const clipItem = this._getSelectedClipItem();
-        if (clipItem) {
-          this._updateClipViewer(clipItem);
-        }
-      },
-
-      /**
-       * Set the title
-       * @private
-       */
-      _setTitle: function() {
-        let title = 'Clips: ';
-        if (!Chrome.Utils.isWhiteSpace(this.labelName)) {
-          title = `${this.labelName}: `;
-        }
-        const clipItem = this._getSelectedClipItem();
-        if (clipItem) {
-          if (clipItem.remote) {
-            title += `Remote clip - ${clipItem.device}`;
-          } else {
-            title += 'Local clip';
-          }
-        }
-        this.set('title', title);
-      },
-
-      /**
-       * Set the labels for the selected {@link ClipItem}
+       * Set the selected labels based on a {@link ClipItem}
        * @param {ClipItem} clipItem
        * @returns {Promise<void>}
        * @private
        */
       _setSelectedLabels: function(clipItem) {
-        return clipItem.getLabels().then((labels) => {
-          this.set('selectedLabelItems', []);
-          labels.forEach((label) => {
-            this.push('selectedLabelItems', label.name);
-          });
-          // set visibility
-          if (this.selectedLabelItems.length) {
-            this.$.clipViewerLabels.style.display = 'block';
-          } else {
-            this.$.clipViewerLabels.style.display = 'none';
-          }
+        this.splice('selectedDialogLabels', 0, this.selectedDialogLabels.length);
+        if (!clipItem) {
           return Promise.resolve();
-        });
-      },
-
-      /**
-       * Delete all elements created in the ClipViewer
-       * @private
-       */
-      _clearClipViewer: function() {
-        this.$.clipViewerLabels.style.display = 'none';
-        const el = this.$.clipViewerText;
-        while (el.firstChild) {
-          // delete all children previous linkify created
-          el.removeChild(el.firstChild);
         }
+        return clipItem.getLabels().then((labels) => {
+          labels.forEach((label) => {
+            this.push('selectedDialogLabels', label.name);
+          });
+          return Promise.resolve();
+        });
       },
 
       /**
-       * Set the ClipViewer contents
-       * @param {ClipItem} clipItem
+       * Close the Undo Toast
        * @private
        */
-      _updateClipViewer: function(clipItem) {
-        this._clearClipViewer();
-        this._setSelectedLabels(clipItem).then(() => {
-          const el = this.$.clipViewerText;
-          el.textContent = clipItem.text;
-          // linkify it - creates element children
-          linkifyElement(el);
-          return Promise.resolve();
-        }).catch((err) => {
-          Chrome.GA.error(err.message, 'MainPage._updateClipViewer');
-        });
+      _closeUndoToast: function() {
+        this.splice('undoClips', 0, this.undoClips.length);
+        this.$.undoToast.close();
       },
     });
   })();

@@ -199,7 +199,7 @@ window.app = window.app || {};
    * @type {string}
    * @memberOf Main
    */
-  let prevRoute = 'page-main';
+  let prevRoute = '';
 
   /**
    * Route to use on tab highlight
@@ -273,10 +273,10 @@ window.app = window.app || {};
     if (!page.obj) {
       // some pages are just pages
       if (page.route === 'page-main') {
-        t.$.mainPage.setLabelName('');
+        t.$.mainPage.setLabelFilter(null);
         t.route = page.route;
       } else if (page.route.includes('page-main-labeled')) {
-        t.$.mainPage.setLabelName(page.label);
+        t.$.mainPage.setLabelFilter(page.label);
         t.route = 'page-main';
       } else {
         t.route = page.route;
@@ -289,8 +289,6 @@ window.app = window.app || {};
     } else {
       // some pages have functions to view them
       _showPage(page);
-      t.route = page.route;
-      _scrollPageToTop();
     }
   };
 
@@ -320,6 +318,24 @@ window.app = window.app || {};
       case 'page-devices':
       case 'page-labels':
         page.el.onCurrentPage();
+        break;
+      default:
+        break;
+    }
+  };
+
+  /**
+   * Event: Selected {@link Main.page} changed
+   * @param {Event} event
+   * @memberOf Main
+   */
+  t._onPageChanged = function(event) {
+    if (event.srcElement !== t.$.animatedPages) {
+      return;
+    }
+    switch (prevRoute) {
+      case 'page-main':
+        t.$.mainPage.onLeavePage();
         break;
       default:
         break;
@@ -573,7 +589,7 @@ window.app = window.app || {};
     const idx = _getPageIdx(onHighlightRoute);
     const page = pages[idx];
     if (onHighlightRoute === 'page-main') {
-      t.$.mainPage.setLabelName('');
+      t.$.mainPage.setLabelFilter(null);
       if ((prevRoute === 'page-main')) {
         t.$.mainPage.updateDates();
       }
@@ -625,6 +641,8 @@ window.app = window.app || {};
         const insertEl = document.getElementById(page.insertion);
         Polymer.dom(insertEl).appendChild(page.el);
       }
+      t.route = page.route;
+      _scrollPageToTop();
     } else {
       page.obj();
     }

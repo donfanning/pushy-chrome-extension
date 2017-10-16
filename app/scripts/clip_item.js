@@ -100,11 +100,15 @@
   };
   
   /**
-   * Do we contain a {@link Label}
-   * @param {string} name - {@link Label} name
-   * @returns {Promise<boolean>} true if we have Label
+   * Do we contain a {@link Label} with the given name
+   * @param {?string} name
+   * @returns {Promise<boolean>}
    */
   ClipItem.prototype.hasLabel = function(name) {
+    if (Chrome.Utils.isWhiteSpace(name)) {
+      return Promise.resolve(false);
+    }
+    
     const label = new app.Label(name);
     return label.getId().then((id) => {
       if (id && this.labelsId.includes(id)) {
@@ -264,7 +268,7 @@
   };
 
   /**
-   * Get the {@link ClipItem} from the database
+   * Get a {@link ClipItem} from the database
    * @param {string} text - The text of the clip
    * @returns {Promise<ClipItem|undefined>} A new {@link ClipItem},
    * undefined if not found
@@ -305,6 +309,16 @@
   };
 
   /**
+   * Add the given {@link ClipItem} objects
+   * @param {ClipItem[]} clipItems
+   * @returns {Promise<void>}
+   */
+  ClipItem.bulkPut = function(clipItems) {
+    const array = Array.isArray(clipItems) ? clipItems : [clipItems];
+    return app.DB.clips().bulkPut(array);
+  };
+
+  /**
    * Remove the given keys from the database
    * @param {int|int[]} keys - array of PK's to delete
    * @returns {Promise<void>}
@@ -326,7 +340,7 @@
 
   /**
    * Return all the {@link ClipItem} objects from storage
-   * @param {string} [labelName=''] - optional {@link Label} name
+   * @param {?string} [labelName=''] - optional {@link Label} name
    * to filter on
    * @returns {Promise<ClipItem[]>}
    */

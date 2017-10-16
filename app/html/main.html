@@ -30,6 +30,10 @@
 <template is="dom-bind" id="t">
   <style is="custom-style">
 
+    #mainToolbar {
+      background-color: var(--dark-primary-color);
+    }
+
     #mainToolbar .middle-container {
       height: 100%;
       margin-left: 48px;
@@ -45,7 +49,7 @@
       background-color: var(--drawer-menu-color);
       border-bottom: var(--drawer-toolbar-border-color);
     }
-    
+
     #labelsItem {
       color: var(--primary-text-color);;
     }
@@ -71,7 +75,7 @@
 						             border-radius: 20px; box-sizing: border-box;
 						             display: [[_computeAvatarDisplay(avatar)]];">
         </paper-toolbar>
-        
+
         <!-- Drawer Content -->
         <paper-menu class="list" id="mainMenu" attr-for-selected="id" selected="[[route]]">
           <template is="dom-repeat" items="[[pagesOne]]">
@@ -82,7 +86,7 @@
               <span>[[item.label]]</span>
             </paper-item>
           </template>
-          <hr />
+          <hr/>
           <paper-item id="labelsItem" disabled>Labels</paper-item>
           <template is="dom-repeat" items="[[pagesLabels]]" sort="_onSortLabelPages" observe="label">
             <paper-item id="[[item.route]][[item.index]]" class="center horizontal layout"
@@ -165,9 +169,13 @@ You can always change whether the extension has this permission from the Menu op
         </paper-dialog>
 
         <!-- All the pages -->
-        <neon-animated-pages attr-for-selected="data-route" selected="{{route}}"
-                             on-neon-animation-finish="_onPageAnimation"
-                             entry-animation="fade-in-animation" exit-animation="fade-out-animation">
+        <neon-animated-pages
+            id="animatedPages"
+            attr-for-selected="data-route" selected="{{route}}"
+            on-iron-select="_onPageChanged"
+            on-neon-animation-finish="_onPageAnimation"
+            entry-animation="fade-in-animation"
+            exit-animation="fade-out-animation">
           <neon-animatable data-route="page-main">
             <section>
               <main-page id="mainPage"></main-page>
