@@ -255,9 +255,11 @@
                 items="{{clips}}" as="clip"
                 sort="_sortByDate" filter="_filter" observe="date">
               <div
+                  tabindex="1"
                   class="clip-item"
                   id="clip[[index]]"
-                  clip="{{clip}}">
+                  clip="{{clip}}"
+                  on-tap="_onClipTap">
                 <div class="clip-body flex vertical layout" tabindex="-1">
                   <paper-item class="date-row center horizontal layout">
                     <paper-icon-button
@@ -305,7 +307,7 @@
 <script>
   (function() {
     'use strict';
-    
+
     new ExceptionHandler();
 
     const _ERR_LOAD = 'Failed to load Clips';
@@ -718,6 +720,57 @@
       },
 
       /**
+       * Event: Tap on clip row - handle selections like a tree select
+       * @param {Event} event
+       * @param {ClipItem} event.model.clip
+       * @private
+       * @memberOf MainPage
+       */
+      _onClipTap: function(event) {
+        const isShift = event.detail.sourceEvent.shiftKey;
+        const isCtrl = event.detail.sourceEvent.ctrlKey;
+        const clipItem = event.model.clip;
+        if (isShift) {
+          // select range
+          const startPos = this._getClipPos(clipItem.text);
+          let endPos = -1;
+          for (let i = startPos; i < this.clips.length; i++) {
+            if (this._isSelected(this.clips[i])) {
+              endPos = i;
+              break;
+            }
+          }
+          if (endPos !== -1) {
+            for (let i = startPos; i < endPos; i++) {
+              const clip = this.clips[i];
+              if (this.isFavFilter) {
+                if (clip.fav) {
+                  this.push('selectedClips', clip);
+                }
+              } else {
+                this.push('selectedClips', clip);
+              }
+            }
+          }
+        } else if (isCtrl) {
+          // toggle selection
+          const pos = this._getSelectedClipPos(clipItem.text);
+          if (pos === -1) {
+            this.push('selectedClips', clipItem);
+          } else {
+            this.splice('selectedClips', pos, 1);
+          }
+        } else {
+          // single select
+          this.splice('selectedClips', 0, this.selectedClips.length);
+          this.push('selectedClips', clipItem);
+        }
+
+        // prevent iron-selector from handling
+        event.stopPropagation();
+      },
+
+      /**
        * Event: Copy list row to clipboard
        * @param {Event} event
        * @param {ClipItem} event.model.clip
@@ -754,6 +807,7 @@
       /**
        * Event: Toggle favorite state of row
        * @param {Event} event
+       * @param {ClipItem} event.model.clip
        * @private
        * @memberOf MainPage
        */
@@ -1038,6 +1092,19 @@
        */
       _getClipPos: function(clipText) {
         return this.clips.findIndex((clipItem) => {
+          return (clipText === clipItem.text);
+        });
+      },
+
+      /**
+       * Get position of select row with given text
+       * @param {string} clipText - text to find
+       * @returns {int} position in array, -1 if not found
+       * @private
+       * @memberOf MainPage
+       */
+      _getSelectedClipPos: function(clipText) {
+        return this.selectedClips.findIndex((clipItem) => {
           return (clipText === clipItem.text);
         });
       },
