@@ -14,6 +14,7 @@ const base = {
   dev: 'dev/',
   store: 'store/',
   docs: 'docs/',
+  tmp_docs: '../tmp_jsdoc/',
 };
 const path = {
   scripts: `${base.src}scripts/`,
@@ -25,6 +26,7 @@ const path = {
   locales: `${base.src}_locales/`,
   bower: `${base.src}bower_components/`,
   bowerScripts: `${base.src}bower_components/chrome-extension-utils/`,
+  bowerElements: `${base.src}bower_components/setting-elements/`,
   bowerFirebase: `${base.src}bower_components/firebase/`,
   bowerDexie: `${base.src}bower_components/dexie/`,
   bowerMoment: `${base.src}bower_components/moment/`,
@@ -60,6 +62,7 @@ const files = {
     `!${path.bowerLinkify}**`,
   ],
   bowerScripts: `${path.bowerScripts}**/*.js`,
+  bowerElements: `${path.bowerElements}**/*.html`,
 };
 files.js = [files.scripts, files.bowerScripts, `${base.src}*.js`];
 files.lintdevjs = '*.js';
@@ -150,8 +153,11 @@ gulp.task('prodTest', (cb) => {
 gulp.task('docs', (cb) => {
   const config = require('./jsdoc.json');
   const README = '../Pushy-Clipboard.github.io/README.md';
-  gulp.src([README, files.scripts, files.bowerScripts, files.elements],
-      {read: false}).pipe(plugins.jsdoc3(config, cb));
+  gulp.src([README, files.scripts, files.bowerScripts, files.elements,
+    files.bowerElements], {read: true}).
+      pipe(If('*.html', plugins.crisper(crisperOpts))).
+      pipe(gulp.dest(base.tmp_docs)).
+      pipe(plugins.jsdoc3(config, cb));
 });
 
 // polylint elements

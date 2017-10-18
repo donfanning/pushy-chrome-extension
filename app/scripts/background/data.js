@@ -184,6 +184,10 @@ If you find the extension of value please rate it. Thanks. \
           break;
         case 2: // UPDATED
           actionLabel = `Updated item in ${change.table}`;
+          if (change.table === 'labels') {
+            // update it in all the clips
+            app.ClipItem.updateLabel(change.obj.name, change.oldObj.name);
+          }
           break;
         case 3: // DELETED
           actionLabel = `Deleted item in ${change.table}`;
@@ -208,7 +212,6 @@ If you find the extension of value please rate it. Thanks. \
   function _onLoad() {
     // listen for changes to database
     app.DB.get().on('changes', _onDBChanged);
-
   }
 
   // listen for document and resources loaded
@@ -250,41 +253,43 @@ If you find the extension of value please rate it. Thanks. \
       // when the version changes
       const oldVersion = Chrome.Storage.getInt('version');
 
-      if ((oldVersion === null) || (_VERSION > oldVersion)) {
+      if (Number.isNaN(oldVersion) || (_VERSION > oldVersion)) {
         // update version number
         Chrome.Storage.set('version', _VERSION);
       }
 
-      if (oldVersion < 2) {
-        // remove unused variables
-        localStorage.removeItem('lastEmail');
-        localStorage.removeItem('lastUid');
-      }
-
-      if (oldVersion < 3) {
-        // remove unused variables
-        localStorage.removeItem('notifyOnReceive');
-      }
-
-      if (oldVersion < 5) {
-        // move lastError
-        const lastError = Chrome.Storage.get('lastError');
-        if (lastError) {
-          // transfer to chrome.storage.local
-          Chrome.Storage.setLastError(lastError).catch((err) => {
-            Chrome.Log.error(err.message, 'Data.update', _ERROR_INITIALIZE);
-          });
-          localStorage.removeItem('lastError');
-        } else {
-          // add empty
-          Chrome.Storage.clearLastError().catch((err) => {
-            Chrome.Log.error(err.message, 'Data.update', _ERROR_INITIALIZE);
-          });
+      if (!Number.isNaN(oldVersion)) {
+        if (oldVersion < 2) {
+          // remove unused variables
+          localStorage.removeItem('lastEmail');
+          localStorage.removeItem('lastUid');
         }
-      }
 
-      if (oldVersion < 6) {
-        _addLabelExample();
+        if (oldVersion < 3) {
+          // remove unused variables
+          localStorage.removeItem('notifyOnReceive');
+        }
+
+        if (oldVersion < 5) {
+          // move lastError
+          const lastError = Chrome.Storage.get('lastError');
+          if (lastError) {
+            // transfer to chrome.storage.local
+            Chrome.Storage.setLastError(lastError).catch((err) => {
+              Chrome.Log.error(err.message, 'Data.update', _ERROR_INITIALIZE);
+            });
+            localStorage.removeItem('lastError');
+          } else {
+            // add empty
+            Chrome.Storage.clearLastError().catch((err) => {
+              Chrome.Log.error(err.message, 'Data.update', _ERROR_INITIALIZE);
+            });
+          }
+        }
+
+        if (oldVersion < 6) {
+          _addLabelExample();
+        }
       }
 
       _addDefaults();

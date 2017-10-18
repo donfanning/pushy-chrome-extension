@@ -115,6 +115,7 @@
           type: String,
           value: '',
           notify: true,
+          observer: '_addTextChanged',
         },
 
         /**
@@ -128,18 +129,16 @@
         },
       },
 
+      observers: [
+        '_itemsChanged(items.*)',
+      ],
+
       ready: function() {
-        // listen for chrome messages
-//        chrome.runtime.onMessage.addListener((request) => {
-//          if (request.message ===
-//              app.ChromeMsg.DEVICES_CHANGED.message) {
-//            this._loadDevices();
-//          }
-//        });
 //        this._loadLabels();
       },
 
       onCurrentPage: function() {
+        this.set('addText', '');
         this._loadLabels();
       },
 
@@ -176,38 +175,69 @@
 
       _addLabel() {
         Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage._addLabel');
-        app.Label.add(this.addText).then((label) => {
+        let name = this.addText;
+        name = name || '';
+        name = name.trim();
+        app.Label.add(name).then((label) => {
           this.push('items', {
             label: label,
             newName: label.name,
           });
+          this.set('addText', '');
           return Promise.resolve();
         }).catch((err) => {
           if ((err.message !== app.Label.ERROR_EMPTY_TEXT) &&
               (err.message !== app.Label.ERROR_EXISTS)) {
-            Chrome.Log.error(err.message, 'LabelsPage._addLabel',
+            Chrome.Log.error(err.message, 'LabelsPage._onAddKeyUp',
                 'Failed to create label');
           }
         });
       },
 
-      _setAddDisabledState(disabled) {
-        if (disabled) {
+      _addTextChanged() {
+        if (Chrome.Utils.isWhiteSpace(this.addText)) {
           this.$.addButton.setAttribute('disabled', 'true');
         } else {
           this.$.addButton.removeAttribute('disabled');
         }
       },
 
-      _updateListLabel(model) {
+      _itemsChanged(changeRecord) {
+        if (changeRecord) {
+          let path = changeRecord.path;
+          let base = changeRecord.base;
+          let itemPath;
+          // handle paths like 'users.#4.newName'
+          const newNameIdx = path.indexOf('.newName');
+          const labelNameIdx = path.indexOf('.label.name');
+          if (newNameIdx !== -1) {
+            itemPath = path.substring(0, newNameIdx);
+          } else if (labelNameIdx) {
+            itemPath = path.substring(0, labelNameIdx);
+          }
+          if (itemPath) {
+            const item = this.get(itemPath);
+            const index = base.indexOf(item);
+            const newName = base[index].newName;
+            const label = base[index].label;
+            const el = document.getElementById(`delete${index}`);
+            if (el && (newName !== label.name)) {
+              el.setAttribute('disabled', 'true');
+            } else if (el) {
+              el.removeAttribute('disabled');
+            }
+          }
+        }
+      },
+
+      _updateListLabel(item) {
         Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage._updateListLabel');
-        const item = model.item;
         let name = item.newName.trim();
         name = name || '';
         const idx = this.items.findIndex((el) => {
           return el.label.name === item.label.name;
         });
-        if (name.length > 0) {
+        if (name.length) {
           if (idx !== -1) {
             this.set(`items.${idx}.label.name`, name);
             this.set(`items.${idx}.newName`, name);
@@ -221,16 +251,6 @@
             this.set(`labels.${idx}.newName`, item.label.name);
           }
         }
-        this._setDeleteDisabledState(false, model.index);
-      },
-
-      _setDeleteDisabledState(disabled, index) {
-        const el = document.getElementById(`delete${index}`);
-        if (el && disabled) {
-          el.setAttribute('disabled', 'true');
-        } else if (el) {
-          el.removeAttribute('disabled');
-        }
       },
 
       _onAddTapped: function() {
@@ -238,19 +258,9 @@
       },
 
       _onAddKeyUp: function(event) {
-        let name = this.addText;
-        name = name || '';
-        name = name.trim();
         if (event.keyCode === 13) {
           // 'enter' was pressed
-          this.set('addText', name);
           this._addLabel();
-        } else {
-          if (name.length > 0) {
-            this._setAddDisabledState(false);
-          } else {
-            this._setAddDisabledState(true);
-          }
         }
       },
 
@@ -258,8 +268,8 @@
         Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage.delete');
         const item = event.model.item;
         item.label.delete().then(() => {
-          const idx = this.items.findIndex((el) => {
-            return el.label.name === item.label.name;
+          const idx = this.items.findIndex((itm) => {
+            return itm.label.name === item.label.name;
           });
           if (idx !== -1) {
             this.splice('items', idx, 1);
@@ -272,19 +282,13 @@
       },
 
       _onListItemBlur: function(event) {
-        this._updateListLabel(event.model);
+        this._updateListLabel(event.model.item);
       },
 
       _onListItemKeyUp: function(event) {
-        const model = event.model;
-        const item = model.item;
         if (event.keyCode === 13) {
           // 'enter' was pressed
-          this._updateListLabel(model);
-        } else {
-          // disable if name has changed
-          const disabled = (item.newName !== item.label.name);
-          this._setDeleteDisabledState(disabled, model.index);
+          this._updateListLabel(event.model.item);
         }
       },
     });

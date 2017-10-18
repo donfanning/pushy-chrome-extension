@@ -75,8 +75,26 @@ app.DB = (function() {
       });
     });
 
+    // add labels array to clipItems, delete clipItemsTmp table
+    _db.version(4).stores({
+      clipItemsTmp: null,
+    }).upgrade(function(t) {
+      return t.db.clipItems.toArray().then((clipItems) => {
+        clipItems.forEach((clipItem) => {
+          // eslint-disable-next-line promise/no-nesting
+          clipItem.setLabelsById(clipItem.labelsId).catch((err) => {
+            Chrome.GA.error(err.message, 'DB.update');
+          });
+        });
+        return Promise.resolve();
+      });
+    });
+
     _db.clipItems.mapToClass(app.ClipItem);
     _db.labels.mapToClass(app.Label);
+    
+    // to make Dexie.Observable works all the time
+    _db.open();
   }
 
   // listen for document and resources loaded
@@ -110,4 +128,4 @@ app.DB = (function() {
       return _db.labels;
     },
   };
-})();
+})(window);

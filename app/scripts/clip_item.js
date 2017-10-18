@@ -19,7 +19,8 @@
    * @param {boolean} remote - true if this came from a device other than ours
    * @param {string} device - A String representing the source device
    * @property {int} _id - database PK
-   * @property {int[]} labelsId - Array of label PK's
+   * @property {labelsId} labelsId- Array of {@Label} PK's
+   * @property {Label[]} labels- Array of {@Label} objects
    */
   const ClipItem = function(text, date, fav, remote, device) {
     this.text = text;
@@ -28,6 +29,7 @@
     this.remote = remote;
     this.device = device;
     this.labelsId = [];
+    this.labels = [];
   };
 
   /**
@@ -73,15 +75,7 @@
   ClipItem._ERROR_NO_LABEL = 'Label not found.';
 
   /**
-   * Get our labels
-   * @returns {Promise<Label[]>} Array of {@link Label} objects
-   */
-  ClipItem.prototype.getLabels = function() {
-    return app.DB.labels().where('_id').anyOf(this.labelsId).sortBy('name');
-  };
-
-  /**
-   * Set our {@link Label} ids
+   * Set our {@link Label} objects
    * @param {string[]} labelNames - names of labels
    * @returns {Promise<int>} our database PK
    */
@@ -89,10 +83,10 @@
     labelNames = labelNames || [];
     return app.Label.loadAll().then((labels) => {
       labels = labels || [];
-      this.labelsId = [];
+      this._clearLabels();
       labels.forEach((label) => {
         if (labelNames.includes(label.name)) {
-          this.labelsId.push(label._id);
+          this._addLabel(label);
         }
       });
       return this.save();
@@ -100,22 +94,50 @@
   };
   
   /**
+   * Set our {@link Label} objects
+   * @param {int[]} labelIds - PK of labels
+   * @returns {Promise<int>} our database PK
+   */
+  ClipItem.prototype.setLabelsById = function(labelIds) {
+    labelIds = labelIds || [];
+    return app.Label.loadAll().then((labels) => {
+      labels = labels || [];
+      this._clearLabels();
+      labels.forEach((label) => {
+        if (labelIds.includes(label._id)) {
+          this._addLabel(label);
+        }
+      });
+      return this.save();
+    });
+  };
+
+  /**
+   * Get our label names
+   * @returns {string[]}
+   */
+  ClipItem.prototype.getLabelNames = function() {
+    const names = [];
+    this.labels.forEach((label) => {
+      names.push(label.name);
+    });
+    return names;
+  };
+
+  /**
    * Do we contain a {@link Label} with the given name
    * @param {?string} name
-   * @returns {Promise<boolean>}
+   * @returns {boolean}
    */
   ClipItem.prototype.hasLabel = function(name) {
     if (Chrome.Utils.isWhiteSpace(name)) {
-      return Promise.resolve(false);
+      return false;
     }
     
-    const label = new app.Label(name);
-    return label.getId().then((id) => {
-      if (id && this.labelsId.includes(id)) {
-        return Promise.resolve(true);
-      }
-      return Promise.resolve(false);
+    const index = this.labels.findIndex((label) => {
+      return label.name === name;
     });
+    return (index !== -1);
   };
 
   /**
@@ -125,7 +147,7 @@
   ClipItem.prototype.addLabel = function(label) {
     label.getId().then((id) => {
       if (id) {
-        this.labelsId.push(id);
+        this._addLabel(label);
         return this.save();
       }
       return Promise.reject(new Error(ClipItem._ERROR_NO_LABEL));
@@ -142,9 +164,7 @@
   ClipItem.prototype.removeLabel = function(label) {
     label.getId().then((id) => {
       if (id) {
-        const index = this.labelsId.indexOf(id);
-        if (index !== -1) {
-          this.labelsId.splice(index, 1);
+        if (this._removeLabel(label)) {
           return this.save();
         }
       }
@@ -170,6 +190,47 @@
    */
   ClipItem.prototype.update = function(changes) {
     return app.DB.clips().update(this._id, changes);
+  };
+
+  /**
+   * Clear labels - don't save
+   */
+  ClipItem.prototype._clearLabels = function() {
+    this.labels = [];
+    this.labelsId = [];
+  };
+
+  /**
+   * Add a {@label} - don't save
+   * @param {Label} label
+   */
+  ClipItem.prototype._addLabel = function(label) {
+    const newLabel = new app.Label(label.name);
+    newLabel._id = label._id;
+    this.labels.push(newLabel);
+    this.labelsId.push(newLabel._id);
+  };
+
+  /**
+   * Remove a {@link Label} - don't save
+   * @param {int} id - Label PK
+   * @returns {boolean} true if removed
+   */
+  ClipItem.prototype._removeLabel = function(id) {
+    const index = this.labels.findIndex((lbl) => {
+      return lbl._id === id;
+    });
+    if (index !== -1) {
+      const idx = this.labelsId.indexOf(id);
+      if (idx !== -1) {
+        this.labelsId.splice(idx, 1);
+      } else {
+       Chrome.GA.error('Did not find labelsId', 'ClipItem._removeLabel');
+      }
+      this.labels.splice(index, 1);
+      return true;
+    }
+    return false;
   };
 
   /**
@@ -367,18 +428,47 @@
   ClipItem.removeLabel = function(labelId) {
     app.DB.get().transaction('rw', app.DB.clips(), () => {
       ClipItem.loadAll().then((clipItems) => {
-        clipItems = clipItems || [];
         const changedClipItems = [];
         clipItems.forEach((clipItem) => {
-          const index = clipItem.labelsId.indexOf(labelId);
-          if (index !== -1) {
-            clipItem.labelsId.splice(index, 1);
+          if (clipItem._removeLabel(labelId)) {
             changedClipItems.push(clipItem);
           }
         });
         return Promise.resolve(changedClipItems);
       }).then((clipItems) => {
-        clipItems = clipItems || [];
+        clipItems.forEach((clipItem) => {
+          clipItem.save();
+        });
+        return Promise.resolve();
+      }).catch((err) => {
+        return Promise.reject(err);
+      });
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'ClipItem.removeLabel',
+          'Failed to remove label from Clip Items.');
+    });
+  };
+
+  /**
+   * Update the given {@link Label} name in all {@link ClipItem} objects
+   * @param {string} newName
+   * @param {string} oldName
+   */
+  ClipItem.updateLabel = function(newName, oldName) {
+    app.DB.get().transaction('rw', app.DB.clips(), () => {
+      ClipItem.loadAll().then((clipItems) => {
+        const changedClipItems = [];
+        clipItems.forEach((clipItem) => {
+          const index = clipItem.labels.findIndex((label) => {
+            return label.name === oldName;
+          });
+          if (index !== -1) {
+            clipItem.labels[index].name = newName;
+            changedClipItems.push(clipItem);
+          }
+        });
+        return Promise.resolve(changedClipItems);
+      }).then((clipItems) => {
         clipItems.forEach((clipItem) => {
           clipItem.save();
         });

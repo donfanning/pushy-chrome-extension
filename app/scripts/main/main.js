@@ -275,7 +275,7 @@ window.app = window.app || {};
       if (page.route === 'page-main') {
         t.$.mainPage.setLabelFilter(null);
         t.route = page.route;
-      } else if (page.route.includes('page-main-labeled')) {
+      } else if (page.route.includes('page-main-labeled#')) {
         t.$.mainPage.setLabelFilter(page.label);
         t.route = 'page-main';
       } else {
@@ -520,9 +520,8 @@ window.app = window.app || {};
               // already exists
               break;
             }
-            const suffix = t.pagesLabels.length;
             const newPage = {
-              label: name, route: `page-main-labeled${suffix}`,
+              label: name, route: `page-main-labeled#${name}`,
               icon: 'myicons:label', ready: true, divider: false,
               obj: null, insertion: null, el: null,
             };
@@ -711,14 +710,12 @@ window.app = window.app || {};
     return app.Label.loadAll().then((labels) => {
       labels = labels || [];
       const pages = [];
-      let count = 0;
       labels.forEach((label) => {
         pages.push({
-          label: label.name, route: `page-main-labeled${count}`,
+          label: label.name, route: `page-main-labeled#${label.name}`,
           icon: 'myicons:label', ready: true, divider: false,
           obj: null, insertion: null, el: null,
         });
-        count++;
       });
       return Promise.resolve(pages);
     });

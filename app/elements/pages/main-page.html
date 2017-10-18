@@ -73,7 +73,7 @@
         overflow-y: scroll;
         border: 1px #CCCCCC;
         border-right-style: solid;
-        padding: 0 0 32px;
+        padding: 0 0 32px 0;
         margin: 0;
       }
 
@@ -81,8 +81,8 @@
         position: relative;
         border: 1px #CCCCCC;
         border-bottom-style: solid;
-        padding: 0;
         margin: 0;
+        padding: 0 0 0 8px;
         cursor: pointer;
       }
 
@@ -114,7 +114,7 @@
         color: var(--accent-color);
         text-align: center;
       }
-      
+
       #clipViewer {
         height: 82vh;
         overflow: hidden;
@@ -305,26 +305,25 @@
 <script>
   (function() {
     'use strict';
-
+    
     new ExceptionHandler();
 
     const _ERR_LOAD = 'Failed to load Clips';
 
     let self;
 
+    /**
+     * Polymer element to display and manage {@link ClipItem} objects
+     * @namespace MainPage
+     */
     Polymer({
-
-      /**
-       * Main Page - list of {@link ClipItem} objects
-       * @namespace MainPage
-       */
 
       is: 'main-page',
 
       properties: {
         /**
          * {@link ClipItem} currently being viewed
-         * @typedef {ClipItem}
+         * @memberOf MainPage
          */
         currentClip: {
           type: Object,
@@ -335,7 +334,7 @@
 
         /**
          * Array of {@link ClipItem} objects filtered by {@link labelFilter}
-         * @typedef {ClipItem[]}
+         * @memberOf MainPage
          */
         clips: {
           type: Array,
@@ -345,7 +344,7 @@
 
         /**
          * Array of selected {@link ClipItem} objects
-         * @typedef {ClipItem[]}
+         * @memberOf MainPage
          */
         selectedClips: {
           type: Array,
@@ -353,6 +352,10 @@
           notify: true,
         },
 
+        /**
+         * True if we have selected items
+         * @memberOf MainPage
+         */
         hasSelections: {
           type: Boolean,
           computed:
@@ -360,8 +363,8 @@
         },
 
         /**
-         * Array of {@link ClipItem} objects that have been deleted
-         * @typedef {ClipItem[]}
+         * Array of {@link ClipItem} objects that have been recently deleted
+         * @memberOf MainPage
          */
         undoClips: {
           type: Array,
@@ -369,19 +372,30 @@
           notify: true,
         },
 
+        /**
+         * Message of undo toast
+         * @memberOf MainPage
+         */
         undoText: {
           type: String,
           value: '',
           notify: true,
         },
 
+        /**
+         * True if we are only showing favorite items
+         * @memberOf MainPage
+         */
         isFavFilter: {
           type: Boolean,
           value: false,
           notify: true,
         },
 
-        // Label name for filtering
+        /**
+         * {@link Label} name for filtering our items
+         * @memberOf MainPage
+         */
         labelFilter: {
           type: String,
           value: null,
@@ -390,7 +404,7 @@
 
         /**
          * Array of all {@link Label} names
-         * @typedef {string[]}
+         * @memberOf MainPage
          */
         labels: {
           type: Array,
@@ -400,7 +414,7 @@
 
         /**
          * Array of all {@link Label} names for the current clip
-         * @typedef {string[]}
+         * @memberOf MainPage
          */
         currentLabels: {
           type: Array,
@@ -410,7 +424,7 @@
 
         /**
          * Array of all selected {@link Label} names in the dialog
-         * @typedef {string[]}
+         * @memberOf MainPage
          */
         selectedDialogLabels: {
           type: Array,
@@ -420,7 +434,7 @@
 
         /**
          * True if label changes in dialog should apply to all selectedClips
-         * @typedef {Boolean}
+         * @memberOf MainPage
          */
         isMultiLabelsEdit: {
           type: Boolean,
@@ -434,16 +448,20 @@
         '_selectedDialogLabelsAddedOrRemoved(selectedDialogLabels.splices)',
       ],
 
-      /** Element is ready */
+      /**
+       * Element is ready
+       * @memberOf MainPage
+       */
       ready: function() {
         self = this;
         this._loadClipItems().then(() => {
-          // listen for changes to database
-          app.DB.get().on('changes', this._onDBChanged);
           return Promise.resolve();
         }).catch((err) => {
           Chrome.Log.error(err.message, 'MainPage.ready', _ERR_LOAD);
         });
+
+        // listen for changes to database
+        app.DB.get().on('changes', this._onDBChanged);
 
         // listen for copy and cut events on document
         document.addEventListener('cut', this._onCopy, true);
@@ -451,19 +469,26 @@
 
       },
 
-      /** We have animated in and are now the current page */
+      /**
+       * We have animated in and are now the current page
+       * @memberOf MainPage
+       */
       onCurrentPage: function() {
         this._selectFirst(true);
         this.updateDates();
       },
 
-      /** We are not going to be current anymore */
+      /**
+       * We are not going to be current anymore
+       * @memberOf MainPage
+       */
       onLeavePage: function() {
         this._closeUndoToast();
       },
 
       /**
        * Update the relative dates
+       * @memberOf MainPage
        */
       updateDates: function() {
         for (let i = 0; i < this.clips.length; i++) {
@@ -476,6 +501,7 @@
       /**
        * Set {@link Label} name for filtering
        * @param {?string} labelName
+       * @memberOf MainPage
        */
       setLabelFilter: function(labelName) {
         if (labelName !== this.labelFilter) {
@@ -491,6 +517,7 @@
        * @see http://dexie.org/docs/Observable/Dexie.Observable.html
        * @param {Array} changes - database changes
        * @private
+       * @memberOf MainPage
        */
       _onDBChanged: function(changes) {
         changes.forEach(function(change) {
@@ -506,20 +533,9 @@
                 const clipItem =
                     new app.ClipItem(c.text, c.date, c.fav, c.remote, c.device);
                 clipItem._id = change.key;
-                clipItem.labelsId = c.labelsId;
-                if (self.labelFilter) {
-                  clipItem.hasLabel(self.labelFilter).then((isTrue) => {
-                    // only add if it has our label
-                    if (isTrue) {
-                      self.push('clips', clipItem);
-                      self.updateDates();
-                      self._select(clipItem);
-                    }
-                    return Promise.resolve();
-                  }).catch((err) => {
-                    Chrome.Log.error(err.message, 'MainPage._onDBChanged');
-                  });
-                } else {
+                clipItem.labels = c.labels;
+                if (!self.labelFilter || clipItem.hasLabel(self.labelFilter)) {
+                  // add to list if not filtering or has our labelFiler
                   self.push('clips', clipItem);
                   self.updateDates();
                   self._select(clipItem);
@@ -531,16 +547,20 @@
                 const clipItem = change.obj;
                 const pos = self._getClipPos(clipItem.text);
                 if (pos !== -1) {
-                  const oldDate = self.clips[pos].date;
+                  const oldDate = change.oldObj.date;
                   const str = `clips.${pos}.`;
                   self.set(`${str}_id`, clipItem._id);
                   self.set(`${str}fav`, clipItem.fav);
                   self.set(`${str}date`, clipItem.date);
                   self.set(`${str}remote`, clipItem.remote);
                   self.set(`${str}device`, clipItem.device);
+                  self.set(`${str}labels`, clipItem.labels);
                   self.set(`${str}labelsId`, clipItem.labelsId);
                   if (oldDate !== clipItem.date) {
-                    self.updateDates();
+                    self.clips.sort((a, b) => {
+                      return a.date - b.date;
+                    });
+                    self.set('clips', self.clips);
                   }
                   if (self.currentClip &&
                       (clipItem.text === self.currentClip.text)) {
@@ -569,6 +589,7 @@
       /**
        * Event: Select labels menu icon tapped
        * @private
+       * @memberOf MainPage
        */
       _onSelectLabelsTapped: function() {
         this._showLabelsSelectDialog(true);
@@ -577,6 +598,7 @@
       /**
        * Event: Labels section of ClipViewer tapped
        * @private
+       * @memberOf MainPage
        */
       _onLabelsTapped: function() {
         this._showLabelsSelectDialog(false);
@@ -585,6 +607,7 @@
       /**
        * Event: Undo Toast close button tapped
        * @private
+       * @memberOf MainPage
        */
       _onCloseToastTapped: function() {
         this._closeUndoToast();
@@ -594,6 +617,7 @@
        * Event: Undo Toast button tapped<br />
        * Restore the deleted Items
        * @private
+       * @memberOf MainPage
        */
       _onUndoDeleteTapped: function() {
         const addItems = [];
@@ -615,23 +639,28 @@
       /**
        * Event: Select all menu icon tapped
        * @private
+       * @memberOf MainPage
        */
       _onSelectAllTapped: function() {
         this.splice('selectedClips', 0, this.selectedClips.length);
+        const clips = [];
         this.clips.forEach((clip) => {
           if (this.isFavFilter) {
             if (clip.fav) {
-              this.push('selectedClips', clip);
+              clips.push(clip);
             }
           } else {
-            this.push('selectedClips', clip);
+            clips.push(clip);
           }
         });
+        this.set('selectedClips', clips);
+        this._setCurrentClip();
       },
 
       /**
        * Event: Deselect all menu icon tapped
        * @private
+       * @memberOf MainPage
        */
       _onDeselectAllTapped: function() {
         this.splice('selectedClips', 0, this.selectedClips.length);
@@ -640,6 +669,7 @@
       /**
        * Event: Delete menu icon tapped
        * @private
+       * @memberOf MainPage
        */
       _onDeleteSelectedTapped: function() {
         this.splice('undoClips', 0, this.undoClips.length);
@@ -668,6 +698,7 @@
       /**
        * Event: Favorite filter menu icon tapped
        * @private
+       * @memberOf MainPage
        */
       _onFavFilterTapped: function() {
         this.set('isFavFilter', !this.isFavFilter);
@@ -691,6 +722,7 @@
        * @param {Event} event
        * @param {ClipItem} event.model.clip
        * @private
+       * @memberOf MainPage
        */
       _onCopyTapped: function(event) {
         const clipItem = event.model.clip;
@@ -723,6 +755,7 @@
        * Event: Toggle favorite state of row
        * @param {Event} event
        * @private
+       * @memberOf MainPage
        */
       _onFavTapped: function(event) {
         const clipItem = event.model.clip;
@@ -739,16 +772,19 @@
       /**
        * Event: Text was copied to clipboard
        * @private
+       * @memberOf MainPage
        */
       _onCopy: function() {
         Chrome.Msg.send(app.ChromeMsg.COPIED_TO_CLIPBOARD).catch(() => {});
       },
 
       /**
-       * Observer:
+       * Observer: The current clip changed
        * @private
+       * @memberOf MainPage
        */
       _currentClipChanged: function() {
+        // clear text
         const el = this.$.clipViewerText;
         while (el.firstChild) {
           // delete all children previous linkify created
@@ -769,43 +805,34 @@
           return;
         }
 
-        clipItem.getLabels().then((labels) => {
-          labels.forEach((label) => {
-            if (!this.currentLabels.includes(label.name)) {
-              this.push('currentLabels', label.name);
-            }
-          });
-          // visibility
-          if (this.currentLabels && this.currentLabels.length) {
-            this.$.clipViewerLabels.style.display = 'block';
-          } else {
-            this.$.clipViewerLabels.style.display = 'none';
+        const names = clipItem.getLabelNames();
+        names.forEach((name) => {
+          if (!this.currentLabels.includes(name)) {
+            this.push('currentLabels', name);
           }
-
-          // set text
-          const el = this.$.clipViewerText;
-          el.textContent = clipItem.text;
-          // linkify it - creates element children
-          linkifyElement(el);
-
-          return Promise.resolve();
-        }).catch((err) => {
-          Chrome.Log.error(err.message, 'MainPage._currentClipChanged');
         });
+        // visibility
+        if (this.currentLabels && this.currentLabels.length) {
+          this.$.clipViewerLabels.style.display = 'block';
+        } else {
+          this.$.clipViewerLabels.style.display = 'none';
+        }
+
+        // set text
+        el.textContent = clipItem.text;
+        // linkify it - creates element children
+        linkifyElement(el);
       },
 
       /**
        * Observer: selectedClips Array mutations
        * @param {{}} changeRecord
        * @private
+       * @memberOf MainPage
        */
       _selectedClipsAddedOrRemoved: function(changeRecord) {
         if (changeRecord) {
-          let currentItem = null;
-          if (this.selectedClips && this.selectedClips.length) {
-            currentItem = this.selectedClips[this.selectedClips.length - 1];
-          }
-          this.set('currentClip', currentItem);
+          this._setCurrentClip();
         }
       },
 
@@ -813,13 +840,40 @@
        * Observer: selectedDialogLabels Array mutations
        * @param {{}} changeRecord
        * @private
+       * @memberOf MainPage
        */
       _selectedDialogLabelsAddedOrRemoved: function(changeRecord) {
         if (changeRecord) {
           const promises = [];
           if (this.isMultiLabelsEdit) {
+            // track each added and removed label change and
+            // apply to each selected clip
+            const addedNames = [];
+            const removedNames = [];
+            const splices = changeRecord.indexSplices;
+            splices.forEach((splice) => {
+              for (let i = 0; i < splice.addedCount; i++) {
+                let index = splice.index + i;
+                addedNames.push(splice.object[index]);
+              }
+              splice.removed.forEach((name) => {
+                removedNames.push(name);
+              });
+            });
             this.selectedClips.forEach((clipItem) => {
-              promises.push(clipItem.setLabels(this.selectedDialogLabels));
+              const names = clipItem.getLabelNames();
+              addedNames.forEach((addedName) => {
+                if (!clipItem.hasLabel(addedName)) {
+                  names.push(addedName);
+                }
+              });
+              removedNames.forEach((removedName) => {
+                if (clipItem.hasLabel(removedName)) {
+                  const idx = names.indexOf(removedName);
+                  names.splice(idx, 1);
+                }
+              });
+              promises.push(clipItem.setLabels(names));
             });
           } else {
             const clipItem = this.currentClip;
@@ -846,6 +900,7 @@
        * Computed Property: Do we have selected items
        * @returns {boolean}
        * @private
+       * @memberOf MainPage
        */
       _computeHasSelections: function() {
         let ret = false;
@@ -861,6 +916,7 @@
        * @param {string} labelName
        * @returns {string} Page title
        * @private
+       * @memberOf MainPage
        */
       _computeTitle: function(clipItem, labelName) {
         let title = 'Clips: ';
@@ -882,12 +938,13 @@
        * @param {boolean} multi - true if dialog applies to all selectedClips
        * @returns {string} Dialog title
        * @private
+       * @memberOf MainPage
        */
       _computeLabelsDialogTitle: function(multi) {
         if (multi && this.selectedClips && (this.selectedClips.length > 1)) {
-          return 'Set labels for all selected items (will replace existing)';
+          return 'Set labels for selected clips';
         } else {
-          return 'Edit labels for current item';
+          return 'Set labels for the current clip';
         }
       },
 
@@ -896,6 +953,7 @@
        * @param {boolean} isTrue - true if fav
        * @returns {string} Favorite icon style
        * @private
+       * @memberOf MainPage
        */
       _computeFavIcon: function(isTrue) {
         return isTrue ? 'myicons:favorite' : 'myicons:favorite-border';
@@ -906,6 +964,7 @@
        * @param {boolean} isTrue - true if fav
        * @returns {string} Favorite icon color
        * @private
+       * @memberOf MainPage
        */
       _computeFavColor: function(isTrue) {
         return isTrue ? 'rgba(255, 0, 0, .8)' : 'var(--primary-text-color)';
@@ -916,6 +975,7 @@
        * @param {boolean} isTrue - true if fav
        * @returns {string} fav filter menu icon color
        * @private
+       * @memberOf MainPage
        */
       _computeFavMenuColor: function(isTrue) {
         return isTrue ? 'rgba(255, 0, 0, .8)' : 'var(--menu-icon-color)';
@@ -926,6 +986,7 @@
        * @param {int} date - from epoch in millis
        * @returns {string} Date as relative from now
        * @private
+       * @memberOf MainPage
        */
       _computeDate: function(date) {
         return app.Utils.getRelativeTime(date);
@@ -936,6 +997,7 @@
        * @param {boolean} isFilter - true if filtering by fav
        * @returns {string} tooltip text of what toggling would be
        * @private
+       * @memberOf MainPage
        */
       _computeFavToolTip: function(isFilter) {
         return isFilter ? 'Show all' : 'Show favorites';
@@ -945,6 +1007,7 @@
        * Load the {@link ClipItem} objects
        * @returns {Promise<void>}
        * @private
+       * @memberOf MainPage
        */
       _loadClipItems: function() {
         this.splice('clips', 0, this.clips.length);
@@ -971,6 +1034,7 @@
        * @param {string} clipText - text to find
        * @returns {int} position in array, -1 if not found
        * @private
+       * @memberOf MainPage
        */
       _getClipPos: function(clipText) {
         return this.clips.findIndex((clipItem) => {
@@ -984,6 +1048,7 @@
        * @param {ClipItem} clipB - next row to compare
        * @returns {int} difference in dates
        * @private
+       * @memberOf MainPage
        */
       _sortByDate: function(clipA, clipB) {
         return clipB.date - clipA.date;
@@ -994,6 +1059,7 @@
        * @param {ClipItem} clip - row to check
        * @returns {boolean} true if row is visible
        * @private
+       * @memberOf MainPage
        */
       _filter: function(clip) {
         return this.isFavFilter ? clip.fav : true;
@@ -1004,6 +1070,7 @@
        * @param {ClipItem} clipItem
        * @returns {boolean}
        * @private
+       * @memberOf MainPage
        */
       _isSelected: function(clipItem) {
         const idx = this.selectedClips.findIndex((clip) => {
@@ -1016,6 +1083,7 @@
        * Select {@link ClipItem} if not already
        * @param {ClipItem} clipItem
        * @private
+       * @memberOf MainPage
        */
       _select: function(clipItem) {
         if (!this._isSelected(clipItem)) {
@@ -1024,10 +1092,24 @@
       },
 
       /**
+       * Set clip viewer contents based on last selected
+       * @private
+       * @memberOf MainPage
+       */
+      _setCurrentClip: function() {
+        let currentItem = null;
+        if (this.selectedClips && this.selectedClips.length) {
+          currentItem = this.selectedClips[this.selectedClips.length - 1];
+        }
+        this.set('currentClip', currentItem);
+      },
+
+      /**
        * Select first item in list, if it is not already
        * @param {boolean} [ifNoSelections=false] - if true,
        * only do if no selections
        * @private
+       * @memberOf MainPage
        */
       _selectFirst: function(ifNoSelections = false) {
         this.$.clipsTemplate.render();
@@ -1044,9 +1126,34 @@
       },
 
       /**
+       * Get the labels shared by all selected {@link ClipItem} objects
+       * @returns {string[]} Array of all shared Label names
+       * @private
+       * @memberOf MainPage
+       */
+      getCommonLabelsForSelected: function() {
+        const labels = [];
+        this.labels.forEach((labelName) => {
+          let has = true;
+          for (let i = 0; i < this.selectedClips.length; i++) {
+            const clipItem = this.selectedClips[i];
+            if (!clipItem.hasLabel(labelName)) {
+              has = false;
+              break;
+            }
+          }
+          if (has) {
+            labels.push(labelName);
+          }
+        });
+        return labels;
+      },
+
+      /**
        * Show Labels select dialog
        * @param {boolean} multi - if true apply changes to all selectItems
        * @private
+       * @memberOf MainPage
        */
       _showLabelsSelectDialog: function(multi) {
         this.set('isMultiLabelsEdit', multi);
@@ -1059,11 +1166,12 @@
         }).then(() => {
           if (multi && (this.selectedClips.length > 1)) {
             // for multi mode, will apply to all selectedClips
-            this.set('selectedDialogLabels', []);
-            return Promise.resolve();
+            const labels = this.getCommonLabelsForSelected();
+            this.set('selectedDialogLabels', labels);
           } else {
-            return this._setSelectedLabels(this.currentClip);
+            this._setSelectedLabels(this.currentClip);
           }
+          return Promise.resolve();
         }).then(() => {
           this.$.labelsDialog.open();
           return Promise.resolve();
@@ -1076,25 +1184,24 @@
       /**
        * Set the selected labels based on a {@link ClipItem}
        * @param {ClipItem} clipItem
-       * @returns {Promise<void>}
        * @private
+       * @memberOf MainPage
        */
       _setSelectedLabels: function(clipItem) {
         this.splice('selectedDialogLabels', 0, this.selectedDialogLabels.length);
         if (!clipItem) {
-          return Promise.resolve();
+          return;
         }
-        return clipItem.getLabels().then((labels) => {
-          labels.forEach((label) => {
-            this.push('selectedDialogLabels', label.name);
-          });
-          return Promise.resolve();
+        const names = clipItem.getLabelNames();
+        names.forEach((name) => {
+          this.push('selectedDialogLabels', name);
         });
       },
 
       /**
        * Close the Undo Toast
        * @private
+       * @memberOf MainPage
        */
       _closeUndoToast: function() {
         this.splice('undoClips', 0, this.undoClips.length);

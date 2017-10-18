@@ -21,7 +21,8 @@
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 
-<script type="text/javascript" src="../../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
+<script type="text/javascript"
+        src="../../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
 
 <dom-module id="error-page">
   <template>
@@ -99,16 +100,24 @@
 </dom-module>
 
 <script>
-  (function(window) {
+  window.app = window.app || {};
+  (function() {
     'use strict';
 
     new ExceptionHandler();
 
-    window.app = window.app || {};
+    /**
+     * Polymer element to display a {@link Chrome.Storage.LastError} object
+     * @namespace ErrorPage
+     */
     app.ErrorPageFactory = Polymer({
       is: 'error-page',
 
       properties: {
+        /**
+         * A {@link Chrome.Storage.LastError}
+         * @memberOf ErrorPage
+         */
         lastError: {
           type: Object,
           value: function() {
@@ -118,6 +127,10 @@
         },
       },
 
+      /**
+       * Element is ready
+       * @memberOf ErrorPage
+       */
       ready: function() {
         Chrome.Storage.getLastError().then((lastError) => {
           this.set('lastError', lastError);
@@ -140,8 +153,9 @@
       },
 
       /**
-       * Event: Email support
+       * Event: Send Email to support address
        * @private
+       * @memberOf ErrorPage
        */
       _onEmailTapped: function() {
         let body = app.Utils.getEmailBody();
@@ -156,8 +170,9 @@
       },
 
       /**
-       * Event: Remove the error
+       * Event: Clear the error
        * @private
+       * @memberOf ErrorPage
        */
       _onRemoveTapped: function() {
         Chrome.Storage.clearLastError();
@@ -166,9 +181,10 @@
 
       /**
        * Computed Binding
-       * @param {Chrome.Storage.LastError} lastError - the error
+       * @param {Chrome.Storage.LastError} lastError
        * @returns {string} stack trace
        * @private
+       * @memberOf ErrorPage
        */
       _computeStack: function(lastError) {
         let ret = '';
@@ -180,9 +196,10 @@
 
       /**
        * Computed Binding
-       * @param {Chrome.Storage.LastError} lastError - the error
+       * @param {Chrome.Storage.LastError} lastError
        * @returns {string} page title
        * @private
+       * @memberOf ErrorPage
        */
       _computeTitle: function(lastError) {
         let ret = 'Last error viewer';
