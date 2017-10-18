@@ -547,7 +547,7 @@
             case 2: // UPDATED
               if (change.table === 'clipItems') {
                 const clipItem = change.obj;
-                const pos = self._getClipPos(clipItem.text);
+                let pos = self._getClipPos(clipItem.text);
                 if (pos !== -1) {
                   const oldDate = change.oldObj.date;
                   const str = `clips.${pos}.`;
@@ -566,6 +566,7 @@
                   }
                   if (self.currentClip &&
                       (clipItem.text === self.currentClip.text)) {
+                    let pos = self._getClipPos(clipItem.text);
                     // bypass dirty checking
                     self.set('currentClip', null);
                     self.set('currentClip', self.clips[pos]);
