@@ -253,7 +253,7 @@
             <template
                 is="dom-repeat" id="clipsTemplate"
                 items="{{clips}}" as="clip"
-                sort="_sortByDate" filter="_filter" observe="date">
+                sort="_sortByDate" filter="_filter" observe="date fav">
               <div
                   tabindex="1"
                   class="clip-item"
@@ -536,10 +536,15 @@
                     new app.ClipItem(c.text, c.date, c.fav, c.remote, c.device);
                 clipItem._id = change.key;
                 clipItem.labels = c.labels;
+                clipItem.labelsId = c.labelsId;
                 if (!self.labelFilter || clipItem.hasLabel(self.labelFilter)) {
                   // add to list if not filtering or has our labelFiler
                   self.push('clips', clipItem);
                   self.updateDates();
+                  self.clips.sort((a, b) => {
+                    return a.date - b.date;
+                  });
+                  self.set('clips', self.clips);
                   self._select(clipItem);
                 }
               }
@@ -733,15 +738,37 @@
         const clipItem = event.model.clip;
         if (isShift) {
           // select range
-          const startPos = this._getClipPos(clipItem.text);
+          let startPos = this._getClipPos(clipItem.text);
           let endPos = -1;
-          for (let i = startPos; i < this.clips.length; i++) {
-            if (this._isSelected(this.clips[i])) {
-              endPos = i;
-              break;
+          if (this._isSelected(clipItem)) {
+            // do nothing
+            endPos = startPos;
+          } else if (!this.hasSelections) {
+            // select to newest, inclusive
+            endPos = this.clips.length;
+          } else {
+            for (let i = startPos + 1; i < this.clips.length; i++) {
+              // select to newest selected, exclusive
+              const clip = this.clips[i];
+              if (this._isSelected(clip)) {
+                endPos = i;
+                break;
+              }
+            }
+            if (endPos === -1) {
+              // try other direction
+              endPos = startPos + 1;
+              for (let i = endPos - 2; i >= 0; i--) {
+                // select to oldest selected, exclusive
+                const clip = this.clips[i];
+                if (this._isSelected(clip)) {
+                  startPos = i + 1;
+                  break;
+                }
+              }
             }
           }
-          if (endPos !== -1) {
+          if ((startPos !== -1) && (endPos !== -1)) {
             for (let i = startPos; i < endPos; i++) {
               const clip = this.clips[i];
               if (this.isFavFilter) {
