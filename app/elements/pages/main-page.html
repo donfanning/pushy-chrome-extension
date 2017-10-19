@@ -192,7 +192,7 @@
                 id="labels" icon="myicons:label"
                 disabled$="[[!hasSelections]]"
                 on-tap="_onSelectLabelsTapped"></paper-icon-button>
-            <paper-tooltip for="labels" position="left" offset="0">Set labels for selected items</paper-tooltip>
+            <paper-tooltip for="labels" position="left" offset="0">Change labels for selected items</paper-tooltip>
             <paper-icon-button
                 id="delete" icon="myicons:delete"
                 disabled$="[[!hasSelections]]"
@@ -492,6 +492,9 @@
        * @memberOf MainPage
        */
       updateDates: function() {
+        if (this.clips === undefined) {
+          return;
+        }
         for (let i = 0; i < this.clips.length; i++) {
           const date = this.clips[i].date;
           this.set(`clips.${i}.date`, date - 1);
@@ -533,12 +536,8 @@
                 clipItem.labelsId = c.labelsId;
                 if (!self.labelFilter || clipItem.hasLabel(self.labelFilter)) {
                   // add to list if not filtering or has our labelFiler
-                  // TODO revert
-//                  self.unshift('clips', clipItem);
-                  self.push('clips', clipItem);
-                  self._sortClipsByDate();
+                  self.unshift('clips', clipItem);
                   self._select(clipItem);
-                  self.updateDates();
                 }
               }
               break;
@@ -555,15 +554,7 @@
                   self.set(`${str}device`, clipItem.device);
                   self.set(`${str}labels`, clipItem.labels);
                   self.set(`${str}labelsId`, clipItem.labelsId);
-                  self._sortClipsByDate();
                   self.updateDates();
-                  if (self.currentClip &&
-                      (clipItem.text === self.currentClip.text)) {
-                    let pos = self._getClipPos(clipItem.text);
-                    // bypass dirty checking
-                    self.set('currentClip', null);
-                    self.set('currentClip', self.clips[pos]);
-                  }
                 }
               }
               break;
@@ -573,6 +564,7 @@
                 const pos = self._getClipPos(clipItem.text);
                 if (pos !== -1) {
                   self.splice('clips', pos, 1);
+                  self.updateDates();
                 }
               }
               break;
@@ -638,20 +630,12 @@
        * @memberOf MainPage
        */
       _onSelectAllTapped: function() {
+        const t = this.$.clipsTemplate;
         this.splice('selectedClips', 0, this.selectedClips.length);
-        const clips = [];
-        for (let i = this.clips.length - 1; i >= 0; i--) {
-          const clip = this.clips[i];
-          if (this.isFavFilter) {
-            if (clip.fav) {
-              clips.push(clip);
-            }
-          } else {
-            clips.push(clip);
-          }
+        for (let i = t.renderedItemCount - 1; i >= 0; i--) {
+          const clipItem = t.itemForElement(this.$$(`#clip${i}`));
+          this.push('selectedClips', clipItem);
         }
-        this.set('selectedClips', clips);
-        this._setCurrentClip();
       },
 
       /**
@@ -687,7 +671,8 @@
             this.$.undoToast.show();
             return Promise.resolve();
           }).catch((err) => {
-            Chrome.Log.error(err.message, 'Main._onDeleteSelectedRows');
+            Chrome.Log.error(err.message, 'Main._onDeleteSelectedRows',
+                'Failed to delete clips.');
           });
         }
       },
@@ -699,19 +684,16 @@
        */
       _onFavFilterTapped: function() {
         this.set('isFavFilter', !this.isFavFilter);
-        if (this.isFavFilter) {
+        if (this.isFavFilter && this.hasSelections) {
           // deselect any selected non-fav rows
-          if (this.hasSelections) {
-            const len = this.selectedClips.length;
-            for (let i = len - 1; i >= 0; i--) {
-              if (!this.selectedClips[i].fav) {
-                this.splice('selectedClips', i, 1);
-              }
+          const len = this.selectedClips.length;
+          for (let i = len - 1; i >= 0; i--) {
+            if (!this.selectedClips[i].fav) {
+              this.splice('selectedClips', i, 1);
             }
           }
         }
         this.$.clipsTemplate.render();
-
       },
 
       /**
@@ -864,6 +846,8 @@
        * @memberOf MainPage
        */
       _currentClipChanged: function() {
+        this.updateDates();
+
         // clear text
         const el = this.$.clipViewerText;
         while (el.firstChild) {
@@ -892,7 +876,6 @@
           }
         });
 
-        // visibility
         if (this.currentLabels && this.currentLabels.length) {
           this.$.clipViewerLabels.style.display = 'block';
         }
@@ -977,6 +960,7 @@
               this.$.labelsDialog.close();
               return this._loadClipItems();
             } else {
+              this._setCurrentClip();
               return Promise.resolve();
             }
           }).catch((err) => {
@@ -1032,7 +1016,7 @@
        */
       _computeLabelsDialogTitle: function(multi) {
         if (multi && this.selectedClips && (this.selectedClips.length > 1)) {
-          return 'Set labels for selected clips';
+          return 'Change labels for selected clips';
         } else {
           return 'Set labels for the current clip';
         }
@@ -1222,41 +1206,26 @@
         if (this.selectedClips && this.selectedClips.length) {
           currentItem = this.selectedClips[this.selectedClips.length - 1];
         }
+        // override dirty checking
+        this.set('currentClip', null);
         this.set('currentClip', currentItem);
       },
 
       /**
-       * Sort the {@link clips} Array by date
+       * Get all labels in all selected {@link ClipItem} objects
+       * @returns {string[]}
        * @private
        * @memberOf MainPage
        */
-      _sortClipsByDate: function() {
-        // TODO revert
-//        this.clips.sort((a, b) => {
-//          return b.date - a.date;
-//        });
-//        this.$.clipsTemplate.render();
-      },
-
-      /**
-       * Get the labels shared by all selected {@link ClipItem} objects
-       * @returns {string[]} Array of all shared Label names
-       * @private
-       * @memberOf MainPage
-       */
-      _getCommonLabelsForSelected: function() {
+      _getAllLabelsForSelected: function() {
         const labels = [];
         this.labels.forEach((labelName) => {
-          let has = true;
           for (let i = 0; i < this.selectedClips.length; i++) {
             const clipItem = this.selectedClips[i];
-            if (!clipItem.hasLabel(labelName)) {
-              has = false;
+            if (clipItem.hasLabel(labelName)) {
+              labels.push(labelName);
               break;
             }
-          }
-          if (has) {
-            labels.push(labelName);
           }
         });
         return labels;
@@ -1279,7 +1248,7 @@
         }).then(() => {
           if (multi && (this.selectedClips.length > 1)) {
             // for multi mode, will apply to all selectedClips
-            const labels = this._getCommonLabelsForSelected();
+            const labels = this._getAllLabelsForSelected();
             this.set('selectedDialogLabels', labels);
           } else {
             this._setSelectedLabels(this.currentClip);
