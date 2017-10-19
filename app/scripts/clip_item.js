@@ -92,7 +92,7 @@
       return this.save();
     });
   };
-  
+
   /**
    * Set our {@link Label} objects
    * @param {int[]} labelIds - PK of labels
@@ -133,7 +133,7 @@
     if (Chrome.Utils.isWhiteSpace(name)) {
       return false;
     }
-    
+
     const index = this.labels.findIndex((label) => {
       return label.name === name;
     });
@@ -182,7 +182,7 @@
   ClipItem.prototype.save = function() {
     return this._safeSave();
   };
-  
+
   /**
    * Update the database
    * @param {Object} changes - properties to change
@@ -225,7 +225,7 @@
       if (idx !== -1) {
         this.labelsId.splice(idx, 1);
       } else {
-       Chrome.GA.error('Did not find labelsId', 'ClipItem._removeLabel');
+        Chrome.GA.error('Did not find labelsId', 'ClipItem._removeLabel');
       }
       this.labels.splice(index, 1);
       return true;
@@ -400,7 +400,8 @@
   };
 
   /**
-   * Return all the {@link ClipItem} objects from storage
+   * Get all the {@link ClipItem} objects from storage, sorted from newest to
+   * oldest
    * @param {?string} [labelName=''] - optional {@link Label} name
    * to filter on
    * @returns {Promise<ClipItem[]>}
@@ -411,16 +412,17 @@
       return label.getId().then((id) => {
         if (id) {
           // filter by label
-          return app.DB.clips().where('labelsId').equals(id).sortBy('date');
+          return app.DB.clips().where('labelsId').equals(id).reverse().
+              sortBy('date');
         } else {
-          return app.DB.clips().orderBy('date').toArray();
+          return app.DB.clips().reverse().sortBy('date');
         }
       });
     } else {
-      return app.DB.clips().orderBy('date').toArray();
+      return app.DB.clips().reverse().sortBy('date');
     }
   };
-    
+
   /**
    * Remove the given {@link Label} PK from all {@link ClipItem} objects
    * @param {int} labelId - Label PK to delete
