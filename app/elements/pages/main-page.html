@@ -248,6 +248,7 @@
         <!-- Main list -->
         <div id="clipList" class="flex-2">
           <iron-selector
+              id="clipsSelector"
               multi attr-for-selected="clip"
               selected-values="{{selectedClips}}">
             <template
@@ -533,7 +534,9 @@
                 if (!self.labelFilter || clipItem.hasLabel(self.labelFilter)) {
                   // add to list if not filtering or has our labelFiler
                   self.unshift('clips', clipItem);
+                  self._sortClipsByDate();
                   self._select(clipItem);
+                  self.updateDates();
                 }
               }
               break;
@@ -550,6 +553,8 @@
                   self.set(`${str}device`, clipItem.device);
                   self.set(`${str}labels`, clipItem.labels);
                   self.set(`${str}labelsId`, clipItem.labelsId);
+                  self._sortClipsByDate();
+                  self.updateDates();
                   if (self.currentClip &&
                       (clipItem.text === self.currentClip.text)) {
                     let pos = self._getClipPos(clipItem.text);
@@ -633,7 +638,8 @@
       _onSelectAllTapped: function() {
         this.splice('selectedClips', 0, this.selectedClips.length);
         const clips = [];
-        this.clips.forEach((clip) => {
+        for (let i = this.clips.length - 1; i >= 0; i--) {
+          const clip = this.clips[i];
           if (this.isFavFilter) {
             if (clip.fav) {
               clips.push(clip);
@@ -641,7 +647,7 @@
           } else {
             clips.push(clip);
           }
-        });
+        }
         this.set('selectedClips', clips);
         this._setCurrentClip();
       },
@@ -1176,19 +1182,6 @@
       },
 
       /**
-       * Set clip viewer contents based on last selected
-       * @private
-       * @memberOf MainPage
-       */
-      _setCurrentClip: function() {
-        let currentItem = null;
-        if (this.selectedClips && this.selectedClips.length) {
-          currentItem = this.selectedClips[this.selectedClips.length - 1];
-        }
-        this.set('currentClip', currentItem);
-      },
-
-      /**
        * Select first item in list, if it is not already
        * @param {boolean} [ifNoSelections=false] - if true,
        * only do if no selections
@@ -1210,12 +1203,37 @@
       },
 
       /**
+       * Set clip viewer contents based on last selected
+       * @private
+       * @memberOf MainPage
+       */
+      _setCurrentClip: function() {
+        let currentItem = null;
+        if (this.selectedClips && this.selectedClips.length) {
+          currentItem = this.selectedClips[this.selectedClips.length - 1];
+        }
+        this.set('currentClip', currentItem);
+      },
+
+      /**
+       * Sort the {@link clips} Array by date
+       * @private
+       * @memberOf MainPage
+       */
+      _sortClipsByDate: function() {
+        this.clips.sort((a, b) => {
+          return b.date - a.date;
+        });
+        this.$.clipsTemplate.render();
+      },
+
+      /**
        * Get the labels shared by all selected {@link ClipItem} objects
        * @returns {string[]} Array of all shared Label names
        * @private
        * @memberOf MainPage
        */
-      getCommonLabelsForSelected: function() {
+      _getCommonLabelsForSelected: function() {
         const labels = [];
         this.labels.forEach((labelName) => {
           let has = true;
@@ -1250,7 +1268,7 @@
         }).then(() => {
           if (multi && (this.selectedClips.length > 1)) {
             // for multi mode, will apply to all selectedClips
-            const labels = this.getCommonLabelsForSelected();
+            const labels = this._getCommonLabelsForSelected();
             this.set('selectedDialogLabels', labels);
           } else {
             this._setSelectedLabels(this.currentClip);
