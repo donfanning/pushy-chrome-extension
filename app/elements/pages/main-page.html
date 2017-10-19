@@ -246,7 +246,7 @@
         </paper-toast>
 
         <!-- Main list -->
-        <div id="clipList" class="flex-2">
+        <div id="clipList" class="no-select flex-2">
           <iron-selector
               id="clipsSelector"
               multi attr-for-selected="clip"
@@ -533,7 +533,9 @@
                 clipItem.labelsId = c.labelsId;
                 if (!self.labelFilter || clipItem.hasLabel(self.labelFilter)) {
                   // add to list if not filtering or has our labelFiler
-                  self.unshift('clips', clipItem);
+                  // TODO revert
+//                  self.unshift('clips', clipItem);
+                  self.push('clips', clipItem);
                   self._sortClipsByDate();
                   self._select(clipItem);
                   self.updateDates();
@@ -723,66 +725,75 @@
         const isShift = event.detail.sourceEvent.shiftKey;
         const isCtrl = event.detail.sourceEvent.ctrlKey;
         const clipItem = event.model.clip;
+        const t = this.$.clipsTemplate;
+        const el = this.$$(`#clip${event.model.index}`);
+        const selected = Polymer.dom(el).classList.contains('iron-selected');
+
+        // prevent iron-selector from handling
+        event.stopPropagation();
+
         if (isShift) {
           // select range
-          let startPos = this._getClipPos(clipItem.text);
+          let startPos = -1;
           let endPos = -1;
-          if (this._isSelected(clipItem)) {
+          if (selected) {
             // do nothing
-            endPos = startPos;
+            return;
           } else if (!this.hasSelections) {
-            // select to newest, inclusive
-            endPos = this.clips.length;
+            // select from first to current
+            startPos = 0;
+            endPos = t.indexForElement(el);
           } else {
-            for (let i = startPos + 1; i < this.clips.length; i++) {
-              // select to newest selected, exclusive
-              const clip = this.clips[i];
+            endPos = t.indexForElement(el);
+            for (let i = endPos - 1; i >= 0; i--) {
+              // select from after newer selection to current
+              const clip = t.itemForElement(this.$$(`#clip${i}`));
               if (this._isSelected(clip)) {
-                endPos = i;
+                startPos = i + 1;
                 break;
               }
             }
-            if (endPos === -1) {
-              // try other direction
-              endPos = startPos + 1;
-              for (let i = endPos - 2; i >= 0; i--) {
-                // select to oldest selected, exclusive
-                const clip = this.clips[i];
+            if (startPos === -1) {
+              // do the other direction
+              for (let i = endPos + 1; i < t.renderedItemCount; i++) {
+                // select from before older selection to current
+                const clip = t.itemForElement(this.$$(`#clip${i}`));
                 if (this._isSelected(clip)) {
-                  startPos = i + 1;
+                  startPos = i - 1;
                   break;
                 }
               }
             }
           }
-          if ((startPos !== -1) && (endPos !== -1)) {
-            for (let i = startPos; i < endPos; i++) {
-              const clip = this.clips[i];
-              if (this.isFavFilter) {
-                if (clip.fav) {
-                  this.push('selectedClips', clip);
-                }
-              } else {
-                this.push('selectedClips', clip);
-              }
+          if (startPos <= endPos) {
+            // found range, select it
+            for (let i = startPos; i <= endPos; i++) {
+              const clip = t.itemForElement(this.$$(`#clip${i}`));
+              this.push('selectedClips', clip);
+            }
+          } else if (startPos > endPos) {
+            // found range, select it
+            for (let i = startPos; i >= endPos; i--) {
+              const clip = t.itemForElement(this.$$(`#clip${i}`));
+              this.push('selectedClips', clip);
             }
           }
         } else if (isCtrl) {
           // toggle selection
-          const pos = this._getSelectedClipPos(clipItem.text);
-          if (pos === -1) {
-            this.push('selectedClips', clipItem);
+          if (selected) {
+            const idx = this.selectedClips.indexOf(clipItem);
+            this.splice('selectedClips', idx, 1);
           } else {
-            this.splice('selectedClips', pos, 1);
+            this.push('selectedClips', clipItem);
           }
         } else {
-          // single select
+          // single select with toggle
+          const len = this.selectedClips.length;
           this.splice('selectedClips', 0, this.selectedClips.length);
-          this.push('selectedClips', clipItem);
+          if (!selected || (len > 1)) {
+            this.push('selectedClips', clipItem);
+          }
         }
-
-        // prevent iron-selector from handling
-        event.stopPropagation();
       },
 
       /**
@@ -880,7 +891,7 @@
             this.push('currentLabels', name);
           }
         });
-        
+
         // visibility
         if (this.currentLabels && this.currentLabels.length) {
           this.$.clipViewerLabels.style.display = 'block';
@@ -1220,10 +1231,11 @@
        * @memberOf MainPage
        */
       _sortClipsByDate: function() {
-        this.clips.sort((a, b) => {
-          return b.date - a.date;
-        });
-        this.$.clipsTemplate.render();
+        // TODO revert
+//        this.clips.sort((a, b) => {
+//          return b.date - a.date;
+//        });
+//        this.$.clipsTemplate.render();
       },
 
       /**
