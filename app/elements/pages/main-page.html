@@ -866,11 +866,11 @@
         if (this.currentLabels === undefined) {
           this.currentLabels = [];
         }
+        this.$.clipViewerLabels.style.display = 'none';
+        this.splice('currentLabels', 0, this.currentLabels.length);
 
         const clipItem = this.currentClip;
-        this.splice('currentLabels', 0, this.currentLabels.length);
         if (!clipItem) {
-          this.$.clipViewerLabels.style.display = 'none';
           return;
         }
 
@@ -880,11 +880,10 @@
             this.push('currentLabels', name);
           }
         });
+        
         // visibility
         if (this.currentLabels && this.currentLabels.length) {
           this.$.clipViewerLabels.style.display = 'block';
-        } else {
-          this.$.clipViewerLabels.style.display = 'none';
         }
 
         // set text
