@@ -402,6 +402,7 @@
           type: String,
           value: null,
           notify: true,
+          observer: '_labelFilterChanged',
         },
 
         /**
@@ -456,9 +457,7 @@
        */
       ready: function() {
         self = this;
-        this._loadClipItems().then(() => {
-          return Promise.resolve();
-        }).catch((err) => {
+        this._loadClipItems().catch((err) => {
           Chrome.Log.error(err.message, 'MainPage.ready', _ERR_LOAD);
         });
 
@@ -468,7 +467,6 @@
         // listen for copy and cut events on document
         document.addEventListener('cut', this._onCopy, true);
         document.addEventListener('copy', this._onCopy, true);
-
       },
 
       /**
@@ -506,12 +504,7 @@
        * @memberOf MainPage
        */
       setLabelFilter: function(labelName) {
-        if (labelName !== this.labelFilter) {
-          this.set('labelFilter', labelName);
-          this._loadClipItems().catch((err) => {
-            Chrome.Log.error(err.message, 'MainPage.setLabelFilter', _ERR_LOAD);
-          });
-        }
+        this.set('labelFilter', labelName);
       },
 
       /**
@@ -539,12 +532,7 @@
                 clipItem.labelsId = c.labelsId;
                 if (!self.labelFilter || clipItem.hasLabel(self.labelFilter)) {
                   // add to list if not filtering or has our labelFiler
-                  self.push('clips', clipItem);
-                  self.updateDates();
-                  self.clips.sort((a, b) => {
-                    return a.date - b.date;
-                  });
-                  self.set('clips', self.clips);
+                  self.unshift('clips', clipItem);
                   self._select(clipItem);
                 }
               }
@@ -554,7 +542,6 @@
                 const clipItem = change.obj;
                 let pos = self._getClipPos(clipItem.text);
                 if (pos !== -1) {
-                  const oldDate = change.oldObj.date;
                   const str = `clips.${pos}.`;
                   self.set(`${str}_id`, clipItem._id);
                   self.set(`${str}fav`, clipItem.fav);
@@ -563,12 +550,6 @@
                   self.set(`${str}device`, clipItem.device);
                   self.set(`${str}labels`, clipItem.labels);
                   self.set(`${str}labelsId`, clipItem.labelsId);
-                  if (oldDate !== clipItem.date) {
-                    self.clips.sort((a, b) => {
-                      return a.date - b.date;
-                    });
-                    self.set('clips', self.clips);
-                  }
                   if (self.currentClip &&
                       (clipItem.text === self.currentClip.text)) {
                     let pos = self._getClipPos(clipItem.text);
@@ -907,6 +888,17 @@
       },
 
       /**
+       * Observer: The label filter changed
+       * @private
+       * @memberOf MainPage
+       */
+      _labelFilterChanged: function() {
+        this._loadClipItems().catch((err) => {
+          Chrome.Log.error(err.message, 'MainPage.setLabelFilter', _ERR_LOAD);
+        });
+      },
+
+      /**
        * Observer: selectedClips Array mutations
        * @param {{}} changeRecord
        * @private
@@ -1102,11 +1094,8 @@
             clips.push(clipItem);
           });
           this.set('clips', clips);
-
-          if (this.clips.length > 0) {
-            this.push('selectedClips', this.clips[this.clips.length - 1]);
-            this.$.clipList.scrollTop = 0;
-          }
+          this._selectFirst();
+          this.$.clipList.scrollTop = 0;
           return Promise.resolve();
         });
       },
