@@ -458,10 +458,7 @@
        */
       ready: function() {
         self = this;
-        this._loadClipItems().catch((err) => {
-          Chrome.Log.error(err.message, 'MainPage.ready', _ERR_LOAD);
-        });
-
+        
         // listen for changes to database
         app.DB.get().on('changes', this._onDBChanged);
 
@@ -793,11 +790,7 @@
         const clipItem = event.model.clip;
         clipItem.date = Date.now();
         clipItem.remote = false;
-        if (this._isSelected(clipItem)) {
-          // deselect if we are selected
-          const pos = this.selectedClips.indexOf(clipItem);
-          this.splice('selectedClips', pos, 1);
-        }
+        this._deselect(clipItem);
         clipItem.save().then(() => {
           this._selectFirst();
           // send message to copy to clipboard
@@ -1093,11 +1086,9 @@
         this._closeUndoToast();
         return app.ClipItem.loadAll(this.labelFilter).then((clipItems) => {
           // populate list
-          const clips = [];
           clipItems.forEach((clipItem) => {
-            clips.push(clipItem);
+            this.push('clips', clipItem);
           });
-          this.set('clips', clips);
           this._selectFirst();
           this.$.clipList.scrollTop = 0;
           return Promise.resolve();
@@ -1113,19 +1104,6 @@
        */
       _getClipPos: function(clipText) {
         return this.clips.findIndex((clipItem) => {
-          return (clipText === clipItem.text);
-        });
-      },
-
-      /**
-       * Get position of select row with given text
-       * @param {string} clipText - text to find
-       * @returns {int} position in array, -1 if not found
-       * @private
-       * @memberOf MainPage
-       */
-      _getSelectedClipPos: function(clipText) {
-        return this.selectedClips.findIndex((clipItem) => {
           return (clipText === clipItem.text);
         });
       },
