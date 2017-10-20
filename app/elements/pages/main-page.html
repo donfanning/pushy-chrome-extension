@@ -706,9 +706,10 @@
       _onClipTap: function(event) {
         const isShift = event.detail.sourceEvent.shiftKey;
         const isCtrl = event.detail.sourceEvent.ctrlKey;
-        const clipItem = event.model.clip;
+        const currentClipItem = event.model.clip;
         const t = this.$.clipsTemplate;
         const el = this.$$(`#clip${event.model.index}`);
+        const endPos = t.indexForElement(el);
         const selected = Polymer.dom(el).classList.contains('iron-selected');
 
         // prevent iron-selector from handling
@@ -717,63 +718,66 @@
         if (isShift) {
           // select range
           let startPos = -1;
-          let endPos = -1;
           if (selected) {
-            // do nothing
+            // deselect any contiguous selections after 
+            for (let i = endPos + 1; i < t.renderedItemCount; i++) {
+              const clipItem = t.itemForElement(this.$$(`#clip${i}`));
+              if (!this._deselect(clipItem)) {
+                break;
+              }
+            }
             return;
           } else if (!this.hasSelections) {
             // select from first to current
             startPos = 0;
-            endPos = t.indexForElement(el);
           } else {
-            endPos = t.indexForElement(el);
             for (let i = endPos - 1; i >= 0; i--) {
               // select from after newer selection to current
-              const clip = t.itemForElement(this.$$(`#clip${i}`));
-              if (this._isSelected(clip)) {
-                startPos = i + 1;
+              const clipItem = t.itemForElement(this.$$(`#clip${i}`));
+              if (this._isSelected(clipItem)) {
+                startPos = i;
                 break;
               }
             }
             if (startPos === -1) {
-              // do the other direction
+              // try the other direction
               for (let i = endPos + 1; i < t.renderedItemCount; i++) {
                 // select from before older selection to current
-                const clip = t.itemForElement(this.$$(`#clip${i}`));
-                if (this._isSelected(clip)) {
-                  startPos = i - 1;
+                const clipItem = t.itemForElement(this.$$(`#clip${i}`));
+                if (this._isSelected(clipItem)) {
+                  startPos = i;
                   break;
                 }
               }
             }
           }
-          if (startPos <= endPos) {
+          if (startPos !== -1) {
             // found range, select it
-            for (let i = startPos; i <= endPos; i++) {
-              const clip = t.itemForElement(this.$$(`#clip${i}`));
-              this.push('selectedClips', clip);
-            }
-          } else if (startPos > endPos) {
-            // found range, select it
-            for (let i = startPos; i >= endPos; i--) {
-              const clip = t.itemForElement(this.$$(`#clip${i}`));
-              this.push('selectedClips', clip);
+            if (startPos < endPos) {
+              for (let i = startPos + 1; i <= endPos; i++) {
+                const clipItem = t.itemForElement(this.$$(`#clip${i}`));
+                this._select(clipItem);
+              }
+            } else if (startPos > endPos) {
+              for (let i = startPos - 1; i >= endPos; i--) {
+                const clipItem = t.itemForElement(this.$$(`#clip${i}`));
+                this._select(clipItem);
+              }
             }
           }
         } else if (isCtrl) {
           // toggle selection
           if (selected) {
-            const idx = this.selectedClips.indexOf(clipItem);
-            this.splice('selectedClips', idx, 1);
+            this._deselect(currentClipItem);
           } else {
-            this.push('selectedClips', clipItem);
+            this._select(currentClipItem);
           }
         } else {
           // single select with toggle
           const len = this.selectedClips.length;
           this.splice('selectedClips', 0, this.selectedClips.length);
           if (!selected || (len > 1)) {
-            this.push('selectedClips', clipItem);
+            this._select(currentClipItem);
           }
         }
       },
@@ -1166,34 +1170,55 @@
       /**
        * Select {@link ClipItem} if not already
        * @param {ClipItem} clipItem
+       * @returns {boolean} true if selected
        * @private
        * @memberOf MainPage
        */
       _select: function(clipItem) {
         if (!this._isSelected(clipItem)) {
           this.push('selectedClips', clipItem);
+          return true;
         }
+        return false;
+      },
+
+      /**
+       * Deselect {@link ClipItem} if not already
+       * @param {ClipItem} clipItem
+       * @returns {boolean} true if deselected
+       * @private
+       * @memberOf MainPage
+       */
+      _deselect: function(clipItem) {
+        const idx = this.selectedClips.findIndex((clip) => {
+          return (clip.text === clipItem.text);
+        });
+        if (idx !== -1) {
+          this.splice('selectedClips', idx, 1);
+          return true;
+        }
+        return false;
       },
 
       /**
        * Select first item in list, if it is not already
        * @param {boolean} [ifNoSelections=false] - if true,
        * only do if no selections
+       * @returns {boolean} true if selected
        * @private
        * @memberOf MainPage
        */
       _selectFirst: function(ifNoSelections = false) {
         this.$.clipsTemplate.render();
         if (ifNoSelections && this.selectedClips.length) {
-          return;
+          return false;
         }
         const el = this.$$('#clip0');
         if (el) {
           const clipItem = this.$.clipsTemplate.itemForElement(el);
-          if (!this._isSelected(clipItem)) {
-            this.push('selectedClips', clipItem);
-          }
+          return this._select(clipItem);
         }
+        return false;
       },
 
       /**
@@ -1212,20 +1237,24 @@
       },
 
       /**
-       * Get all labels in all selected {@link ClipItem} objects
-       * @returns {string[]}
+       * Get the labels shared by all selected {@link ClipItem} objects
+       * @returns {string[]} Array of all shared Label names
        * @private
        * @memberOf MainPage
        */
-      _getAllLabelsForSelected: function() {
+      _getCommonLabelsForSelected: function() {
         const labels = [];
         this.labels.forEach((labelName) => {
+          let has = true;
           for (let i = 0; i < this.selectedClips.length; i++) {
             const clipItem = this.selectedClips[i];
-            if (clipItem.hasLabel(labelName)) {
-              labels.push(labelName);
+            if (!clipItem.hasLabel(labelName)) {
+              has = false;
               break;
             }
+          }
+          if (has) {
+            labels.push(labelName);
           }
         });
         return labels;
@@ -1248,7 +1277,7 @@
         }).then(() => {
           if (multi && (this.selectedClips.length > 1)) {
             // for multi mode, will apply to all selectedClips
-            const labels = this._getAllLabelsForSelected();
+            const labels = this._getCommonLabelsForSelected();
             this.set('selectedDialogLabels', labels);
           } else {
             this._setSelectedLabels(this.currentClip);
