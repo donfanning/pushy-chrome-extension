@@ -82,7 +82,6 @@ app.DB = (function() {
     }).upgrade(function(t) {
       let clipItems;
       return t.db.clipItems.toArray().then((clips) => {
-        console.log(clips);
         clipItems = clips;
         return t.db.labels.toArray();
       }).then((labels) => {
@@ -93,7 +92,6 @@ app.DB = (function() {
               clipItem.labels.push(label);
             }
           });
-          t.db.clipItems.put(clipItem);
         });
         return t.idbtrans.objectStore('clipItems');
       }).then((clipItemsTable) => {
