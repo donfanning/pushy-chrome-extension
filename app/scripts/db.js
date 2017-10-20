@@ -75,26 +75,38 @@ app.DB = (function() {
       });
     });
 
-    // add labels array to clipItems, delete clipItemsTmp table
+    // add labels array to clipItems
     _db.version(4).stores({
-      clipItemsTmp: null,
+      clipItems: '++_id, &text, date, *labelsId',
+      labels: '++_id, &name',
     }).upgrade(function(t) {
-      return t.db.clipItems.toArray().then((clipItems) => {
+      let clipItems;
+      return t.db.clipItems.toArray().then((clips) => {
+        console.log(clips);
+        clipItems = clips;
+        return t.db.labels.toArray();
+      }).then((labels) => {
         clipItems.forEach((clipItem) => {
-          // eslint-disable-next-line promise/no-nesting
-          clipItem.setLabelsById(clipItem.labelsId).catch((err) => {
-            Chrome.GA.error(err.message, 'DB.update');
+          clipItem.labels = [];
+          labels.forEach((label) => {
+            if (clipItem.labelsId.includes(label._id)) {
+              clipItem.labels.push(label);
+            }
           });
+          t.db.clipItems.put(clipItem);
         });
+        return t.idbtrans.objectStore('clipItems');
+      }).then((clipItemsTable) => {
+        clipItems.forEach((clipItem) => clipItemsTable.put(clipItem));
         return Promise.resolve();
       });
     });
 
     _db.clipItems.mapToClass(app.ClipItem);
     _db.labels.mapToClass(app.Label);
-    
+
     // to make Dexie.Observable works all the time
-    _db.open();
+    // _db.open();
   }
 
   // listen for document and resources loaded
