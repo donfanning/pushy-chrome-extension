@@ -106,7 +106,7 @@ app.DB = (function() {
     _db.labels.mapToClass(app.Label);
 
     // to make Dexie.Observable works all the time
-    // _db.open();
+    _db.open();
   }
 
   // listen for document and resources loaded
