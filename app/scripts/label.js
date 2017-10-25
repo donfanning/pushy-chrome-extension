@@ -40,7 +40,10 @@
    */
   Label.prototype.setName = function(name) {
     this.name = name;
-    return app.DB.labels().update(this._id, this);
+    const db = app.DB.get();
+    return db.transaction('rw', app.DB.labels(), app.DB.clips(), () => {
+      return app.DB.labels().update(this._id, this);
+    });
   };
 
   /**
@@ -48,7 +51,10 @@
    * @returns {Promise<int>} database PK
    */
   Label.prototype.save = function() {
-    return app.DB.labels().put(this);
+    const db = app.DB.get();
+    return db.transaction('rw', app.DB.labels(), app.DB.clips(), () => {
+      return app.DB.labels().put(this);
+    });
   };
 
   /**
@@ -56,7 +62,10 @@
    * @returns {Promise<void>} void
    */
   Label.prototype.delete = function() {
-    return app.DB.labels().delete(this._id);
+    const db = app.DB.get();
+    return db.transaction('rw', app.DB.labels(), app.DB.clips(), () => {
+      return app.DB.labels().delete(this._id);
+    });
   };
 
   /**
@@ -79,17 +88,20 @@
    * @returns {Promise<Label>} A new {@link Label}
    */
   Label.add = function(name) {
-    if (Chrome.Utils.isWhiteSpace(name)) {
-      return Promise.reject(new Error(Label.ERROR_EMPTY_TEXT));
-    }
-    const label = new Label(name);
-    return label.getId().then((id) => {
-      if (id) {
-        return Promise.reject(new Error(Label.ERROR_EXISTS));
+    const db = app.DB.get();
+    return db.transaction('rw', app.DB.labels(), app.DB.clips(), () => {
+      if (Chrome.Utils.isWhiteSpace(name)) {
+        return Promise.reject(new Error(Label.ERROR_EMPTY_TEXT));
       }
-      return label.save();
-    }).then(() => {
-      return Promise.resolve(label);
+      const label = new Label(name);
+      return label.getId().then((id) => {
+        if (id) {
+          return Promise.reject(new Error(Label.ERROR_EXISTS));
+        }
+        return label.save();
+      }).then(() => {
+        return Promise.resolve(label);
+      });
     });
   };
 

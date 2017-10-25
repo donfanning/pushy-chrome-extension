@@ -211,7 +211,7 @@ If you find the extension of value please rate it. Thanks. \
    */
   function _onLoad() {
     // listen for changes to database
-    app.DB.get().on('changes', _onDBChanged);
+    // app.DB.get().on('changes', _onDBChanged);
   }
 
   // listen for document and resources loaded
