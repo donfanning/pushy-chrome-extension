@@ -458,9 +458,31 @@
        */
       ready: function() {
         self = this;
+
+        const db = app.DB.get();
         
-        // listen for changes to database
-//        app.DB.get().on('changes', this._onDBChanged);
+        db.clipItems.hook('creating', function(primKey, obj) {
+          // eslint-disable-next-line no-invalid-this
+          this.onsuccess = function() {
+            self._addClipItem(obj.text);
+          };
+        });
+
+        db.clipItems.hook('updating', function(mods, primKey, obj) {
+          // eslint-disable-next-line no-invalid-this
+          this.onsuccess = function() {
+            self._updateClipItem(obj.text, mods);
+          };
+        });
+
+        db.clipItems.hook('deleting', function(primKey, obj) {
+          // eslint-disable-next-line no-invalid-this
+          this.onsuccess = function() {
+            self._deleteClipItem(obj.text);
+          };
+        });
+
+        Chrome.Msg.listen(this._onChromeMessage);
 
         // listen for copy and cut events on document
         document.addEventListener('cut', this._onCopy, true);
@@ -508,67 +530,30 @@
         this.set('labelFilter', labelName);
       },
 
+      // noinspection JSUnusedLocalSymbols
       /**
-       * Event: Fired when changes occur in the Dexie database
-       * @see http://dexie.org/docs/Observable/Dexie.Observable.html
-       * @param {Array} changes - database changes
+       * Event: Fired when a message is sent from either an extension process<br>
+       * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
+       * @see https://developer.chrome.com/extensions/runtime#event-onMessage
+       * @param {Chrome.Msg.Message} request - details for the
+       * @param {Object} sender - MessageSender object
+       * @param {function} response - function to call once after processing
+       * @returns {boolean} true if asynchronous
        * @private
        * @memberOf MainPage
        */
-      _onDBChanged: function(changes) {
-        changes.forEach(function(change) {
-          switch (change.type) {
-            case 1: // CREATED
-              if (change.table === 'clipItems') {
-                const c = change.obj;
-                if (self._getClipPos(c.text) !== -1) {
-                  // already in list
-                  break;
-                }
-
-                const clipItem =
-                    new app.ClipItem(c.text, c.date, c.fav, c.remote, c.device);
-                clipItem._id = change.key;
-                clipItem.labels = c.labels;
-                clipItem.labelsId = c.labelsId;
-                if (!self.labelFilter || clipItem.hasLabel(self.labelFilter)) {
-                  // add to list if not filtering or has our labelFiler
-                  self.unshift('clips', clipItem);
-                  self._select(clipItem);
-                }
-              }
-              break;
-            case 2: // UPDATED
-              if (change.table === 'clipItems') {
-                const clipItem = change.obj;
-                let pos = self._getClipPos(clipItem.text);
-                if (pos !== -1) {
-                  const str = `clips.${pos}.`;
-                  self.set(`${str}_id`, clipItem._id);
-                  self.set(`${str}fav`, clipItem.fav);
-                  self.set(`${str}date`, clipItem.date);
-                  self.set(`${str}remote`, clipItem.remote);
-                  self.set(`${str}device`, clipItem.device);
-                  self.set(`${str}labels`, clipItem.labels);
-                  self.set(`${str}labelsId`, clipItem.labelsId);
-                  self.updateDates();
-                }
-              }
-              break;
-            case 3: // DELETED
-              if (change.table === 'clipItems') {
-                const clipItem = change.oldObj;
-                const pos = self._getClipPos(clipItem.text);
-                if (pos !== -1) {
-                  self.splice('clips', pos, 1);
-                  self.updateDates();
-                }
-              }
-              break;
-            default:
-              break;
-          }
-        });
+      _onChromeMessage: function(request, sender, response) {
+        let ret = false;
+        if (request.message === app.ChromeMsg.CLIP_ITEM_CREATED.message) {
+          ret = true; // async
+          self._addClipItem(request.item);
+        } else if (request.message === app.ChromeMsg.CLIP_ITEM_UPDATED.message) {
+          const item = request.item;
+          self._updateClipItem(item.text, item.mods);
+        } else if (request.message === app.ChromeMsg.CLIP_ITEM_DELETED.message) {
+          self._deleteClipItem(request.item);
+        }
+        return ret;
       },
 
       /**
@@ -1093,6 +1078,60 @@
           this.$.clipList.scrollTop = 0;
           return Promise.resolve();
         });
+      },
+
+      /**
+       * Add a {@link ClipItem} to the list
+       * @param {string} text - ClipItem text
+       * @private
+       * @memberOf MainPage
+       */
+      _addClipItem: function(text) {
+        app.ClipItem.getNew(text).then((clipItem) => {
+          if (self._getClipPos(clipItem.text) === -1) {
+            if (!self.labelFilter || clipItem.hasLabel(self.labelFilter)) {
+              // add to list if not filtering or has our labelFiler
+              self.unshift('clips', clipItem);
+              self._select(clipItem);
+            }
+          }
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, 'MainPage._addClipItem',
+              'Failed to add clip item');
+        });
+      },
+
+      /**
+       * Update a {@link ClipItem} in the list
+       * @param {string} text - ClipItem text
+       * @param {Object} mods - key/value pairs of changes
+       * @private
+       * @memberOf MainPage
+       */
+      _updateClipItem: function(text, mods) {
+        let pos = self._getClipPos(text);
+        if (pos !== -1) {
+          const str = `clips.${pos}.`;
+          for (const key of Object.keys(mods)) {
+            self.set(`${str}${key}`, mods[key]);
+          }
+          self.updateDates();
+        }
+      },
+
+      /**
+       * Delete a {@link ClipItem} from the list
+       * @param {string} text - ClipItem text
+       * @private
+       * @memberOf MainPage
+       */
+      _deleteClipItem: function(text) {
+        const pos = self._getClipPos(text);
+        if (pos !== -1) {
+          self.splice('clips', pos, 1);
+          self.updateDates();
+        }
       },
 
       /**

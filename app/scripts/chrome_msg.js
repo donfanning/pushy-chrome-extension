@@ -36,6 +36,9 @@ app.ChromeMsg = (function() {
    *     failed
    * @property {Chrome.Msg.Message} UNREGISTER_FAILED - unregister with server
    *     failed
+   * @property {Chrome.Msg.Message} CLIP_ITEM_CREATED - new clip created
+   * @property {Chrome.Msg.Message} CLIP_ITEM_DELETED - clip deleted
+   * @property {Chrome.Msg.Message} CLIP_ITEM_UPDATED - existing clip updated
    * @const
    * @memberOf app.ChromeMsg
    */
@@ -75,6 +78,18 @@ app.ChromeMsg = (function() {
     UNREGISTER_FAILED: {
       message: 'unregisterFailed',
     },
+    CLIP_ITEM_CREATED: {
+      message: 'clipItemCreated',
+      item: '',
+    },
+    CLIP_ITEM_DELETED: {
+      message: 'clipItemDeleted',
+      item: '',
+    },
+    CLIP_ITEM_UPDATED: {
+      message: 'clipItemUpdated',
+      item: '',
+    },
   };
 
   return {
@@ -89,5 +104,8 @@ app.ChromeMsg = (function() {
     MSG_FAILED: _MSG.MSG_FAILED,
     REGISTER_FAILED: _MSG.REGISTER_FAILED,
     UNREGISTER_FAILED: _MSG.UNREGISTER_FAILED,
+    CLIP_ITEM_CREATED: _MSG.CLIP_ITEM_CREATED,
+    CLIP_ITEM_DELETED: _MSG.CLIP_ITEM_DELETED,
+    CLIP_ITEM_UPDATED: _MSG.CLIP_ITEM_UPDATED,
   };
 })();

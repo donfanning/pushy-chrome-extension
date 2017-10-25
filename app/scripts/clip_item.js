@@ -18,18 +18,19 @@
    * @param {boolean} fav - true if this has been marked as a favorite
    * @param {boolean} remote - true if this came from a device other than ours
    * @param {string} device - A String representing the source device
+   * @param {labelsId[]} labelsId=[] - Array of {@Label} PK's
+   * @param {Label[]} labels=[] - Array of {@Label} objects
    * @property {int} _id - database PK
-   * @property {labelsId} labelsId- Array of {@Label} PK's
-   * @property {Label[]} labels- Array of {@Label} objects
    */
-  const ClipItem = function(text, date, fav, remote, device) {
+  const ClipItem = function(text, date, fav, remote, device,
+                            labelsId = [], labels = []) {
     this.text = text;
     this.date = date;
     this.fav = fav;
     this.remote = remote;
     this.device = device;
-    this.labelsId = [];
-    this.labels = [];
+    this.labelsId = labelsId;
+    this.labels = labels;
   };
 
   /**
@@ -73,6 +74,13 @@
    * @type {string}
    */
   ClipItem._ERROR_NO_LABEL = 'Label not found.';
+
+  /**
+   * Error indicating ClipItem doesn't exist
+   * @const
+   * @type {string}
+   */
+  ClipItem._ERROR_NO_CLIP = 'Clip item not found.';
 
   /**
    * Set our {@link Label} objects
@@ -329,12 +337,31 @@
   };
 
   /**
-   * Get a {@link ClipItem} from the database
+   * Get a new {@link ClipItem} from the database
+   * @param {string} text - The text of the clip
+   * @returns {Promise<ClipItem>} A new {@link ClipItem}
+   */
+  ClipItem.getNew = function(text) {
+    const clipTable = app.DB.clips();
+    return clipTable.where('text').equals(text).first().then((c) => {
+      if (c) {
+        const clipItem = new app.ClipItem(c.text, c.date, c.fav, c.remote,
+            c.device, c.labelsId, c.labels);
+        clipItem._id = c._id;
+        return Promise.resolve(clipItem);
+      }
+      return Promise.reject(new Error(ClipItem._ERROR_NO_CLIP));
+    });
+  };
+
+  /**
+   * Get a {@link ClipItem} data from the database
    * @param {string} text - The text of the clip
    * @returns {Promise<ClipItem|undefined>} A new {@link ClipItem},
    * undefined if not found
+   * @private
    */
-  ClipItem.get = function(text) {
+  ClipItem._get = function(text) {
     return app.DB.clips().where('text').equals(text).first();
   };
 
@@ -352,7 +379,7 @@
     const clipItem = new ClipItem(text, date, fav, remote, device);
     if (keepFav) {
       // make sure fav stays true
-      return ClipItem.get(text).then((clip) => {
+      return ClipItem._get(text).then((clip) => {
         if ((clip !== undefined) && clip.fav) {
           clipItem.fav = true;
         }

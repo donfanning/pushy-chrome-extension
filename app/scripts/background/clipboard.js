@@ -99,16 +99,13 @@ app.CB = (function() {
       // copy a ClipItem to the clipboard
       const clip = request.item;
       const clipItem = new app.ClipItem(clip.text, clip.lastSeen, clip.fav,
-          clip.remote, clip.device);
+          clip.remote, clip.device, clip.labelsId, clip.labels);
       app.CB.copyToClipboard(clipItem.text);
       _sendLocalClipItem(clipItem);
     }
     return ret;
   }
-
-  /**
-   * Listen for Chrome messages
-   */
+  
   Chrome.Msg.listen(_onChromeMessage);
 
   return {

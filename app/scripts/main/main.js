@@ -239,9 +239,6 @@
     // listen for changes to chrome.storage
     chrome.storage.onChanged.addListener(_onChromeStorageChanged);
 
-    // listen for changes to database
-    // app.DB.get().on('changes', _onDBChanged);
-
     // listen for messages from the service worker
     navigator.serviceWorker.addEventListener('message', _onSWMessage);
 

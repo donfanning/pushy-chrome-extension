@@ -100,14 +100,14 @@ app.DB = (function() {
       });
     });
 
-    _db.labels.hook('deleting', function(primKey, obj, trans) {
+    _db.labels.hook('deleting', function(primKey) {
       // eslint-disable-next-line no-invalid-this
       this.onsuccess = function() {
         app.ClipItem.removeLabel(primKey);
       };
     });
 
-    _db.labels.hook('updating', function(mods, primKey, obj, trans) {
+    _db.labels.hook('updating', function(mods, primKey, obj) {
       // eslint-disable-next-line no-invalid-this
       this.onsuccess = function() {
         if (mods.hasOwnProperty('name')) {

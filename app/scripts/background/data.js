@@ -131,7 +131,7 @@ If you find the extension of value please rate it. Thanks. \
    * @private
    * @memberOf app.Data
    */
-  const _ERROR_INITIALIZE = 'Data initialization error.';
+  const _ERROR_INIT = 'Data initialization error.';
 
   /**
    * Save the [_DEFAULTS]{@link app.Data._DEFAULTS} if they don't exist
@@ -164,9 +164,54 @@ If you find the extension of value please rate it. Thanks. \
     }).then((clipItem) => {
       return clipItem.addLabel(label);
     }).catch((err) => {
-      Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INITIALIZE);
+      Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INIT);
     });
   }
+
+  /**
+   * Event: called when document and resources are loaded<br />
+   * Monitor database
+   * @private
+   * @memberOf app.Data
+   */
+  function _onLoad() {
+    const db = app.DB.get();
+
+    db.clipItems.hook('creating', function(primKey, obj) {
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        const msg =
+            Chrome.JSONUtils.shallowCopy(app.ChromeMsg.CLIP_ITEM_CREATED);
+        msg.item = obj.text;
+        Chrome.Msg.send(msg).catch(() => {});
+      };
+    });
+
+    db.clipItems.hook('updating', function(mods, primKey, obj) {
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        const msg =
+            Chrome.JSONUtils.shallowCopy(app.ChromeMsg.CLIP_ITEM_UPDATED);
+         msg.item = {
+          text: obj.text,
+          mods: mods,
+        };
+        Chrome.Msg.send(msg).catch(() => {});
+      };
+    });
+
+    db.clipItems.hook('deleting', function(primKey, obj) {
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        const msg =
+            Chrome.JSONUtils.shallowCopy(app.ChromeMsg.CLIP_ITEM_DELETED);
+        msg.item = obj.text;
+        Chrome.Msg.send(msg).catch(() => {});
+      };
+    });
+  }
+
+  window.addEventListener('load', _onLoad);
 
   return {
     /**
@@ -178,20 +223,19 @@ If you find the extension of value please rate it. Thanks. \
 
       _addLabelExample();
 
-      const introClip =
-          new app.ClipItem(_INTRO_TEXT, Date.now(), true,
-              false, app.Device.myName());
+      const introClip = new app.ClipItem(_INTRO_TEXT, Date.now(), true, false,
+          app.Device.myName());
       introClip.save().catch((err) => {
-        Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INITIALIZE);
+        Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INIT);
       });
 
       app.User.setInfo().catch((err) => {
-        Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INITIALIZE);
+        Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INIT);
       });
 
       // and the last error
       Chrome.Storage.clearLastError().catch((err) => {
-        Chrome.Log.error(err.message, 'Data.initialize', _ERROR_INITIALIZE);
+        Chrome.Log.error(err.message, 'Data.initialize', _ERROR_INIT);
       });
     },
 
@@ -227,13 +271,13 @@ If you find the extension of value please rate it. Thanks. \
           if (lastError) {
             // transfer to chrome.storage.local
             Chrome.Storage.setLastError(lastError).catch((err) => {
-              Chrome.Log.error(err.message, 'Data.update', _ERROR_INITIALIZE);
+              Chrome.Log.error(err.message, 'Data.update', _ERROR_INIT);
             });
             localStorage.removeItem('lastError');
           } else {
             // add empty
             Chrome.Storage.clearLastError().catch((err) => {
-              Chrome.Log.error(err.message, 'Data.update', _ERROR_INITIALIZE);
+              Chrome.Log.error(err.message, 'Data.update', _ERROR_INIT);
             });
           }
         }
