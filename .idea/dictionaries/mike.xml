@@ -53,6 +53,7 @@
       <w>oncopy</w>
       <w>onerror</w>
       <w>onload</w>
+      <w>onsuccess</w>
       <w>openbsd</w>
       <w>phonelink</w>
       <w>polylint</w>
