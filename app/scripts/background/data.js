@@ -14,7 +14,7 @@ app.Data = (function() {
   'use strict';
 
   new ExceptionHandler();
-
+  
   /**
    * Version of data - update when items are added, removed, changed
    * @type {int}
@@ -167,55 +167,6 @@ If you find the extension of value please rate it. Thanks. \
       Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INITIALIZE);
     });
   }
-
-  /**
-   * Event: Fired when changes occur in the Dexie database
-   * @see http://dexie.org/docs/Observable/Dexie.Observable.html
-   * @param {Array} changes - database changes
-   * @private
-   * @memberOf app.Data
-   */
-  function _onDBChanged(changes) {
-    let actionLabel;
-    changes.forEach(function(change) {
-      switch (change.type) {
-        case 1: // CREATED
-          actionLabel = `Created item in ${change.table}`;
-          break;
-        case 2: // UPDATED
-          actionLabel = `Updated item in ${change.table}`;
-          if (change.table === 'labels') {
-            // update it in all the clips
-            app.ClipItem.updateLabel(change.obj.name, change.oldObj.name);
-          }
-          break;
-        case 3: // DELETED
-          actionLabel = `Deleted item in ${change.table}`;
-          if (change.table === 'labels') {
-            // remove it from all the clips
-            app.ClipItem.removeLabel(change.oldObj._id);
-          }
-          break;
-        default:
-          break;
-      }
-      Chrome.GA.event(app.GA.EVENT.DB_CHANGED, actionLabel);
-    });
-  }
-
-  /**
-   * Event: called when document and resources are loaded<br />
-   * Listen for database changes
-   * @private
-   * @memberOf app.Data
-   */
-  function _onLoad() {
-    // listen for changes to database
-    // app.DB.get().on('changes', _onDBChanged);
-  }
-
-  // listen for document and resources loaded
-  window.addEventListener('load', _onLoad);
 
   return {
     /**

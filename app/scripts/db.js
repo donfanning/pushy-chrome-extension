@@ -101,32 +101,31 @@ app.DB = (function() {
     });
 
     _db.labels.hook('deleting', function(primKey, obj, trans) {
-      // You may do additional database operations using given transaction
-      // object.
-      // You may set this.onsuccess = callback when delete operation completes.
-      // You may set this.onerror = callback if delete operation fails.
-      // Any modification to obj is ignored.
-      // Any return value is ignored.
-      // throwing exception will make the db operation fail.
-      app.ClipItem.removeLabel(primKey);
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        app.ClipItem.removeLabel(primKey);
+      };
     });
 
     _db.labels.hook('updating', function(mods, primKey, obj, trans) {
-      if (mods.hasOwnProperty('name')) {
-        // 'name' property is being updated
-        if (typeof mods.name === 'string') {
-          // change not delete
-          app.ClipItem.updateLabel(mods.name, obj.name);
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        if (mods.hasOwnProperty('name')) {
+          // 'name' property is being updated
+          if (typeof mods.name === 'string') {
+            // change not delete
+            app.ClipItem.updateLabel(mods.name, obj.name);
+          }
         }
-      }
+      };
     });
-    
+
     _db.clipItems.mapToClass(app.ClipItem);
     _db.labels.mapToClass(app.Label);
   }
 
   // listen for document and resources loaded
-  window.addEventListener('load', _onLoad);
+  addEventListener('load', _onLoad);
 
   return {
     /**
@@ -156,4 +155,4 @@ app.DB = (function() {
       return _db.labels;
     },
   };
-})(window);
+})();

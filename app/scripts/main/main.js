@@ -4,8 +4,6 @@
  * https://opensource.org/licenses/Apache-2.0
  * https://goo.gl/wFvBM1
  */
-window.app = window.app || {};
-
 (function() {
   'use strict';
 
@@ -54,7 +52,7 @@ window.app = window.app || {};
    * @memberOf Main
    */
   const t = document.querySelector('#t');
-
+  
   /**
    * Manage an html page that is inserted on demand<br>
    * May also be a url link to external site
@@ -207,7 +205,7 @@ window.app = window.app || {};
    * @memberOf Main
    */
   let onHighlightRoute = 'page-main';
-
+  
   /**
    * Event: Template Bound, bindings have resolved and content has been
    * stamped to the page
@@ -252,7 +250,57 @@ window.app = window.app || {};
 
     // check for optional permissions
     _checkOptionalPermissions();
+
+    const db = app.DB.get();
+    
+    db.labels.hook('creating', function(primKey, obj) {
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        const name = obj.name;
+        if (_getPagesLabelsIdx(name) === -1) {
+          const newPage = {
+            label: name, route: `page-main-labeled#${name}`,
+            icon: 'myicons:label', ready: true, divider: false,
+            obj: null, insertion: null, el: null,
+          };
+          pages.push(newPage);
+          t.push('pagesLabels', newPage);
+        }
+      };
+    });
+
+    db.labels.hook('updating', function(mods, primKey, obj) {
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        if (mods.hasOwnProperty('name')) {
+          // 'name' property is being updated
+          if (typeof mods.name === 'string') {
+            // change not delete
+            const name = obj.name;
+            const newName = mods.name;
+            const idx = _getPagesLabelsIdx(name);
+            t.set(`pagesLabels.${idx}.label`, newName);
+          }
+        }
+      };
+    });
+
+    db.labels.hook('deleting', function(primKey, obj) {
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        const name = obj.name;
+        let idx = pages.findIndex((page) => {
+          return page.label === name;
+        });
+        pages.splice(idx, 1);
+        idx = t.pagesLabels.findIndex((page) => {
+          return page.label === name;
+        });
+        t.splice('pagesLabels', idx, 1);
+      };
+    });
   }
+
 
   /**
    * Event: navigation menu selected
@@ -503,60 +551,7 @@ window.app = window.app || {};
     }
   }
 
-  /**
-   * Event: Fired when changes occur in the Dexie database
-   * @see http://dexie.org/docs/Observable/Dexie.Observable.html
-   * @param {Array} changes - database changes
-   * @memberOf Main
-   */
-  function _onDBChanged(changes) {
-    changes.forEach(function(change) {
-      switch (change.type) {
-        case 1: // CREATED
-          if (change.table === 'labels') {
-            const name = change.obj.name;
-            const idx = _getPagesLabelsIdx(name);
-            if (idx !== -1) {
-              // already exists
-              break;
-            }
-            const newPage = {
-              label: name, route: `page-main-labeled#${name}`,
-              icon: 'myicons:label', ready: true, divider: false,
-              obj: null, insertion: null, el: null,
-            };
-            pages.push(newPage);
-            t.push('pagesLabels', newPage);
-          }
-          break;
-        case 2: // UPDATED
-          if (change.table === 'labels') {
-            const name = change.oldObj.name;
-            const newName = change.obj.name;
-            const idx = _getPagesLabelsIdx(name);
-            t.set(`pagesLabels.${idx}.label`, newName);
-          }
-          break;
-        case 3: // DELETED
-          if (change.table === 'labels') {
-            const name = change.oldObj.name;
-            let idx = pages.findIndex((page) => {
-              return page.label === name;
-            });
-            pages.splice(idx, 1);
-            idx = t.pagesLabels.findIndex((page) => {
-              return page.label === name;
-            });
-            t.splice('pagesLabels', idx, 1);
-          }
-          break;
-        default:
-          break;
-      }
-    });
-  }
-
-  /**
+   /**
    * Event: Fired when the highlighted or selected tabs in a window changes.
    * @see https://developer.chrome.com/extensions/tabs#event-onHighlighted
    * @param {Object} highlightInfo - info
@@ -755,7 +750,7 @@ window.app = window.app || {};
       Chrome.GA.error(err.message, 'Main._setErrorMenuState');
     });
   }
-
+  
   // listen for dom-change
   t.addEventListener('dom-change', _onDomChange);
 })(window);
