@@ -30,6 +30,20 @@
 <template is="dom-bind" id="t">
   <style is="custom-style">
 
+    paper-menu paper-item {
+      --paper-item-selected: {
+        color: var(--dark-primary-color);
+        background-color: var(--selected-color);
+        text-rendering: optimizeLegibility;
+      };
+      --paper-item-focused: {
+        background-color: transparent;
+      };
+      --paper-item-focused-before: {
+        background-color: transparent;
+      };
+    }
+
     #mainToolbar {
       background-color: var(--dark-primary-color);
     }
