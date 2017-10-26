@@ -61,12 +61,14 @@
       app.Devices.add(device);
       const fav = (data.fav === '1');
       // persist
-      app.ClipItem.add(data.m, Date.now(), fav, true, device.getName(), true).
-          catch((err) => {
-            Chrome.Log.error(err.message, 'ReceiveMsg._process');
-          });
-      // save to clipboard
-      app.CB.copyToClipboard(data.m);
+      app.ClipItem.add(data.m, Date.now(), fav, true, device.getName(),
+          true).then(() => {
+        // save to clipboard
+        app.CB.copyToClipboard(data.m);
+        return Promise.resolve();
+      }).catch((err) => {
+        Chrome.Log.error(err.message, 'ReceiveMsg._process');
+      });
     } else if (data.act === app.Msg.ACTION.PING) {
       // we were pinged
       app.Devices.add(device);

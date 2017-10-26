@@ -87,7 +87,7 @@
     // Persist
     let addOK = false;
     app.ClipItem.add(text, Date.now(), false,
-        false, app.Device.myName()).then((clipItem) => {
+        false, app.Device.myName(), true).then((clipItem) => {
       addOK = true;
       return app.Msg.sendClipItem(clipItem);
     }).catch((err) => {

@@ -18,8 +18,8 @@
    * @param {boolean} fav - true if this has been marked as a favorite
    * @param {boolean} remote - true if this came from a device other than ours
    * @param {string} device - A String representing the source device
-   * @param {labelsId[]} labelsId=[] - Array of {@Label} PK's
-   * @param {Label[]} labels=[] - Array of {@Label} objects
+   * @param {labelsId[]} [labelsId=[]] - Array of {@Label} PK's
+   * @param {Label[]} [labels=[]] - Array of {@Label} objects
    * @property {int} _id - database PK
    */
   const ClipItem = function(text, date, fav, remote, device,
@@ -372,25 +372,27 @@
    * @param {boolean} fav - true if this has been marked as a favorite
    * @param {boolean} remote - true if this came from a device other than ours
    * @param {string} device - A String representing the source device
-   * @param {boolean} [keepFav=false] - if true don't override fav if it is true
+   * @param {boolean} [keepState=false] - if true keep labels and fav if true
    * @returns {Promise<ClipItem>} A new {@link ClipItem}
    */
-  ClipItem.add = function(text, date, fav, remote, device, keepFav = false) {
+  ClipItem.add = function(text, date, fav, remote, device, keepState = false) {
     const clipItem = new ClipItem(text, date, fav, remote, device);
-    if (keepFav) {
-      // make sure fav stays true
+    if (keepState) {
+      // make sure fav stays true and labels stay
       return ClipItem._get(text).then((clip) => {
-        if ((clip !== undefined) && clip.fav) {
-          clipItem.fav = true;
+        if (clip !== undefined) {
+          if (clip.fav) {
+            clipItem.fav = true;
+          }
+          clipItem.labelsId = clip.labelsId;
+          clipItem.labels = clip.labels;
         }
         return clipItem.save();
-      }).then((id) => {
-        clipItem._id = id;
+      }).then(() => {
         return Promise.resolve(clipItem);
       });
     } else {
-      return clipItem.save().then((id) => {
-        clipItem._id = id;
+      return clipItem.save().then(() => {
         return Promise.resolve(clipItem);
       });
     }
