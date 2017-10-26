@@ -52,7 +52,7 @@
     try {
       data.m = decodeURIComponent(data.m);
     } catch (ex) {
-      const msg = `Caught: ReceiveMsg._process ${ex.message}`;
+      const msg = `Caught: ReceiveMsg._process ${ex.message} ${data.m}`;
       Chrome.Log.exception(ex, msg);
     }
 
