@@ -460,7 +460,7 @@
         self = this;
 
         const db = app.DB.get();
-        
+
         db.clipItems.hook('creating', function(primKey, obj) {
           // eslint-disable-next-line no-invalid-this
           this.onsuccess = function() {
@@ -1099,11 +1099,11 @@
        */
       _addClipItem: function(text) {
         app.ClipItem.getNew(text).then((clipItem) => {
-          if (self._getClipPos(clipItem.text) === -1) {
-            if (!self.labelFilter || clipItem.hasLabel(self.labelFilter)) {
+          if (this._getClipPos(clipItem.text) === -1) {
+            if (!this.labelFilter || clipItem.hasLabel(this.labelFilter)) {
               // add to list if not filtering or has our labelFiler
-              self.unshift('clips', clipItem);
-              self._select(clipItem);
+              this.unshift('clips', clipItem);
+              this._select(clipItem);
             }
           }
           return Promise.resolve();
@@ -1121,13 +1121,19 @@
        * @memberOf MainPage
        */
       _updateClipItem: function(text, mods) {
-        let pos = self._getClipPos(text);
+        let pos = this._getClipPos(text);
         if (pos !== -1) {
           const str = `clips.${pos}.`;
           for (const key of Object.keys(mods)) {
-            self.set(`${str}${key}`, mods[key]);
+            this.set(`${str}${key}`, mods[key]);
           }
-          self.updateDates();
+          this.updateDates();
+          if (this.currentClip &&
+              (this.clips[pos].text === this.currentClip.text) &&
+              mods.hasOwnProperty('labels')) {
+            // update clip if labels changed
+            this._setCurrentClip();
+          }
         }
       },
 
@@ -1138,10 +1144,10 @@
        * @memberOf MainPage
        */
       _deleteClipItem: function(text) {
-        const pos = self._getClipPos(text);
+        const pos = this._getClipPos(text);
         if (pos !== -1) {
-          self.splice('clips', pos, 1);
-          self.updateDates();
+          this.splice('clips', pos, 1);
+          this.updateDates();
         }
       },
 
