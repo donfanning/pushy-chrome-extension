@@ -562,6 +562,7 @@
        * @memberOf MainPage
        */
       _onSelectLabelsTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'selectLabels');
         this._showLabelsSelectDialog(true);
       },
 
@@ -571,6 +572,7 @@
        * @memberOf MainPage
        */
       _onLabelsTapped: function() {
+        Chrome.GA.event(app.GA.EVENT.CLICK, 'showLabelList');
         this._showLabelsSelectDialog(false);
       },
 
@@ -580,6 +582,7 @@
        * @memberOf MainPage
        */
       _onCloseToastTapped: function() {
+        Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'closeUndoToast');
         this._closeUndoToast();
       },
 
@@ -590,6 +593,7 @@
        * @memberOf MainPage
        */
       _onUndoDeleteTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'UNDO');
         const addItems = [];
         this.undoClips.forEach((undoClip) => {
           addItems.push(undoClip);
@@ -612,6 +616,7 @@
        * @memberOf MainPage
        */
       _onSelectAllTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'selectAllClipItems');
         const t = this.$.clipsTemplate;
         this.splice('selectedClips', 0, this.selectedClips.length);
         for (let i = t.renderedItemCount - 1; i >= 0; i--) {
@@ -626,6 +631,7 @@
        * @memberOf MainPage
        */
       _onDeselectAllTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'deselectAllClipItems');
         this.splice('selectedClips', 0, this.selectedClips.length);
       },
 
@@ -635,6 +641,7 @@
        * @memberOf MainPage
        */
       _onDeleteSelectedTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'deleteSelectedClipItems');
         this.splice('undoClips', 0, this.undoClips.length);
 
         let keys = [];
@@ -665,6 +672,7 @@
        * @memberOf MainPage
        */
       _onFavFilterTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'filterByFavorites');
         this.set('isFavFilter', !this.isFavFilter);
         if (this.isFavFilter && this.hasSelections) {
           // deselect any selected non-fav rows
@@ -686,6 +694,7 @@
        * @memberOf MainPage
        */
       _onClipTap: function(event) {
+        Chrome.GA.event(app.GA.EVENT.CLICK, 'clipItemRow');
         const isShift = event.detail.sourceEvent.shiftKey;
         const isCtrl = event.detail.sourceEvent.ctrlKey;
         const currentClipItem = event.model.clip;
@@ -772,6 +781,7 @@
        * @memberOf MainPage
        */
       _onCopyTapped: function(event) {
+        Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'copyClipItem');
         const clipItem = event.model.clip;
         clipItem.date = Date.now();
         clipItem.remote = false;
@@ -802,6 +812,7 @@
        * @memberOf MainPage
        */
       _onFavTapped: function(event) {
+        Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'toggleFavorite');
         const clipItem = event.model.clip;
         if (clipItem) {
           clipItem.update({fav: !clipItem.fav}).catch((err) => {

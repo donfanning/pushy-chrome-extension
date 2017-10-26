@@ -32,15 +32,28 @@ app.GA = (function() {
   /**
    * Event types
    * @type {{}}
+   * @property {Chrome.GA.Event} CLICK - generic click
+   * @property {Chrome.GA.Event} IMAGE_BUTTON - icon clicked (non-menu)
    * @property {Chrome.GA.Event} SENT - message sent
    * @property {Chrome.GA.Event} RECEIVED - message received
    * @property {Chrome.GA.Event} REGISTERED - {@link Device} registered
    * @property {Chrome.GA.Event} UNREGISTERED - {@link Device} unregistered
    * @property {Chrome.GA.Event} TOKEN_REFRESHED - firebase token refreshed
+   * @property {Chrome.GA.Event} DB_CHANGED - any db change
    * @const
    * @memberOf app.GA
    */
   const EVENT = {
+    CLICK: {
+      eventCategory: 'ui',
+      eventAction: 'click',
+      eventLabel: '',
+    },
+    IMAGE_BUTTON: {
+      eventCategory: 'ui',
+      eventAction: 'imageButtonClicked',
+      eventLabel: '',
+    },
     SENT: {
       eventCategory: 'message',
       eventAction: 'sent',
