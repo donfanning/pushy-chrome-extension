@@ -27,9 +27,6 @@
 
 <link rel="import" href="../my_icons.html">
 
-<script type="text/javascript"
-        src="../../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
-
 <dom-module id="main-page">
   <template>
     <style include="iron-flex iron-flex-alignment iron-flex-factors iron-positioning"></style>
@@ -458,30 +455,13 @@
        */
       ready: function() {
         self = this;
+      },
 
-        const db = app.DB.get();
-
-        db.clipItems.hook('creating', function(primKey, obj) {
-          // eslint-disable-next-line no-invalid-this
-          this.onsuccess = function() {
-            self._addClipItem(obj.text);
-          };
-        });
-
-        db.clipItems.hook('updating', function(mods, primKey, obj) {
-          // eslint-disable-next-line no-invalid-this
-          this.onsuccess = function() {
-            self._updateClipItem(obj.text, mods);
-          };
-        });
-
-        db.clipItems.hook('deleting', function(primKey, obj) {
-          // eslint-disable-next-line no-invalid-this
-          this.onsuccess = function() {
-            self._deleteClipItem(obj.text);
-          };
-        });
-
+      /**
+       * Element is attached
+       * @memberOf MainPage
+       */
+      attached: function() {
         Chrome.Msg.listen(this._onChromeMessage);
 
         // listen for copy and cut events on document
@@ -881,13 +861,17 @@
 
       /**
        * Observer: The label filter changed
+       * @param {string} newValue
+       * @param {string|undefined} oldValue
        * @private
        * @memberOf MainPage
        */
-      _labelFilterChanged: function() {
-        this._loadClipItems().catch((err) => {
-          Chrome.Log.error(err.message, 'MainPage.setLabelFilter', _ERR_LOAD);
-        });
+      _labelFilterChanged: function(newValue, oldValue) {
+          if (typeof oldValue !== 'undefined') {
+            this._loadClipItems().catch((err) => {
+              Chrome.Log.error(err.message, 'MainPage.setLabelFilter', _ERR_LOAD);
+            });
+          }
       },
 
       /**
@@ -1077,10 +1061,10 @@
        * @memberOf MainPage
        */
       _loadClipItems: function() {
-        this.splice('clips', 0, this.clips.length);
-        this.splice('selectedClips', 0, this.selectedClips.length);
         this._closeUndoToast();
         return app.ClipItem.loadAll(this.labelFilter).then((clipItems) => {
+          this.splice('clips', 0, this.clips.length);
+          this.splice('selectedClips', 0, this.selectedClips.length);
           // populate list
           clipItems.forEach((clipItem) => {
             this.push('clips', clipItem);
@@ -1353,5 +1337,38 @@
         this.$.undoToast.close();
       },
     });
+
+    /**
+     * Document and resources loaded
+     * @private
+     * @memberOf MainPage
+     */
+    function _onLoad() {
+      const db = app.DB.get();
+
+      db.clipItems.hook('creating', function(primKey, obj) {
+        // eslint-disable-next-line no-invalid-this
+        this.onsuccess = function() {
+          self._addClipItem(obj.text);
+        };
+      });
+
+      db.clipItems.hook('updating', function(mods, primKey, obj) {
+        // eslint-disable-next-line no-invalid-this
+        this.onsuccess = function() {
+          self._updateClipItem(obj.text, mods);
+        };
+      });
+
+      db.clipItems.hook('deleting', function(primKey, obj) {
+        // eslint-disable-next-line no-invalid-this
+        this.onsuccess = function() {
+          self._deleteClipItem(obj.text);
+        };
+      });
+    }
+
+    // listen for document and resources loaded
+    window.addEventListener('load', _onLoad);
   })();
 </script>

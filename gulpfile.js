@@ -35,7 +35,7 @@ const path = {
 const files = {
   manifest: `${base.src}manifest.json`,
   scripts: `${path.scripts}**/*.js`,
-  html: `${path.html}*.*`,
+  html: `${path.html}**/*.html`,
   styles: `${path.styles}**/*.*`,
   elements: `${path.elements}**/*.html`,
   images: `${path.images}*.*`,
@@ -45,7 +45,6 @@ const files = {
     `${path.bowerFirebase}firebase-auth.js`,
     `${path.bowerFirebase}firebase-messaging.js`,
     `${path.bowerDexie}dist/dexie.min.js`,
-    `${path.bowerDexie}addons/Dexie.Observable/dist/dexie-observable.min.js`,
     `${path.bowerMoment}min/moment.min.js`,
     `${path.bowerLinkify}linkify.min.js`,
     `${path.bowerLinkify}linkify-element.min.js`,
@@ -63,6 +62,10 @@ const files = {
   ],
   bowerScripts: `${path.bowerScripts}**/*.js`,
   bowerElements: `${path.bowerElements}**/*.html`,
+  prodDelete: [
+    `${base.dist}app/bower_components/moment/`,
+    `${base.dist}app/bower_components/linkifyjs/`,
+  ],
 };
 files.js = [files.scripts, files.bowerScripts, `${base.src}*.js`];
 files.lintdevjs = '*.js';
@@ -136,8 +139,9 @@ gulp.task('prod', (cb) => {
   isProd = true;
   isProdTest = false;
   runSequence('clean', [
-    'manifest', 'html', 'scripts', 'styles', 'vulcanize',
-    'images', 'assets', 'lib', 'locales', 'docs'], 'zip', cb);
+        'manifest', 'html', 'scripts', 'styles', 'vulcanize_elements',
+        'images', 'assets', 'lib', 'locales', 'docs'],
+      'prod_delete', 'zip', cb);
 });
 
 // Production test build
@@ -145,15 +149,16 @@ gulp.task('prodTest', (cb) => {
   isProd = true;
   isProdTest = true;
   runSequence('clean', [
-    'manifest', 'html', 'scripts', 'styles', 'vulcanize',
-    'images', 'assets', 'lib', 'locales'], 'zip', cb);
+    'manifest', 'html', 'scripts', 'styles', 'vulcanize_elements',
+    'images', 'assets', 'lib', 'locales'], 'prod_delete', 'zip', cb);
 });
 
 // Generate JSDoc
 gulp.task('docs', (cb) => {
   const config = require('./jsdoc.json');
   const README = '../Pushy-Clipboard.github.io/README.md';
-  gulp.src([README, files.scripts, files.bowerScripts, files.elements,
+  gulp.src([
+    README, files.scripts, files.bowerScripts, files.elements,
     files.bowerElements], {read: true}).
       pipe(If('*.html', plugins.crisper(crisperOpts))).
       pipe(gulp.dest(base.tmp_docs)).
@@ -183,7 +188,7 @@ gulp.task('clean', () => {
 });
 
 // clean output directories
-gulp.task('clean-all', () => {
+gulp.task('clean_all', () => {
   return del([base.dist, base.dev]);
 });
 
@@ -267,8 +272,6 @@ gulp.task('html', () => {
   return gulp.src(input, {base: '.'}).
       pipe(isWatch ? watch(input, watchOpts) : util.noop()).
       pipe(plumber()).
-      pipe((isProd && !isProdTest) ? util.noop() : plugins.replace(
-          '<!--@@build:replace -->', '<!--')).
       pipe(isProd ? plugins.minifyHtml() : util.noop()).
       pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
@@ -338,14 +341,19 @@ gulp.task('locales', () => {
       pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
-// vulcanize for production
-gulp.task('vulcanize', () => {
+// vulcanize elements for production
+gulp.task('vulcanize_elements', () => {
   return gulp.src(`${path.elements}elements.html`, {base: '.'}).
       pipe(plugins.vulcanize(vulcanizeOpts)).
       pipe(plugins.crisper(crisperOpts)).
       pipe(If('*.html', plugins.minifyInline())).
       pipe(If('*.js', minify(minifyOpts).on('error', util.log))).
       pipe(gulp.dest(base.dist));
+});
+
+// delete unneeded files
+gulp.task('prod_delete', () => {
+  return del(files.prodDelete);
 });
 
 // compress for the Chrome Web Store

@@ -132,6 +132,28 @@
   }
 
   /**
+   * Event: document and resources loaded
+   * @private
+   * @memberOf Background
+   */
+  function _onLoad() {
+    // Listen for extension install or update
+    chrome.runtime.onInstalled.addListener(_onInstalled);
+
+    // Listen for Chrome starting
+    chrome.runtime.onStartup.addListener(_onStartup);
+
+    // Listen for click on the icon
+    chrome.browserAction.onClicked.addListener(_onIconClicked);
+
+    // Listen for tab updates
+    chrome.tabs.onUpdated.addListener(_onTabUpdated);
+
+    // Listen for changes to localStorage
+    addEventListener('storage', _onStorageChanged, false);
+  }
+
+  /**
    * Initialize firebase and Service Worker if signed in
    * @returns {Promise<void>} void
    * @private
@@ -153,18 +175,6 @@
     });
   }
 
-  // Listen for extension install or update
-  chrome.runtime.onInstalled.addListener(_onInstalled);
-
-  // Listen for Chrome starting
-  chrome.runtime.onStartup.addListener(_onStartup);
-
-  // Listen for click on the icon
-  chrome.browserAction.onClicked.addListener(_onIconClicked);
-
-  // Listen for tab updates
-  chrome.tabs.onUpdated.addListener(_onTabUpdated);
-
-  // Listen for changes to localStorage
-  addEventListener('storage', _onStorageChanged, false);
+  // Listen for document and resources loaded
+  addEventListener('load', _onLoad);
 })();

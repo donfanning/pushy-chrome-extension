@@ -212,9 +212,6 @@
    * @memberOf Main
    */
   function _onDomChange() {
-    // track usage
-    Chrome.GA.page('/main.html');
-
     // concatenate all the pages for the main menu
     _buildPages().then(() => {
       // initialize menu states
@@ -223,13 +220,14 @@
       
       // select menu
       t.$.mainMenu.select(t.route);
-      
+      // set MainPage filter
+      t.$.mainPage.setLabelFilter('');
+
       return Promise.resolve();
     }).catch((err) => {
-      Chrome.Log.error(err.message,
-          'Main._buildPages', 'Failed tp build menu.');
+      Chrome.Log.error(err.message, 'Main._buildPages');
     });
-    
+
     // listen for Chrome messages
     Chrome.Msg.listen(_onChromeMessage);
 
@@ -247,6 +245,16 @@
 
     // check for optional permissions
     _checkOptionalPermissions();
+  }
+
+  /**
+   * Event: Template Bound, bindings have resolved and content has been
+   * stamped to the page
+   * @memberOf Main
+   */
+  function _onLoad() {
+    // track usage
+    Chrome.GA.page('/main.html');
 
     const db = app.DB.get();
     
@@ -297,8 +305,7 @@
       };
     });
   }
-
-
+  
   /**
    * Event: navigation menu selected
    * @param {Event} event
@@ -318,7 +325,7 @@
     if (!page.obj) {
       // some pages are just pages
       if (page.route === 'page-main') {
-        t.$.mainPage.setLabelFilter(null);
+        t.$.mainPage.setLabelFilter('');
         t.route = page.route;
       } else if (page.route.includes('page-main-labeled#')) {
         t.$.mainPage.setLabelFilter(page.label);
@@ -750,4 +757,7 @@
   
   // listen for dom-change
   t.addEventListener('dom-change', _onDomChange);
+  
+  // listen for documents and resources loaded
+  addEventListener('load', _onLoad);
 })(window);
