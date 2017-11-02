@@ -91,20 +91,21 @@
       }
 
       .clip-text-row {
-        padding-left: 0;
-        padding-right: 0;
+        padding: 0 8px;
+        margin: 0;
       }
 
       .clip-text {
         line-height: 1.2em;
         height: 2.4em;
         overflow: hidden;
-        margin-left: 16px;
-        margin-right: 16px;
+        padding: 0 8px 0 4px;
+        margin: 0;
       }
 
       .date-row {
         padding: 0 8px;
+        --paper-item-min-height: 40px;
       }
 
       .date-text {
@@ -148,6 +149,10 @@
 
       #labelsDialog {
         min-width: 25vw;
+      }
+      
+      .label-item {
+        cursor: pointer;
       }
 
       #undoToastButton {
@@ -215,7 +220,7 @@
                 selected-values="{{selectedDialogLabels}}">
               <template is="dom-repeat"
                         items="{{labels}}" as="label">
-                <paper-icon-item id="[[label]]">
+                <paper-icon-item id="[[label]]" class="label-item">
                   <iron-icon icon="myicons:label" item-icon></iron-icon>
                   [[label]]
                 </paper-icon-item>
@@ -271,10 +276,13 @@
                         icon="myicons:content-copy"
                         on-tap="_onCopyTapped"></paper-icon-button>
                   </paper-item>
-                  <paper-item class="clip-text-row">
-                    <paper-item-body class="clip-text fit vertical start-justified layout">
+                  <paper-item class="clip-text-row horizontal layout flex">
+                    <paper-item-body class="clip-text vertical start-justified layout">
                       [[clip.text]]
                     </paper-item-body>
+                    <paper-icon-button
+                        icon="myicons:label-outline"
+                        on-tap="_onLabelTapped"></paper-icon-button>
                   </paper-item>
                 </div>
               </div>
@@ -317,7 +325,6 @@
      * @namespace MainPage
      */
     Polymer({
-
       is: 'main-page',
 
       properties: {
@@ -557,6 +564,26 @@
       },
 
       /**
+       * Event: Label icon of clip row tapped
+       * @param {Event} event
+       * @param {Event} event.model
+       * @private
+       * @memberOf MainPage
+       */
+      _onLabelTapped: function(event) {
+        Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'showLabelList');
+        const clipItem = event.model.clip;
+        if (this._isSelected(clipItem)) {
+          // prevent iron-select from handling
+          event.stopPropagation();
+          // select ourselves only
+          this._deselectAll();
+          this._select(clipItem);
+        }
+        this._showLabelsSelectDialog(false);
+      },
+
+      /**
        * Event: Undo Toast close button tapped
        * @private
        * @memberOf MainPage
@@ -598,7 +625,7 @@
       _onSelectAllTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'selectAllClipItems');
         const t = this.$.clipsTemplate;
-        this.splice('selectedClips', 0, this.selectedClips.length);
+        this._deselectAll();
         for (let i = t.renderedItemCount - 1; i >= 0; i--) {
           const clipItem = t.itemForElement(this.$$(`#clip${i}`));
           this.push('selectedClips', clipItem);
@@ -612,7 +639,7 @@
        */
       _onDeselectAllTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'deselectAllClipItems');
-        this.splice('selectedClips', 0, this.selectedClips.length);
+        this._deselectAll();
       },
 
       /**
@@ -632,7 +659,7 @@
 
         if (keys.length) {
           app.ClipItem.remove(keys).then(() => {
-            this.splice('selectedClips', 0, this.selectedClips.length);
+            this._deselectAll();
             const len = this.undoClips.length;
             let toastText =
                 (len === 1) ? 'Deleted 1 item.' : `Deleted ${len} items.`;
@@ -746,7 +773,7 @@
         } else {
           // single select with toggle
           const len = this.selectedClips.length;
-          this.splice('selectedClips', 0, this.selectedClips.length);
+          this._deselectAll();
           if (!selected || (len > 1)) {
             this._select(currentClipItem);
           }
@@ -867,11 +894,11 @@
        * @memberOf MainPage
        */
       _labelFilterChanged: function(newValue, oldValue) {
-          if (typeof oldValue !== 'undefined') {
-            this._loadClipItems().catch((err) => {
-              Chrome.Log.error(err.message, 'MainPage.setLabelFilter', _ERR_LOAD);
-            });
-          }
+        if (typeof oldValue !== 'undefined') {
+          this._loadClipItems().catch((err) => {
+            Chrome.Log.error(err.message, 'MainPage.setLabelFilter', _ERR_LOAD);
+          });
+        }
       },
 
       /**
@@ -1064,7 +1091,7 @@
         this._closeUndoToast();
         return app.ClipItem.loadAll(this.labelFilter).then((clipItems) => {
           this.splice('clips', 0, this.clips.length);
-          this.splice('selectedClips', 0, this.selectedClips.length);
+          this._deselectAll();
           // populate list
           clipItems.forEach((clipItem) => {
             this.push('clips', clipItem);
@@ -1216,6 +1243,17 @@
           return true;
         }
         return false;
+      },
+
+      /**
+       * Deselect all {@link ClipItem}
+       * @private
+       * @memberOf MainPage
+       */
+      _deselectAll: function() {
+        if (this.selectedClips && this.selectedClips.length) {
+          this.splice('selectedClips', 0, this.selectedClips.length);
+        }
       },
 
       /**
