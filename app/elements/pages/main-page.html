@@ -970,15 +970,15 @@
        * @memberOf MainPage
        */
       _computeTitle: function(clipItem, labelName) {
-        let title = 'Clips: ';
+        let title = 'Clips';
         if (!Chrome.Utils.isWhiteSpace(labelName)) {
-          title = `${labelName}: `;
+          title = `${labelName}`;
         }
         if (clipItem) {
           if (clipItem.remote) {
-            title += `Remote clip - ${clipItem.device}`;
+            title += `: Remote clip - ${clipItem.device}`;
           } else {
-            title += 'Local clip';
+            title += ': Local clip';
           }
         }
         return title;
