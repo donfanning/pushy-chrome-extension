@@ -52,7 +52,7 @@
    * @memberOf Main
    */
   const t = document.querySelector('#t');
-  
+
   /**
    * Manage an html page that is inserted on demand<br>
    * May also be a url link to external site
@@ -200,12 +200,12 @@
   let prevRoute = '';
 
   /**
-   * Route to use on tab highlight
+   * Route to use on tab highlight, blank keep current
    * @type {string}
    * @memberOf Main
    */
-  let onHighlightRoute = 'page-main';
-  
+  let onHighlightRoute = '';
+
   /**
    * Event: Template Bound, bindings have resolved and content has been
    * stamped to the page
@@ -217,7 +217,7 @@
       // initialize menu states
       _setDevicesMenuState();
       _setErrorMenuState();
-      
+
       // select menu
       t.$.mainMenu.select(t.route);
       // set MainPage filter
@@ -257,7 +257,7 @@
     Chrome.GA.page('/main.html');
 
     const db = app.DB.get();
-    
+
     db.labels.hook('creating', function(primKey, obj) {
       // eslint-disable-next-line no-invalid-this
       this.onsuccess = function() {
@@ -305,7 +305,7 @@
       };
     });
   }
-  
+
   /**
    * Event: navigation menu selected
    * @param {Event} event
@@ -555,7 +555,7 @@
     }
   }
 
-   /**
+  /**
    * Event: Fired when the highlighted or selected tabs in a window changes.
    * @see https://developer.chrome.com/extensions/tabs#event-onHighlighted
    * @param {Object} highlightInfo - info
@@ -583,6 +583,11 @@
    * @memberOf Main
    */
   function _setHighlightRoute() {
+    if (Chrome.Utils.isWhiteSpace(onHighlightRoute)) {
+      // leave as is
+      return;
+    }
+    
     prevRoute = t.route;
     const idx = _getPageIdx(onHighlightRoute);
     const page = pages[idx];
@@ -597,7 +602,7 @@
     t.route = onHighlightRoute;
     t.$.mainMenu.select(onHighlightRoute);
     _scrollPageToTop();
-    onHighlightRoute = 'page-main';
+    onHighlightRoute = '';
   }
 
   /**
@@ -645,7 +650,7 @@
       page.obj();
     }
   }
-  
+
   /**
    * Display dialog to prompt for accepting optional permissions
    * if it has not been set yet
@@ -754,10 +759,10 @@
       Chrome.GA.error(err.message, 'Main._setErrorMenuState');
     });
   }
-  
+
   // listen for dom-change
   t.addEventListener('dom-change', _onDomChange);
-  
+
   // listen for documents and resources loaded
   addEventListener('load', _onLoad);
 })(window);
