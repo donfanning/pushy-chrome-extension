@@ -63,8 +63,10 @@ const files = {
   bowerScripts: `${path.bowerScripts}**/*.js`,
   bowerElements: `${path.bowerElements}**/*.html`,
   prodDelete: [
-    `${base.dist}app/bower_components/moment/`,
-    `${base.dist}app/bower_components/linkifyjs/`,
+    `${base.dist}app/bower_components/`,
+    `${base.dist}app/scripts/**/*.js`,
+    `!${base.dist}app/scripts/main/main.js`,
+    `!${base.dist}app/scripts/background/background.js`,
   ],
 };
 files.js = [files.scripts, files.bowerScripts, `${base.src}*.js`];
@@ -126,31 +128,71 @@ gulp.Gulp.prototype._runTask = function(task) {
 // Default - watch for changes in development
 gulp.task('default', ['incrementalBuild']);
 
+// Incremental Development build
+gulp.task('incrementalBuild', (cb) => {
+  isWatch = true;
+  runSequence('lint', [
+    'bower',
+    'manifest',
+    'html',
+    'lintdevjs',
+    'scripts',
+    'styles',
+    'elements',
+    'images',
+    'assets',
+    'lib',
+    'locales',
+  ], cb);
+});
+
 // Development build
 gulp.task('dev', (cb) => {
   isProd = false;
   runSequence('clean', [
-    'bower', 'manifest', 'html', 'scripts', 'styles',
-    'elements', 'images', 'assets', 'lib', 'locales'], cb);
+    'bower',
+    'manifest',
+    'html',
+    'scripts',
+    'styles',
+    'elements',
+    'images',
+    'assets',
+    'lib',
+    'locales',
+  ], cb);
 });
 
 // Production build
 gulp.task('prod', (cb) => {
   isProd = true;
   isProdTest = false;
-  runSequence('clean', [
-        'manifest', 'html', 'scripts', 'styles', 'vulcanize_elements',
-        'images', 'assets', 'lib', 'locales', 'docs'],
-      'prod_delete', 'zip', cb);
+  runSequence('clean', 'html', [
+    'manifest',
+    'scripts',
+    'styles',
+    'vulcanize_elements',
+    'vulcanize_background',
+    'images',
+    'assets',
+    'locales',
+  ], 'prod_delete', 'zip', cb);
 });
 
 // Production test build
 gulp.task('prodTest', (cb) => {
   isProd = true;
   isProdTest = true;
-  runSequence('clean', [
-    'manifest', 'html', 'scripts', 'styles', 'vulcanize_elements',
-    'images', 'assets', 'lib', 'locales'], 'prod_delete', 'zip', cb);
+  runSequence('clean', 'html', [
+    'manifest',
+    'scripts',
+    'styles',
+    'vulcanize_elements',
+    'vulcanize_background',
+    'images',
+    'assets',
+    'locales',
+  ], 'prod_delete', 'zip', cb);
 });
 
 // Generate JSDoc
@@ -190,23 +232,6 @@ gulp.task('clean', () => {
 // clean output directories
 gulp.task('clean_all', () => {
   return del([base.dist, base.dev]);
-});
-
-// Incremental Development build
-gulp.task('incrementalBuild', (cb) => {
-  isWatch = true;
-  runSequence('lint', [
-    'bower',
-    'manifest',
-    'html',
-    'lintdevjs',
-    'scripts',
-    'styles',
-    'elements',
-    'images',
-    'assets',
-    'lib',
-    'locales'], cb);
 });
 
 // manifest.json
@@ -328,7 +353,7 @@ gulp.task('lib', () => {
   return gulp.src(input, {base: '.'}).
       pipe(isWatch ? watch(input, watchOpts) : util.noop()).
       pipe(plumber()).
-      pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+      pipe(isProd ? util.noop() : gulp.dest(base.dev));
 });
 
 // locales
@@ -344,6 +369,16 @@ gulp.task('locales', () => {
 // vulcanize elements for production
 gulp.task('vulcanize_elements', () => {
   return gulp.src(`${path.elements}elements.html`, {base: '.'}).
+      pipe(plugins.vulcanize(vulcanizeOpts)).
+      pipe(plugins.crisper(crisperOpts)).
+      pipe(If('*.html', plugins.minifyInline())).
+      pipe(If('*.js', minify(minifyOpts).on('error', util.log))).
+      pipe(gulp.dest(base.dist));
+});
+
+// vulcanize background_imports.html for production
+gulp.task('vulcanize_background', () => {
+  return gulp.src(`${path.html}background_imports.html`, {base: '.'}).
       pipe(plugins.vulcanize(vulcanizeOpts)).
       pipe(plugins.crisper(crisperOpts)).
       pipe(If('*.html', plugins.minifyInline())).
