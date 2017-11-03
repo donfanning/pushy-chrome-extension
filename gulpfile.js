@@ -48,6 +48,7 @@ const files = {
   prodDelete: [
     `${base.dist}app/bower_components/`,
     `${base.dist}app/scripts/**/*.js`,
+    `!${base.dist}app/scripts/on_copy_cut_content_script.js`,
     `!${base.dist}app/scripts/sw.js`,
     `!${base.dist}app/scripts/main/main.js`,
     `!${base.dist}app/scripts/background/background.js`,
@@ -68,7 +69,7 @@ const minifyOpts = {
   },
 };
 const crisperOpts = {
-  scriptInHead: false,
+  scriptInHead: true,
 };
 const vulcanizeOpts = {
   stripComments: true,
