@@ -27,10 +27,6 @@ const path = {
   bower: `${base.src}bower_components/`,
   bowerScripts: `${base.src}bower_components/chrome-extension-utils/`,
   bowerElements: `${base.src}bower_components/setting-elements/`,
-  bowerFirebase: `${base.src}bower_components/firebase/`,
-  bowerDexie: `${base.src}bower_components/dexie/`,
-  bowerMoment: `${base.src}bower_components/moment/`,
-  bowerLinkify: `${base.src}bower_components/linkifyjs/`,
 };
 const files = {
   manifest: `${base.src}manifest.json`,
@@ -40,25 +36,12 @@ const files = {
   elements: `${path.elements}**/*.html`,
   images: `${path.images}*.*`,
   assets: `${path.assets}*.*`,
-  lib: [
-    `${path.bowerFirebase}firebase-app.js`,
-    `${path.bowerFirebase}firebase-auth.js`,
-    `${path.bowerFirebase}firebase-messaging.js`,
-    `${path.bowerDexie}dist/dexie.min.js`,
-    `${path.bowerMoment}min/moment.min.js`,
-    `${path.bowerLinkify}linkify.min.js`,
-    `${path.bowerLinkify}linkify-element.min.js`,
-  ],
   locales: `${path.locales}**/*.*`,
   bower: [
     `${path.bower}**/*`,
     `!${path.bower}**/test/*`,
     `!${path.bower}**/demo/*`,
     `!${path.bower}jquery/**`,
-    `!${path.bowerFirebase}**`,
-    `!${path.bowerDexie}**`,
-    `!${path.bowerMoment}**`,
-    `!${path.bowerLinkify}**`,
   ],
   bowerScripts: `${path.bowerScripts}**/*.js`,
   bowerElements: `${path.bowerElements}**/*.html`,
@@ -79,7 +62,7 @@ const watchOpts = {
 };
 const minifyOpts = {
   output: {
-    beautify: true,
+    beautify: false,
     comments: '/Copyright/',
   },
 };
@@ -141,7 +124,6 @@ gulp.task('incrementalBuild', (cb) => {
     'elements',
     'images',
     'assets',
-    'lib',
     'locales',
   ], cb);
 });
@@ -158,7 +140,6 @@ gulp.task('dev', (cb) => {
     'elements',
     'images',
     'assets',
-    'lib',
     'locales',
   ], cb);
 });
@@ -171,11 +152,12 @@ gulp.task('prod', (cb) => {
     'manifest',
     'scripts',
     'styles',
-    'vulcanize_elements',
+    'vulcanize_main',
     'vulcanize_background',
     'images',
     'assets',
     'locales',
+    'docs',
   ], 'prod_delete', 'zip', cb);
 });
 
@@ -187,7 +169,7 @@ gulp.task('prodTest', (cb) => {
     'manifest',
     'scripts',
     'styles',
-    'vulcanize_elements',
+    'vulcanize_main',
     'vulcanize_background',
     'images',
     'assets',
@@ -346,16 +328,6 @@ gulp.task('assets', () => {
       pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
-// lib
-gulp.task('lib', () => {
-  const input = files.lib;
-  watchOpts.name = currentTaskName;
-  return gulp.src(input, {base: '.'}).
-      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
-      pipe(plumber()).
-      pipe(isProd ? util.noop() : gulp.dest(base.dev));
-});
-
 // locales
 gulp.task('locales', () => {
   const input = files.locales;
@@ -366,9 +338,9 @@ gulp.task('locales', () => {
       pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
 });
 
-// vulcanize elements for production
-gulp.task('vulcanize_elements', () => {
-  return gulp.src(`${path.elements}elements.html`, {base: '.'}).
+// vulcanize main_imports.html for production
+gulp.task('vulcanize_main', () => {
+  return gulp.src(`${path.html}main_imports.html`, {base: '.'}).
       pipe(plugins.vulcanize(vulcanizeOpts)).
       pipe(plugins.crisper(crisperOpts)).
       pipe(If('*.html', plugins.minifyInline())).
