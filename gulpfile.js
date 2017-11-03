@@ -48,6 +48,7 @@ const files = {
   prodDelete: [
     `${base.dist}app/bower_components/`,
     `${base.dist}app/scripts/**/*.js`,
+    `!${base.dist}app/scripts/sw.js`,
     `!${base.dist}app/scripts/main/main.js`,
     `!${base.dist}app/scripts/background/background.js`,
   ],
@@ -62,7 +63,7 @@ const watchOpts = {
 };
 const minifyOpts = {
   output: {
-    beautify: false,
+    beautify: true,
     comments: '/Copyright/',
   },
 };
