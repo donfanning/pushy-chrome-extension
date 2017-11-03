@@ -69,7 +69,7 @@ const minifyOpts = {
   },
 };
 const crisperOpts = {
-  scriptInHead: true,
+  scriptInHead: false,
 };
 const vulcanizeOpts = {
   stripComments: true,
@@ -184,8 +184,12 @@ gulp.task('docs', (cb) => {
   const config = require('./jsdoc.json');
   const README = '../Pushy-Clipboard.github.io/README.md';
   gulp.src([
-    README, files.scripts, files.bowerScripts, files.elements,
-    files.bowerElements], {read: true}).
+    README,
+    files.scripts,
+    files.bowerScripts,
+    files.elements,
+    files.bowerElements,
+  ], {read: true}).
       pipe(If('*.html', plugins.crisper(crisperOpts))).
       pipe(gulp.dest(base.tmp_docs)).
       pipe(plugins.jsdoc3(config, cb));
