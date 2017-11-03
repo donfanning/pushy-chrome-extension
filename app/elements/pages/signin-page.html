@@ -51,7 +51,7 @@
       .buttonContainer {
         padding-top: 16px;
         padding-bottom: 8px;
-        border-top: 1px solid #d9d9d9;
+        border-top: 1px solid #D9D9D9;
       }
 
       #googleAccountButton {
@@ -61,8 +61,8 @@
         font-family: 'RobotoDraft', 'Roboto', arial, sans-serif;
         white-space: nowrap;
         cursor: pointer;
-        background: #fff;
-        border: 1px solid #d9d9d9;
+        background: #FFFFFF;
+        border: 1px solid #D9D9D9;
         border-radius: 3px;
         box-sizing: border-box;
         margin: 0 0.29em;
@@ -99,15 +99,15 @@
           </paper-dialog-scrollable>
           <div class="buttons">
             <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
-            <paper-button dialog-confirm hidden$="[[!confirmButton]]"
-                          on-click="_onDialogButtonClicked">OK
+            <paper-button dialog-confirm hidden$="[[!showConfirmButton]]"
+                          on-click="_onDialogOKClicked">OK
             </paper-button>
           </div>
         </paper-dialog>
 
         <div class="contentContainer horizontal layout center">
           <paper-item id="description"
-                      style$="display: [[_computeDescDisplay(waiting, signedIn)]];">
+                      style$="display: [[_computeDescDisplay(isWaiting, signedIn)]];">
             You must be signed in to the Browser with the account you
             wish to use to share with your other devices. It is only used to ensure
             that all messages goes to a single account. You also need to "Allow Notifications"
@@ -115,16 +115,16 @@
           </paper-item>
 
           <div id="waiter" class="vertical layout center"
-               style$="display: [[_computeWaiterDisplay(waiting)]];">
+               style$="display: [[_computeWaiterDisplay(isWaiting)]];">
             <div class="horizontal center-justified layout">
-              <paper-spinner active="[[waiting]]" tabindex="-1"></paper-spinner>
+              <paper-spinner active="[[isWaiting]]" tabindex="-1"></paper-spinner>
             </div>
-            <paper-item>[[_computeWaiterLabel(waiting)]]</paper-item>
+            <paper-item>[[_computeWaiterLabel(isWaiting)]]</paper-item>
           </div>
         </div>
         <div class="buttonContainer vertical layout center">
           <paper-item id="googleAccountButton" tabindex="0"
-                      on-click="_onAccountButtonClicked" disabled$="[[signInDisabled]]">
+                      on-click="_onAccountButtonClicked" disabled$="[[isSignInDisabled]]">
             <paper-ripple center></paper-ripple>
             <iron-icon icon="myicons:google" item-icon></iron-icon>
             <span class="setting-label">[[_computeButtonLabel(signedIn)]]</span>
@@ -149,13 +149,17 @@
     const ERROR_PERMISSION =
         'Notification permission is required to sign-in.';
     let ERROR_BLOCKED_MESSAGE =
-        `<p>You either blocked notifications for the extension or the Chrome
-          settings block all notifications.<br />
+        `<p>
+          You either blocked notifications for the extension, the Chrome
+          settings block all notifications, or you dismissed the notification
+           popup too many times.<br />
           If you want to sign-in, go to <b>Chrome settings</b> and click
           on <b>Advanced</b>.
           Click on <b>Content settings</b> then <b>Notifications</b>.
           Make sure <b>Ask before sending (recommended)</b> is selected.
           In the <b>Block</b> area allow <b>Pushy Clipboard</b>.
+          If it is not there, <b>ADD</b> this:<br />
+          chrome-extension://jemdfhaheennfkehopbpkephjlednffd/ site.
         </p>`;
     const ERROR_DEFAULT_MESSAGE =
         'Display notification pop-up again?';
@@ -163,50 +167,159 @@
         'An error occurred. Please try again later.<br />';
 
     window.app = window.app || {};
+    /**
+     * Polymer element to manage user account
+     * @namespace SignInPage
+     */
     app.SignInPageFactory = Polymer({
       is: 'signin-page',
 
       properties: {
+        /**
+         * Signin state
+         * @memberOf SignInPage
+         */
         signedIn: {
           type: Boolean,
           value: false,
           notify: true,
         },
 
-        signInDisabled: {
+        /**
+         * Signin disabled state
+         * @memberOf SignInPage
+         */
+        isSignInDisabled: {
           type: Boolean,
           value: true,
           notify: true,
         },
 
-        waiting: {
+        /**
+         * Waiting for signIn/signOut state
+         * @memberOf SignInPage
+         */
+        isWaiting: {
           type: Boolean,
           value: false,
           notify: true,
         },
 
-        confirmButton: {
+        /**
+         * Display dialog OK button state
+         * @memberOf SignInPage
+         */
+        showConfirmButton: {
           type: Boolean,
           value: false,
         },
       },
 
+      /**
+       * We have animated in and are now the current page
+       * @memberOf SignInPage
+       */
       onCurrentPage: function() {
         this._checkChromeSignIn();
       },
 
       /**
+       * Event: Signin/SignOut button clicked
+       * @private
+       * @memberOf SignInPage
+       */
+      _onAccountButtonClicked: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.BUTTON,
+            `SignInPage.accountButton: ${!this.signedIn}`);
+        if (!navigator.onLine) {
+          const title = this.signedIn ? ERROR_SIGN_OUT : ERROR_SIGN_IN;
+          Chrome.Log.error(ERROR_NETWORK, 'SignInPage._accountButton', title);
+          this._showDialog(title, ERROR_NETWORK, false);
+        } else {
+          this.set('isWaiting', true);
+          this.signedIn ? this._signOut() : this._signIn();
+        }
+      },
+
+      /**
+       * Event: Dialog OK button click
+       * @private
+       * @memberOf SignInPage
+       */
+      _onDialogOKClicked: function() {
+        this._checkPermissions();
+      },
+
+      /**
+       * Computed Binding: Page title
+       * @param {boolean} isSignedIn - true if signed in
+       * @returns {string}
+       * @private
+       * @memberOf SignInPage
+       */
+      _computeTitle: function(isSignedIn) {
+        const signedIn = `Signed in as: ${Chrome.Storage.get('email')}`;
+        const signedOut = 'Account Sign In';
+        return isSignedIn ? signedIn : signedOut;
+      },
+
+      /**
+       * Computed Binding: Account button label
+       * @param {boolean} isSignedIn - true if signed in
+       * @returns {string}
+       * @private
+       * @memberOf SignInPage
+       */
+      _computeButtonLabel: function(isSignedIn) {
+        return isSignedIn ? 'Sign out' : 'Sign in';
+      },
+
+      /**
+       * Computed Binding: Spinner label
+       * @returns {string}
+       * @private
+       * @memberOf SignInPage
+       */
+      _computeWaiterLabel: function() {
+        return this.signedIn ? 'Signing Out...' : 'Signing In...';
+      },
+
+      /**
+       * Computed Binding: Description display style
+       * @param {boolean} isWaiting - true if signing in
+       * @param {boolean} isSignedIn - true if signed in
+       * @returns {string}
+       * @private
+       * @memberOf SignInPage
+       */
+      _computeDescDisplay: function(isWaiting, isSignedIn) {
+        return (isWaiting || isSignedIn) ? 'none' : 'block';
+      },
+
+      /**
+       * Computed Binding: Spinner display style
+       * @param {boolean} isWaiting - true if signing in
+       * @returns {string}
+       * @private
+       * @memberOf SignInPage
+       */
+      _computeWaiterDisplay: function(isWaiting) {
+        return isWaiting ? 'block' : 'none';
+      },
+
+      /**
        * Determine if the user is signed into the Browser
        * @private
+       * @memberOf SignInPage
        */
       _checkChromeSignIn: function() {
         const chromep = new ChromePromise();
         chromep.identity.getProfileUserInfo().then((userInfo) => {
           if (!app.Utils.isSignedIn() &&
               Chrome.Utils.isWhiteSpace(userInfo.id)) {
-            this.set('signInDisabled', true);
+            this.set('isSignInDisabled', true);
           } else {
-            this.set('signInDisabled', false);
+            this.set('isSignInDisabled', false);
             this._checkPermissions();
           }
           return Promise.resolve();
@@ -218,11 +331,12 @@
       /**
        * Display popup to Allow Notifications if necessary
        * @private
+       * @memberOf SignInPage
        */
       _checkPermissions: function() {
         // Note: Don't rely on Notification.permission
         // if extension requests notifications permission
-        this.set('signInDisabled', true);
+        this.set('isSignInDisabled', true);
         Notification.requestPermission().then((permission) => {
           if (permission === 'denied') {
             // user denied or Chrome setting blocks all
@@ -242,7 +356,7 @@
                 true);
           } else {
             // granted
-            this.set('signInDisabled', false);
+            this.set('isSignInDisabled', false);
           }
           return Promise.resolve();
         }).catch((err) => {
@@ -256,6 +370,7 @@
       /**
        * Attempt to sign in with current Browser account
        * @private
+       * @memberOf SignInPage
        */
       _signIn: function() {
         Chrome.Msg.send(app.ChromeMsg.SIGN_IN).then((response) => {
@@ -263,16 +378,17 @@
             Chrome.Log.error(response.error, 'SignInPage._signIn');
             this._showDialog(ERROR_SIGN_IN, response.error, false);
           }
-          this.set('waiting', false);
+          this.set('isWaiting', false);
           return Promise.resolve();
         }).catch(() => {
-          this.set('waiting', false);
+          this.set('isWaiting', false);
         });
       },
 
       /**
        * Attempt to sign out of current Browser account
        * @private
+       * @memberOf SignInPage
        */
       _signOut: function() {
         Chrome.Msg.send(app.ChromeMsg.SIGN_OUT).then((response) => {
@@ -280,70 +396,42 @@
             // just force it to happen
             this._forceSignOut();
           }
-          this.set('waiting', false);
+          this.set('isWaiting', false);
           return Promise.resolve();
         }).catch(() => {
-          this.set('waiting', false);
+          this.set('isWaiting', false);
         });
       },
 
       /**
        * Force sign out
        * @private
+       * @memberOf SignInPage
        */
       _forceSignOut: function() {
         Chrome.Msg.send(app.ChromeMsg.FORCE_SIGN_OUT).catch(() => {});
       },
 
-      _showDialog: function(title, text, confirmButton) {
+      /**
+       * Show the error dialog
+       * @param {string} title - dialog title
+       * @param {string} text - dialog message
+       * @param {boolean} showConfirmButton - if true, display showConfirmButton
+       * @private
+       * @memberOf SignInPage
+       */
+      _showDialog: function(title, text, showConfirmButton) {
         text = text.replace('\n', '<br/>');
         this.$.dialogTitle.innerHTML = title;
         this.$.dialogText.innerHTML = text;
-        this.set('confirmButton', confirmButton);
+        this.set('showConfirmButton', showConfirmButton);
         this.$.errorDialog.open();
       },
 
-      _onAccountButtonClicked: function() {
-        Chrome.GA.event(Chrome.GA.EVENT.BUTTON,
-            `SignInPage.accountButton: ${!this.signedIn}`);
-        if (!navigator.onLine) {
-          const title = this.signedIn ? ERROR_SIGN_OUT : ERROR_SIGN_IN;
-          Chrome.Log.error(ERROR_NETWORK, 'SignInPage._accountButton', title);
-          this._showDialog(title, ERROR_NETWORK, false);
-        } else {
-          this.set('waiting', true);
-          this.signedIn ? this._signOut() : this._signIn();
-        }
-      },
-
-      _onDialogButtonClicked: function() {
-        this._checkPermissions();
-      },
-
-      _computeTitle: function(isSignedIn) {
-        const signedIn = `Signed in as: ${Chrome.Storage.get('email')}`;
-        const signedOut = 'Account Sign In';
-        return isSignedIn ? signedIn : signedOut;
-      },
-
-      _computeButtonLabel: function(signedIn) {
-        return signedIn ? 'Sign out' : 'Sign in';
-      },
-
-      _computeWaiterLabel: function() {
-        return this.signedIn ? 'Signing Out...' : 'Signing In...';
-      },
-
-      _computeDescDisplay: function(waiting, signedIn) {
-        return (waiting || signedIn) ? 'none' : 'block';
-      },
-
-      _computeWaiterDisplay: function(waiting) {
-        return waiting ? 'block' : 'none';
-      },
-
       /**
-       * initialize value if it is not in localStorage
+       * Initialize value if it is not in localStorage
+       * @private
+       * @memberOf SignInPage
        */
       _initSignedIn: function() {
         this.set('signedIn', false);

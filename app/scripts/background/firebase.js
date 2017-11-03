@@ -158,10 +158,14 @@ app.Fb = (function() {
      * @memberOf app.Fb
      */
     getRegToken: function() {
+      // this will at least ensure the LAN is connected
+      // may get false positives for other failures
       if (navigator.onLine) {
-        // this will at least ensure the LAN is connected
-        // may get false positives for other failures
-        return _messaging.getToken().then((token) => {
+        // you have to already have the notification permission
+        // or this will fail silently
+        return _messaging.requestPermission().then(() => {
+          return _messaging.getToken();
+        }).then((token) => {
           if (token) {
             return Promise.resolve(token);
           }

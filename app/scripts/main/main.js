@@ -248,8 +248,7 @@
   }
 
   /**
-   * Event: Template Bound, bindings have resolved and content has been
-   * stamped to the page
+   * Event: Document and resources loaded
    * @memberOf Main
    */
   function _onLoad() {
@@ -584,7 +583,13 @@
    */
   function _setHighlightRoute() {
     if (Chrome.Utils.isWhiteSpace(onHighlightRoute)) {
-      // leave as is
+      // don't change route
+      // if sign-in page is current, give it a chance to recheck its permissions
+      if (t.route === 'page-signin') {
+        const idx = _getPageIdx(t.route);
+        const page = pages[idx];
+        page.el.onCurrentPage();
+      }
       return;
     }
     
@@ -764,5 +769,5 @@
   t.addEventListener('dom-change', _onDomChange);
 
   // listen for documents and resources loaded
-  addEventListener('load', _onLoad);
+  window.addEventListener('load', _onLoad);
 })(window);
