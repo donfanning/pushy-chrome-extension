@@ -53,14 +53,20 @@ app.Alarm = (function() {
   }
 
   /**
-   * Listen for alarms
+   * Event: called when document and resources are loaded
+   * @private
+   * @memberOf app.Alarm
    */
-  chrome.alarms.onAlarm.addListener(_onAlarm);
+  function _onLoad() {
+    // Listen for alarms
+    chrome.alarms.onAlarm.addListener(_onAlarm);
+    
+    // Listen for changes to localStorage
+    addEventListener('storage', _onStorageChanged, false);
+  }
 
-  /**
-   * Listen for changes to localStorage
-   */
-  addEventListener('storage', _onStorageChanged, false);
+  // listen for document and resources loaded
+  window.addEventListener('load', _onLoad);
 
   return {
     /**
