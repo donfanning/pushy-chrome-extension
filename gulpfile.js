@@ -39,6 +39,7 @@ const files = {
   locales: `${path.locales}**/*.*`,
   bower: [
     `${path.bower}**/*`,
+    `!${path.bowerScripts}**/*`,
     `!${path.bower}**/test/*`,
     `!${path.bower}**/demo/*`,
     `!${path.bower}jquery/**`,
@@ -271,6 +272,8 @@ gulp.task('scripts', () => {
   watchOpts.name = currentTaskName;
   return gulp.src(input, {base: '.'}).
       pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(isProd ? util.noop() : plugins.replace('const _DEBUG = false',
+          'const _DEBUG = true')).
       pipe(plugins.eslint()).
       pipe(plugins.eslint.formatEach()).
       pipe(plugins.eslint.failAfterError()).
