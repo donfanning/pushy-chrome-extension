@@ -149,7 +149,7 @@
       #labelsDialog {
         min-width: 25vw;
       }
-      
+
       .label-item {
         cursor: pointer;
       }
@@ -174,6 +174,13 @@
           <span class="space"></span>
           <div class="middle middle-container center horizontal layout flex">
             <div class="flex">[[_computeTitle(currentClip, labelFilter)]]</div>
+            <paper-icon-button
+                id="send" icon="myicons:send"
+                disabled$="[[!canSend]]"
+                on-tap="_onSendTapped"></paper-icon-button>
+            <paper-tooltip for="send" position="left" offset="0">
+              Send clipboard contents
+            </paper-tooltip>
             <paper-icon-button
                 id="fav" icon="[[_computeFavIcon(isFavFilter)]]"
                 style$="color: [[_computeFavMenuColor(isFavFilter)]];"
@@ -369,6 +376,16 @@
         },
 
         /**
+         * True if we can send the clipboard contents
+         * @memberOf MainPage
+         */
+        canSend: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
+
+        /**
          * Array of {@link ClipItem} objects that have been recently deleted
          * @memberOf MainPage
          */
@@ -461,6 +478,7 @@
        */
       ready: function() {
         self = this;
+        this.set('canSend', app.Utils.isSignedIn() && app.Utils.allowPush());
       },
 
       /**
@@ -482,6 +500,7 @@
       onCurrentPage: function() {
         this._selectFirst(true);
         this.updateDates();
+        this.set('canSend', app.Utils.isSignedIn() && app.Utils.allowPush());
       },
 
       /**
@@ -670,6 +689,16 @@
                 'Failed to delete clips.');
           });
         }
+      },
+
+      /**
+       * Event: Send clipboard contents icon tapped
+       * @private
+       * @memberOf MainPage
+       */
+      _onSendTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'sendClipboardContents');
+        Chrome.Msg.send(app.ChromeMsg.COPIED_TO_CLIPBOARD).catch(() => {});
       },
 
       /**
