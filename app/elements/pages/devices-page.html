@@ -18,74 +18,74 @@
 <link rel="import" href="../my_icons.html">
 
 <dom-module id="devices-page">
-	<template>
-		<style include="iron-flex iron-flex-alignment"></style>
-		<style include="shared-styles"></style>
-		<style>
-			:host {
-				display: block;
-				position: relative;
-			}
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
 
-			.card-content {
-				padding-top: 0;
-				padding-bottom: 0;
-			}
+      .card-content {
+        padding-top: 0;
+        padding-bottom: 0;
+      }
 
-			#deviceList {
-				max-height: 79vh;
-				overflow: hidden;
-				overflow-y: scroll;
-				padding: 0 0 16px;
-				margin: 0;
-			}
+      #deviceList {
+        max-height: 79vh;
+        overflow: hidden;
+        overflow-y: scroll;
+        padding: 0 0 16px;
+        margin: 0;
+      }
 
-			.list-item {
-				position: relative;
-				border: 1px #CCCCCC;
-				border-bottom-style: solid;
-				padding: 16px 0 16px 0;
-				margin: 0;
-			}
+      .list-item {
+        position: relative;
+        border: 1px #CCCCCC;
+        border-bottom-style: solid;
+        padding: 16px 0 16px 0;
+        margin: 0;
+      }
 
-			.list-item paper-item {
-				--paper-item-min-height: 0px;
-			}
+      .list-item paper-item {
+        --paper-item-min-height: 0px;
+      }
 
-			.list-item paper-icon-button {
-				margin-left: 28px;
-			}
+      .list-item paper-icon-button {
+        margin-left: 28px;
+      }
 
-			.date {
-				color: var(--accent-color);
-			}
+      .date {
+        color: var(--accent-color);
+      }
 
-		</style>
+    </style>
 
-		<paper-card class="page-content" heading="Devices">
-			<div class="card-content">
-				<div id="deviceList" class="flex">
-					<template is="dom-repeat" id="listTemplate" items="{{devices}}" as="device"
-					          sort="_sortByDate">
-						<div class="list-item horizontal center layout" id="item[[index]]">
-							<paper-icon-button id="delete[[index]]" icon="myicons:close"
-							                   on-tap="_onDeleteTapped"></paper-icon-button>
-							<div class="vertical layout flex" tabindex="-1">
-								<paper-item>Nickname: [[device.nickname]]</paper-item>
-								<paper-item>Model: [[device.model]]</paper-item>
-								<paper-item>SN: [[device.sn]]</paper-item>
-								<paper-item>OS: [[device.os]]</paper-item>
-								<paper-item class="date">Last seen: {{_computeDate(device.lastSeen)}}</paper-item>
-							</div>
-						</div>
-					</template>
-				</div>
-				<div class="horizontal end-justified layout">
-					<paper-fab icon="myicons:refresh" on-tap="_onFabTapped"></paper-fab>
-				</div>
-			</div>
-		</paper-card>
-	</template>
+    <paper-card class="page-content" heading="Devices">
+      <div class="card-content">
+        <div id="deviceList" class="flex">
+          <template is="dom-repeat" id="listTemplate" items="{{devices}}" as="device"
+                    sort="_sortByDate">
+            <div class="list-item horizontal center layout" id="item[[index]]">
+              <paper-icon-button id="delete[[index]]" icon="myicons:close"
+                                 on-tap="_onDeleteTapped"></paper-icon-button>
+              <div class="vertical layout flex" tabindex="-1">
+                <paper-item>Nickname: [[device.nickname]]</paper-item>
+                <paper-item>Model: [[device.model]]</paper-item>
+                <paper-item>SN: [[device.sn]]</paper-item>
+                <paper-item>OS: [[device.os]]</paper-item>
+                <paper-item class="date">Last seen: [[_computeDate(device.lastSeen)]]</paper-item>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="horizontal end-justified layout">
+          <paper-fab icon="myicons:refresh" on-tap="_onFabTapped"></paper-fab>
+        </div>
+      </div>
+    </paper-card>
+  </template>
 </dom-module>
 
 <script>
@@ -95,6 +95,10 @@
     new ExceptionHandler();
 
     window.app = window.app || {};
+    /**
+     * Polymer element to manage our {@link Device} objects
+     * @namespace DevicesPage
+     */
     app.DevicesPageFactory = Polymer({
       is: 'devices-page',
 
@@ -102,6 +106,7 @@
 
         /**
          * The Array of {@link Device} objects
+         * @memberOf DevicesPage
          */
         devices: {
           type: Array,
@@ -110,6 +115,10 @@
         },
       },
 
+      /**
+       * Element is ready
+       * @memberOf DevicesPage
+       */
       ready: function() {
         // listen for chrome messages
         chrome.runtime.onMessage.addListener((request) => {
@@ -121,12 +130,67 @@
         this._loadDevices();
       },
 
+      /**
+       * We have animated in and are now the current page
+       * @memberOf DevicesPage
+       */
       onCurrentPage: function() {
         this._ping();
         this._loadDevices();
       },
 
-      // Load the Devices
+      /**
+       * Sort filter for the Devices - by last seen date
+       * @param {Device} a - first comparator
+       * @param {Device} b - second comparator
+       * @returns {int}
+       * @private
+       * @memberOf DevicesPage
+       */
+      _sortByDate: function(a, b) {
+        return b.lastSeen - a.lastSeen;
+      },
+
+      /**
+       * Event: Delete Device button tapped
+       * @param {Event} event
+       * @param {{}} event.model
+       * @private
+       * @memberOf DevicesPage
+       */
+      _onDeleteTapped: function(event) {
+        const device = event.model.device;
+        const msg =
+            Chrome.JSONUtils.shallowCopy(app.ChromeMsg.REMOVE_DEVICE);
+        msg.item = device.getUniqueName();
+        Chrome.Msg.send(msg).catch(() => {});
+      },
+
+      /**
+       * Event: Refresh Fab tapped
+       * @private
+       * @memberOf DevicesPage
+       */
+      _onFabTapped: function() {
+        this._ping();
+      },
+
+      /**
+       * Computed property: Relative date string
+       * @param {int} date
+       * @returns {string}
+       * @private
+       * @memberOf DevicesPage
+       */
+      _computeDate: function(date) {
+        return app.Utils.getRelativeTime(date);
+      },
+
+      /**
+       * Load the devices
+       * @private
+       * @memberOf DevicesPage
+       */
       _loadDevices: function() {
         // clear list
         this.splice('devices', 0, this.devices.length);
@@ -145,30 +209,14 @@
         }
       },
 
-      _sortByDate: function(a, b) {
-        return b.lastSeen - a.lastSeen;
-      },
-
-      _onDeleteTapped: function(event) {
-        const device = event.model.device;
-        const msg =
-            Chrome.JSONUtils.shallowCopy(app.ChromeMsg.REMOVE_DEVICE);
-        msg.item = device.getUniqueName();
-        Chrome.Msg.send(msg).catch(() => {});
-      },
-
-      _onFabTapped: function() {
-        this._ping();
-      },
-
-      _computeDate: function(date) {
-        return app.Utils.getRelativeTime(date);
-      },
-
+      /**
+       * Ping our devices
+       * @private
+       * @memberOf DevicesPage
+       */
       _ping: function() {
         Chrome.Msg.send(app.ChromeMsg.PING).catch(() => {});
       },
-
     });
   })(window);
 </script>

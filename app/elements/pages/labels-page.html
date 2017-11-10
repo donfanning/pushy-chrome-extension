@@ -103,11 +103,27 @@
     new ExceptionHandler();
 
     window.app = window.app || {};
+
+    /**
+     * Polymer element to manage our {@link Label} objects
+     * @namespace LabelsPage
+     */
     app.LabelsPageFactory = Polymer({
       is: 'labels-page',
 
+      /**
+       * A list item
+       * @typedef {{}} LabelsPage.Item
+       * @property {Label} label
+       * @property {string} newName
+       * @memberOf LabelsPage
+       */
+      
       properties: {
-        /** The add Label text */
+        /**
+         * The text in the Add textInput
+         * @memberOf LabelsPage
+         */
         addText: {
           type: String,
           value: '',
@@ -116,8 +132,9 @@
         },
 
         /**
-         *  The Array of list objects
-         *  {label: app.Label, newName: string}
+         * The Array of list objects
+         * @typedef {LabelsPage.Item[]} LabelsPage.Items
+         * @memberOf LabelsPage
          */
         items: {
           type: Array,
@@ -130,16 +147,90 @@
         '_itemsChanged(items.*)',
       ],
 
-      ready: function() {
-//        this._loadLabels();
-      },
-
+      /**
+       * We have animated in and are now the current page
+       * @memberOf LabelsPage
+       */
       onCurrentPage: function() {
         this.set('addText', '');
         this._loadLabels();
       },
+      
+      /**
+       * Event: Add text button tapped
+       * @private
+       * @memberOf LabelsPage
+       */
+      _onAddTapped: function() {
+        this._addLabel();
+      },
 
-      /** Load the Labels from the database */
+      /**
+       * Event: Add text key up
+       * @param {Event} event - key-up event
+       * @private
+       * @memberOf LabelsPage
+       */
+      _onAddKeyUp: function(event) {
+        if (event.keyCode === 13) {
+          // 'enter' was pressed
+          this._addLabel();
+        }
+      },
+
+      /**
+       * Event: Delete button tapped for a label
+       * @param {Event} event
+       * @param {{}} event.model
+       * @private
+       * @memberOf LabelsPage
+       */
+      _onDeleteTapped: function(event) {
+        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage.delete');
+        const item = event.model.item;
+        item.label.delete().then(() => {
+          const idx = this.items.findIndex((itm) => {
+            return itm.label.name === item.label.name;
+          });
+          if (idx !== -1) {
+            this.splice('items', idx, 1);
+          }
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, 'LabelsPage._onDeleteTapped',
+              'Failed to delete label');
+        });
+      },
+
+      /**
+       * Event: Label input lost focus
+       * @param {Event} event
+       * @param {{}} event.model
+       * @private
+       * @memberOf LabelsPage
+       */
+      _onListItemBlur: function(event) {
+        this._updateListLabel(event.model.item);
+      },
+
+      /**
+       * Event: Label input key up
+       * @param {Event} event
+       * @param {{}} event.model
+       * @private
+       * @memberOf LabelsPage
+       */
+      _onListItemKeyUp: function(event) {
+        if (event.keyCode === 13) {
+          // 'enter' was pressed
+          this._updateListLabel(event.model.item);
+        }
+      },
+      /**
+       * Load the Labels from the database
+       * @private
+       * @memberOf LabelsPage
+       */
       _loadLabels: function() {
         // clear list
         this.splice('items', 0, this.items.length);
@@ -158,6 +249,14 @@
         });
       },
 
+      /**
+       * Sort filter for the Labels - alphabetical
+       * @param {LabelsPage.Item} a - first comparator
+       * @param {LabelsPage.Item} b - second comparator
+       * @returns {int}
+       * @private
+       * @memberOf LabelsPage
+       */
       _sortByName: function(a, b) {
         const aName = a.label.name.toLowerCase();
         const bName = b.label.name.toLowerCase();
@@ -170,6 +269,11 @@
         }
       },
 
+      /**
+       * Add a new label
+       * @private
+       * @memberOf LabelsPage
+       */
       _addLabel() {
         Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage._addLabel');
         let name = this.addText;
@@ -190,7 +294,41 @@
           }
         });
       },
-
+      
+      /**
+       * Update an exiting label
+       * @param {LabelsPage.Item} item
+       * @private
+       * @memberOf LabelsPage
+       */
+      _updateListLabel(item) {
+        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage._updateListLabel');
+        let name = item.newName.trim();
+        name = name || '';
+        const idx = this.items.findIndex((el) => {
+          return el.label.name === item.label.name;
+        });
+        if (name.length) {
+          if (idx !== -1) {
+            this.set(`items.${idx}.label.name`, name);
+            this.set(`items.${idx}.newName`, name);
+          }
+          item.label.setName(name).catch((err) => {
+            Chrome.Log.error(err.message, 'LabelsPage._updateListLabel',
+                'Failed to update label name');
+          });
+        } else {
+          if (idx !== -1) {
+            this.set(`labels.${idx}.newName`, item.label.name);
+          }
+        }
+      },
+      
+      /**
+       * Observer: {@link LabelsPage.addText} changed
+       * @private
+       * @memberOf LabelsPage
+       */
       _addTextChanged() {
         if (Chrome.Utils.isWhiteSpace(this.addText)) {
           this.$.addButton.setAttribute('disabled', 'true');
@@ -199,6 +337,12 @@
         }
       },
 
+      /**
+       * Observer: {@link LabelsPage.items} changed
+       * @param {{}} changeRecord - details of change
+       * @private
+       * @memberOf LabelsPage
+       */
       _itemsChanged(changeRecord) {
         if (changeRecord) {
           let path = changeRecord.path;
@@ -224,68 +368,6 @@
               el.removeAttribute('disabled');
             }
           }
-        }
-      },
-
-      _updateListLabel(item) {
-        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage._updateListLabel');
-        let name = item.newName.trim();
-        name = name || '';
-        const idx = this.items.findIndex((el) => {
-          return el.label.name === item.label.name;
-        });
-        if (name.length) {
-          if (idx !== -1) {
-            this.set(`items.${idx}.label.name`, name);
-            this.set(`items.${idx}.newName`, name);
-          }
-          item.label.setName(name).catch((err) => {
-            Chrome.Log.error(err.message, 'LabelsPage._updateListLabel',
-                'Failed to update label name');
-          });
-        } else {
-          if (idx !== -1) {
-            this.set(`labels.${idx}.newName`, item.label.name);
-          }
-        }
-      },
-
-      _onAddTapped: function() {
-        this._addLabel();
-      },
-
-      _onAddKeyUp: function(event) {
-        if (event.keyCode === 13) {
-          // 'enter' was pressed
-          this._addLabel();
-        }
-      },
-
-      _onDeleteTapped: function(event) {
-        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'LabelsPage.delete');
-        const item = event.model.item;
-        item.label.delete().then(() => {
-          const idx = this.items.findIndex((itm) => {
-            return itm.label.name === item.label.name;
-          });
-          if (idx !== -1) {
-            this.splice('items', idx, 1);
-          }
-          return Promise.resolve();
-        }).catch((err) => {
-          Chrome.Log.error(err.message, 'LabelsPage._onDeleteTapped',
-              'Failed to delete label');
-        });
-      },
-
-      _onListItemBlur: function(event) {
-        this._updateListLabel(event.model.item);
-      },
-
-      _onListItemKeyUp: function(event) {
-        if (event.keyCode === 13) {
-          // 'enter' was pressed
-          this._updateListLabel(event.model.item);
         }
       },
     });

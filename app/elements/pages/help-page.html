@@ -94,10 +94,19 @@
     new ExceptionHandler();
 
     window.app = window.app || {};
+
+    /**
+     * Polymer element to display Help and Feedback links
+     * @namespace HelpPage
+     */
     app.HelpPageFactory = Polymer({
       is: 'help-page',
 
       properties: {
+        /**
+         * Path to github project
+         * @memberOf HelpPage
+         */
         githubPath: {
           type: String,
           value: function() {
@@ -106,6 +115,10 @@
           readOnly: true,
         },
 
+        /**
+         * Path to github project's pages
+         * @memberOf HelpPage
+         */
         githubPagesPath: {
           type: String,
           value: function() {
@@ -115,21 +128,23 @@
         },
       },
 
-       /**
+      /**
        * computed binding: Get the extension version
        * @returns {string} version
        * @private
+       * @memberOf HelpPage
        */
       _computeVersion: function() {
         const text = Chrome.Utils.getVersion();
         return encodeURIComponent(text);
       },
 
-       /**
+      /**
        * computed binding: Get a mailto url
        * @param {string} subject - email subject
        * @returns {string} url
        * @private
+       * @memberOf HelpPage
        */
       _computeMailToUrl: function(subject) {
         return app.Utils.getEmailUrl(subject, app.Utils.getEmailBody());

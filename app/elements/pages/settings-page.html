@@ -127,9 +127,18 @@
     const ERROR_TITLE = 'Failed to change setting';
 
     window.app = window.app || {};
+
+    /**
+     * Polymer element to manage extension settings
+     * @namespace SettingsPage
+     */
     app.SettingsPageFactory = Polymer({
       is: 'settings-page',
 
+      /**
+       * Element is ready
+       * @memberOf SettingsPage
+       */
       ready: function() {
         // listen for chrome messages
         chrome.runtime.onMessage.addListener((request) => {
@@ -155,6 +164,7 @@
        * @param {string} title - error title
        * @param {string} text - description of error
        * @private
+       * @memberOf SettingsPage
        */
       _showDialog: function(title, text) {
         text = text.replace('\n', '<br/>');
