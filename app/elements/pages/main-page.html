@@ -489,7 +489,7 @@
        */
       ready: function() {
         self = this;
-        this.set('canSend', app.Utils.isSignedIn() && app.Utils.allowPush());
+        this.set('canSend', app.Utils.canSend());
         this.set('isPinFavs', app.Utils.isPinFavs());
       },
 
@@ -510,7 +510,7 @@
        * @memberOf MainPage
        */
       onCurrentPage: function() {
-        this.set('canSend', app.Utils.isSignedIn() && app.Utils.allowPush());
+        this.set('canSend', app.Utils.canSend());
         this.set('isPinFavs', app.Utils.isPinFavs());
         this._selectFirst(true);
         this.updateDates();
@@ -1177,11 +1177,33 @@
           nonFavClips.sort((a, b) => {
             return b.date - a.date;
           });
-          this.set('clips', favClips.concat(nonFavClips));
+          this.splice('clips', 0, this.clips.length);
+          // populate list
+          favClips.forEach((clipItem) => {
+            this.push('clips', clipItem);
+          });
+          nonFavClips.forEach((clipItem) => {
+            this.push('clips', clipItem);
+          });
+          this._selectionHack();
         } else {
           this.clips.sort((a, b) => {
             return b.date - a.date;
           });
+        }
+      },
+
+      /**
+       * Hack for dom-repeat recycling nodes
+       * @see https://github.com/PolymerElements/iron-selector/issues/154
+       * @private
+       * @memberOf MainPage
+       */
+      _selectionHack: function() {
+        if (this.clips && this.clips.length && this.hasSelections) {
+          this.$.clipsTemplate.render();
+          this.$.clipsSelector.select(this.clips[0]);
+          this.$.clipsSelector.select(this.clips[0]);
         }
       },
 
@@ -1228,7 +1250,11 @@
             // update clip if labels changed
             this._setCurrentClip();
           }
-          this._sortClips();
+          if (app.Utils.isPinFavs()) {
+            this._sortClips();
+          } else {
+            this.updateDates();
+          }
         }
       },
 
@@ -1242,7 +1268,7 @@
         const pos = this._getClipPos(text);
         if (pos !== -1) {
           this.splice('clips', pos, 1);
-          this._sortClips();
+          this.updateDates();
         }
       },
 
