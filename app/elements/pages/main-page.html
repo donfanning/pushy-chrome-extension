@@ -262,7 +262,7 @@
             <template
                 is="dom-repeat" id="clipsTemplate"
                 items="{{clips}}" as="clip"
-                sort="_sortByDate" filter="_filter" observe="date fav">
+                filter="_filter" observe="fav">
               <div
                   tabindex="1"
                   class="clip-item"
@@ -416,6 +416,17 @@
         },
 
         /**
+         * True if we are showing favorite items at top of list
+         * @memberOf MainPage
+         */
+        isPinFavs: {
+          type: Boolean,
+          value: null,
+          notify: true,
+          observer: '_pinFavsChanged',
+        },
+
+        /**
          * {@link Label} name for filtering our items
          * @memberOf MainPage
          */
@@ -479,6 +490,7 @@
       ready: function() {
         self = this;
         this.set('canSend', app.Utils.isSignedIn() && app.Utils.allowPush());
+        this.set('isPinFavs', app.Utils.isPinFavs());
       },
 
       /**
@@ -498,9 +510,10 @@
        * @memberOf MainPage
        */
       onCurrentPage: function() {
+        this.set('canSend', app.Utils.isSignedIn() && app.Utils.allowPush());
+        this.set('isPinFavs', app.Utils.isPinFavs());
         this._selectFirst(true);
         this.updateDates();
-        this.set('canSend', app.Utils.isSignedIn() && app.Utils.allowPush());
       },
 
       /**
@@ -822,7 +835,7 @@
         clipItem.remote = false;
         this._deselect(clipItem);
         clipItem.save().then(() => {
-          this._selectFirst();
+          this._select(clipItem);
           // send message to copy to clipboard
           const msg =
               Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
@@ -922,10 +935,23 @@
        * @memberOf MainPage
        */
       _labelFilterChanged: function(newValue, oldValue) {
-        if (typeof oldValue !== 'undefined') {
+        if (typeof(oldValue) !== 'undefined') {
           this._loadClipItems().catch((err) => {
             Chrome.Log.error(err.message, 'MainPage.setLabelFilter', _ERR_LOAD);
           });
+        }
+      },
+
+      /**
+       * Observer: The pinFavs setting changed
+       * @param {boolean} newValue
+       * @param {boolean|undefined} oldValue
+       * @private
+       * @memberOf MainPage
+       */
+      _pinFavsChanged: function(newValue, oldValue) {
+        if (typeof(oldValue) !== 'undefined') {
+          this._sortClips();
         }
       },
 
@@ -1124,10 +1150,39 @@
           clipItems.forEach((clipItem) => {
             this.push('clips', clipItem);
           });
+          this._sortClips();
           this._selectFirst();
           this.$.clipList.scrollTop = 0;
           return Promise.resolve();
         });
+      },
+
+      /**
+       * Sort the {@link ClipItem} list
+       * @private
+       * @memberOf MainPage
+       */
+      _sortClips: function() {
+        if (this.isPinFavs) {
+          // sort favs and non-favs separately and keep favs on top
+          const favClips = this.clips.filter((clip) => {
+            return clip.fav;
+          });
+          favClips.sort((a, b) => {
+            return b.date - a.date;
+          });
+          const nonFavClips = this.clips.filter((clip) => {
+            return !clip.fav;
+          });
+          nonFavClips.sort((a, b) => {
+            return b.date - a.date;
+          });
+          this.set('clips', favClips.concat(nonFavClips));
+        } else {
+          this.clips.sort((a, b) => {
+            return b.date - a.date;
+          });
+        }
       },
 
       /**
@@ -1142,6 +1197,7 @@
             if (!this.labelFilter || clipItem.hasLabel(this.labelFilter)) {
               // add to list if not filtering or has our labelFiler
               this.unshift('clips', clipItem);
+              this._sortClips();
               this._select(clipItem);
             }
           }
@@ -1160,19 +1216,19 @@
        * @memberOf MainPage
        */
       _updateClipItem: function(text, mods) {
-        let pos = this._getClipPos(text);
+        const pos = this._getClipPos(text);
         if (pos !== -1) {
           const str = `clips.${pos}.`;
           for (const key of Object.keys(mods)) {
             this.set(`${str}${key}`, mods[key]);
           }
-          this.updateDates();
           if (this.currentClip &&
               (this.clips[pos].text === this.currentClip.text) &&
               mods.hasOwnProperty('labels')) {
             // update clip if labels changed
             this._setCurrentClip();
           }
+          this._sortClips();
         }
       },
 
@@ -1186,8 +1242,21 @@
         const pos = this._getClipPos(text);
         if (pos !== -1) {
           this.splice('clips', pos, 1);
-          this.updateDates();
+          this._sortClips();
         }
+      },
+
+      /**
+       * Get clip from text
+       * @param {string} clipText - text to find
+       * @returns {?ClipItem} null if not found
+       * @private
+       * @memberOf MainPage
+       */
+      _getClip: function(clipText) {
+        return this.clips.find((clipItem) => {
+          return (clipText === clipItem.text);
+        });
       },
 
       /**
@@ -1201,18 +1270,6 @@
         return this.clips.findIndex((clipItem) => {
           return (clipText === clipItem.text);
         });
-      },
-
-      /**
-       * Sort list by date
-       * @param {ClipItem} clipA - row to compare
-       * @param {ClipItem} clipB - next row to compare
-       * @returns {int} difference in dates
-       * @private
-       * @memberOf MainPage
-       */
-      _sortByDate: function(clipA, clipB) {
-        return clipB.date - clipA.date;
       },
 
       /**
