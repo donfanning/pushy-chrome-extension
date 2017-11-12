@@ -22,7 +22,7 @@ app.Data = (function() {
    * @private
    * @memberOf app.Data
    */
-  const _VERSION = 6;
+  const _VERSION = 7;
 
   /**
    * The data items saved to localStorage
@@ -34,6 +34,7 @@ app.Data = (function() {
    * @property {boolean} autoSend - automatically send push notifications
    * @property {boolean} allowReceive - receive push notifications
    * @property {int} storageDuration - how long to save clipItems
+   * @property {boolean} pinFavs - Pin favorite clips to top of list
    * @property {boolean} notify - xxx
    * @property {boolean} notifyOnCopy - show notification when copy detected
    * @property {boolean} notifyOnSend - show notification on send push
@@ -66,6 +67,7 @@ app.Data = (function() {
     'autoSend': true,
     'allowReceive': true,
     'storageDuration': 2,
+    'pinFavs': false,
     'notify': true,
     'notifyOnCopy': false,
     'notifyOnSend': false,

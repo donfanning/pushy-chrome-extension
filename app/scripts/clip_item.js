@@ -405,7 +405,15 @@
    */
   ClipItem.bulkPut = function(clipItems) {
     const array = Array.isArray(clipItems) ? clipItems : [clipItems];
-    return app.DB.clips().bulkPut(array);
+    return app.DB.get().transaction('rw', app.DB.clips(), () => {
+      return app.DB.clips().bulkPut(array).catch((err) => {
+        // some may have failed if the same clipItem text was added again
+        // we'll go ahead and commit the successes
+        Chrome.Log.error(err.message, 'ClipItem.bulkPut',
+            'Not all deletes were undone');
+        return Promise.resolve();
+      });
+    });
   };
 
   /**

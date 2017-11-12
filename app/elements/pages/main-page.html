@@ -8,6 +8,7 @@
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
 
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-styles/color.html">
@@ -182,6 +183,12 @@
               Send clipboard contents
             </paper-tooltip>
             <paper-icon-button
+                id="pin" icon="[[_computePinIcon(isPinFavs)]]"
+                on-tap="_onPinTapped"></paper-icon-button>
+            <paper-tooltip for="pin" position="left" offset="0">
+              [[_computePinToolTip(isPinFavs)]]
+            </paper-tooltip>
+            <paper-icon-button
                 id="fav" icon="[[_computeFavIcon(isFavFilter)]]"
                 style$="color: [[_computeFavMenuColor(isFavFilter)]];"
                 on-tap="_onFavFilterTapped"></paper-icon-button>
@@ -313,6 +320,7 @@
 
       </div>
     </paper-material>
+    <iron-localstorage name="pinFavs" value="{{isPinFavs}}" on-iron-localstorage-load-empty="_initPinFavs"></iron-localstorage>
   </template>
 </dom-module>
 
@@ -325,6 +333,9 @@
     const _ERR_LOAD = 'Failed to load Clips';
 
     let self;
+    
+    // temporarily skip sort during bulk operations
+    let skipSort = false;
 
     /**
      * Polymer element to display and manage {@link ClipItem} objects
@@ -421,7 +432,7 @@
          */
         isPinFavs: {
           type: Boolean,
-          value: null,
+          value: false,
           notify: true,
           observer: '_pinFavsChanged',
         },
@@ -490,7 +501,6 @@
       ready: function() {
         self = this;
         this.set('canSend', app.Utils.canSend());
-        this.set('isPinFavs', app.Utils.isPinFavs());
       },
 
       /**
@@ -511,7 +521,6 @@
        */
       onCurrentPage: function() {
         this.set('canSend', app.Utils.canSend());
-        this.set('isPinFavs', app.Utils.isPinFavs());
         this._selectFirst(true);
         this.updateDates();
       },
@@ -636,14 +645,16 @@
         this.undoClips.forEach((undoClip) => {
           addItems.push(undoClip);
         });
+        // skip sort until done with bulkPut
+        skipSort = true;
         app.ClipItem.bulkPut(addItems).then(() => {
+          skipSort = false;
+          this._sortClips();
           this._closeUndoToast();
           return Promise.resolve();
-        }).catch((err) => {
-          // some may have failed if the same clipItem text was added again
-          // we'll go ahead and commit the successes
-          Chrome.Log.error(err.message, 'MainPage.onUndoDeleteTapped',
-              'Failed to undo all deletes.');
+        }).catch(() => {
+          skipSort = false;
+          this._sortClips();
           this._closeUndoToast();
         });
       },
@@ -715,12 +726,21 @@
       },
 
       /**
+       * Event: Pin menu icon tapped
+       * @private
+       * @memberOf MainPage
+       */
+      _onPinTapped: function() {
+        this.set('isPinFavs', !this.isPinFavs);
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, `pinFavorites: ${this.isPinFavs}`);
+      },
+      
+      /**
        * Event: Favorite filter menu icon tapped
        * @private
        * @memberOf MainPage
        */
       _onFavFilterTapped: function() {
-        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'filterByFavorites');
         this.set('isFavFilter', !this.isFavFilter);
         if (this.isFavFilter && this.hasSelections) {
           // deselect any selected non-fav rows
@@ -732,6 +752,8 @@
           }
         }
         this.$.clipsTemplate.render();
+        Chrome.GA.event(Chrome.GA.EVENT.ICON,
+            `filterByFavorites: ${this.isFavFilter}`);
       },
 
       /**
@@ -881,6 +903,15 @@
         Chrome.Msg.send(app.ChromeMsg.COPIED_TO_CLIPBOARD).catch(() => {});
       },
 
+      /**
+       * Event: Initialize pinFavs if it is not in localStorage
+       * @private
+       * @memberOf MainPage
+       */
+      _initPinFavs: function() {
+        this.set('isPinFavs', 'false');
+      },
+      
       /**
        * Observer: The current clip changed
        * @private
@@ -1082,13 +1113,35 @@
 
       /**
        * Computed Binding
+       * @param {boolean} isTrue - true if we should pin favs to top
+       * @returns {string} icon style
+       * @private
+       * @memberOf MainPage
+       */
+      _computePinIcon: function(isTrue) {
+        return isTrue ? 'myicons:pin' : 'myicons:pin-off';
+      },
+
+      /**
+       * Computed Binding
        * @param {boolean} isTrue - true if fav
-       * @returns {string} Favorite icon style
+       * @returns {string} icon style
        * @private
        * @memberOf MainPage
        */
       _computeFavIcon: function(isTrue) {
         return isTrue ? 'myicons:favorite' : 'myicons:favorite-border';
+      },
+      
+      /**
+       * Computed Binding
+       * @param {boolean} isTrue - true if pinning favorites
+       * @returns {string} tooltip text of what toggling would be
+       * @private
+       * @memberOf MainPage
+       */
+      _computePinToolTip: function(isTrue) {
+        return isTrue ? 'Do not pin favorites to top' : 'Pin favorites to top';
       },
 
       /**
@@ -1115,6 +1168,17 @@
 
       /**
        * Computed Binding
+       * @param {boolean} isFilter - true if filtering by fav
+       * @returns {string} tooltip text of what toggling would be
+       * @private
+       * @memberOf MainPage
+       */
+      _computeFavToolTip: function(isFilter) {
+        return isFilter ? 'Show all' : 'Show favorites only';
+      },
+
+      /**
+       * Computed Binding
        * @param {int} date - from epoch in millis
        * @returns {string} Date as relative from now
        * @private
@@ -1122,17 +1186,6 @@
        */
       _computeDate: function(date) {
         return app.Utils.getRelativeTime(date);
-      },
-
-      /**
-       * Computed Binding
-       * @param {boolean} isFilter - true if filtering by fav
-       * @returns {string} tooltip text of what toggling would be
-       * @private
-       * @memberOf MainPage
-       */
-      _computeFavToolTip: function(isFilter) {
-        return isFilter ? 'Show all' : 'Show favorites';
       },
 
       /**
@@ -1163,6 +1216,9 @@
        * @memberOf MainPage
        */
       _sortClips: function() {
+        if (skipSort) {
+          return;
+        }
         if (this.isPinFavs) {
           // sort favs and non-favs separately and keep favs on top
           const favClips = this.clips.filter((clip) => {
@@ -1185,12 +1241,12 @@
           nonFavClips.forEach((clipItem) => {
             this.push('clips', clipItem);
           });
-          this._selectionHack();
         } else {
           this.clips.sort((a, b) => {
             return b.date - a.date;
           });
         }
+        this._selectionHack();
       },
 
       /**
@@ -1240,17 +1296,29 @@
       _updateClipItem: function(text, mods) {
         const pos = this._getClipPos(text);
         if (pos !== -1) {
+          let needsSort = false;
           const str = `clips.${pos}.`;
           for (const key of Object.keys(mods)) {
+            // check if props that affect sort changed
+            if (key === 'fav') {
+              if (this.isPinFavs && (mods[key] !== this.clips[pos].fav)) {
+                needsSort = true;
+              }
+            }
             this.set(`${str}${key}`, mods[key]);
           }
+          
           if (this.currentClip &&
               (this.clips[pos].text === this.currentClip.text) &&
               mods.hasOwnProperty('labels')) {
             // update clip if labels changed
             this._setCurrentClip();
           }
-          if (app.Utils.isPinFavs()) {
+          
+          if (!needsSort && mods.hasOwnProperty('date')) {
+            needsSort = true;
+          }
+          if (needsSort) {
             this._sortClips();
           } else {
             this.updateDates();

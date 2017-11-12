@@ -94,7 +94,7 @@ app.Utils = (function() {
      */
     setBadgeText: function() {
       let text = 'SAVE';
-      if (app.Utils.isSignedIn() && app.Utils.allowPush()) {
+      if (app.Utils.canSend()) {
         text = 'SEND';
       }
       chrome.browserAction.setBadgeText({text: text});
@@ -124,6 +124,15 @@ app.Utils = (function() {
     getRelativeTime: function(time) {
       return `${moment(time).fromNow()}, ` +
           `${moment(time).format('h:mm a')}`;
+    },
+
+    /**
+     * Should we show the favorites at the top of the list
+     * @returns {boolean}
+     * @memberOf app.Utils
+     */
+    isPinFavs: function() {
+      return Chrome.Storage.getBool('pinFavs');
     },
 
     /**
@@ -187,6 +196,15 @@ app.Utils = (function() {
      */
     notRegistered: function() {
       return !this.isRegistered();
+    },
+
+    /**
+     * Can we send messages to our devices
+     * @returns {boolean} 
+     * @memberOf app.Utils
+     */
+    canSend: function() {
+      return app.Utils.isSignedIn() && app.Utils.allowPush();
     },
   };
 })();
