@@ -4,12 +4,6 @@
  * https://opensource.org/licenses/Apache-2.0
  * https://goo.gl/wFvBM1
  */
-/*
- * Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
- * Licensed under Apache 2.0
- * https://opensource.org/licenses/Apache-2.0
- * https://github.com/opus1269/chrome-extension-utils/blob/master/LICENSE.md
- */
 window.app = window.app || {};
 
 /**
@@ -40,6 +34,7 @@ app.GA = (function() {
    * @property {Chrome.GA.Event} UNREGISTERED - {@link Device} unregistered
    * @property {Chrome.GA.Event} TOKEN_REFRESHED - firebase token refreshed
    * @property {Chrome.GA.Event} DB_CHANGED - any db change
+   * @property {Chrome.GA.Event} CHROME_SIGN_OUT - Chrome signed out of our act.
    * @const
    * @memberOf app.GA
    */
@@ -82,6 +77,11 @@ app.GA = (function() {
     DB_CHANGED: {
       eventCategory: 'database',
       eventAction: 'changed',
+      eventLabel: '',
+    },
+    CHROME_SIGN_OUT: {
+      eventCategory: 'user',
+      eventAction: 'chromeSignOut',
       eventLabel: '',
     },
   };

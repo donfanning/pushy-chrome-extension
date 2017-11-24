@@ -57,8 +57,10 @@ app.User = (function() {
     const uid = Chrome.Storage.get('uid');
     if (app.Utils.isSignedIn() && !signedIn && (account.id === uid)) {
       // our user signed out of Chrome while we were signed in
+      Chrome.GA.event(app.GA.EVENT.CHROME_SIGN_OUT);
       Chrome.Storage.set('needsCleanup', true);
       _setSignIn(false);
+      app.Devices.clear();
       Chrome.Storage.set('registered', false);
       app.Fb.signOut().catch(() => {});
     }
