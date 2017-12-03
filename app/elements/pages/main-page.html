@@ -668,10 +668,12 @@
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'selectAllClipItems');
         const t = this.$.clipsTemplate;
         this._deselectAll();
+        const clipItems = [];
         for (let i = t.renderedItemCount - 1; i >= 0; i--) {
           const clipItem = t.itemForElement(this.$$(`#clip${i}`));
-          this.push('selectedClips', clipItem);
+          clipItems.push(clipItem);
         }
+        this.push('selectedClips', ...clipItems);
       },
 
       /**
@@ -693,7 +695,7 @@
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'deleteSelectedClipItems');
         this.splice('undoClips', 0, this.undoClips.length);
 
-        let keys = [];
+        const keys = [];
         this.selectedClips.forEach((selectedClip) => {
           keys.push(selectedClip._id);
           this.push('undoClips', selectedClip);
@@ -814,17 +816,19 @@
           }
           if (startPos !== -1) {
             // found range, select it
+            const clipItems = [];
             if (startPos < endPos) {
               for (let i = startPos + 1; i <= endPos; i++) {
                 const clipItem = t.itemForElement(this.$$(`#clip${i}`));
-                this._select(clipItem);
+                clipItems.push(clipItem);
               }
             } else if (startPos > endPos) {
               for (let i = startPos - 1; i >= endPos; i--) {
                 const clipItem = t.itemForElement(this.$$(`#clip${i}`));
-                this._select(clipItem);
+                clipItems.push(clipItem);
               }
             }
+            this.push('selectedClips', ...clipItems);
           }
         } else if (isCtrl) {
           // toggle selection
