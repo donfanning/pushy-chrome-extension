@@ -220,8 +220,6 @@
 
       // select menu
       t.$.mainMenu.select(t.route);
-      // set MainPage filter
-      t.$.mainPage.setLabelFilter('');
 
       return Promise.resolve();
     }).catch((err) => {
