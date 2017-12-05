@@ -268,19 +268,19 @@
                   tabindex="-1"
                   class="clip-item"
                   id="clip[[index]]"
-                  on-tap="_onClipTapped">
+                  on-tap="_onClipRowTapped">
                 <div class="clip-body flex vertical layout" tabindex="-1">
                   <paper-item class="date-row center horizontal layout">
                     <paper-icon-button
                         icon="[[_computeFavIcon(clip.fav)]]"
                         style$="color: [[_computeFavColor(clip.fav)]];"
-                        on-tap="_onFavTapped"></paper-icon-button>
+                        on-tap="_onRowFavTapped"></paper-icon-button>
                     <paper-item-body class="date-text center flex">
                       {{_computeDate(clip.date)}}
                     </paper-item-body>
                     <paper-icon-button
                         icon="myicons:content-copy"
-                        on-tap="_onCopyTapped"></paper-icon-button>
+                        on-tap="_onRowCopyTapped"></paper-icon-button>
                   </paper-item>
                   <paper-item class="clip-text-row horizontal layout flex">
                     <paper-item-body class="clip-text vertical start-justified layout">
@@ -288,7 +288,7 @@
                     </paper-item-body>
                     <paper-icon-button
                         icon="myicons:label-outline"
-                        on-tap="_onLabelTapped"></paper-icon-button>
+                        on-tap="_onRowLabelTapped"></paper-icon-button>
                   </paper-item>
                 </div>
               </div>
@@ -609,26 +609,6 @@
       },
 
       /**
-       * Event: Label icon of clip row tapped
-       * @param {Event} event
-       * @param {{}} event.model
-       * @private
-       * @memberOf MainPage
-       */
-      _onLabelTapped: function(event) {
-        Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'showLabelList');
-        const clipItem = event.model.clip;
-        if (this._isSelected(clipItem)) {
-          // prevent iron-select from handling
-          event.stopPropagation();
-          // select ourselves only
-          this._deselectAll();
-          this._select(clipItem);
-        }
-        this._showLabelsSelectDialog(false);
-      },
-
-      /**
        * Event: Undo Toast close button tapped
        * @private
        * @memberOf MainPage
@@ -769,7 +749,7 @@
        * @private
        * @memberOf MainPage
        */
-      _onClipTapped: function(event) {
+      _onClipRowTapped: function(event) {
         Chrome.GA.event(app.GA.EVENT.CLICK, 'clipItemRow');
         const isShift = event.detail.sourceEvent.shiftKey;
         const isCtrl = event.detail.sourceEvent.ctrlKey;
@@ -853,7 +833,7 @@
        * @private
        * @memberOf MainPage
        */
-      _onCopyTapped: function(event) {
+      _onRowCopyTapped: function(event) {
         Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'copyClipItem');
         const clipItem = event.model.clip;
         clipItem.date = Date.now();
@@ -867,7 +847,7 @@
           Chrome.Msg.send(msg).catch(() => {});
           return Promise.resolve();
         }).catch((err) => {
-          Chrome.Log.error(err.message, 'MainPage._onCopyTapped',
+          Chrome.Log.error(err.message, 'MainPage._onRowCopyTapped',
               'Failed to copy item to clipboard.');
         });
 
@@ -882,17 +862,34 @@
        * @private
        * @memberOf MainPage
        */
-      _onFavTapped: function(event) {
+      _onRowFavTapped: function(event) {
         Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'toggleFavorite');
         const clipItem = event.model.clip;
         if (clipItem) {
           clipItem.update({fav: !clipItem.fav}).catch((err) => {
-            Chrome.Log.error(err.message, 'MainPage._onFavTapped');
+            Chrome.Log.error(err.message, 'MainPage._onRowFavTapped');
           });
         }
 
         // prevent row selection
         event.stopPropagation();
+      },
+
+      /**
+       * Event: Label icon of clip row tapped
+       * @param {Event} event
+       * @param {{}} event.model
+       * @private
+       * @memberOf MainPage
+       */
+      _onRowLabelTapped: function(event) {
+        Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'showLabelList');
+        const clipItem = event.model.clip;
+        this._deselectAll();
+        this._select(clipItem);
+        // prevent row deselection
+        event.stopPropagation();
+        this._showLabelsSelectDialog(false);
       },
 
       /**
