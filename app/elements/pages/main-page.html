@@ -491,7 +491,6 @@
       },
 
       observers: [
-        '_clipsAddedOrRemoved(clips.splices)',
         '_selectedClipsAddedOrRemoved(selectedClips.splices)',
         '_selectedDialogLabelsAddedOrRemoved(selectedDialogLabels.splices)',
       ],
@@ -1008,22 +1007,6 @@
             }
           }
         }
-      },
-
-      /**
-       * Observer: Clips Array mutations
-       * @param {{}} changeRecord
-       * @private
-       * @memberOf MainPage
-       */
-      _clipsAddedOrRemoved: function(changeRecord) {
-        // if (!this.isBulkOp && changeRecord) {
-        //   changeRecord.indexSplices.forEach((splice) => {
-        //     if (splice.addedCount) {
-        //       Polymer.dom.flush();
-        //     }
-        //   });
-        // }
       },
 
       /**
