@@ -328,9 +328,6 @@
 
     let self;
 
-    // true if bulk operation is underway
-    let bulkOperation = false;
-
     /**
      * Polymer element to display and manage {@link ClipItem} objects
      * @namespace MainPage
@@ -481,6 +478,16 @@
           value: false,
           notify: true,
         },
+
+        /**
+         * True if we are performing an operation on multiple clips
+         * @memberOf MainPage
+         */
+        isBulkOp: {
+          type: Boolean,
+          value: false,
+          observer: '_bulkOpChanged',
+        },
       },
 
       observers: [
@@ -516,7 +523,7 @@
        * @memberOf MainPage
        */
       onCurrentPage: function() {
-        bulkOperation = false;
+        this.set('isBulkOp', false);
         this.set('canSend', app.Utils.canSend());
         this._selectFirst(true);
         this.updateDates();
@@ -527,7 +534,7 @@
        * @memberOf MainPage
        */
       onLeavePage: function() {
-        bulkOperation = false;
+        this.set('isBulkOp', false);
         this._closeUndoToast();
         this._deselectAll();
       },
@@ -537,7 +544,7 @@
        * @memberOf MainPage
        */
       updateDates: function() {
-        if (bulkOperation || (this.clips === undefined)) {
+        if (this.isBulkOp || (this.clips === undefined)) {
           return;
         }
         for (let i = 0; i < this.clips.length; i++) {
@@ -645,19 +652,15 @@
           addItems.push(undoClip);
         });
         // skip updates until done with bulkPut
-        bulkOperation = true;
+        this.set('isBulkOp', true);
         app.ClipItem.bulkPut(addItems).then(() => {
-          bulkOperation = false;
+          this.set('isBulkOp', false);
           this._closeUndoToast();
-          // reload clips
-          return this._loadClipItems(false);
-        }).then(() => {
           // reset selections
           this.push('selectedClips', ...addItems);
           return Promise.resolve();
         }).catch(() => {
-          bulkOperation = false;
-          this._loadClipItems();
+          this.set('isBulkOp', false);
           this._closeUndoToast();
         });
       },
@@ -705,11 +708,11 @@
         });
 
         if (keys.length) {
-          this._deselectAll();
           // skip updates until bulk operation is complete
-          bulkOperation = true;
+          this.set('isBulkOp', true);
           app.ClipItem.remove(keys).then(() => {
-            bulkOperation = false;
+            this._deselectAll();
+            this.set('isBulkOp', false);
             const len = this.undoClips.length;
             let toastText =
                 (len === 1) ? 'Deleted 1 item.' : `Deleted ${len} items.`;
@@ -717,7 +720,7 @@
             this.$.undoToast.show();
             return Promise.resolve();
           }).catch((err) => {
-            bulkOperation = false;
+            this.set('isBulkOp', false);
             Chrome.Log.error(err.message, 'MainPage._onDeleteSelectedRows',
                 'Failed to delete clips.');
           });
@@ -856,7 +859,6 @@
         const clipItem = event.model.clip;
         clipItem.date = Date.now();
         clipItem.remote = false;
-        this._deselect(clipItem);
         clipItem.save().then(() => {
           // send message to copy to clipboard
           const msg =
@@ -988,19 +990,40 @@
       },
 
       /**
+       * Observer: The bulkOp setting changed
+       * @param {boolean} newValue
+       * @param {boolean|undefined} oldValue
+       * @private
+       * @memberOf MainPage
+       */
+      _bulkOpChanged: function(newValue, oldValue) {
+        if (typeof(oldValue) !== 'undefined') {
+          if (!newValue && oldValue) {
+            // toggling from true to false
+            if (this.clips && this.clips.length) {
+              this._sortClips();
+            } else {
+              // no clips
+              this.set('clips', []);
+            }
+          }
+        }
+      },
+
+      /**
        * Observer: Clips Array mutations
        * @param {{}} changeRecord
        * @private
        * @memberOf MainPage
        */
       _clipsAddedOrRemoved: function(changeRecord) {
-        if (!bulkOperation && changeRecord) {
-          changeRecord.indexSplices.forEach((splice) => {
-            if (splice.addedCount) {
-              Polymer.dom.flush();
-            }
-          });
-        }
+        // if (!this.isBulkOp && changeRecord) {
+        //   changeRecord.indexSplices.forEach((splice) => {
+        //     if (splice.addedCount) {
+        //       Polymer.dom.flush();
+        //     }
+        //   });
+        // }
       },
 
       /**
@@ -1010,7 +1033,7 @@
        * @memberOf MainPage
        */
       _selectedClipsAddedOrRemoved: function(changeRecord) {
-        if (!bulkOperation && changeRecord) {
+        if (!this.isBulkOp && changeRecord) {
           changeRecord.indexSplices.forEach((splice) => {
             splice.removed.forEach(function(clipItem) {
               const pos = this._getClipPos(clipItem.text);
@@ -1041,7 +1064,7 @@
        */
       _selectedDialogLabelsAddedOrRemoved: function(changeRecord) {
         if (changeRecord) {
-          bulkOperation = true;
+          this.set('isBulkOp', true);
           const promises = [];
           if (this.isMultiLabelsEdit) {
             // track each added and removed label change and
@@ -1079,7 +1102,7 @@
           }
 
           Promise.all(promises).then(() => {
-            bulkOperation = false;
+            this.set('isBulkOp', false);
             if (this.labelFilter &&
                 !this.selectedDialogLabels.includes(this.labelFilter)) {
               // deleted current label from item(s) 
@@ -1090,7 +1113,7 @@
               return Promise.resolve();
             }
           }).catch((err) => {
-            bulkOperation = false;
+            this.set('isBulkOp', false);
             Chrome.Log.error(err.errorMessage,
                 'MainPage._onSelectedLabelsChanged', 'Failed to set label.');
           });
@@ -1104,11 +1127,7 @@
        * @memberOf MainPage
        */
       _computeHasSelections: function() {
-        let ret = false;
-        if (this.selectedClips && this.selectedClips.length) {
-          ret = true;
-        }
-        return ret;
+        return !!(this.selectedClips && this.selectedClips.length);
       },
 
       /**
@@ -1238,20 +1257,19 @@
         this.splice('clips', 0, this.clips.length);
         this._deselectAll();
         return app.ClipItem.loadAll(this.labelFilter).then((clipItems) => {
+          this.set('isBulkOp', true);
           // populate list
           if (this.isFavFilter) {
             // favorites only
-            bulkOperation = true;
             clipItems.forEach((clipItem) => {
               if (clipItem.fav) {
-                this.push('clips', clipItem);
+                this.clips.push(clipItem);
               }
             });
-            bulkOperation = false;
           } else {
-            this.push('clips', ...clipItems);
+            this.clips.push(...clipItems);
           }
-          this._sortClips();
+          this.set('isBulkOp', false);
           if (selectFirst) {
             this._selectFirst();
             this.$.clipList.scrollTop = 0;
@@ -1266,7 +1284,7 @@
        * @memberOf MainPage
        */
       _sortClips: function() {
-        if (bulkOperation) {
+        if (this.isBulkOp) {
           return;
         }
         if (this.isPinFavs) {
@@ -1308,15 +1326,16 @@
        * @memberOf MainPage
        */
       _addClipItem: function(text) {
-        if (bulkOperation) {
-          return;
-        }
         app.ClipItem.getNew(text).then((clipItem) => {
           if (this._getClipPos(clipItem.text) === -1) {
             if (!this.labelFilter || clipItem.hasLabel(this.labelFilter)) {
               // add to list if not filtering or has our labelFiler
-              this.unshift('clips', clipItem);
-              this._sortClips();
+              if (this.isBulkOp) {
+                this.clips.unshift(clipItem);
+              } else {
+                this.unshift('clips', clipItem);
+                this._sortClips();
+              }
             }
           }
           return Promise.resolve();
@@ -1375,8 +1394,12 @@
       _deleteClipItem: function(text) {
         const pos = this._getClipPos(text);
         if (pos !== -1) {
-          this.splice('clips', pos, 1);
-          this.updateDates();
+          if (this.isBulkOp) {
+            this.clips.splice(pos, 1);
+          } else {
+            this.splice('clips', pos, 1);
+            this.updateDates();
+          }
         }
       },
 
@@ -1404,17 +1427,6 @@
         return this.clips.findIndex((clipItem) => {
           return (clipText === clipItem.text);
         });
-      },
-
-      /**
-       * Filter list
-       * @param {ClipItem} clip - row to check
-       * @returns {boolean} true if row is visible
-       * @private
-       * @memberOf MainPage
-       */
-      _filter: function(clip) {
-        return this.isFavFilter ? clip.fav : true;
       },
 
       /**
@@ -1596,14 +1608,14 @@
        * @memberOf MainPage
        */
       _setSelectedLabels: function(clipItem) {
-        this.splice('selectedDialogLabels', 0, this.selectedDialogLabels.length);
-        if (!clipItem) {
-          return;
+        if (this.selectedDialogLabels && this.selectedDialogLabels.length) {
+          this.splice('selectedDialogLabels', 0,
+              this.selectedDialogLabels.length);
         }
-        const names = clipItem.getLabelNames();
-        names.forEach((name) => {
-          this.push('selectedDialogLabels', name);
-        });
+        if (clipItem) {
+          const names = clipItem.getLabelNames();
+          this.push('selectedDialogLabels', ...names);
+        }
       },
 
       /**
@@ -1612,7 +1624,9 @@
        * @memberOf MainPage
        */
       _closeUndoToast: function() {
-        this.splice('undoClips', 0, this.undoClips.length);
+        if (this.undoClips && this.undoClips.length) {
+          this.splice('undoClips', 0, this.undoClips.length);
+        }
         this.$.undoToast.close();
       },
     });
@@ -1624,6 +1638,11 @@
      */
     function _onLoad() {
       const db = app.DB.get();
+      if (!db) {
+        Chrome.Log.error('Failed to get database reference', 'MainPage._onLoad',
+            'Database not found');
+        return;
+      }
 
       db.clipItems.hook('creating', function(primKey, obj) {
         // eslint-disable-next-line no-invalid-this
