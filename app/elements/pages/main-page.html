@@ -502,19 +502,16 @@
       ready: function() {
         self = this;
         this.set('canSend', app.Utils.canSend());
-        this._loadClipItems();
-      },
+        this._loadClipItems().then(() => {
+          Chrome.Msg.listen(this._onChromeMessage);
 
-      /**
-       * Element is attached
-       * @memberOf MainPage
-       */
-      attached: function() {
-        Chrome.Msg.listen(this._onChromeMessage);
-
-        // listen for copy and cut events on document
-        document.addEventListener('cut', this._onCopy, true);
-        document.addEventListener('copy', this._onCopy, true);
+          // listen for copy and cut events on document
+          document.addEventListener('cut', this._onCopy, true);
+          document.addEventListener('copy', this._onCopy, true);
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, 'MainPage.ready', _ERR_LOAD);
+        });
       },
 
       /**
@@ -737,8 +734,7 @@
             `filterByFavorites: ${this.isFavFilter}`);
 
         this._loadClipItems(true).catch((err) => {
-          Chrome.Log.error(err.message, 'MainPage._onFavFilterTapped',
-              'Failed to load clips.');
+          Chrome.Log.error(err.message, 'MainPage._onFavFilterTapped', _ERR_LOAD);
         });
       },
 
@@ -1001,6 +997,7 @@
             } else {
               // no clips
               this.set('clips', []);
+              this._setCurrentClip();
             }
           }
         }
@@ -1234,10 +1231,10 @@
        */
       _loadClipItems: function(selectFirst = true) {
         this._closeUndoToast();
-        this.splice('clips', 0, this.clips.length);
+        this.set('isBulkOp', true);
+        this._deleteClips();
         this._deselectAll();
         return app.ClipItem.loadAll(this.labelFilter).then((clipItems) => {
-          this.set('isBulkOp', true);
           // populate list
           if (this.isFavFilter) {
             // favorites only
@@ -1255,6 +1252,9 @@
             this.$.clipList.scrollTop = 0;
           }
           return Promise.resolve();
+        }).catch((err) => {
+          this.set('isBulkOp', false);
+          return Promise.reject(err);
         });
       },
 
@@ -1281,7 +1281,7 @@
           nonFavClips.sort((a, b) => {
             return b.date - a.date;
           });
-          this.splice('clips', 0, this.clips.length);
+          this._deleteClips();
           // populate list
           this.push('clips', ...favClips);
           this.push('clips', ...nonFavClips);
@@ -1293,7 +1293,7 @@
           clips.sort((a, b) => {
             return b.date - a.date;
           });
-          this.splice('clips', 0, this.clips.length);
+          this._deleteClips();
           this.push('clips', ...clips);
         }
         this._updateSelectionClasses();
@@ -1483,13 +1483,32 @@
       },
 
       /**
+       * Delete all {@link ClipItem} objects
+       * @private
+       * @memberOf MainPage
+       */
+      _deleteClips: function() {
+        if (this.clips && this.clips.length) {
+          if (this.isBulkOp) {
+            this.clips.splice(0, this.clips.length);
+          } else {
+            this.splice('clips', 0, this.clips.length);
+          }
+        }
+      },
+
+      /**
        * Deselect all {@link ClipItem}
        * @private
        * @memberOf MainPage
        */
       _deselectAll: function() {
         if (this.selectedClips && this.selectedClips.length) {
-          this.splice('selectedClips', 0, this.selectedClips.length);
+          if (this.isBulkOp) {
+            this.selectedClips.splice(0, this.selectedClips.length);
+          } else {
+            this.splice('selectedClips', 0, this.selectedClips.length);
+          }
         }
       },
 
@@ -1522,7 +1541,9 @@
         }
         // override dirty checking
         this.set('currentClip', null);
-        this.set('currentClip', currentItem);
+        if (currentItem) {
+          this.set('currentClip', currentItem);
+        }
       },
 
       /**
