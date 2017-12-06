@@ -74,6 +74,10 @@
         padding: 0 0 32px 0;
         margin: 0;
       }
+      
+      #ironList {
+        height: 82vh;
+      }
 
       .clip-item {
         position: relative;
@@ -263,7 +267,7 @@
         <!-- Main list -->
         <div id="clipList" class="no-select flex-2">
           <iron-list id=ironList items="{{clips}}" as="clip" max-physical-count="50000">
-            <template id="clipsTemplate">
+            <template>
               <div
                   tabindex="-1"
                   class="clip-item"
@@ -508,6 +512,7 @@
           // listen for copy and cut events on document
           document.addEventListener('cut', this._onCopy, true);
           document.addEventListener('copy', this._onCopy, true);
+          
           return Promise.resolve();
         }).catch((err) => {
           Chrome.Log.error(err.message, 'MainPage.ready', _ERR_LOAD);
