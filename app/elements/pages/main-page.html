@@ -67,14 +67,14 @@
       #clipList {
         min-width: 600px;
         height: 82vh;
-        overflow: hidden;
-        overflow-y: scroll;
+        /*overflow: hidden;*/
+        /*overflow-y: scroll;*/
         border: 1px #CCCCCC;
         border-right-style: solid;
         padding: 0 0 32px 0;
         margin: 0;
       }
-      
+
       #ironList {
         height: 82vh;
       }
@@ -169,6 +169,10 @@
         background: var(--selected-color);
       }
 
+      .selected {
+        background: var(--selected-color);
+      }
+
     </style>
 
     <paper-material elevation="1" class="page-content">
@@ -230,11 +234,11 @@
             entry-animation="scale-up-animation"
             exit-animation="fade-out-animation">
           <h2 class="vertical layout center">
-            [[_computeLabelsDialogTitle(isMultiLabelsEdit, selectedClips, selectedClips.splices)]]</h2>
+            [[_computeLabelsDialogTitle(isMultiLabelsEdit, selClips, selClips.splices)]]</h2>
           <paper-dialog-scrollable>
             <paper-listbox
                 multi attr-for-selected="id"
-                selected-values="{{selectedDialogLabels}}">
+                selected-values="{{selDialogLabels}}">
               <template is="dom-repeat"
                         items="{{labels}}" as="label">
                 <paper-icon-item id="[[label]]" class="label-item">
@@ -266,12 +270,17 @@
 
         <!-- Main list -->
         <div id="clipList" class="no-select flex-2">
-          <iron-list id=ironList items="{{clips}}" as="clip" max-physical-count="50000">
+          <iron-list
+              id=ironList items="{{clips}}" as="clip"
+              multi-selection
+              selected-items="{{selClips}}"
+              on-focus="_onFocused"
+              max-physical-count="50000">
             <template>
               <div
                   tabindex="-1"
-                  class="clip-item"
-                  id="clip[[index]]"
+                  class$="[[_computeClipClass(selected)]]"
+                  index$="[[index]]"
                   on-tap="_onClipRowTapped">
                 <div class="clip-body flex vertical layout" tabindex="-1">
                   <paper-item class="date-row center horizontal layout">
@@ -365,7 +374,7 @@
          * Array of selected {@link ClipItem} objects
          * @memberOf MainPage
          */
-        selectedClips: {
+        selClips: {
           type: Array,
           value: [],
           notify: true,
@@ -377,8 +386,7 @@
          */
         hasSelections: {
           type: Boolean,
-          computed:
-              '_computeHasSelections(selectedClips.splices)',
+          computed: '_computeHasSelections(selClips.splices)',
         },
 
         /**
@@ -467,7 +475,7 @@
          * Array of all selected {@link Label} names in the dialog
          * @memberOf MainPage
          */
-        selectedDialogLabels: {
+        selDialogLabels: {
           type: Array,
           value: [],
           notify: true,
@@ -490,13 +498,13 @@
         isBulkOp: {
           type: Boolean,
           value: false,
+          notify: true,
           observer: '_bulkOpChanged',
         },
       },
 
       observers: [
-        '_selectedClipsAddedOrRemoved(selectedClips.splices)',
-        '_selectedDialogLabelsAddedOrRemoved(selectedDialogLabels.splices)',
+        '_selDialogLabelsAddedOrRemoved(selDialogLabels.splices)',
       ],
 
       /**
@@ -505,14 +513,15 @@
        */
       ready: function() {
         self = this;
+        this.addEventListener('focus', this._onFocused.bind(this), true);
         this.set('canSend', app.Utils.canSend());
-        this._loadClipItems().then(() => {
+        this._loadClipItems(true).then(() => {
           Chrome.Msg.listen(this._onChromeMessage);
 
           // listen for copy and cut events on document
           document.addEventListener('cut', this._onCopy, true);
           document.addEventListener('copy', this._onCopy, true);
-          
+
           return Promise.resolve();
         }).catch((err) => {
           Chrome.Log.error(err.message, 'MainPage.ready', _ERR_LOAD);
@@ -628,19 +637,25 @@
        */
       _onUndoDeleteTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'UNDO');
-        const addItems = [];
-        this.undoClips.forEach((undoClip) => {
-          addItems.push(undoClip);
-        });
-        // skip updates until done with bulkPut
         this.set('isBulkOp', true);
-        app.ClipItem.bulkPut(addItems).then(() => {
+        app.ClipItem.bulkPut(this.undoClips).then(() => {
           this.set('isBulkOp', false);
-          this._closeUndoToast();
           // reset selections
-          this.push('selectedClips', ...addItems);
+          this.undoClips.forEach((clipItem) => {
+            // need to use new item reference - hashing issue in iron-list?
+            const newClipItem = this._getClip(clipItem.text);
+            if (newClipItem) {
+              this.$.ironList.selectItem(newClipItem);
+            }
+          });
+          this._setCurrentClip();
+          if (this.selClips && this.selClips.length) {
+            this.scrollToItem(this.selClips[this.selClips.length - 1]);
+          }
+          this._closeUndoToast();
           return Promise.resolve();
-        }).catch(() => {
+        }).catch((err) => {
+          console.log(err);
           this.set('isBulkOp', false);
           this._closeUndoToast();
         });
@@ -654,12 +669,7 @@
       _onSelectAllTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'selectAllClipItems');
         this._deselectAll();
-        const clipItems = [];
-        for (let i = this.clips.length - 1; i >= 0; i--) {
-          const clipItem = this.clips[i];
-          clipItems.push(clipItem);
-        }
-        this.push('selectedClips', ...clipItems);
+        this._selectAll();
       },
 
       /**
@@ -683,16 +693,16 @@
         // save items for undo
         const keys = [];
         this.splice('undoClips', 0, this.undoClips.length);
-        this.selectedClips.forEach((selectedClip) => {
-          keys.push(selectedClip._id);
-          this.push('undoClips', selectedClip);
+        this.selClips.forEach((clipItem) => {
+          keys.push(clipItem._id);
+          this.push('undoClips', clipItem);
         });
 
         if (keys.length) {
           // skip updates until bulk operation is complete
           this.set('isBulkOp', true);
+          this._deselectAll();
           app.ClipItem.remove(keys).then(() => {
-            this._deselectAll();
             this.set('isBulkOp', false);
             const len = this.undoClips.length;
             let toastText =
@@ -744,6 +754,19 @@
       },
 
       /**
+       * Event: Clip row got focus
+       * @param {Event} event
+       * @param {ClipItem} event.model.clip
+       * @private
+       * @memberOf MainPage
+       */
+      _onFocused: function(event) {
+        // TODO do we need?
+        console.log(event);
+        event.stopPropagation();
+      },
+      
+        /**
        * Event: Tap on clip row - handle selections like a tree select
        * @param {Event} event
        * @param {ClipItem} event.model.clip
@@ -751,24 +774,35 @@
        * @memberOf MainPage
        */
       _onClipRowTapped: function(event) {
-        Chrome.GA.event(app.GA.EVENT.CLICK, 'clipItemRow');
         const isShift = event.detail.sourceEvent.shiftKey;
         const isCtrl = event.detail.sourceEvent.ctrlKey;
         const endPos = event.model.index;
-        const currentClipItem = this.clips[endPos];
-        let selected = this._isSelected(currentClipItem);
+        const curClipItem = this.clips[endPos];
+        let selected = event.model.selected;
+
+        Chrome.GA.event(app.GA.EVENT.CLICK, 'clipItemRow');
 
         if (isShift) {
-          // select range
+          // select range of rows
           let startPos = -1;
+
+          // override shitty iron-list scrolling
+          const list = this.$.ironList;
+          const firstIndex = list.firstVisibleIndex;
+          list.scrollToIndex(0);
+          
           if (selected) {
             // deselect any contiguous selections after 
             for (let i = endPos + 1; i < this.clips.length; i++) {
               const clipItem = this.clips[i];
-              if (!this._deselect(clipItem)) {
+              if (this._isSelected(clipItem)) {
+                list.deselectItem(clipItem);
+              } else {
                 break;
               }
             }
+            list.scrollToIndex(firstIndex);
+            this._setCurrentClip();
             return;
           } else if (!this.hasSelections) {
             // select from first to current
@@ -796,33 +830,33 @@
           }
           if (startPos !== -1) {
             // found range, select it
-            const clipItems = [];
+            
             if (startPos < endPos) {
               for (let i = startPos + 1; i <= endPos; i++) {
-                const clipItem = this.clips[i];
-                clipItems.push(clipItem);
+                list.selectItem(this.clips[i]);
               }
             } else if (startPos > endPos) {
               for (let i = startPos - 1; i >= endPos; i--) {
-                const clipItem = this.clips[i];
-                clipItems.push(clipItem);
+                list.selectItem(this.clips[i]);
               }
             }
-            this.push('selectedClips', ...clipItems);
           }
+          list.scrollToIndex(firstIndex);
+          this._setCurrentClip();
         } else if (isCtrl) {
           // toggle selection
           if (selected) {
-            this._deselect(currentClipItem);
+            this._deselect(curClipItem);
           } else {
-            this._select(currentClipItem);
+            this._select(curClipItem);
           }
         } else {
           // single select with toggle
-          const len = this.selectedClips.length;
+          const len = this.selClips.length;
           this._deselectAll();
           if (!selected || (len > 1)) {
-            this._select(currentClipItem);
+            // item not selected or multiple selections before tap
+            this._select(curClipItem);
           }
         }
       },
@@ -888,8 +922,10 @@
         const clipItem = event.model.clip;
         this._deselectAll();
         this._select(clipItem);
+
         // prevent row deselection
         event.stopPropagation();
+
         this._showLabelsSelectDialog(false);
       },
 
@@ -994,57 +1030,29 @@
        * @memberOf MainPage
        */
       _bulkOpChanged: function(newValue, oldValue) {
-        if (typeof(oldValue) !== 'undefined') {
-          if (!newValue && oldValue) {
-            // toggling from true to false
-            if (this.clips && this.clips.length) {
-              this._sortClips();
-            } else {
-              // no clips
-              this.set('clips', []);
-              this._setCurrentClip();
-            }
+        // TODO check this
+        // if (typeof(oldValue) !== 'undefined') {
+        if (!newValue && oldValue) {
+          // toggling from true to false
+          if (this.clips && this.clips.length) {
+            this._sortClips();
+          } else {
+            // no clips
+            this.set('clips', []);
+            this._updateSelections([]);
+            this._setCurrentClip();
           }
         }
+        // }
       },
 
       /**
-       * Observer: selectedClips Array mutations
+       * Observer: selDialogLabels Array mutations
        * @param {{}} changeRecord
        * @private
        * @memberOf MainPage
        */
-      _selectedClipsAddedOrRemoved: function(changeRecord) {
-        if (!this.isBulkOp && changeRecord) {
-          changeRecord.indexSplices.forEach((splice) => {
-            splice.removed.forEach(function(clipItem) {
-              const pos = this._getClipPos(clipItem.text);
-              const el = this.$$(`#clip${pos}`);
-              if (el) {
-                el.classList.remove('iron-selected');
-              }
-            }, this);
-            for (let i = 0; i < splice.addedCount; i++) {
-              const index = splice.index + i;
-              const clipItem = splice.object[index];
-              const pos = this._getClipPos(clipItem.text);
-              const el = this.$$(`#clip${pos}`);
-              if (el) {
-                el.classList.add('iron-selected');
-              }
-            }
-          }, this);
-          this._setCurrentClip();
-        }
-      },
-
-      /**
-       * Observer: selectedDialogLabels Array mutations
-       * @param {{}} changeRecord
-       * @private
-       * @memberOf MainPage
-       */
-      _selectedDialogLabelsAddedOrRemoved: function(changeRecord) {
+      _selDialogLabelsAddedOrRemoved: function(changeRecord) {
         if (changeRecord) {
           this.set('isBulkOp', true);
           const promises = [];
@@ -1063,7 +1071,7 @@
                 removedNames.push(name);
               });
             });
-            this.selectedClips.forEach((clipItem) => {
+            this.selClips.forEach((clipItem) => {
               const names = clipItem.getLabelNames();
               addedNames.forEach((addedName) => {
                 if (!clipItem.hasLabel(addedName)) {
@@ -1080,13 +1088,13 @@
             });
           } else {
             const clipItem = this.currentClip;
-            promises.push(clipItem.setLabels(this.selectedDialogLabels));
+            promises.push(clipItem.setLabels(this.selDialogLabels));
           }
 
           Promise.all(promises).then(() => {
             this.set('isBulkOp', false);
             if (this.labelFilter &&
-                !this.selectedDialogLabels.includes(this.labelFilter)) {
+                !this.selDialogLabels.includes(this.labelFilter)) {
               // deleted current label from item(s) 
               this.$.labelsDialog.close();
               return this._loadClipItems();
@@ -1109,7 +1117,7 @@
        * @memberOf MainPage
        */
       _computeHasSelections: function() {
-        return !!(this.selectedClips && this.selectedClips.length);
+        return !!(this.selClips && this.selClips.length);
       },
 
       /**
@@ -1143,7 +1151,7 @@
        * @memberOf MainPage
        */
       _computeLabelsDialogTitle: function(multi) {
-        if (multi && this.selectedClips && (this.selectedClips.length > 1)) {
+        if (multi && this.selClips && (this.selClips.length > 1)) {
           return 'Change labels for selected clips';
         } else {
           return 'Set labels for the current clip';
@@ -1228,6 +1236,21 @@
       },
 
       /**
+       * Computed Binding: Clip item classList
+       * @param {boolean} selected - is clip selected
+       * @returns {string} Clip item classList
+       * @private
+       * @memberOf MainPage
+       */
+      _computeClipClass: function(selected) {
+        let classList = 'clip-item';
+        if (selected) {
+          classList += ' selected';
+        }
+        return classList;
+      },
+
+      /**
        * Load the {@link ClipItem} objects
        * @param {boolean} [selectFirst=true] - if true select first item
        * @returns {Promise<void>}
@@ -1236,29 +1259,31 @@
        */
       _loadClipItems: function(selectFirst = true) {
         this._closeUndoToast();
-        this.set('isBulkOp', true);
         this._deleteClips();
         this._deselectAll();
         return app.ClipItem.loadAll(this.labelFilter).then((clipItems) => {
           // populate list
           if (this.isFavFilter) {
             // favorites only
-            clipItems.forEach((clipItem) => {
-              if (clipItem.fav) {
-                this.clips.push(clipItem);
-              }
+            const favClipItems = clipItems.filter((clipItem) => {
+              return clipItem.fav;
             });
+            this.push('clips', ...favClipItems);
           } else {
-            this.clips.push(...clipItems);
+            this.push('clips', ...clipItems);
           }
-          this.set('isBulkOp', false);
+          this._sortClips();
           if (selectFirst) {
             this._selectFirst();
-            this.$.clipList.scrollTop = 0;
+          }
+          // TODO check this HACK not sure why this is needed but it loses selection
+          // on first opening of UI otherwise
+          this._deselectAll();
+          if (selectFirst) {
+            this._selectFirst();
           }
           return Promise.resolve();
         }).catch((err) => {
-          this.set('isBulkOp', false);
           return Promise.reject(err);
         });
       },
@@ -1272,6 +1297,15 @@
         if (this.isBulkOp) {
           return;
         }
+        
+        // override shitty iron-list scrolling
+        const list = this.$.ironList;
+        const firstIndex = list.firstVisibleIndex;
+        list.scrollToIndex(0);
+        
+        // copy of current selections
+        const selClips = this.selClips.slice();
+
         if (this.isPinFavs) {
           // sort favs and non-favs separately and keep favs on top
           const favClips = this.clips.filter((clip) => {
@@ -1292,16 +1326,15 @@
           this.push('clips', ...nonFavClips);
         } else {
           // sort by date
-          const clips = this.clips.filter(() => {
-            return true;
-          });
+          const clips = this.clips.slice();
           clips.sort((a, b) => {
             return b.date - a.date;
           });
           this._deleteClips();
           this.push('clips', ...clips);
         }
-        this._updateSelectionClasses();
+        this._updateSelections(selClips);
+        list.scrollToIndex(firstIndex);
       },
 
       /**
@@ -1314,7 +1347,7 @@
         app.ClipItem.getNew(text).then((clipItem) => {
           if (this._getClipPos(clipItem.text) === -1) {
             if (!this.labelFilter || clipItem.hasLabel(this.labelFilter)) {
-              // add to list if not filtering or has our labelFiler
+              // add to list if not filtering or has our labelFilter
               if (this.isBulkOp) {
                 this.clips.unshift(clipItem);
               } else {
@@ -1415,6 +1448,32 @@
       },
 
       /**
+       * Delete all {@link ClipItem} objects
+       * @private
+       * @memberOf MainPage
+       */
+      _deleteClips: function() {
+        if (this.clips && this.clips.length) {
+          this.splice('clips', 0, this.clips.length);
+        }
+      },
+
+      /**
+       * Update the selected items
+       * @param {ClipItem[]} selClips - ClipItems to select
+       * @private
+       * @memberOf MainPage
+       */
+      _updateSelections: function(selClips) {
+        const list = this.$.ironList;
+        list.clearSelection();
+        selClips.forEach((clipItem) => {
+          list.selectItem(clipItem);
+        });
+        this._setCurrentClip();
+      },
+
+      /**
        * Is a {@link ClipItem} selected
        * @param {ClipItem} clipItem
        * @returns {boolean}
@@ -1422,33 +1481,10 @@
        * @memberOf MainPage
        */
       _isSelected: function(clipItem) {
-        const idx = this.selectedClips.findIndex((clip) => {
+        const idx = this.selClips.findIndex((clip) => {
           return (clip.text === clipItem.text);
         });
         return (idx !== -1);
-      },
-
-      /**
-       * Update all the selection classLists
-       * @private
-       * @memberOf MainPage
-       */
-      _updateSelectionClasses: function() {
-        Polymer.dom.flush();
-        this.clips.forEach((clipItem) => {
-          const pos = this._getClipPos(clipItem.text);
-          const el = this.$$(`#clip${pos}`);
-          if (el) {
-            el.classList.remove('iron-selected');
-          }
-        });
-        this.selectedClips.forEach((clipItem) => {
-          const pos = this._getClipPos(clipItem.text);
-          const el = this.$$(`#clip${pos}`);
-          if (el) {
-            el.classList.add('iron-selected');
-          }
-        });
       },
 
       /**
@@ -1459,11 +1495,15 @@
        * @memberOf MainPage
        */
       _select: function(clipItem) {
+        let ret = false;
         if (clipItem && !this._isSelected(clipItem)) {
-          this.push('selectedClips', clipItem);
-          return true;
+          this.$.ironList.selectItem(clipItem);
+          if (!this.isBulkOp) {
+            this._setCurrentClip();
+          }
+          ret = true;
         }
-        return false;
+        return ret;
       },
 
       /**
@@ -1474,31 +1514,28 @@
        * @memberOf MainPage
        */
       _deselect: function(clipItem) {
-        if (!clipItem) {
-          return false;
+        let ret = false;
+        if (clipItem && this._isSelected(clipItem)) {
+          this.$.ironList.deselectItem(clipItem);
+          if (!this.isBulkOp) {
+            this._setCurrentClip();
+          }
+          ret = true;
         }
-        const idx = this.selectedClips.findIndex((clip) => {
-          return (clip.text === clipItem.text);
-        });
-        if (this._isSelected(clipItem)) {
-          this.splice('selectedClips', idx, 1);
-          return true;
-        }
-        return false;
+        return ret;
       },
 
       /**
-       * Delete all {@link ClipItem} objects
+       * Select all {@link ClipItem}
        * @private
        * @memberOf MainPage
        */
-      _deleteClips: function() {
+      _selectAll: function() {
         if (this.clips && this.clips.length) {
-          if (this.isBulkOp) {
-            this.clips.splice(0, this.clips.length);
-          } else {
-            this.splice('clips', 0, this.clips.length);
-          }
+          this.clips.forEach((clipItem) => {
+            this.$.ironList.selectItem(clipItem);
+          });
+          this._setCurrentClip();
         }
       },
 
@@ -1508,13 +1545,10 @@
        * @memberOf MainPage
        */
       _deselectAll: function() {
-        if (this.selectedClips && this.selectedClips.length) {
-          if (this.isBulkOp) {
-            this.selectedClips.splice(0, this.selectedClips.length);
-          } else {
-            this.splice('selectedClips', 0, this.selectedClips.length);
-          }
+        if (this.selClips && this.selClips.length) {
+          this.$.ironList.clearSelection();
         }
+        this._setCurrentClip();
       },
 
       /**
@@ -1527,11 +1561,13 @@
        */
       _selectFirst: function(ifNoSelections = false) {
         if (!this.clips || !this.clips.length ||
-            (ifNoSelections && this.selectedClips.length)) {
+            (ifNoSelections && this.selClips.length)) {
           return false;
         }
         const clipItem = this.clips[0];
-        return this._select(clipItem);
+        const ret = this._select(clipItem);
+        this.$.ironList.scrollToIndex(0);
+        return ret;
       },
 
       /**
@@ -1541,8 +1577,8 @@
        */
       _setCurrentClip: function() {
         let currentItem = null;
-        if (this.selectedClips && this.selectedClips.length) {
-          currentItem = this.selectedClips[this.selectedClips.length - 1];
+        if (this.selClips && this.selClips.length) {
+          currentItem = this.selClips[this.selClips.length - 1];
         }
         // override dirty checking
         this.set('currentClip', null);
@@ -1561,8 +1597,8 @@
         const labels = [];
         this.labels.forEach((labelName) => {
           let has = true;
-          for (let i = 0; i < this.selectedClips.length; i++) {
-            const clipItem = this.selectedClips[i];
+          for (let i = 0; i < this.selClips.length; i++) {
+            const clipItem = this.selClips[i];
             if (!clipItem.hasLabel(labelName)) {
               has = false;
               break;
@@ -1590,10 +1626,10 @@
           });
           return Promise.resolve();
         }).then(() => {
-          if (multi && (this.selectedClips.length > 1)) {
+          if (multi && (this.selClips.length > 1)) {
             // for multi mode, will apply to all selectedClips
             const labels = this._getCommonLabelsForSelected();
-            this.set('selectedDialogLabels', labels);
+            this.set('selDialogLabels', labels);
           } else {
             this._setSelectedLabels(this.currentClip);
           }
@@ -1614,13 +1650,12 @@
        * @memberOf MainPage
        */
       _setSelectedLabels: function(clipItem) {
-        if (this.selectedDialogLabels && this.selectedDialogLabels.length) {
-          this.splice('selectedDialogLabels', 0,
-              this.selectedDialogLabels.length);
+        if (this.selDialogLabels && this.selDialogLabels.length) {
+          this.splice('selDialogLabels', 0, this.selDialogLabels.length);
         }
         if (clipItem) {
           const names = clipItem.getLabelNames();
-          this.push('selectedDialogLabels', ...names);
+          this.push('selDialogLabels', ...names);
         }
       },
 
