@@ -650,7 +650,7 @@
           });
           this._setCurrentClip();
           if (this.selClips && this.selClips.length) {
-            list.scrollToItem(this.selClips[this.selClips.length - 1]);
+            list.scrollToItem(this.selClips[0]);
           }
           this._closeUndoToast();
           return Promise.resolve();
