@@ -274,13 +274,11 @@
               id=ironList items="{{clips}}" as="clip"
               multi-selection
               selected-items="{{selClips}}"
-              on-focus="_onFocused"
               max-physical-count="50000">
             <template>
               <div
                   tabindex="-1"
                   class$="[[_computeClipClass(selected)]]"
-                  index$="[[index]]"
                   on-tap="_onClipRowTapped">
                 <div class="clip-body flex vertical layout" tabindex="-1">
                   <paper-item class="date-row center horizontal layout">
@@ -641,21 +639,23 @@
         app.ClipItem.bulkPut(this.undoClips).then(() => {
           this.set('isBulkOp', false);
           // reset selections
+          const list = this.$.ironList;
           this.undoClips.forEach((clipItem) => {
             // need to use new item reference - hashing issue in iron-list?
             const newClipItem = this._getClip(clipItem.text);
             if (newClipItem) {
-              this.$.ironList.selectItem(newClipItem);
+              list.selectItem(newClipItem);
             }
           });
           this._setCurrentClip();
           if (this.selClips && this.selClips.length) {
-            this.scrollToItem(this.selClips[this.selClips.length - 1]);
+            list.scrollToItem(this.selClips[this.selClips.length - 1]);
           }
           this._closeUndoToast();
           return Promise.resolve();
         }).catch((err) => {
-          console.log(err);
+          Chrome.Log.error(err.message, 'MainPage._onUndoDeleteTapped',
+              'Failed to undo delete.');
           this.set('isBulkOp', false);
           this._closeUndoToast();
         });
@@ -754,19 +754,18 @@
       },
 
       /**
-       * Event: Clip row got focus
+       * Event: iron-list got focus
        * @param {Event} event
        * @param {ClipItem} event.model.clip
        * @private
        * @memberOf MainPage
        */
       _onFocused: function(event) {
-        // TODO do we need?
-        console.log(event);
+        // !Important prevent iron-list from handling
         event.stopPropagation();
       },
-      
-        /**
+
+      /**
        * Event: Tap on clip row - handle selections like a tree select
        * @param {Event} event
        * @param {ClipItem} event.model.clip
@@ -790,7 +789,7 @@
           const list = this.$.ironList;
           const firstIndex = list.firstVisibleIndex;
           list.scrollToIndex(0);
-          
+
           if (selected) {
             // deselect any contiguous selections after 
             for (let i = endPos + 1; i < this.clips.length; i++) {
@@ -830,7 +829,7 @@
           }
           if (startPos !== -1) {
             // found range, select it
-            
+
             if (startPos < endPos) {
               for (let i = startPos + 1; i <= endPos; i++) {
                 list.selectItem(this.clips[i]);
@@ -1018,7 +1017,7 @@
        */
       _pinFavsChanged: function(newValue, oldValue) {
         if (typeof(oldValue) !== 'undefined') {
-          this._sortClips();
+          this._sortClipItems();
         }
       },
 
@@ -1030,20 +1029,18 @@
        * @memberOf MainPage
        */
       _bulkOpChanged: function(newValue, oldValue) {
-        // TODO check this
-        // if (typeof(oldValue) !== 'undefined') {
-        if (!newValue && oldValue) {
-          // toggling from true to false
-          if (this.clips && this.clips.length) {
-            this._sortClips();
-          } else {
-            // no clips
-            this.set('clips', []);
-            this._updateSelections([]);
-            this._setCurrentClip();
+        if (typeof(oldValue) !== 'undefined') {
+          if (!newValue && oldValue) {
+            // toggling from true to false
+            if (this.clips && this.clips.length) {
+              this._sortClipItems();
+            } else {
+              // no clips
+              this.set('clips', []);
+              this._updateSelections([]);
+            }
           }
         }
-        // }
       },
 
       /**
@@ -1259,7 +1256,7 @@
        */
       _loadClipItems: function(selectFirst = true) {
         this._closeUndoToast();
-        this._deleteClips();
+        this._deleteAllClipItems();
         this._deselectAll();
         return app.ClipItem.loadAll(this.labelFilter).then((clipItems) => {
           // populate list
@@ -1272,19 +1269,17 @@
           } else {
             this.push('clips', ...clipItems);
           }
-          this._sortClips();
+          this._sortClipItems();
           if (selectFirst) {
             this._selectFirst();
           }
-          // TODO check this HACK not sure why this is needed but it loses selection
+          // HACK not sure why this is needed but it loses selection
           // on first opening of UI otherwise
           this._deselectAll();
           if (selectFirst) {
             this._selectFirst();
           }
           return Promise.resolve();
-        }).catch((err) => {
-          return Promise.reject(err);
         });
       },
 
@@ -1293,16 +1288,26 @@
        * @private
        * @memberOf MainPage
        */
-      _sortClips: function() {
+      _sortClipItems: function() {
         if (this.isBulkOp) {
           return;
         }
-        
+
+        /**
+         * Sort by date
+         * @param {ClipItem} a
+         * @param {ClipItem} b
+         * @returns {number}
+         */
+        function byDate(a, b) {
+          return b.date - a.date;
+        }
+
         // override shitty iron-list scrolling
         const list = this.$.ironList;
         const firstIndex = list.firstVisibleIndex;
         list.scrollToIndex(0);
-        
+
         // copy of current selections
         const selClips = this.selClips.slice();
 
@@ -1311,26 +1316,20 @@
           const favClips = this.clips.filter((clip) => {
             return clip.fav;
           });
-          favClips.sort((a, b) => {
-            return b.date - a.date;
-          });
+          favClips.sort(byDate);
           const nonFavClips = this.clips.filter((clip) => {
             return !clip.fav;
           });
-          nonFavClips.sort((a, b) => {
-            return b.date - a.date;
-          });
-          this._deleteClips();
+          nonFavClips.sort(byDate);
+          this._deleteAllClipItems();
           // populate list
           this.push('clips', ...favClips);
           this.push('clips', ...nonFavClips);
         } else {
           // sort by date
           const clips = this.clips.slice();
-          clips.sort((a, b) => {
-            return b.date - a.date;
-          });
-          this._deleteClips();
+          clips.sort(byDate);
+          this._deleteAllClipItems();
           this.push('clips', ...clips);
         }
         this._updateSelections(selClips);
@@ -1352,7 +1351,7 @@
                 this.clips.unshift(clipItem);
               } else {
                 this.unshift('clips', clipItem);
-                this._sortClips();
+                this._sortClipItems();
               }
             }
           }
@@ -1373,12 +1372,13 @@
       _updateClipItem: function(text, mods) {
         const pos = this._getClipPos(text);
         if (pos !== -1) {
+          const oldClipItem = this.clips[pos];
           let needsSort = false;
           const str = `clips.${pos}.`;
           for (const key of Object.keys(mods)) {
             // check if props that affect sort changed
             if (key === 'fav') {
-              if (this.isPinFavs && (mods[key] !== this.clips[pos].fav)) {
+              if (this.isPinFavs && (mods[key] !== oldClipItem.fav)) {
                 needsSort = true;
               }
             }
@@ -1386,7 +1386,7 @@
           }
 
           if (this.currentClip &&
-              (this.clips[pos].text === this.currentClip.text) &&
+              (oldClipItem.text === this.currentClip.text) &&
               mods.hasOwnProperty('labels')) {
             // update clip if labels changed
             this._setCurrentClip();
@@ -1395,8 +1395,9 @@
           if (!needsSort && mods.hasOwnProperty('date')) {
             needsSort = true;
           }
+
           if (needsSort) {
-            this._sortClips();
+            this._sortClipItems();
           } else {
             this.updateDates();
           }
@@ -1418,6 +1419,17 @@
             this.splice('clips', pos, 1);
             this.updateDates();
           }
+        }
+      },
+
+      /**
+       * Delete all {@link ClipItem} objects
+       * @private
+       * @memberOf MainPage
+       */
+      _deleteAllClipItems: function() {
+        if (this.clips && this.clips.length) {
+          this.splice('clips', 0, this.clips.length);
         }
       },
 
@@ -1445,17 +1457,6 @@
         return this.clips.findIndex((clipItem) => {
           return (clipText === clipItem.text);
         });
-      },
-
-      /**
-       * Delete all {@link ClipItem} objects
-       * @private
-       * @memberOf MainPage
-       */
-      _deleteClips: function() {
-        if (this.clips && this.clips.length) {
-          this.splice('clips', 0, this.clips.length);
-        }
       },
 
       /**
