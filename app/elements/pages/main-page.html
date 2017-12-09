@@ -830,16 +830,17 @@
           }
           if (startPos !== -1) {
             // found range, select it
-
+            const items = [];
             if (startPos < endPos) {
               for (let i = startPos + 1; i <= endPos; i++) {
-                list.selectItem(this.clips[i]);
+                items.push(this.clips[i]);
               }
             } else if (startPos > endPos) {
               for (let i = startPos - 1; i >= endPos; i--) {
-                list.selectItem(this.clips[i]);
+                items.push(this.clips[i]);
               }
             }
+            this.push('selClips', ...items);
           }
           list.scrollToIndex(firstIndex);
           this._setCurrentClip();
@@ -1073,20 +1074,24 @@
             });
             this.selClips.forEach((clipItem) => {
               const names = clipItem.getLabelNames();
+              
               addedNames.forEach((addedName) => {
                 if (!clipItem.hasLabel(addedName)) {
                   names.push(addedName);
                 }
               });
+              
               removedNames.forEach((removedName) => {
                 if (clipItem.hasLabel(removedName)) {
                   const idx = names.indexOf(removedName);
                   names.splice(idx, 1);
                 }
               });
+              
               promises.push(clipItem.setLabels(names));
             });
           } else {
+            // apply to current clip
             const clipItem = this.currentClip;
             promises.push(clipItem.setLabels(this.selDialogLabels));
           }
@@ -1536,9 +1541,10 @@
        */
       _selectAll: function() {
         if (this.clips && this.clips.length) {
-          this.clips.forEach((clipItem) => {
-            this.$.ironList.selectItem(clipItem);
-          });
+          const list = this.$.ironList;
+          list.clearSelection();
+          this.push('selClips', ...this.clips);
+          list.scrollToIndex(0);
           this._setCurrentClip();
         }
       },
