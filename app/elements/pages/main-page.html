@@ -1041,7 +1041,7 @@
             } else {
               // no clips
               this.set('clips', []);
-              this._updateSelections([]);
+              this._updateSelections([], 0);
             }
           }
         }
@@ -1340,8 +1340,7 @@
           this._deleteAllClipItems();
           this.push('clips', ...clips);
         }
-        this._updateSelections(selClips);
-        list.scrollToIndex(firstIndex);
+        this._updateSelections(selClips, firstIndex);
       },
 
       /**
@@ -1470,15 +1469,15 @@
       /**
        * Update the selected items
        * @param {ClipItem[]} selClips - ClipItems to select
+       * @param {int} [scrollIndex = 0]
        * @private
        * @memberOf MainPage
        */
-      _updateSelections: function(selClips) {
+      _updateSelections: function(selClips, scrollIndex = 0) {
         const list = this.$.ironList;
         list.clearSelection();
-        selClips.forEach((clipItem) => {
-          list.selectItem(clipItem);
-        });
+        this.push('selClips', ...selClips);
+        list.scrollToIndex(scrollIndex);
         this._setCurrentClip();
       },
 
@@ -1606,15 +1605,15 @@
       _getCommonLabelsForSelected: function() {
         const labels = [];
         this.labels.forEach((labelName) => {
-          let has = true;
+          let hasLabel = true;
           for (let i = 0; i < this.selClips.length; i++) {
             const clipItem = this.selClips[i];
             if (!clipItem.hasLabel(labelName)) {
-              has = false;
+              hasLabel = false;
               break;
             }
           }
-          if (has) {
+          if (hasLabel) {
             labels.push(labelName);
           }
         });
