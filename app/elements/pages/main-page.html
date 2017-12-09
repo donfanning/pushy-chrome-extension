@@ -1018,7 +1018,9 @@
        */
       _pinFavsChanged: function(newValue, oldValue) {
         if (typeof(oldValue) !== 'undefined') {
+          this._deselectAll();
           this._sortClipItems();
+          this._selectFirst();
         }
       },
 
