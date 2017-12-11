@@ -12,7 +12,7 @@ const base = {
   src: 'app/',
   dist: 'dist/',
   dev: 'dev/',
-  store: 'store/',
+  secure: 'secure/',
   docs: 'docs/',
   tmp_docs: '../tmp_jsdoc/',
 };
@@ -377,5 +377,5 @@ gulp.task('zip', () => {
   return gulp.src(`${base.dist}${base.src}**`).
       pipe(!isProdTest ? plugins.zip('store.zip') : plugins.zip(
           'store-test.zip')).
-      pipe(!isProdTest ? gulp.dest(base.store) : gulp.dest(base.dist));
+      pipe(!isProdTest ? gulp.dest(base.secure) : gulp.dest(base.dist));
 });

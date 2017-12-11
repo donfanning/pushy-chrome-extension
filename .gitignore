@@ -6,6 +6,9 @@
 *.db
 *.lock
 
+/secure
+/app/manifest.json
+
 
 # jekyll
 _site/
