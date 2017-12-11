@@ -515,6 +515,11 @@
         this.addEventListener('focus', this._onFocused.bind(this), true);
         this.set('canSend', app.Utils.canSend());
         this._loadClipItems(true).then(() => {
+          // !Important
+          this._deselectAll();
+          this._selectFirst();
+
+          // don't do in attached. need clips to be loaded before listening
           Chrome.Msg.listen(this._onChromeMessage);
 
           // listen for copy and cut events on document
@@ -535,7 +540,7 @@
         this.set('isBulkOp', false);
         this.set('canSend', app.Utils.canSend());
         this._selectFirst(true);
-        this.updateDates();
+        this._updateDates();
       },
 
       /**
@@ -549,27 +554,16 @@
       },
 
       /**
-       * Update the relative dates
-       * @memberOf MainPage
-       */
-      updateDates: function() {
-        if (this.isBulkOp || (this.clips === undefined)) {
-          return;
-        }
-        for (let i = 0; i < this.clips.length; i++) {
-          const date = this.clips[i].date;
-          this.set(`clips.${i}.date`, date - 1);
-          this.set(`clips.${i}.date`, date);
-        }
-      },
-
-      /**
        * Set {@link Label} name for filtering
-       * @param {?string} labelName
+       * @param {string} [labelName = '']
        * @memberOf MainPage
        */
-      setLabelFilter: function(labelName) {
-        this.set('labelFilter', labelName);
+      setLabelFilter: function(labelName = '') {
+        if (this.labelFilter === labelName) {
+          this._updateDates();
+        } else {
+          this.set('labelFilter', labelName);
+        }
       },
 
       // noinspection JSUnusedLocalSymbols
@@ -649,7 +643,7 @@
             }
           });
           this._setCurrentClip();
-          if (this.selClips && this.selClips.length) {
+          if (this.hasSelections) {
             list.scrollToItem(this.selClips[0]);
           }
           this._closeUndoToast();
@@ -954,7 +948,7 @@
        * @memberOf MainPage
        */
       _currentClipChanged: function() {
-        this.updateDates();
+        this._updateDates();
 
         // clear text
         const el = this.$.clipViewerText;
@@ -1036,8 +1030,9 @@
         if (typeof(oldValue) !== 'undefined') {
           if (!newValue && oldValue) {
             // toggling from true to false
-            if (this.clips && this.clips.length) {
+            if (this._hasClipItems()) {
               this._sortClipItems();
+              this._updateDates();
             } else {
               // no clips
               this.set('clips', []);
@@ -1074,20 +1069,20 @@
             });
             this.selClips.forEach((clipItem) => {
               const names = clipItem.getLabelNames();
-              
+
               addedNames.forEach((addedName) => {
                 if (!clipItem.hasLabel(addedName)) {
                   names.push(addedName);
                 }
               });
-              
+
               removedNames.forEach((removedName) => {
                 if (clipItem.hasLabel(removedName)) {
                   const idx = names.indexOf(removedName);
                   names.splice(idx, 1);
                 }
               });
-              
+
               promises.push(clipItem.setLabels(names));
             });
           } else {
@@ -1281,14 +1276,18 @@
           if (selectFirst) {
             this._selectFirst();
           }
-          // HACK not sure why this is needed but it loses selection
-          // on first opening of UI otherwise
-          this._deselectAll();
-          if (selectFirst) {
-            this._selectFirst();
-          }
           return Promise.resolve();
         });
+      },
+
+      /**
+       * Do we have any {@link ClipItem} objects in the list
+       * @returns {boolean} true if we have at least one clip
+       * @private
+       * @memberOf MainPage
+       */
+      _hasClipItems: function() {
+        return !!(this.clips && this.clips.length);
       },
 
       /**
@@ -1406,7 +1405,7 @@
           if (needsSort) {
             this._sortClipItems();
           } else {
-            this.updateDates();
+            this._updateDates();
           }
         }
       },
@@ -1424,7 +1423,7 @@
             this.clips.splice(pos, 1);
           } else {
             this.splice('clips', pos, 1);
-            this.updateDates();
+            this._updateDates();
           }
         }
       },
@@ -1435,7 +1434,7 @@
        * @memberOf MainPage
        */
       _deleteAllClipItems: function() {
-        if (this.clips && this.clips.length) {
+        if (this._hasClipItems()) {
           this.splice('clips', 0, this.clips.length);
         }
       },
@@ -1448,9 +1447,13 @@
        * @memberOf MainPage
        */
       _getClip: function(clipText) {
-        return this.clips.find((clipItem) => {
-          return (clipText === clipItem.text);
-        });
+        let ret = null;
+        if (this._hasClipItems()) {
+          ret = this.clips.find((clipItem) => {
+            return (clipText === clipItem.text);
+          });
+        }
+        return ret;
       },
 
       /**
@@ -1461,9 +1464,29 @@
        * @memberOf MainPage
        */
       _getClipPos: function(clipText) {
-        return this.clips.findIndex((clipItem) => {
-          return (clipText === clipItem.text);
-        });
+        let ret = -1;
+        if (this._hasClipItems()) {
+          ret = this.clips.findIndex((clipItem) => {
+            return (clipText === clipItem.text);
+          });
+        }
+        return ret;
+      },
+
+      /**
+       * Update the relative dates
+       * @private
+       * @memberOf MainPage
+       */
+      _updateDates: function() {
+        if (this.isBulkOp || !this._hasClipItems()) {
+          return;
+        }
+        for (let i = 0; i < this.clips.length; i++) {
+          const date = this.clips[i].date;
+          this.set(`clips.${i}.date`, date - 1);
+          this.set(`clips.${i}.date`, date);
+        }
       },
 
       /**
@@ -1474,6 +1497,7 @@
        * @memberOf MainPage
        */
       _updateSelections: function(selClips, scrollIndex = 0) {
+        selClips = selClips || [];
         const list = this.$.ironList;
         list.clearSelection();
         this.push('selClips', ...selClips);
@@ -1539,7 +1563,7 @@
        * @memberOf MainPage
        */
       _selectAll: function() {
-        if (this.clips && this.clips.length) {
+        if (this._hasClipItems()) {
           const list = this.$.ironList;
           list.clearSelection();
           this.push('selClips', ...this.clips);
@@ -1554,7 +1578,7 @@
        * @memberOf MainPage
        */
       _deselectAll: function() {
-        if (this.selClips && this.selClips.length) {
+        if (this.hasSelections) {
           this.$.ironList.clearSelection();
         }
         this._setCurrentClip();
@@ -1569,14 +1593,11 @@
        * @memberOf MainPage
        */
       _selectFirst: function(ifNoSelections = false) {
-        if (!this.clips || !this.clips.length ||
-            (ifNoSelections && this.selClips.length)) {
+        if (!this._hasClipItems() || (ifNoSelections && this.hasSelections)) {
           return false;
         }
-        const clipItem = this.clips[0];
-        const ret = this._select(clipItem);
         this.$.ironList.scrollToIndex(0);
-        return ret;
+        return this._select(this.clips[0]);
       },
 
       /**
@@ -1586,7 +1607,7 @@
        */
       _setCurrentClip: function() {
         let currentItem = null;
-        if (this.selClips && this.selClips.length) {
+        if (this.hasSelections) {
           currentItem = this.selClips[this.selClips.length - 1];
         }
         // override dirty checking

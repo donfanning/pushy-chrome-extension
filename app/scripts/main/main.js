@@ -322,7 +322,7 @@
     if (!page.obj) {
       // some pages are just pages
       if (page.route === 'page-main') {
-        t.$.mainPage.setLabelFilter('');
+        t.$.mainPage.setLabelFilter();
         t.route = page.route;
       } else if (page.route.includes('page-main-labeled#')) {
         t.$.mainPage.setLabelFilter(page.label);
@@ -590,15 +590,12 @@
       }
       return;
     }
-    
+
     prevRoute = t.route;
     const idx = _getPageIdx(onHighlightRoute);
     const page = pages[idx];
     if (onHighlightRoute === 'page-main') {
-      t.$.mainPage.setLabelFilter(null);
-      if ((prevRoute === 'page-main')) {
-        t.$.mainPage.updateDates();
-      }
+      t.$.mainPage.setLabelFilter();
     } else {
       _showPage(page);
     }
