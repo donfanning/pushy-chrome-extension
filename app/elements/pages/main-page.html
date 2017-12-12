@@ -20,13 +20,15 @@
 <link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
-<link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
 <link rel="import" href="../my_icons.html">
+<link rel="import" href="../clip-viewer.html">
+<link rel="import" href="../labels-dialog.html">
 
 <dom-module id="main-page">
   <template>
@@ -125,40 +127,6 @@
         margin: 0;
       }
 
-      #clipViewerText {
-        @apply(--paper-font-subhead);
-        white-space: pre-wrap;
-      }
-
-      #clipViewerLabels {
-        cursor: pointer;
-        margin: 0;
-        padding-bottom: 16px;
-      }
-
-      #clipViewerLabels paper-item {
-        @apply(--paper-font-subhead);
-        --paper-item: {
-          min-height: 0;
-          border: 2px solid rgba(0, 0, 0, .1);
-          border-radius: 5px;
-          background-color: rgba(0, 0, 0, .1);
-          margin-right: 8px;
-          margin-bottom: 8px;
-          padding-left: 4px;
-          padding-right: 4px;
-        };
-        --paper-item-disabled-color: var(--primary-text-color);
-      }
-
-      #labelsDialog {
-        min-width: 25vw;
-      }
-
-      .label-item {
-        cursor: pointer;
-      }
-
       #undoToastButton {
         margin-top: 0;
         margin-bottom: 0;
@@ -229,29 +197,11 @@
       <div class="body-content horizontal layout">
 
         <!-- Select labels dialog -->
-        <paper-dialog
-            id="labelsDialog" modal
-            entry-animation="scale-up-animation"
-            exit-animation="fade-out-animation">
-          <h2 class="vertical layout center">
-            [[_computeLabelsDialogTitle(isMultiLabelsEdit, selClips, selClips.splices)]]</h2>
-          <paper-dialog-scrollable>
-            <paper-listbox
-                multi attr-for-selected="id"
-                selected-values="{{selDialogLabels}}">
-              <template is="dom-repeat"
-                        items="{{labels}}" as="label">
-                <paper-icon-item id="[[label]]" class="label-item">
-                  <iron-icon icon="myicons:label" item-icon></iron-icon>
-                  [[label]]
-                </paper-icon-item>
-              </template>
-            </paper-listbox>
-          </paper-dialog-scrollable>
-          <div class="buttons">
-            <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
-          </div>
-        </paper-dialog>
+        <labels-dialog
+            id="labelsDialog"
+            dialog-title="[[_computeLabelsDialogTitle(isMultiLabelsEdit, selClips, selClips.splices)]]"
+            selected-labels="{{selDialogLabels}}">
+        </labels-dialog>
 
         <!-- Undo delete toast -->
         <paper-toast id="undoToast" duration="0">
@@ -308,19 +258,11 @@
         </div>
 
         <!-- Clip Viewer -->
-        <div id="clipViewer" class="flex-3">
-          <div id="clipViewerLabels" on-tap="_onLabelsTapped">
-            <div class="horizontal layout">
-              <template
-                  is="dom-repeat" id="labelsTemplate"
-                  items="{{currentLabels}}" as="currentLabel">
-                <paper-item disabled>[[currentLabel]]</paper-item>
-              </template>
-            </div>
-            <hr/>
-          </div>
-          <div id="clipViewerText"></div>
-        </div>
+        <clip-viewer
+            id="clipViewer"
+            class="flex-3"
+            clip-item="{{currentClip}}"
+            on-labels-tapped="_onViewerLabelsTapped"></clip-viewer>
 
       </div>
     </paper-material>
@@ -356,7 +298,6 @@
           type: Object,
           value: null,
           notify: true,
-          observer: '_currentClipChanged',
         },
 
         /**
@@ -448,26 +389,6 @@
           value: null,
           notify: true,
           observer: '_labelFilterChanged',
-        },
-
-        /**
-         * Array of all {@link Label} names
-         * @memberOf MainPage
-         */
-        labels: {
-          type: Array,
-          value: [],
-          notify: true,
-        },
-
-        /**
-         * Array of all {@link Label} names for the current clip
-         * @memberOf MainPage
-         */
-        currentLabels: {
-          type: Array,
-          value: [],
-          notify: true,
         },
 
         /**
@@ -599,17 +520,7 @@
        */
       _onSelectLabelsTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'selectLabels');
-        this._showLabelsSelectDialog(true);
-      },
-
-      /**
-       * Event: Labels section of ClipViewer tapped
-       * @private
-       * @memberOf MainPage
-       */
-      _onLabelsTapped: function() {
-        Chrome.GA.event(app.GA.EVENT.CLICK, 'showLabelList');
-        this._showLabelsSelectDialog(false);
+        this._showLabelsDialog(true);
       },
 
       /**
@@ -913,15 +824,25 @@
        * @memberOf MainPage
        */
       _onRowLabelTapped: function(event) {
-        Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'showLabelList');
-        const clipItem = event.model.clip;
+        Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'rowLabelTapped');
         this._deselectAll();
-        this._select(clipItem);
+        this._select(event.model.clip);
 
         // prevent row deselection
         event.stopPropagation();
 
-        this._showLabelsSelectDialog(false);
+        this._showLabelsDialog(false);
+      },
+
+      /**
+       * Event: Labels of {@link ClipViewer} tapped
+       * @param {Event} event
+       * @private
+       * @memberOf MainPage
+       */
+      _onViewerLabelsTapped: function(event) {
+        Chrome.GA.event(app.GA.EVENT.CLICK, 'viewerLabelsTapped');
+        this._showLabelsDialog(false);
       },
 
       /**
@@ -940,52 +861,6 @@
        */
       _initPinFavs: function() {
         this.set('isPinFavs', 'false');
-      },
-
-      /**
-       * Observer: The current clip changed
-       * @private
-       * @memberOf MainPage
-       */
-      _currentClipChanged: function() {
-        this._updateDates();
-
-        // clear text
-        const el = this.$.clipViewerText;
-        while (el.firstChild) {
-          // delete all children previous linkify created
-          el.removeChild(el.firstChild);
-        }
-
-        // set the current labels
-
-        // not guaranteed to be initialized yet
-        if (this.currentLabels === undefined) {
-          this.currentLabels = [];
-        }
-        this.$.clipViewerLabels.style.display = 'none';
-        this.splice('currentLabels', 0, this.currentLabels.length);
-
-        const clipItem = this.currentClip;
-        if (!clipItem) {
-          return;
-        }
-
-        const names = clipItem.getLabelNames();
-        names.forEach((name) => {
-          if (!this.currentLabels.includes(name)) {
-            this.push('currentLabels', name);
-          }
-        });
-
-        if (this.currentLabels && this.currentLabels.length) {
-          this.$.clipViewerLabels.style.display = 'block';
-        }
-
-        // set text
-        el.textContent = clipItem.text;
-        // linkify it - creates element children
-        linkifyElement(el);
       },
 
       /**
@@ -1377,36 +1252,36 @@
        */
       _updateClipItem: function(text, mods) {
         const pos = this._getClipPos(text);
-        if (pos !== -1) {
-          const oldClipItem = this.clips[pos];
-          let needsSort = false;
-          const str = `clips.${pos}.`;
-          for (const key of Object.keys(mods)) {
-            // check if props that affect sort changed
-            if (key === 'fav') {
-              if (this.isPinFavs && (mods[key] !== oldClipItem.fav)) {
-                needsSort = true;
-              }
+        if (pos === -1) {
+          return;
+        }
+
+        const clipItem = this.clips[pos];
+        let needsSort = false;
+        for (const key of Object.keys(mods)) {
+          // check if props that affect sort changed
+          if (key === 'fav') {
+            if (this.isPinFavs && (mods[key] !== clipItem.fav)) {
+              needsSort = true;
             }
-            this.set(`${str}${key}`, mods[key]);
           }
+          this.set(`clips.${pos}.${key}`, mods[key]);
+        }
 
-          if (this.currentClip &&
-              (oldClipItem.text === this.currentClip.text) &&
-              mods.hasOwnProperty('labels')) {
-            // update clip if labels changed
-            this._setCurrentClip();
-          }
+        if (!needsSort && mods.hasOwnProperty('date')) {
+          needsSort = true;
+        }
 
-          if (!needsSort && mods.hasOwnProperty('date')) {
-            needsSort = true;
-          }
+        if (this.currentClip && mods.hasOwnProperty('labels') &&
+            (clipItem.text === this.currentClip.text)) {
+          // update current clip if labels changed
+          this._setCurrentClip();
+        }
 
-          if (needsSort) {
-            this._sortClipItems();
-          } else {
-            this._updateDates();
-          }
+        if (needsSort) {
+          this._sortClipItems();
+        } else {
+          this._updateDates();
         }
       },
 
@@ -1618,74 +1493,47 @@
       },
 
       /**
-       * Get the labels shared by all selected {@link ClipItem} objects
-       * @returns {string[]} Array of all shared Label names
-       * @private
-       * @memberOf MainPage
-       */
-      _getCommonLabelsForSelected: function() {
-        const labels = [];
-        this.labels.forEach((labelName) => {
-          let hasLabel = true;
-          for (let i = 0; i < this.selClips.length; i++) {
-            const clipItem = this.selClips[i];
-            if (!clipItem.hasLabel(labelName)) {
-              hasLabel = false;
-              break;
-            }
-          }
-          if (hasLabel) {
-            labels.push(labelName);
-          }
-        });
-        return labels;
-      },
-
-      /**
        * Show Labels select dialog
        * @param {boolean} multi - if true apply changes to all selectItems
        * @private
        * @memberOf MainPage
        */
-      _showLabelsSelectDialog: function(multi) {
+      _showLabelsDialog: function(multi) {
         this.set('isMultiLabelsEdit', multi);
-        app.Label.loadAll().then((labels) => {
-          this.splice('labels', 0, this.labels.length);
-          labels.forEach((label) => {
-            this.push('labels', label.name);
+        if (multi && (this.selClips.length > 1)) {
+          // for multi mode, apply to all selectedClips
+          app.Label.loadAll().then((labels) => {
+            // get all label names that all selected clips share
+            const names = [];
+            labels = labels || [];
+            labels.forEach((label) => {
+              let hasLabel = true;
+              for (let i = 0; i < this.selClips.length; i++) {
+                const clipItem = this.selClips[i];
+                if (!clipItem.hasLabel(label.name)) {
+                  hasLabel = false;
+                  break;
+                }
+              }
+              if (hasLabel) {
+                names.push(label.name);
+              }
+            });
+            return Promise.resolve(names);
+          }).then((labelNames) => {
+            this.set('selDialogLabels', labelNames);
+            this.$.labelsDialog.open();
+            return Promise.resolve();
+          }).catch((err) => {
+            Chrome.Log.error(err.message, 'MainPage._showLabelsDialog',
+                'Failed to load labels');
           });
-          return Promise.resolve();
-        }).then(() => {
-          if (multi && (this.selClips.length > 1)) {
-            // for multi mode, will apply to all selectedClips
-            const labels = this._getCommonLabelsForSelected();
-            this.set('selDialogLabels', labels);
-          } else {
-            this._setSelectedLabels(this.currentClip);
+        } else {
+          if (this.currentClip) {
+            const names = this.currentClip.getLabelNames();
+            this.set('selDialogLabels', names);
+            this.$.labelsDialog.open();
           }
-          return Promise.resolve();
-        }).then(() => {
-          this.$.labelsDialog.open();
-          return Promise.resolve();
-        }).catch((err) => {
-          Chrome.Log.error(err.message, 'MainPage._showLabelsSelectDialog',
-              'Failed to load labels');
-        });
-      },
-
-      /**
-       * Set the selected labels based on a {@link ClipItem}
-       * @param {ClipItem} clipItem
-       * @private
-       * @memberOf MainPage
-       */
-      _setSelectedLabels: function(clipItem) {
-        if (this.selDialogLabels && this.selDialogLabels.length) {
-          this.splice('selDialogLabels', 0, this.selDialogLabels.length);
-        }
-        if (clipItem) {
-          const names = clipItem.getLabelNames();
-          this.push('selDialogLabels', ...names);
         }
       },
 
