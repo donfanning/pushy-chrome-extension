@@ -1,0 +1,157 @@
+<!--
+  ~ Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
+  ~ Licensed under Apache 2.0
+  ~ https://opensource.org/licenses/Apache-2.0
+  ~ https://github.com/opus1269/setting-elements/blob/master/LICENSE.md
+  -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+
+<script src="../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
+
+<dom-module id="clip-viewer">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      .text {
+        @apply(--paper-font-subhead);
+        white-space: pre-wrap;
+      }
+
+      .labels {
+        cursor: pointer;
+        margin: 0;
+        padding-bottom: 16px;
+      }
+
+      .labels paper-item {
+        @apply(--paper-font-subhead);
+        --paper-item: {
+          min-height: 0;
+          border: 2px solid rgba(0, 0, 0, .1);
+          border-radius: 5px;
+          background-color: rgba(0, 0, 0, .1);
+          margin-right: 8px;
+          margin-bottom: 8px;
+          padding-left: 4px;
+          padding-right: 4px;
+        };
+        --paper-item-disabled-color: var(--primary-text-color);
+      }
+    </style>
+
+    <div id="labels" class="labels" on-tap="_onLabelsTapped">
+      <div class="horizontal layout">
+        <template
+            is="dom-repeat" id="labelsTemplate"
+            items="{{labels}}" as="label">
+          <paper-item disabled>[[label.name]]</paper-item>
+        </template>
+      </div>
+      <hr/>
+    </div>
+    <div id="text" class="text"></div>
+
+  </template>
+</dom-module>
+
+<script>
+  'use strict';
+
+  new ExceptionHandler();
+
+  /**
+   * Polymer element to display a {@link ClipItem}
+   * @namespace ClipViewer
+   */
+  Polymer({
+    is: 'clip-viewer',
+
+    properties: {
+      
+      /**
+       * Fires when labels section is tapped
+       * @event labels-tapped
+       * @memberOf ClipViewer
+       */
+      
+      /**
+       * {@link ClipItem} to view
+       * @memberOf ClipViewer
+       */
+      clipItem: {
+        type: Object,
+        value: null,
+        notify: true,
+        observer: '_clipItemChanged',
+      },
+
+      /**
+       * Array of {@link Label} objects for the {@link ClipItem}
+       * @memberOf ClipViewer
+       */
+      labels: {
+        type: Array,
+        value: [],
+        notify: true,
+      },
+    },
+
+    /**
+     * Event: Labels section tapped
+     * @private
+     * @memberOf ClipViewer
+     */
+    _onLabelsTapped: function() {
+      Chrome.GA.event(app.GA.EVENT.CLICK, 'showLabelList');
+      this.fire('labels-tapped');
+    },
+
+    /**
+     * Observer: The current clip changed
+     * @private
+     * @memberOf ClipViewer
+     */
+    _clipItemChanged: function() {
+      // clear text
+      const el = this.$.text;
+      while (el.firstChild) {
+        // delete all children previous linkify created
+        el.removeChild(el.firstChild);
+      }
+      
+      // clear labels
+      // not guaranteed to be initialized yet
+      if (this.labels === undefined) {
+        this.labels = [];
+      }
+      this.$.labels.style.display = 'none';
+      this.splice('labels', 0, this.labels.length);
+
+      if (!this.clipItem) {
+        return;
+      }
+
+      // set text
+      el.textContent = this.clipItem.text;
+      // linkify it - creates element children
+      linkifyElement(el);
+
+      // set labels
+      if (this.clipItem.labels.length) {
+        this.push('labels', ...this.clipItem.labels);
+        this.$.labels.style.display = 'block';
+      }
+    },
+  });
+</script>

@@ -1,0 +1,153 @@
+<!--
+  ~ Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
+  ~ Licensed under Apache 2.0
+  ~ https://opensource.org/licenses/Apache-2.0
+  ~ https://goo.gl/wFvBM1
+  -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="my_icons.html">
+
+<script src="../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
+
+<dom-module id="labels-dialog">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      .dialog {
+        min-width: 25vw;
+      }
+
+      paper-icon-item {
+        cursor: pointer;
+        /*stupid documentation*/
+        --paper-item-focused-before: {
+          background: transparent;
+        };
+      }
+
+      paper-icon-item iron-icon {
+        color: var(--accent-color);
+      }
+
+      .iron-selected {
+        background: var(--selected-color);
+      }
+    </style>
+
+    <paper-dialog
+        id="dialog" class="dialog" modal
+        entry-animation="scale-up-animation"
+        exit-animation="fade-out-animation"
+        selected-labels="{{selectedLabels}}">
+      <h2 class="vertical layout center">[[dialogTitle]]</h2>
+      <paper-dialog-scrollable>
+        <paper-listbox
+            multi attr-for-selected="id"
+            selected-values="{{selectedLabels}}">
+          <template is="dom-repeat"
+                    items="{{labels}}" as="label">
+            <paper-icon-item id="[[label.name]]">
+              <iron-icon icon="myicons:label" item-icon></iron-icon>
+              [[label.name]]
+            </paper-icon-item>
+          </template>
+        </paper-listbox>
+      </paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
+      </div>
+    </paper-dialog>
+
+  </template>
+</dom-module>
+
+<script>
+  'use strict';
+
+  new ExceptionHandler();
+
+  /**
+   * Polymer dialog to select from a list of labels
+   * @namespace LabelsDialog
+   */
+  Polymer({
+    is: 'labels-dialog',
+
+    properties: {
+      /**
+       * Dialog title
+       * @memberOf LabelsDialog
+       */
+      dialogTitle: {
+        type: String,
+        value: 'Select labels',
+        notify: true,
+      },
+
+      /**
+       * Array of all {@link Label} objects
+       * @memberOf LabelsDialog
+       */
+      labels: {
+        type: Array,
+        value: [],
+        notify: true,
+      },
+
+      /**
+       * Array of selected {@link Label} names
+       * @memberOf LabelsDialog
+       */
+      selectedLabels: {
+        type: Array,
+        value: [],
+        notify: true,
+      },
+    },
+
+    /**
+     * Show the dialog
+     * @private
+     * @memberOf LabelsDialog
+     */
+    open: function() {
+      app.Label.loadAll().then((labels) => {
+        labels = labels || [];
+        this.splice('labels', 0, this.labels.length);
+        if (labels.length) {
+          this.push('labels', ...labels);
+        }
+        this.$.dialog.open();
+        return Promise.resolve();
+      }).catch((err) => {
+        Chrome.Log.error(err.message, 'LabelsDialog._open',
+            'Failed to load labels');
+      });
+    },
+
+    /**
+     * Hide the dialog
+     * @private
+     * @memberOf LabelsDialog
+     */
+    close: function() {
+      this.$.dialog.close();
+    },
+  });
+</script>
