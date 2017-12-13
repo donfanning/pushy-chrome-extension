@@ -1,0 +1,289 @@
+<!--
+  ~ Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
+  ~ Licensed under Apache 2.0
+  ~ https://opensource.org/licenses/Apache-2.0
+  ~ https://goo.gl/wFvBM1
+  -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<script src="../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
+
+<dom-module id="clip-row">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      /* set programmatically */
+      .clip-item {
+        position: relative;
+        border: 1px #CCCCCC;
+        border-bottom-style: solid;
+        margin: 0;
+        padding: 0 0 0 8px;
+        cursor: pointer;
+      }
+
+      .clip-item paper-item {
+        /*stupid documentation*/
+        --paper-item-focused-before: {
+          background: transparent;
+        };
+      }
+
+      .clip-text-row {
+        padding: 0 8px;
+        margin: 0;
+      }
+
+      .clip-text {
+        line-height: 1.2em;
+        height: 2.4em;
+        overflow: hidden;
+        padding: 0 8px 0 4px;
+        margin: 0;
+      }
+
+      .date-row {
+        padding: 0 8px;
+      }
+
+      .date-text {
+        color: var(--accent-color);
+        text-align: center;
+      }
+
+      /* set programmatically */
+      .selected {
+        background: var(--selected-color);
+      }
+    </style>
+
+    <div
+        tabindex="-1"
+        index="{{index}}"
+        selected="{{selected}}"
+        clip="{{clip}}"
+        class$="[[_computeClipClass(selected)]]">
+      <div class="clip-body flex vertical layout" tabindex="-1">
+        <paper-item class="date-row center horizontal layout">
+          <paper-icon-button
+              icon="[[_computeFavIcon(clip.fav)]]"
+              style$="color: [[_computeFavColor(clip.fav)]];"
+              on-tap="_onRowFavTapped"></paper-icon-button>
+          <paper-item-body class="date-text center flex">
+            {{_computeDate(clip.date)}}
+          </paper-item-body>
+          <paper-icon-button
+              icon="myicons:content-copy"
+              on-tap="_onRowCopyTapped"></paper-icon-button>
+        </paper-item>
+        <paper-item class="clip-text-row horizontal layout flex">
+          <paper-item-body class="clip-text vertical start-justified layout">
+            [[clip.text]]
+          </paper-item-body>
+          <paper-icon-button
+              icon="myicons:label-outline"
+              on-tap="_onRowLabelTapped"></paper-icon-button>
+        </paper-item>
+      </div>
+    </div>
+
+  </template>
+</dom-module>
+
+<script>
+  'use strict';
+
+  new ExceptionHandler();
+
+  /**
+   * Polymer element to display a row in the {@link ClipList} 
+   * @namespace ClipRow
+   */
+  Polymer({
+    is: 'clip-row',
+
+    properties: {
+
+      // /**
+      //  * Fired when we are tapped
+      //  * @event row-tapped
+      //  * @memberOf ClipRow
+      //  */
+
+      /**
+       * Fired when the label button of a row is tapped
+       * @event label-tap
+       * @memberOf ClipRow
+       */
+
+      /**
+       * Our {@link ClipItem}
+       * @memberOf ClipRow
+       */
+      clip: {
+        type: Object,
+        value: null,
+        notify: true,
+      },
+
+      /**
+       * True if we are selected
+       * @memberOf ClipRow
+       */
+      index: {
+        type: Number,
+        value: -1,
+        notify: true,
+      },
+
+      /**
+       * True if we are selected
+       * @memberOf ClipRow
+       */
+      selected: {
+        type: Boolean,
+        value: false,
+        notify: true,
+      },
+    },
+
+    /**
+     * Event: Tap on clip row
+     * @param {Event} event
+     * @param {ClipItem} event.model.clip
+     * @private
+     * @memberOf ClipRow
+     */
+    _onClipRowTapped: function(event) {
+      this.fire('row-tap');
+    },
+
+    /**
+     * Event: Copy list row to clipboard
+     * @param {Event} event
+     * @param {ClipItem} event.model.clip
+     * @private
+     * @memberOf ClipRow
+     */
+    _onRowCopyTapped: function(event) {
+      Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'copyClipItem');
+      const clipItem = this.clip;
+      clipItem.date = Date.now();
+      clipItem.remote = false;
+      clipItem.save().then(() => {
+        // send message to copy to clipboard
+        const msg =
+            Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
+        msg.item = clipItem;
+        // eslint-disable-next-line promise/no-nesting
+        Chrome.Msg.send(msg).catch(() => {});
+        return Promise.resolve();
+      }).catch((err) => {
+        Chrome.Log.error(err.message, 'ClipRow._onRowCopyTapped',
+            'Failed to copy item to clipboard.');
+      });
+
+      // prevent row selection
+      event.stopPropagation();
+    },
+
+    /**
+     * Event: Toggle favorite state of row
+     * @param {Event} event
+     * @param {ClipItem} event.model.clip
+     * @private
+     * @memberOf ClipRow
+     */
+    _onRowFavTapped: function(event) {
+      Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'toggleFavorite');
+      const clipItem = this.clip;
+      if (clipItem) {
+        clipItem.update({fav: !clipItem.fav}).catch((err) => {
+          Chrome.Log.error(err.message, 'ClipRow._onRowFavTapped');
+        });
+      }
+
+      // prevent row selection
+      event.stopPropagation();
+    },
+
+    /**
+     * Event: Label icon of clip row tapped
+     * @param {Event} event
+     * @param {{}} event.model
+     * @private
+     * @memberOf ClipRow
+     */
+    _onRowLabelTapped: function(event) {
+      Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'rowLabelTapped');
+
+      // prevent row deselection
+      event.stopPropagation();
+
+      // TODO need clip?
+      this.fire('label-tap', {clip: this.clip});
+    },
+
+    /**
+     * Computed Binding: Clip item classList
+     * @param {boolean} selected - is clip selected
+     * @returns {string} Clip item classList
+     * @private
+     * @memberOf ClipRow
+     */
+    _computeClipClass: function(selected) {
+      let classList = 'clip-item';
+      if (selected) {
+        classList += ' selected';
+      }
+      return classList;
+    },
+
+    /**
+     * Computed Binding
+     * @param {int} date - from epoch in millis
+     * @returns {string} Date as relative from now
+     * @private
+     * @memberOf ClipRow
+     */
+    _computeDate: function(date) {
+      return app.Utils.getRelativeTime(date);
+    },
+
+    /**
+     * Computed Binding
+     * @param {boolean} isTrue - true if fav
+     * @returns {string} icon style
+     * @private
+     * @memberOf ClipRow
+     */
+    _computeFavIcon: function(isTrue) {
+      return isTrue ? 'myicons:favorite' : 'myicons:favorite-border';
+    },
+
+    /**
+     * Computed Binding
+     * @param {boolean} isTrue - true if fav
+     * @returns {string} Favorite icon color
+     * @private
+     * @memberOf ClipRow
+     */
+    _computeFavColor: function(isTrue) {
+      return isTrue ? 'rgba(255, 0, 0, .8)' : 'var(--primary-text-color)';
+    },
+  });
+</script>
