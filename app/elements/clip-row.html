@@ -118,12 +118,6 @@
 
     properties: {
 
-      // /**
-      //  * Fired when we are tapped
-      //  * @event row-tapped
-      //  * @memberOf ClipRow
-      //  */
-
       /**
        * Fired when the label button of a row is tapped
        * @event label-tap
@@ -144,16 +138,6 @@
        * True if we are selected
        * @memberOf ClipRow
        */
-      index: {
-        type: Number,
-        value: -1,
-        notify: true,
-      },
-
-      /**
-       * True if we are selected
-       * @memberOf ClipRow
-       */
       selected: {
         type: Boolean,
         value: false,
@@ -163,12 +147,10 @@
 
     /**
      * Event: Tap on clip row
-     * @param {Event} event
-     * @param {ClipItem} event.model.clip
      * @private
      * @memberOf ClipRow
      */
-    _onClipRowTapped: function(event) {
+    _onClipRowTapped: function() {
       this.fire('row-tap');
     },
 

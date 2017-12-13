@@ -67,13 +67,13 @@
 
       /**
        * Fires when the selected clip changes
-       * @event selected-clip-changed
+       * @event selected-clip-change
        * @memberOf ClipList
        */
 
       /**
        * Fired when the label button of a row is tapped
-       * @event row-label-tapped
+       * @event row-label-tap
        * @memberOf ClipList
        */
 
@@ -224,7 +224,7 @@
       if (this.currentClip && mods.hasOwnProperty('labels') &&
           (clipItem.text === this.currentClip.text)) {
         // update current clip if labels changed
-        this.fire('selected-clip-changed');
+        this.fire('selected-clip-change');
       }
 
       if (needsSort) {
@@ -335,7 +335,7 @@
         list.clearSelection();
         this.push('selClips', ...this.clips);
         list.scrollToIndex(0);
-        this.fire('selected-clip-changed');
+        this.fire('selected-clip-change');
       }
     },
 
@@ -347,7 +347,7 @@
       if (this._hasSelections()) {
         this.$.ironList.clearSelection();
       }
-      this.fire('selected-clip-changed');
+      this.fire('selected-clip-change');
     },
 
     /**
@@ -420,7 +420,7 @@
             }
           }
           list.scrollToIndex(firstIndex);
-          this.fire('selected-clip-changed');
+          this.fire('selected-clip-change');
           return;
         } else if (!this._hasSelections()) {
           // select from first to current
@@ -461,7 +461,7 @@
           this.push('selClips', ...items);
         }
         list.scrollToIndex(firstIndex);
-        this.fire('selected-clip-changed');
+        this.fire('selected-clip-change');
       } else if (isCtrl) {
         // toggle selection
         if (selected) {
@@ -491,7 +491,7 @@
       Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'rowLabelTapped');
       this.deselectAll();
       this._select(event.model.clip);
-      this.fire('row-label-tapped');
+      this.fire('row-label-tap');
     },
 
     /**
@@ -612,7 +612,7 @@
       list.clearSelection();
       this.push('selClips', ...selClips);
       list.scrollToIndex(scrollIndex);
-      this.fire('selected-clip-changed');
+      this.fire('selected-clip-change');
     },
 
     /**
@@ -651,7 +651,7 @@
       if (clipItem && !this._isSelected(clipItem)) {
         this.$.ironList.selectItem(clipItem);
         if (!this.isBulkOp) {
-          this.fire('selected-clip-changed');
+          this.fire('selected-clip-change');
         }
         ret = true;
       }
@@ -670,7 +670,7 @@
       if (clipItem && this._isSelected(clipItem)) {
         this.$.ironList.deselectItem(clipItem);
         if (!this.isBulkOp) {
-          this.fire('selected-clip-changed');
+          this.fire('selected-clip-change');
         }
         ret = true;
       }
