@@ -1,0 +1,706 @@
+<!--
+  ~ Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
+  ~ Licensed under Apache 2.0
+  ~ https://opensource.org/licenses/Apache-2.0
+  ~ https://goo.gl/wFvBM1
+  -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<script src="../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
+
+<dom-module id="clip-list">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      #ironList {
+        height: 82vh;
+      }
+
+      /* set programmatically */
+      .clip-item {
+        position: relative;
+        border: 1px #CCCCCC;
+        border-bottom-style: solid;
+        margin: 0;
+        padding: 0 0 0 8px;
+        cursor: pointer;
+      }
+
+      .clip-item paper-item {
+        /*stupid documentation*/
+        --paper-item-focused-before: {
+          background: transparent;
+        };
+      }
+
+      .clip-text-row {
+        padding: 0 8px;
+        margin: 0;
+      }
+
+      .clip-text {
+        line-height: 1.2em;
+        height: 2.4em;
+        overflow: hidden;
+        padding: 0 8px 0 4px;
+        margin: 0;
+      }
+
+      .date-row {
+        padding: 0 8px;
+      }
+
+      .date-text {
+        color: var(--accent-color);
+        text-align: center;
+      }
+
+      /* set programmatically */
+      .selected {
+        background: var(--selected-color);
+      }
+    </style>
+
+    <div class="no-select">
+      <iron-list
+          id=ironList items="{{clips}}" as="clip"
+          multi-selection
+          selected-items="{{selClips}}"
+          max-physical-count="50000">
+        <template>
+          <div
+              tabindex="-1"
+              class$="[[_computeClipClass(selected)]]"
+              on-tap="_onClipRowTapped">
+            <div class="clip-body flex vertical layout" tabindex="-1">
+              <paper-item class="date-row center horizontal layout">
+                <paper-icon-button
+                    icon="[[_computeFavIcon(clip.fav)]]"
+                    style$="color: [[_computeFavColor(clip.fav)]];"
+                    on-tap="_onRowFavTapped"></paper-icon-button>
+                <paper-item-body class="date-text center flex">
+                  {{_computeDate(clip.date)}}
+                </paper-item-body>
+                <paper-icon-button
+                    icon="myicons:content-copy"
+                    on-tap="_onRowCopyTapped"></paper-icon-button>
+              </paper-item>
+              <paper-item class="clip-text-row horizontal layout flex">
+                <paper-item-body class="clip-text vertical start-justified layout">
+                  [[clip.text]]
+                </paper-item-body>
+                <paper-icon-button
+                    icon="myicons:label-outline"
+                    on-tap="_onRowLabelTapped"></paper-icon-button>
+              </paper-item>
+            </div>
+          </div>
+        </template>
+      </iron-list>
+    </div>
+
+  </template>
+</dom-module>
+
+<script>
+  'use strict';
+
+  new ExceptionHandler();
+
+  /**
+   * Polymer element to display a list of {@link ClipItem} objects
+   * @namespace ClipList
+   */
+  Polymer({
+    is: 'clip-list',
+
+    properties: {
+      
+      /**
+       * Fires when the selected clip changes
+       * @event selected-clip-changed
+       * @memberOf ClipList
+       */
+
+      /**
+       * Fired when the label button of a row is tapped
+       * @event row-label-tapped
+       * @memberOf ClipViewer
+       */
+
+      /**
+       * Array of {@link ClipItem} objects filtered by {@link labelFilter}
+       * @memberOf ClipList
+       */
+      clips: {
+        type: Array,
+        value: [],
+        notify: true,
+      },
+
+      /**
+       * Array of selected {@link ClipItem} objects
+       * @memberOf ClipList
+       */
+      selClips: {
+        type: Array,
+        value: [],
+        notify: true,
+      },
+
+      /**
+       * True if we are showing favorite items at top of list
+       * @memberOf MainPage
+       */
+      isPinFavs: {
+        type: Boolean,
+        value: false,
+        notify: true,
+        observer: '_pinFavsChanged',
+      },
+
+      /**
+       * True if we are performing an operation on multiple clips
+       * @memberOf ClipList
+       */
+      isBulkOp: {
+        type: Boolean,
+        value: false,
+        notify: true,
+        observer: '_bulkOpChanged',
+      },
+    },
+
+    /**
+     * Update the relative dates
+     * @memberOf ClipList
+     */
+    updateDates: function() {
+      if (this.isBulkOp || !this._hasClipItems()) {
+        return;
+      }
+      for (let i = 0; i < this.clips.length; i++) {
+        const date = this.clips[i].date;
+        this.set(`clips.${i}.date`, date - 1);
+        this.set(`clips.${i}.date`, date);
+      }
+    },
+
+    /**
+     * Get clip from text
+     * @param {string} clipText - text to find
+     * @returns {?ClipItem} null if not found
+     * @memberOf ClipList
+     */
+    getClip: function(clipText) {
+      let ret = null;
+      if (this._hasClipItems()) {
+        ret = this.clips.find((clipItem) => {
+          return (clipText === clipItem.text);
+        });
+      }
+      return ret;
+    },
+
+    /**
+     * Get position of row with given text
+     * @param {string} clipText - text to find
+     * @returns {int} position in array, -1 if not found
+     * @memberOf ClipList
+     */
+    getClipPos: function(clipText) {
+      let ret = -1;
+      if (this._hasClipItems()) {
+        ret = this.clips.findIndex((clipItem) => {
+          return (clipText === clipItem.text);
+        });
+      }
+      return ret;
+    },
+
+    /**
+     * Delete all {@link ClipItem} objects
+     * @memberOf ClipList
+     */
+    deleteAllClipItems: function() {
+      if (this._hasClipItems()) {
+        this.splice('clips', 0, this.clips.length);
+      }
+    },
+
+    /**
+     * Sort the {@link ClipItem} list
+     * @memberOf ClipList
+     */
+    sortClipItems: function() {
+      if (this.isBulkOp) {
+        return;
+      }
+
+      /**
+       * Sort by date
+       * @param {ClipItem} a
+       * @param {ClipItem} b
+       * @returns {number}
+       */
+      function byDate(a, b) {
+        return b.date - a.date;
+      }
+
+      // override shitty iron-list scrolling
+      const list = this.$.ironList;
+      const firstIndex = list.firstVisibleIndex;
+      list.scrollToIndex(0);
+
+      // copy of current selections
+      const selClips = this.selClips.slice();
+
+      if (this.isPinFavs) {
+        // sort favs and non-favs separately and keep favs on top
+        const favClips = this.clips.filter((clip) => {
+          return clip.fav;
+        });
+        favClips.sort(byDate);
+        const nonFavClips = this.clips.filter((clip) => {
+          return !clip.fav;
+        });
+        nonFavClips.sort(byDate);
+        this.deleteAllClipItems();
+        // populate list
+        this.push('clips', ...favClips);
+        this.push('clips', ...nonFavClips);
+      } else {
+        // sort by date
+        const clips = this.clips.slice();
+        clips.sort(byDate);
+        this.deleteAllClipItems();
+        this.push('clips', ...clips);
+      }
+      this._updateSelections(selClips, firstIndex);
+    },
+
+    /**
+     * Get last selected {@link ClipItem}
+     * @returns {?ClipItem} null if none selected
+     * @private
+     * @memberOf ClipList
+     */
+    getLastSelected: function() {
+      let clipItem = null;
+      if (this._hasSelections()) {
+        clipItem = this.selClips[this.selClips.length - 1];
+      }
+      return clipItem;
+    },
+
+    /**
+     * Select all {@link ClipItem}
+     * @memberOf ClipList
+     */
+    selectAll: function() {
+      if (this._hasClipItems()) {
+        const list = this.$.ironList;
+        list.clearSelection();
+        this.push('selClips', ...this.clips);
+        list.scrollToIndex(0);
+        this.fire('selected-clip-changed');
+      }
+    },
+
+    /**
+     * Deselect all {@link ClipItem}
+     * @memberOf ClipList
+     */
+    deselectAll: function() {
+      if (this._hasSelections()) {
+        this.$.ironList.clearSelection();
+      }
+      this.fire('selected-clip-changed');
+    },
+
+    /**
+     * Select the given array of {@link ClipItem} objects
+     * @param {ClipItem[]} clipItems
+     * @memberOf ClipList
+     */
+    selectClipItems: function(clipItems) {
+      clipItems = clipItems || [];
+      
+      const list = this.$.ironList;
+      
+      clipItems.forEach((clipItem) => {
+        list.selectItem(clipItem);
+      });
+
+      if (this._hasSelections()) {
+        list.scrollToItem(this.selClips[0]);
+      }
+    },
+
+    /**
+     * Select first item in list, if it is not already
+     * @param {boolean} [ifNoSelections=false] - if true,
+     * only do if no selections
+     * @returns {boolean} true if selected
+     * @memberOf ClipList
+     */
+    selectFirst: function(ifNoSelections = false) {
+      if (!this._hasClipItems() || (ifNoSelections && this._hasSelections())) {
+        return false;
+      }
+      this.$.ironList.scrollToIndex(0);
+      return this._select(this.clips[0]);
+    },
+
+    /**
+     * Event: Tap on clip row - handle selections like a tree select
+     * @param {Event} event
+     * @param {ClipItem} event.model.clip
+     * @private
+     * @memberOf ClipList
+     */
+    _onClipRowTapped: function(event) {
+      const isShift = event.detail.sourceEvent.shiftKey;
+      const isCtrl = event.detail.sourceEvent.ctrlKey;
+      const endPos = event.model.index;
+      const curClipItem = this.clips[endPos];
+      let selected = event.model.selected;
+
+      Chrome.GA.event(app.GA.EVENT.CLICK, 'clipItemRow');
+
+      if (isShift) {
+        // select range of rows
+        let startPos = -1;
+
+        // override shitty iron-list scrolling
+        const list = this.$.ironList;
+        const firstIndex = list.firstVisibleIndex;
+        list.scrollToIndex(0);
+
+        if (selected) {
+          // deselect any contiguous selections after 
+          for (let i = endPos + 1; i < this.clips.length; i++) {
+            const clipItem = this.clips[i];
+            if (this._isSelected(clipItem)) {
+              list.deselectItem(clipItem);
+            } else {
+              break;
+            }
+          }
+          list.scrollToIndex(firstIndex);
+          this.fire('selected-clip-changed');
+          return;
+        } else if (!this._hasSelections()) {
+          // select from first to current
+          startPos = 0;
+        } else {
+          for (let i = endPos - 1; i >= 0; i--) {
+            // select from after newer selection to current
+            const clipItem = this.clips[i];
+            if (this._isSelected(clipItem)) {
+              startPos = i;
+              break;
+            }
+          }
+          if (startPos === -1) {
+            // try the other direction
+            for (let i = endPos + 1; i < this.clips.length; i++) {
+              // select from before older selection to current
+              const clipItem = this.clips[i];
+              if (this._isSelected(clipItem)) {
+                startPos = i;
+                break;
+              }
+            }
+          }
+        }
+        if (startPos !== -1) {
+          // found range, select it
+          const items = [];
+          if (startPos < endPos) {
+            for (let i = startPos + 1; i <= endPos; i++) {
+              items.push(this.clips[i]);
+            }
+          } else if (startPos > endPos) {
+            for (let i = startPos - 1; i >= endPos; i--) {
+              items.push(this.clips[i]);
+            }
+          }
+          this.push('selClips', ...items);
+        }
+        list.scrollToIndex(firstIndex);
+        this.fire('selected-clip-changed');
+      } else if (isCtrl) {
+        // toggle selection
+        if (selected) {
+          this._deselect(curClipItem);
+        } else {
+          this._select(curClipItem);
+        }
+      } else {
+        // single select with toggle
+        const len = this.selClips.length;
+        this.deselectAll();
+        if (!selected || (len > 1)) {
+          // item not selected or multiple selections before tap
+          this._select(curClipItem);
+        }
+      }
+    },
+
+    /**
+     * Event: Copy list row to clipboard
+     * @param {Event} event
+     * @param {ClipItem} event.model.clip
+     * @private
+     * @memberOf ClipList
+     */
+    _onRowCopyTapped: function(event) {
+      Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'copyClipItem');
+      const clipItem = event.model.clip;
+      clipItem.date = Date.now();
+      clipItem.remote = false;
+      clipItem.save().then(() => {
+        // send message to copy to clipboard
+        const msg =
+            Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
+        msg.item = clipItem;
+        // eslint-disable-next-line promise/no-nesting
+        Chrome.Msg.send(msg).catch(() => {});
+        return Promise.resolve();
+      }).catch((err) => {
+        Chrome.Log.error(err.message, 'ClipList._onRowCopyTapped',
+            'Failed to copy item to clipboard.');
+      });
+
+      // prevent row selection
+      event.stopPropagation();
+    },
+
+    /**
+     * Event: Toggle favorite state of row
+     * @param {Event} event
+     * @param {ClipItem} event.model.clip
+     * @private
+     * @memberOf ClipList
+     */
+    _onRowFavTapped: function(event) {
+      Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'toggleFavorite');
+      const clipItem = event.model.clip;
+      if (clipItem) {
+        clipItem.update({fav: !clipItem.fav}).catch((err) => {
+          Chrome.Log.error(err.message, 'ClipList._onRowFavTapped');
+        });
+      }
+
+      // prevent row selection
+      event.stopPropagation();
+    },
+
+    /**
+     * Event: Label icon of clip row tapped
+     * @param {Event} event
+     * @param {{}} event.model
+     * @private
+     * @memberOf ClipList
+     */
+    _onRowLabelTapped: function(event) {
+      Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'rowLabelTapped');
+      this.deselectAll();
+      this._select(event.model.clip);
+
+      // prevent row deselection
+      event.stopPropagation();
+
+      this.fire('row-label-tapped');
+    },
+
+    /**
+     * Observer: The pinFavs setting changed
+     * @param {boolean} newValue
+     * @param {boolean|undefined} oldValue
+     * @private
+     * @memberOf MainPage
+     */
+    _pinFavsChanged: function(newValue, oldValue) {
+      if (typeof(oldValue) !== 'undefined') {
+        this.deselectAll();
+        this.sortClipItems();
+        this.selectFirst();
+      }
+    },
+
+    /**
+     * Computed Binding: Clip item classList
+     * @param {boolean} selected - is clip selected
+     * @returns {string} Clip item classList
+     * @private
+     * @memberOf ClipList
+     */
+    _computeClipClass: function(selected) {
+      let classList = 'clip-item';
+      if (selected) {
+        classList += ' selected';
+      }
+      return classList;
+    },
+
+    /**
+     * Computed Binding
+     * @param {int} date - from epoch in millis
+     * @returns {string} Date as relative from now
+     * @private
+     * @memberOf ClipList
+     */
+    _computeDate: function(date) {
+      return app.Utils.getRelativeTime(date);
+    },
+
+    /**
+     * Computed Binding
+     * @param {boolean} isTrue - true if fav
+     * @returns {string} icon style
+     * @private
+     * @memberOf ClipList
+     */
+    _computeFavIcon: function(isTrue) {
+      return isTrue ? 'myicons:favorite' : 'myicons:favorite-border';
+    },
+
+    /**
+     * Computed Binding
+     * @param {boolean} isTrue - true if fav
+     * @returns {string} Favorite icon color
+     * @private
+     * @memberOf ClipList
+     */
+    _computeFavColor: function(isTrue) {
+      return isTrue ? 'rgba(255, 0, 0, .8)' : 'var(--primary-text-color)';
+    },
+
+    /**
+     * Update the selected items
+     * @param {ClipItem[]} selClips - ClipItems to select
+     * @param {int} [scrollIndex = 0]
+     * @private
+     * @memberOf ClipList
+     */
+    _updateSelections: function(selClips, scrollIndex = 0) {
+      selClips = selClips || [];
+      const list = this.$.ironList;
+      list.clearSelection();
+      this.push('selClips', ...selClips);
+      list.scrollToIndex(scrollIndex);
+      this.fire('selected-clip-changed');
+    },
+
+    /**
+     * Do we have selected items
+     * @returns {boolean}
+     * @private
+     * @memberOf ClipList
+     */
+    _hasSelections: function() {
+      return !!(this.selClips && this.selClips.length);
+    },
+
+    /**
+     * Is a {@link ClipItem} selected
+     * @param {ClipItem} clipItem
+     * @returns {boolean}
+     * @private
+     * @memberOf ClipList
+     */
+    _isSelected: function(clipItem) {
+      const idx = this.selClips.findIndex((clip) => {
+        return (clip.text === clipItem.text);
+      });
+      return (idx !== -1);
+    },
+
+    /**
+     * Select {@link ClipItem} if not already
+     * @param {ClipItem} clipItem
+     * @returns {boolean} true if selected
+     * @private
+     * @memberOf ClipList
+     */
+    _select: function(clipItem) {
+      let ret = false;
+      if (clipItem && !this._isSelected(clipItem)) {
+        this.$.ironList.selectItem(clipItem);
+        if (!this.isBulkOp) {
+          this.fire('selected-clip-changed');
+        }
+        ret = true;
+      }
+      return ret;
+    },
+
+    /**
+     * Deselect {@link ClipItem} if not already
+     * @param {ClipItem} clipItem
+     * @returns {boolean} true if deselected
+     * @private
+     * @memberOf ClipList
+     */
+    _deselect: function(clipItem) {
+      let ret = false;
+      if (clipItem && this._isSelected(clipItem)) {
+        this.$.ironList.deselectItem(clipItem);
+        if (!this.isBulkOp) {
+          this.fire('selected-clip-changed');
+        }
+        ret = true;
+      }
+      return ret;
+    },
+    /**
+     * Do we have any {@link ClipItem} objects in the list
+     * @returns {boolean} true if we have at least one clip
+     * @private
+     * @memberOf ClipList
+     */
+    _hasClipItems: function() {
+      return !!(this.clips && this.clips.length);
+    },
+    
+    /**
+     * Observer: The bulkOp setting changed
+     * @param {boolean} newValue
+     * @param {boolean|undefined} oldValue
+     * @private
+     * @memberOf ClipList
+     */
+    _bulkOpChanged: function(newValue, oldValue) {
+      if (typeof(oldValue) !== 'undefined') {
+        if (!newValue && oldValue) {
+          // toggling from true to false
+          if (this._hasClipItems()) {
+            this.sortClipItems();
+            this.updateDates();
+          } else {
+            // no clips
+            this.set('clips', []);
+            this._updateSelections([], 0);
+          }
+        }
+      }
+    },
+  });
+</script>
