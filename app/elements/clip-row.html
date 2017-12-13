@@ -234,8 +234,7 @@
       // prevent row deselection
       event.stopPropagation();
 
-      // TODO need clip?
-      this.fire('label-tap', {clip: this.clip});
+      this.fire('label-tap');
     },
 
     /**

@@ -491,10 +491,6 @@
       Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'rowLabelTapped');
       this.deselectAll();
       this._select(event.model.clip);
-
-      // prevent row deselection
-      event.stopPropagation();
-
       this.fire('row-label-tapped');
     },
 
