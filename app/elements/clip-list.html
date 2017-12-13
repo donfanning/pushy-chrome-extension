@@ -352,6 +352,34 @@
     },
 
     /**
+     * Get the number of selected {@link ClipItem} objects
+     * @returns {int} 
+     * @private
+     * @memberOf ClipList
+     */
+    getSelectedCount: function() {
+      let ret = 0;
+      if (this._hasSelections()) {
+        ret = this.selClips.length;
+      }
+      return ret;
+    },
+
+    /**
+     * Get the selected {@link ClipItem} objects
+     * @returns {ClipItem[]} 
+     * @private
+     * @memberOf ClipList
+     */
+    getSelected: function() {
+      let ret = [];
+      if (this._hasSelections()) {
+        ret = this.selClips;
+      }
+      return ret;
+    },
+
+    /**
      * Get last selected {@link ClipItem}
      * @returns {?ClipItem} null if none selected
      * @private

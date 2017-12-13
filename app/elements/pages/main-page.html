@@ -340,8 +340,8 @@
           Chrome.Msg.listen(this._onChromeMessage.bind(this));
 
           // listen for copy and cut events on document
-          document.addEventListener('cut', this._onCopy, true);
-          document.addEventListener('copy', this._onCopy, true);
+          document.addEventListener('cut', this._onCopy.bind(this), true);
+          document.addEventListener('copy', this._onCopy.bind(this), true);
 
           return Promise.resolve();
         }).catch((err) => {
@@ -493,7 +493,8 @@
         // save items for undo
         const keys = [];
         this.splice('undoClips', 0, this.undoClips.length);
-        this.selClips.forEach((clipItem) => {
+        const clipItems = this.$.clipList.getSelected();
+        clipItems.forEach((clipItem) => {
           keys.push(clipItem._id);
           this.push('undoClips', clipItem);
         });
@@ -653,7 +654,8 @@
                 removedNames.push(name);
               });
             });
-            this.selClips.forEach((clipItem) => {
+            const clipItems = this.$.clipList.getSelected();
+            clipItems.forEach((clipItem) => {
               const names = clipItem.getLabelNames();
 
               addedNames.forEach((addedName) => {
@@ -726,7 +728,7 @@
        * @memberOf MainPage
        */
       _computeHasSelections: function() {
-        return !!(this.selClips && this.selClips.length);
+        return !!(this.$.clipList.getSelectedCount());
       },
 
       /**
@@ -737,7 +739,7 @@
        * @memberOf MainPage
        */
       _computeLabelsDialogTitle: function(multi) {
-        if (multi && this.selClips && (this.selClips.length > 1)) {
+        if (multi && (this.$.clipList.getSelectedCount() > 1)) {
           return 'Change labels for selected clips';
         } else {
           return 'Set labels for the current clip';
@@ -834,16 +836,18 @@
        */
       _showLabelsDialog: function(multi) {
         this.set('isMultiLabelsEdit', multi);
-        if (multi && (this.selClips.length > 1)) {
+        const list = this.$.clipList;
+        if (multi && (list.getSelectedCount() > 1)) {
           // for multi mode, apply to all selectedClips
           app.Label.loadAll().then((labels) => {
             // get all label names that all selected clips share
+            const clipItems = list.getSelected();
             const names = [];
             labels = labels || [];
             labels.forEach((label) => {
               let hasLabel = true;
-              for (let i = 0; i < this.selClips.length; i++) {
-                const clipItem = this.selClips[i];
+              for (let i = 0; i < clipItems.length; i++) {
+                const clipItem = clipItems[i];
                 if (!clipItem.hasLabel(label.name)) {
                   hasLabel = false;
                   break;
