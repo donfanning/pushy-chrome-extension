@@ -185,6 +185,16 @@
       },
 
       /**
+       * {@link Label} name for filtering our items
+       * @type string
+       * @memberOf ClipList
+       */
+      labelFilter: {
+        type: String,
+        value: null,
+        notify: true,
+      },
+      /**
        * True if we are performing an operation on multiple clips
        * @memberOf ClipList
        */
@@ -198,18 +208,16 @@
 
     /**
      * Load the {@link ClipItem} objects
-     * @param {string} [labelFilter] - label name to filter on
-     * @param {boolean} [isFavFilter] - if true load only favorites
      * @param {boolean} [isSelectFirst=true] - if true select first item
      * @returns {Promise<void>}
      * @memberOf ClipList
      */
-    loadClipItems: function(labelFilter, isFavFilter, isSelectFirst = true) {
-      this.deleteAllClipItems();
+    loadClipItems: function(isSelectFirst = true) {
+      this._deleteAllClipItems();
       this.deselectAll();
-      return app.ClipItem.loadAll(labelFilter).then((clipItems) => {
+      return app.ClipItem.loadAll(this.labelFilter).then((clipItems) => {
         // populate list
-        if (isFavFilter) {
+        if (this.isFavFilter) {
           // favorites only
           const favClipItems = clipItems.filter((clipItem) => {
             return clipItem.fav;
@@ -218,14 +226,100 @@
         } else {
           this.push('clips', ...clipItems);
         }
-        this.sortClipItems();
+        this._sortClipItems();
         if (isSelectFirst) {
           this.selectFirst();
         }
         return Promise.resolve();
       });
     },
-    
+
+    /**
+     * Add a {@link ClipItem} to the list
+     * @param {string} text - ClipItem text
+     * @private
+     * @memberOf ClipList
+     */
+    addClipItem: function(text) {
+      app.ClipItem.getNew(text).then((clipItem) => {
+        if (this._getClipPos(clipItem.text) === -1) {
+          if (!this.labelFilter || clipItem.hasLabel(this.labelFilter)) {
+            // add to list if not filtering or has our labelFilter
+            if (this.isBulkOp) {
+              this.clips.unshift(clipItem);
+            } else {
+              this.unshift('clips', clipItem);
+              this._sortClipItems();
+            }
+          }
+        }
+        return Promise.resolve();
+      }).catch((err) => {
+        Chrome.Log.error(err.message, 'ClipList._addClipItem',
+            'Failed to add clip item');
+      });
+    },
+
+    /**
+     * Update a {@link ClipItem} in the list
+     * @param {string} text - ClipItem text
+     * @param {Object} mods - key/value pairs of changes
+     * @private
+     * @memberOf ClipList
+     */
+    updateClipItem: function(text, mods) {
+      const pos = this._getClipPos(text);
+      if (pos === -1) {
+        return;
+      }
+
+      const clipItem = this.clips[pos];
+      let needsSort = false;
+      for (const key of Object.keys(mods)) {
+        // check if props that affect sort changed
+        if (key === 'fav') {
+          if (this.isPinFavs && (mods[key] !== clipItem.fav)) {
+            needsSort = true;
+          }
+        }
+        this.set(`clips.${pos}.${key}`, mods[key]);
+      }
+
+      if (!needsSort && mods.hasOwnProperty('date')) {
+        needsSort = true;
+      }
+
+      if (this.currentClip && mods.hasOwnProperty('labels') &&
+          (clipItem.text === this.currentClip.text)) {
+        // update current clip if labels changed
+        this.fire('selected-clip-changed');
+      }
+
+      if (needsSort) {
+        this._sortClipItems();
+      } else {
+        this.updateDates();
+      }
+    },
+
+    /**
+     * Delete a {@link ClipItem} from the list
+     * @param {string} text - ClipItem text
+     * @private
+     * @memberOf ClipList
+     */
+    deleteClipItem: function(text) {
+      const pos = this._getClipPos(text);
+      if (pos !== -1) {
+        if (this.isBulkOp) {
+          this.clips.splice(pos, 1);
+        } else {
+          this.splice('clips', pos, 1);
+          this.updateDates();
+        }
+      }
+    },
+
     /**
      * Update the relative dates
      * @memberOf ClipList
@@ -255,83 +349,6 @@
         });
       }
       return ret;
-    },
-
-    /**
-     * Get position of row with given text
-     * @param {string} clipText - text to find
-     * @returns {int} position in array, -1 if not found
-     * @memberOf ClipList
-     */
-    getClipPos: function(clipText) {
-      let ret = -1;
-      if (this._hasClipItems()) {
-        ret = this.clips.findIndex((clipItem) => {
-          return (clipText === clipItem.text);
-        });
-      }
-      return ret;
-    },
-
-    /**
-     * Delete all {@link ClipItem} objects
-     * @memberOf ClipList
-     */
-    deleteAllClipItems: function() {
-      if (this._hasClipItems()) {
-        this.splice('clips', 0, this.clips.length);
-      }
-    },
-
-    /**
-     * Sort the {@link ClipItem} list
-     * @memberOf ClipList
-     */
-    sortClipItems: function() {
-      if (this.isBulkOp) {
-        return;
-      }
-
-      /**
-       * Sort by date
-       * @param {ClipItem} a
-       * @param {ClipItem} b
-       * @returns {number}
-       */
-      function byDate(a, b) {
-        return b.date - a.date;
-      }
-
-      // override shitty iron-list scrolling
-      const list = this.$.ironList;
-      const firstIndex = list.firstVisibleIndex;
-      list.scrollToIndex(0);
-
-      // copy of current selections
-      const selClips = this.selClips.slice();
-
-      if (this.isPinFavs) {
-        // sort favs and non-favs separately and keep favs on top
-        const favClips = this.clips.filter((clip) => {
-          return clip.fav;
-        });
-        favClips.sort(byDate);
-        const nonFavClips = this.clips.filter((clip) => {
-          return !clip.fav;
-        });
-        nonFavClips.sort(byDate);
-        this.deleteAllClipItems();
-        // populate list
-        this.push('clips', ...favClips);
-        this.push('clips', ...nonFavClips);
-      } else {
-        // sort by date
-        const clips = this.clips.slice();
-        clips.sort(byDate);
-        this.deleteAllClipItems();
-        this.push('clips', ...clips);
-      }
-      this._updateSelections(selClips, firstIndex);
     },
 
     /**
@@ -580,7 +597,7 @@
     _pinFavsChanged: function(newValue, oldValue) {
       if (typeof(oldValue) !== 'undefined') {
         this.deselectAll();
-        this.sortClipItems();
+        this._sortClipItems();
         this.selectFirst();
       }
     },
@@ -710,6 +727,7 @@
       }
       return ret;
     },
+    
     /**
      * Do we have any {@link ClipItem} objects in the list
      * @returns {boolean} true if we have at least one clip
@@ -719,7 +737,87 @@
     _hasClipItems: function() {
       return !!(this.clips && this.clips.length);
     },
-    
+
+    /**
+     * Get position of row with given text
+     * @param {string} clipText - text to find
+     * @returns {int} position in array, -1 if not found
+     * @private
+     * @memberOf ClipList
+     */
+    _getClipPos: function(clipText) {
+      let ret = -1;
+      if (this._hasClipItems()) {
+        ret = this.clips.findIndex((clipItem) => {
+          return (clipText === clipItem.text);
+        });
+      }
+      return ret;
+    },
+
+    /**
+     * Delete all {@link ClipItem} objects
+     * @private
+     * @memberOf ClipList
+     */
+    _deleteAllClipItems: function() {
+      if (this._hasClipItems()) {
+        this.splice('clips', 0, this.clips.length);
+      }
+    },
+
+    /**
+     * Sort the {@link ClipItem} list
+     * @private
+     * @memberOf ClipList
+     */
+    _sortClipItems: function() {
+      if (this.isBulkOp) {
+        return;
+      }
+
+      /**
+       * Sort by date
+       * @param {ClipItem} a
+       * @param {ClipItem} b
+       * @returns {number}
+       */
+      function byDate(a, b) {
+        return b.date - a.date;
+      }
+
+      // override shitty iron-list scrolling
+      const list = this.$.ironList;
+      const firstIndex = list.firstVisibleIndex;
+      list.scrollToIndex(0);
+
+      // copy of current selections
+      const selClips = this.selClips.slice();
+
+      if (this.isPinFavs) {
+        // sort favs and non-favs separately and keep favs on top
+        const favClips = this.clips.filter((clip) => {
+          return clip.fav;
+        });
+        favClips.sort(byDate);
+        const nonFavClips = this.clips.filter((clip) => {
+          return !clip.fav;
+        });
+        nonFavClips.sort(byDate);
+        this._deleteAllClipItems();
+        // populate list
+        this.push('clips', ...favClips);
+        this.push('clips', ...nonFavClips);
+      } else {
+        // sort by date
+        const clips = this.clips.slice();
+        clips.sort(byDate);
+        this._deleteAllClipItems();
+        this.push('clips', ...clips);
+      }
+      this._updateSelections(selClips, firstIndex);
+    },
+
     /**
      * Observer: The bulkOp setting changed
      * @param {boolean} newValue
@@ -732,7 +830,7 @@
         if (!newValue && oldValue) {
           // toggling from true to false
           if (this._hasClipItems()) {
-            this.sortClipItems();
+            this._sortClipItems();
             this.updateDates();
           } else {
             // no clips

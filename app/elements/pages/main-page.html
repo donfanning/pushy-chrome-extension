@@ -7,22 +7,16 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
-<link rel="import" href="../../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
 
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-styles/color.html">
 <link rel="import" href="../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
-<link rel="import" href="../../bower_components/paper-toggle-button/paper-toggle-button.html">
 <link rel="import" href="../../bower_components/paper-tooltip/paper-tooltip.html">
 <link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
-<link rel="import" href="../../bower_components/paper-item/paper-item.html">
-<link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
-<link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
@@ -56,22 +50,9 @@
         padding-top: 0;
       }
 
-      iron-icon {
-        color: var(--accent-color);
-      }
-
-      paper-icon-item {
-        /*stupid documentation*/
-        --paper-item-focused-before: {
-          background: transparent;
-        };
-      }
-
       #clipList {
         min-width: 600px;
         height: 82vh;
-        /*overflow: hidden;*/
-        /*overflow-y: scroll;*/
         border: 1px #CCCCCC;
         border-right-style: solid;
         padding: 0 0 32px 0;
@@ -91,15 +72,6 @@
         margin-bottom: 0;
         color: yellow;
       }
-
-      .iron-selected {
-        background: var(--selected-color);
-      }
-
-      .selected {
-        background: var(--selected-color);
-      }
-
     </style>
 
     <paper-material elevation="1" class="page-content">
@@ -181,8 +153,8 @@
         <clip-list
             id="clipList"
             class="flex-2"
-            clips="{{clips}}"
             sel-clips="{{selClips}}"
+            label-filter="{{labelFilter}}"
             is-pin-favs="{{isPinFavs}}"
             is-fav-filter="{{isFavFilter}}"
             is-bulk-op="{{isBulkOp}}"
@@ -229,16 +201,6 @@
         currentClip: {
           type: Object,
           value: null,
-          notify: true,
-        },
-
-        /**
-         * Array of {@link ClipItem} objects filtered by {@link labelFilter}
-         * @memberOf MainPage
-         */
-        clips: {
-          type: Array,
-          value: [],
           notify: true,
         },
 
@@ -375,7 +337,7 @@
           this.$.clipList.selectFirst();
 
           // don't do in attached. need clips to be loaded before listening
-          Chrome.Msg.listen(this._onChromeMessage);
+          Chrome.Msg.listen(this._onChromeMessage.bind(this));
 
           // listen for copy and cut events on document
           document.addEventListener('cut', this._onCopy, true);
@@ -437,12 +399,12 @@
         let ret = false;
         if (request.message === app.ChromeMsg.CLIP_ITEM_CREATED.message) {
           ret = true; // async
-          self._addClipItem(request.item);
+          this.$.clipList.addClipItem(request.item);
         } else if (request.message === app.ChromeMsg.CLIP_ITEM_UPDATED.message) {
           const item = request.item;
-          self._updateClipItem(item.text, item.mods);
+          this.$.clipList.updateClipItem(item.text, item.mods);
         } else if (request.message === app.ChromeMsg.CLIP_ITEM_DELETED.message) {
-          self._deleteClipItem(request.item);
+          this.$.clipList.deleteClipItem(request.item);
         }
         return ret;
       },
@@ -846,94 +808,7 @@
        */
       _loadClipItems: function(isSelectFirst = true) {
         this._closeUndoToast();
-        return this.$.clipList.loadClipItems(
-            this.labelFilter, this.isFavFilter, isSelectFirst);
-      },
-
-      /**
-       * Add a {@link ClipItem} to the list
-       * @param {string} text - ClipItem text
-       * @private
-       * @memberOf MainPage
-       */
-      _addClipItem: function(text) {
-        app.ClipItem.getNew(text).then((clipItem) => {
-          if (this.$.clipList.getClipPos(clipItem.text) === -1) {
-            if (!this.labelFilter || clipItem.hasLabel(this.labelFilter)) {
-              // add to list if not filtering or has our labelFilter
-              if (this.isBulkOp) {
-                this.clips.unshift(clipItem);
-              } else {
-                this.unshift('clips', clipItem);
-                this.$.clipList.sortClipItems();
-              }
-            }
-          }
-          return Promise.resolve();
-        }).catch((err) => {
-          Chrome.Log.error(err.message, 'MainPage._addClipItem',
-              'Failed to add clip item');
-        });
-      },
-
-      /**
-       * Update a {@link ClipItem} in the list
-       * @param {string} text - ClipItem text
-       * @param {Object} mods - key/value pairs of changes
-       * @private
-       * @memberOf MainPage
-       */
-      _updateClipItem: function(text, mods) {
-        const pos = this.$.clipList.getClipPos(text);
-        if (pos === -1) {
-          return;
-        }
-
-        const clipItem = this.clips[pos];
-        let needsSort = false;
-        for (const key of Object.keys(mods)) {
-          // check if props that affect sort changed
-          if (key === 'fav') {
-            if (this.isPinFavs && (mods[key] !== clipItem.fav)) {
-              needsSort = true;
-            }
-          }
-          this.set(`clips.${pos}.${key}`, mods[key]);
-        }
-
-        if (!needsSort && mods.hasOwnProperty('date')) {
-          needsSort = true;
-        }
-
-        if (this.currentClip && mods.hasOwnProperty('labels') &&
-            (clipItem.text === this.currentClip.text)) {
-          // update current clip if labels changed
-          this._setCurrentClip();
-        }
-
-        if (needsSort) {
-          this.$.clipList.sortClipItems();
-        } else {
-          this.$.clipList.updateDates();
-        }
-      },
-
-      /**
-       * Delete a {@link ClipItem} from the list
-       * @param {string} text - ClipItem text
-       * @private
-       * @memberOf MainPage
-       */
-      _deleteClipItem: function(text) {
-        const pos = this.$.clipList.getClipPos(text);
-        if (pos !== -1) {
-          if (this.isBulkOp) {
-            this.clips.splice(pos, 1);
-          } else {
-            this.splice('clips', pos, 1);
-            this.$.clipList.updateDates();
-          }
-        }
+        return this.$.clipList.loadClipItems(isSelectFirst);
       },
 
       /**
@@ -1025,21 +900,21 @@
       db.clipItems.hook('creating', function(primKey, obj) {
         // eslint-disable-next-line no-invalid-this
         this.onsuccess = function() {
-          self._addClipItem(obj.text);
+          self.$.clipList.addClipItem(obj.text);
         };
       });
 
       db.clipItems.hook('updating', function(mods, primKey, obj) {
         // eslint-disable-next-line no-invalid-this
         this.onsuccess = function() {
-          self._updateClipItem(obj.text, mods);
+          self.$.clipList.updateClipItem(obj.text, mods);
         };
       });
 
       db.clipItems.hook('deleting', function(primKey, obj) {
         // eslint-disable-next-line no-invalid-this
         this.onsuccess = function() {
-          self._deleteClipItem(obj.text);
+          self.$.clipList.deleteClipItem(obj.text);
         };
       });
     }
