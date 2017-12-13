@@ -165,13 +165,23 @@
 
       /**
        * True if we are showing favorite items at top of list
-       * @memberOf MainPage
+       * @memberOf ClipList
        */
       isPinFavs: {
         type: Boolean,
         value: false,
         notify: true,
         observer: '_pinFavsChanged',
+      },
+
+      /**
+       * True if we are only showing favorite items
+       * @memberOf ClipList
+       */
+      isFavFilter: {
+        type: Boolean,
+        value: false,
+        notify: true,
       },
 
       /**
@@ -535,7 +545,7 @@
      * @param {boolean} newValue
      * @param {boolean|undefined} oldValue
      * @private
-     * @memberOf MainPage
+     * @memberOf ClipList
      */
     _pinFavsChanged: function(newValue, oldValue) {
       if (typeof(oldValue) !== 'undefined') {
