@@ -294,6 +294,7 @@
 
         /**
          * True if we are only showing favorite items
+         * @type boolean
          * @memberOf MainPage
          */
         isFavFilter: {
@@ -304,6 +305,7 @@
 
         /**
          * True if we are showing favorite items at top of list
+         * @type boolean
          * @memberOf MainPage
          */
         isPinFavs: {
@@ -314,6 +316,7 @@
 
         /**
          * {@link Label} name for filtering our items
+         * @type string
          * @memberOf MainPage
          */
         labelFilter: {
@@ -836,32 +839,15 @@
 
       /**
        * Load the {@link ClipItem} objects
-       * @param {boolean} [selectFirst=true] - if true select first item
+       * @param {boolean} [isSelectFirst=true] - if true select first item
        * @returns {Promise<void>}
        * @private
        * @memberOf MainPage
        */
-      _loadClipItems: function(selectFirst = true) {
+      _loadClipItems: function(isSelectFirst = true) {
         this._closeUndoToast();
-        this.$.clipList.deleteAllClipItems();
-        this.$.clipList.deselectAll();
-        return app.ClipItem.loadAll(this.labelFilter).then((clipItems) => {
-          // populate list
-          if (this.isFavFilter) {
-            // favorites only
-            const favClipItems = clipItems.filter((clipItem) => {
-              return clipItem.fav;
-            });
-            this.push('clips', ...favClipItems);
-          } else {
-            this.push('clips', ...clipItems);
-          }
-          this.$.clipList.sortClipItems();
-          if (selectFirst) {
-            this.$.clipList.selectFirst();
-          }
-          return Promise.resolve();
-        });
+        return this.$.clipList.loadClipItems(
+            this.labelFilter, this.isFavFilter, isSelectFirst);
       },
 
       /**

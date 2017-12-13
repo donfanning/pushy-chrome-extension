@@ -197,6 +197,36 @@
     },
 
     /**
+     * Load the {@link ClipItem} objects
+     * @param {string} [labelFilter] - label name to filter on
+     * @param {boolean} [isFavFilter] - if true load only favorites
+     * @param {boolean} [isSelectFirst=true] - if true select first item
+     * @returns {Promise<void>}
+     * @memberOf ClipList
+     */
+    loadClipItems: function(labelFilter, isFavFilter, isSelectFirst = true) {
+      this.deleteAllClipItems();
+      this.deselectAll();
+      return app.ClipItem.loadAll(labelFilter).then((clipItems) => {
+        // populate list
+        if (isFavFilter) {
+          // favorites only
+          const favClipItems = clipItems.filter((clipItem) => {
+            return clipItem.fav;
+          });
+          this.push('clips', ...favClipItems);
+        } else {
+          this.push('clips', ...clipItems);
+        }
+        this.sortClipItems();
+        if (isSelectFirst) {
+          this.selectFirst();
+        }
+        return Promise.resolve();
+      });
+    },
+    
+    /**
      * Update the relative dates
      * @memberOf ClipList
      */
