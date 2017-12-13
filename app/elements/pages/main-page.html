@@ -130,7 +130,7 @@
         <!-- Select labels dialog -->
         <labels-dialog
             id="labelsDialog"
-            dialog-title="[[_computeLabelsDialogTitle(isMultiLabelsEdit, selClips, selClips.splices)]]"
+            dialog-title="[[_computeLabelsDialogTitle(isMultiLabelsEdit, hasSelections)]]"
             selected-labels="{{selDialogLabels}}">
         </labels-dialog>
 
@@ -153,7 +153,6 @@
         <clip-list
             id="clipList"
             class="flex-2"
-            sel-clips="{{selClips}}"
             label-filter="{{labelFilter}}"
             is-pin-favs="{{isPinFavs}}"
             is-fav-filter="{{isFavFilter}}"
@@ -205,56 +204,6 @@
         },
 
         /**
-         * Array of selected {@link ClipItem} objects
-         * @memberOf MainPage
-         */
-        selClips: {
-          type: Array,
-          value: [],
-          notify: true,
-        },
-
-        /**
-         * True if we have selected items
-         * @memberOf ClipList
-         */
-        hasSelections: {
-          type: Boolean,
-          computed: '_computeHasSelections(selClips.splices)',
-          notify: true,
-        },
-
-        /**
-         * True if we can send the clipboard contents
-         * @memberOf MainPage
-         */
-        canSend: {
-          type: Boolean,
-          value: false,
-          notify: true,
-        },
-
-        /**
-         * Array of {@link ClipItem} objects that have been recently deleted
-         * @memberOf MainPage
-         */
-        undoClips: {
-          type: Array,
-          value: [],
-          notify: true,
-        },
-
-        /**
-         * Message of undo toast
-         * @memberOf MainPage
-         */
-        undoText: {
-          type: String,
-          value: '',
-          notify: true,
-        },
-
-        /**
          * True if we are only showing favorite items
          * @type boolean
          * @memberOf MainPage
@@ -286,6 +235,45 @@
           value: null,
           notify: true,
           observer: '_labelFilterChanged',
+        },
+
+        /**
+         * True if we have selected items
+         * @memberOf ClipList
+         */
+        hasSelections: {
+          type: Boolean,
+          notify: true,
+        },
+
+        /**
+         * True if we can send the clipboard contents
+         * @memberOf MainPage
+         */
+        canSend: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
+
+        /**
+         * Array of {@link ClipItem} objects that have been recently deleted
+         * @memberOf MainPage
+         */
+        undoClips: {
+          type: Array,
+          value: [],
+          notify: true,
+        },
+
+        /**
+         * Message of undo toast
+         * @memberOf MainPage
+         */
+        undoText: {
+          type: String,
+          value: '',
+          notify: true,
         },
 
         /**
@@ -383,6 +371,18 @@
         }
       },
 
+      /**
+       * Event: iron-list got focus
+       * @param {Event} event
+       * @param {ClipItem} event.model.clip
+       * @private
+       * @memberOf MainPage
+       */
+      _onFocused: function(event) {
+        // !Important prevent iron-list from handling
+        event.stopPropagation();
+      },
+
       // noinspection JSUnusedLocalSymbols
       /**
        * Event: Fired when a message is sent from either an extension process<br>
@@ -417,48 +417,6 @@
       _onSelectLabelsTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'selectLabels');
         this._showLabelsDialog(true);
-      },
-
-      /**
-       * Event: Undo Toast close button tapped
-       * @private
-       * @memberOf MainPage
-       */
-      _onCloseToastTapped: function() {
-        Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'closeUndoToast');
-        this._closeUndoToast();
-      },
-
-      /**
-       * Event: Undo Toast button tapped<br />
-       * Restore the deleted Items
-       * @private
-       * @memberOf MainPage
-       */
-      _onUndoDeleteTapped: function() {
-        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'UNDO');
-        this.set('isBulkOp', true);
-        app.ClipItem.bulkPut(this.undoClips).then(() => {
-          this.set('isBulkOp', false);
-          // reset selections
-          const newClipItems = [];
-          this.undoClips.forEach((clipItem) => {
-            // need to use new item reference - hashing issue in iron-list?
-            const newClipItem = this.$.clipList.getClip(clipItem.text);
-            if (newClipItem) {
-              newClipItems.push(newClipItem);
-            }
-          });
-          this.$.clipList.selectClipItems(newClipItems);
-          this._setCurrentClip();
-          this._closeUndoToast();
-          return Promise.resolve();
-        }).catch((err) => {
-          Chrome.Log.error(err.message, 'MainPage._onUndoDeleteTapped',
-              'Failed to undo delete.');
-          this.set('isBulkOp', false);
-          this._closeUndoToast();
-        });
       },
 
       /**
@@ -555,24 +513,55 @@
       },
 
       /**
-       * Event: iron-list got focus
+       * Event: Undo Toast close button tapped
+       * @private
+       * @memberOf MainPage
+       */
+      _onCloseToastTapped: function() {
+        Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'closeUndoToast');
+        this._closeUndoToast();
+      },
+
+      /**
+       * Event: Undo Toast button tapped<br />
+       * Restore the deleted Items
+       * @private
+       * @memberOf MainPage
+       */
+      _onUndoDeleteTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'UNDO');
+        this.set('isBulkOp', true);
+        app.ClipItem.bulkPut(this.undoClips).then(() => {
+          this.set('isBulkOp', false);
+          // reset selections
+          const newClipItems = [];
+          this.undoClips.forEach((clipItem) => {
+            // need to use new item reference - hashing issue in iron-list?
+            const newClipItem = this.$.clipList.getClip(clipItem.text);
+            if (newClipItem) {
+              newClipItems.push(newClipItem);
+            }
+          });
+          this.$.clipList.selectClipItems(newClipItems);
+          this._setCurrentClip();
+          this._closeUndoToast();
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, 'MainPage._onUndoDeleteTapped',
+              'Failed to undo delete.');
+          this.set('isBulkOp', false);
+          this._closeUndoToast();
+        });
+      },
+
+      /**
+       * Event: The selected {@link ClipItem} changed
        * @private
        * @memberOf MainPage
        */
       _onSelectedClipChanged: function() {
         this._setCurrentClip();
-      },
-
-      /**
-       * Event: iron-list got focus
-       * @param {Event} event
-       * @param {ClipItem} event.model.clip
-       * @private
-       * @memberOf MainPage
-       */
-      _onFocused: function(event) {
-        // !Important prevent iron-list from handling
-        event.stopPropagation();
+        this.set('hasSelections', !!this.$.clipList.getSelectedCount());
       },
 
       /**
@@ -719,16 +708,6 @@
           }
         }
         return title;
-      },
-
-      /**
-       * Computed Property: Do we have selected items
-       * @returns {boolean}
-       * @private
-       * @memberOf MainPage
-       */
-      _computeHasSelections: function() {
-        return !!(this.$.clipList.getSelectedCount());
       },
 
       /**

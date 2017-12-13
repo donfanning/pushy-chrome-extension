@@ -150,7 +150,6 @@
       clips: {
         type: Array,
         value: [],
-        notify: true,
       },
 
       /**
@@ -160,7 +159,6 @@
       selClips: {
         type: Array,
         value: [],
-        notify: true,
       },
 
       /**
@@ -679,84 +677,6 @@
     },
 
     /**
-     * Update the selected items
-     * @param {ClipItem[]} selClips - ClipItems to select
-     * @param {int} [scrollIndex = 0]
-     * @private
-     * @memberOf ClipList
-     */
-    _updateSelections: function(selClips, scrollIndex = 0) {
-      selClips = selClips || [];
-      const list = this.$.ironList;
-      list.clearSelection();
-      this.push('selClips', ...selClips);
-      list.scrollToIndex(scrollIndex);
-      this.fire('selected-clip-changed');
-    },
-
-    /**
-     * Do we have selected items
-     * @returns {boolean}
-     * @private
-     * @memberOf ClipList
-     */
-    _hasSelections: function() {
-      return !!(this.selClips && this.selClips.length);
-    },
-
-    /**
-     * Is a {@link ClipItem} selected
-     * @param {ClipItem} clipItem
-     * @returns {boolean}
-     * @private
-     * @memberOf ClipList
-     */
-    _isSelected: function(clipItem) {
-      const idx = this.selClips.findIndex((clip) => {
-        return (clip.text === clipItem.text);
-      });
-      return (idx !== -1);
-    },
-
-    /**
-     * Select {@link ClipItem} if not already
-     * @param {ClipItem} clipItem
-     * @returns {boolean} true if selected
-     * @private
-     * @memberOf ClipList
-     */
-    _select: function(clipItem) {
-      let ret = false;
-      if (clipItem && !this._isSelected(clipItem)) {
-        this.$.ironList.selectItem(clipItem);
-        if (!this.isBulkOp) {
-          this.fire('selected-clip-changed');
-        }
-        ret = true;
-      }
-      return ret;
-    },
-
-    /**
-     * Deselect {@link ClipItem} if not already
-     * @param {ClipItem} clipItem
-     * @returns {boolean} true if deselected
-     * @private
-     * @memberOf ClipList
-     */
-    _deselect: function(clipItem) {
-      let ret = false;
-      if (clipItem && this._isSelected(clipItem)) {
-        this.$.ironList.deselectItem(clipItem);
-        if (!this.isBulkOp) {
-          this.fire('selected-clip-changed');
-        }
-        ret = true;
-      }
-      return ret;
-    },
-    
-    /**
      * Do we have any {@link ClipItem} objects in the list
      * @returns {boolean} true if we have at least one clip
      * @private
@@ -846,6 +766,84 @@
       this._updateSelections(selClips, firstIndex);
     },
 
+    /**
+     * Update the selected items
+     * @param {ClipItem[]} selClips - ClipItems to select
+     * @param {int} [scrollIndex = 0]
+     * @private
+     * @memberOf ClipList
+     */
+    _updateSelections: function(selClips, scrollIndex = 0) {
+      selClips = selClips || [];
+      const list = this.$.ironList;
+      list.clearSelection();
+      this.push('selClips', ...selClips);
+      list.scrollToIndex(scrollIndex);
+      this.fire('selected-clip-changed');
+    },
+
+    /**
+     * Do we have selected items
+     * @returns {boolean}
+     * @private
+     * @memberOf ClipList
+     */
+    _hasSelections: function() {
+      return !!(this.selClips && this.selClips.length);
+    },
+
+    /**
+     * Is a {@link ClipItem} selected
+     * @param {ClipItem} clipItem
+     * @returns {boolean}
+     * @private
+     * @memberOf ClipList
+     */
+    _isSelected: function(clipItem) {
+      const idx = this.selClips.findIndex((clip) => {
+        return (clip.text === clipItem.text);
+      });
+      return (idx !== -1);
+    },
+
+    /**
+     * Select {@link ClipItem} if not already
+     * @param {ClipItem} clipItem
+     * @returns {boolean} true if selected
+     * @private
+     * @memberOf ClipList
+     */
+    _select: function(clipItem) {
+      let ret = false;
+      if (clipItem && !this._isSelected(clipItem)) {
+        this.$.ironList.selectItem(clipItem);
+        if (!this.isBulkOp) {
+          this.fire('selected-clip-changed');
+        }
+        ret = true;
+      }
+      return ret;
+    },
+
+    /**
+     * Deselect {@link ClipItem} if not already
+     * @param {ClipItem} clipItem
+     * @returns {boolean} true if deselected
+     * @private
+     * @memberOf ClipList
+     */
+    _deselect: function(clipItem) {
+      let ret = false;
+      if (clipItem && this._isSelected(clipItem)) {
+        this.$.ironList.deselectItem(clipItem);
+        if (!this.isBulkOp) {
+          this.fire('selected-clip-changed');
+        }
+        ret = true;
+      }
+      return ret;
+    },
+    
     /**
      * Observer: The bulkOp setting changed
      * @param {boolean} newValue
