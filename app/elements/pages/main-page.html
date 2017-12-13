@@ -477,7 +477,7 @@
           const newClipItems = [];
           this.undoClips.forEach((clipItem) => {
             // need to use new item reference - hashing issue in iron-list?
-            const newClipItem = this.this.$.clipList.getClip(clipItem.text);
+            const newClipItem = this.$.clipList.getClip(clipItem.text);
             if (newClipItem) {
               newClipItems.push(newClipItem);
             }
@@ -870,7 +870,7 @@
        */
       _addClipItem: function(text) {
         app.ClipItem.getNew(text).then((clipItem) => {
-          if (this.this.$.clipList.getClipPos(clipItem.text) === -1) {
+          if (this.$.clipList.getClipPos(clipItem.text) === -1) {
             if (!this.labelFilter || clipItem.hasLabel(this.labelFilter)) {
               // add to list if not filtering or has our labelFilter
               if (this.isBulkOp) {
@@ -896,7 +896,7 @@
        * @memberOf MainPage
        */
       _updateClipItem: function(text, mods) {
-        const pos = this.this.$.clipList.getClipPos(text);
+        const pos = this.$.clipList.getClipPos(text);
         if (pos === -1) {
           return;
         }
@@ -937,7 +937,7 @@
        * @memberOf MainPage
        */
       _deleteClipItem: function(text) {
-        const pos = this.this.$.clipList.getClipPos(text);
+        const pos = this.$.clipList.getClipPos(text);
         if (pos !== -1) {
           if (this.isBulkOp) {
             this.clips.splice(pos, 1);
