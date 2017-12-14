@@ -24,6 +24,7 @@ app.User = (function() {
    */
   function _setSignIn(val) {
     Chrome.Storage.set('signedIn', val);
+    // because Background._onStorageChanged won't be called
     app.Utils.setBadgeText();
     if (!val) {
       Chrome.Storage.set('photoURL', '');
