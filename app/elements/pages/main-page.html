@@ -320,9 +320,6 @@
         this.addEventListener('focus', this._onFocused.bind(this), true);
         this.set('canSend', app.Utils.canSend());
         this._loadClipItems(true).then(() => {
-          // !Important
-          this.$.clipList.deselectAll();
-          this.$.clipList.selectFirst();
 
           // don't do in attached. need clips to be loaded before listening
           Chrome.Msg.listen(this._onChromeMessage.bind(this));
