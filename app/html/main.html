@@ -18,31 +18,9 @@
   <!-- All script and element imports - will be vulcanized -->
   <link rel="import" href="main_imports.html">
 
-  <!-- For iron-flex-layout -->
-  <style is="custom-style" include="iron-flex iron-flex-alignment iron-flex-factors iron-positioning"></style>
-
-  <!-- For shared styles, shared-styles.html import in elements.html -->
-  <style is="custom-style" include="shared-styles"></style>
-</head>
-
-<body unresolved class="fullbleed layout vertical">
-
-<template is="dom-bind" id="t">
-  <style is="custom-style">
-
-    paper-menu paper-item {
-      --paper-item-selected: {
-        color: var(--dark-primary-color);
-        background-color: var(--selected-color);
-        text-rendering: optimizeLegibility;
-      };
-      --paper-item-focused: {
-        background-color: transparent;
-      };
-      --paper-item-focused-before: {
-        background-color: transparent;
-      };
-    }
+  <style
+      is="custom-style"
+      include="iron-flex iron-flex-alignment iron-flex-factors iron-positioning shared-styles">
 
     #mainToolbar {
       background-color: var(--dark-primary-color);
@@ -64,6 +42,20 @@
       border-bottom: var(--drawer-toolbar-border-color);
     }
 
+    #mainMenu paper-item {
+      --paper-item-selected: {
+        color: var(--dark-primary-color);
+        background-color: var(--selected-color);
+        text-rendering: optimizeLegibility;
+      };
+      --paper-item-focused: {
+        background-color: transparent;
+      };
+      --paper-item-focused-before: {
+        background-color: transparent;
+      };
+    }
+
     #labelsItem {
       color: var(--primary-text-color);
     }
@@ -75,12 +67,21 @@
     #drawer.paper-drawer-panel > [drawer] {
       border-right: 1px solid rgba(0, 0, 0, 0.14);
     }
-
   </style>
+</head>
 
+<body unresolved class="fullbleed layout vertical">
+
+<template is="dom-bind" id="t">
+
+  <!-- Top Panel -->
   <paper-drawer-panel id="paperDrawerPanel" responsive-width="1500px" drawer-width="300px">
     <paper-material elevation="2" drawer fixed>
+      
+      <!-- Menu Drawer Header Panel -->
       <paper-scroll-header-panel>
+        
+        <!-- Menu Drawer Toolbar -->
         <paper-toolbar id="drawerToolbar">
           <span class="menu-name flex">Menu</span>
           <!--suppress HtmlUnknownTarget -->
@@ -90,8 +91,8 @@
 						             display: [[_computeAvatarDisplay(avatar)]];">
         </paper-toolbar>
 
-        <!-- Drawer Content -->
-        <paper-menu class="list" id="mainMenu" attr-for-selected="id" selected="[[route]]">
+        <!-- Menu Drawer Content -->
+        <paper-menu id="mainMenu" class="list" attr-for-selected="id" selected="[[route]]">
           <template is="dom-repeat" items="[[pagesOne]]">
             <hr hidden$="[[!item.divider]]"/>
             <paper-item id="[[item.route]]" class="center horizontal layout"
@@ -118,11 +119,13 @@
             </paper-item>
           </template>
         </paper-menu>
+        
       </paper-scroll-header-panel>
     </paper-material>
 
     <!-- Main Header Panel -->
     <paper-scroll-header-panel id="mainPanel" main fixed>
+      
       <!-- Main Toolbar -->
       <paper-toolbar id="mainToolbar">
         <paper-icon-button id="paperToggle" icon="myicons:menu" paper-drawer-toggle></paper-icon-button>
@@ -213,9 +216,12 @@ You can always change whether the extension has this permission from the Menu op
             <section id="helpInsertion"></section>
           </neon-animatable>
         </neon-animated-pages>
+        
       </div>
+      
     </paper-scroll-header-panel>
   </paper-drawer-panel>
+  
 </template>
 <script src="../scripts/main/main.js"></script>
 </body>
