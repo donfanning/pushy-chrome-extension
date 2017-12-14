@@ -38,8 +38,6 @@
           max-physical-count="50000">
         <template>
           <clip-row
-              tabindex$="{tabIndex}}"
-              index="{{index}}"
               clip="{{clip}}"
               selected="{{selected}}"
               on-tap="_onClipRowTapped"
@@ -64,9 +62,8 @@
     is: 'clip-list',
 
     properties: {
-
       /**
-       * Fires when the selected clip changes
+       * Fired when the selected clip changes
        * @event selected-clip-change
        * @memberOf ClipList
        */
@@ -126,6 +123,7 @@
         value: null,
         notify: true,
       },
+      
       /**
        * True if we are performing an operation on multiple clips
        * @memberOf ClipList

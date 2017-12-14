@@ -9,7 +9,6 @@
 <link rel="import" href="../bower_components/paper-styles/color.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 
-
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
@@ -73,7 +72,6 @@
 
     <div
         tabindex="-1"
-        index="{{index}}"
         selected="{{selected}}"
         clip="{{clip}}"
         class$="[[_computeClipClass(selected)]]">
@@ -82,13 +80,13 @@
           <paper-icon-button
               icon="[[_computeFavIcon(clip.fav)]]"
               style$="color: [[_computeFavColor(clip.fav)]];"
-              on-tap="_onRowFavTapped"></paper-icon-button>
+              on-tap="_onFavTapped"></paper-icon-button>
           <paper-item-body class="date-text center flex">
             {{_computeDate(clip.date)}}
           </paper-item-body>
           <paper-icon-button
               icon="myicons:content-copy"
-              on-tap="_onRowCopyTapped"></paper-icon-button>
+              on-tap="_onCopyTapped"></paper-icon-button>
         </paper-item>
         <paper-item class="clip-text-row horizontal layout flex">
           <paper-item-body class="clip-text vertical start-justified layout">
@@ -96,7 +94,7 @@
           </paper-item-body>
           <paper-icon-button
               icon="myicons:label-outline"
-              on-tap="_onRowLabelTapped"></paper-icon-button>
+              on-tap="_onLabelTapped"></paper-icon-button>
         </paper-item>
       </div>
     </div>
@@ -146,22 +144,13 @@
     },
 
     /**
-     * Event: Tap on clip row
-     * @private
-     * @memberOf ClipRow
-     */
-    _onClipRowTapped: function() {
-      this.fire('row-tap');
-    },
-
-    /**
-     * Event: Copy list row to clipboard
+     * Event: Copy {@link ClipItem} to clipboard
      * @param {Event} event
      * @param {ClipItem} event.model.clip
      * @private
      * @memberOf ClipRow
      */
-    _onRowCopyTapped: function(event) {
+    _onCopyTapped: function(event) {
       Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'copyClipItem');
       const clipItem = this.clip;
       clipItem.date = Date.now();
@@ -175,7 +164,7 @@
         Chrome.Msg.send(msg).catch(() => {});
         return Promise.resolve();
       }).catch((err) => {
-        Chrome.Log.error(err.message, 'ClipRow._onRowCopyTapped',
+        Chrome.Log.error(err.message, 'ClipRow._onCopyTapped',
             'Failed to copy item to clipboard.');
       });
 
@@ -190,12 +179,12 @@
      * @private
      * @memberOf ClipRow
      */
-    _onRowFavTapped: function(event) {
+    _onFavTapped: function(event) {
       Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'toggleFavorite');
       const clipItem = this.clip;
       if (clipItem) {
         clipItem.update({fav: !clipItem.fav}).catch((err) => {
-          Chrome.Log.error(err.message, 'ClipRow._onRowFavTapped');
+          Chrome.Log.error(err.message, 'ClipRow._onFavTapped');
         });
       }
 
@@ -210,7 +199,7 @@
      * @private
      * @memberOf ClipRow
      */
-    _onRowLabelTapped: function(event) {
+    _onLabelTapped: function(event) {
       Chrome.GA.event(app.GA.EVENT.IMAGE_BUTTON, 'rowLabelTapped');
 
       // prevent row deselection
@@ -235,7 +224,7 @@
     },
 
     /**
-     * Computed Binding
+     * Computed Binding: relative date
      * @param {int} date - from epoch in millis
      * @returns {string} Date as relative from now
      * @private
@@ -246,7 +235,7 @@
     },
 
     /**
-     * Computed Binding
+     * Computed Binding: fav icon
      * @param {boolean} isTrue - true if fav
      * @returns {string} icon style
      * @private
@@ -257,7 +246,7 @@
     },
 
     /**
-     * Computed Binding
+     * Computed Binding: color of fav icon
      * @param {boolean} isTrue - true if fav
      * @returns {string} Favorite icon color
      * @private
