@@ -283,7 +283,9 @@ If you find the extension of value please rate it. Thanks. \
         }
 
         if (oldVersion < 6) {
-          _addLabelExample();
+          _addLabelExample().catch((err) => {
+            Chrome.Log.error(err.message, 'Data.update', _ERROR_INIT);
+          });
         }
       }
 
