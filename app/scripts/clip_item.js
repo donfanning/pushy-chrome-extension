@@ -473,12 +473,12 @@
             changedClipItems.push(clipItem);
           }
         });
-        return Promise.resolve(changedClipItems);
-      }).then((clipItems) => {
-        clipItems.forEach((clipItem) => {
-          clipItem.save();
+        
+        const promises = [];
+        changedClipItems.forEach((clipItem) => {
+          promises.push(clipItem.save());
         });
-        return Promise.resolve();
+        return Promise.all(promises);
       }).catch((err) => {
         return Promise.reject(err);
       });
@@ -506,12 +506,12 @@
             changedClipItems.push(clipItem);
           }
         });
-        return Promise.resolve(changedClipItems);
-      }).then((clipItems) => {
-        clipItems.forEach((clipItem) => {
-          clipItem.save();
+        
+        const promises = [];
+        changedClipItems.forEach((clipItem) => {
+          promises.push(clipItem.save());
         });
-        return Promise.resolve();
+        return Promise.all(promises);
       }).catch((err) => {
         return Promise.reject(err);
       });
@@ -546,7 +546,7 @@
   /**
    * Delete non-favorite {@link ClipItem} objects older than the given time
    * @param {int} time - time in millis since epoch
-   * @returns {Promise<boolean>} true if items were deleted
+   * @returns {Dexie.Promise<boolean>} true if items were deleted
    * @private
    */
   ClipItem._deleteOlderThan = function(time) {
