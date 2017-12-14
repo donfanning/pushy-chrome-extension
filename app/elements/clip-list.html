@@ -137,6 +137,26 @@
     },
 
     /**
+     * Element is ready
+     * @memberOf ClipList
+     */
+    ready: function() {
+      this.addEventListener('focus', this._onFocused.bind(this), true);
+    },
+
+    /**
+     * Event: iron-list got focus
+     * @param {Event} event
+     * @param {ClipItem} event.model.clip
+     * @private
+     * @memberOf ClipList
+     */
+    _onFocused: function(event) {
+      // !?Important prevent iron-list from handling
+      event.stopPropagation();
+    },
+
+    /**
      * Load the {@link ClipItem} objects
      * @param {boolean} [isSelectFirst=true] - if true select first item
      * @returns {Promise<void>}
