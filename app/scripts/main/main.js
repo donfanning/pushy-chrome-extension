@@ -325,6 +325,7 @@
         t.$.mainPage.setLabelFilter();
         t.route = page.route;
       } else if (page.route.includes('page-main-labeled#')) {
+        // a filtered page-main
         t.$.mainPage.setLabelFilter(page.label);
         t.route = 'page-main';
       } else {
@@ -353,10 +354,25 @@
   };
 
   /**
-   * Event: A {@link Main.page} finished animating in
+   * Event: Selected {@link Main.page} changed
+   * @param {Event} event
    * @memberOf Main
    */
-  t._onPageAnimation = function() {
+  t._onPageChanged = function(event) {
+    if (event.srcElement !== t.$.animatedPages) {
+      return;
+    }
+    
+    // leaving page
+    switch (prevRoute) {
+      case 'page-main':
+        t.$.mainPage.onLeavePage();
+        break;
+      default:
+        break;
+    }
+    
+    // entering page
     const idx = _getPageIdx(t.route);
     const page = pages[idx];
     switch (t.route) {
@@ -367,24 +383,6 @@
       case 'page-devices':
       case 'page-labels':
         page.el.onCurrentPage();
-        break;
-      default:
-        break;
-    }
-  };
-
-  /**
-   * Event: Selected {@link Main.page} changed
-   * @param {Event} event
-   * @memberOf Main
-   */
-  t._onPageChanged = function(event) {
-    if (event.srcElement !== t.$.animatedPages) {
-      return;
-    }
-    switch (prevRoute) {
-      case 'page-main':
-        t.$.mainPage.onLeavePage();
         break;
       default:
         break;
