@@ -37,8 +37,13 @@
       }).catch((err) => {
         Chrome.Log.error(err.message, 'Background._onInstalled');
       });
-      app.Data.initialize();
-      app.Utils.showMainTab();
+      app.Data.initialize().then(() => {
+        app.Utils.showMainTab();
+        return Promise.resolve();
+      }).catch((err) => {
+        Chrome.Log.error(err.message, 'Background._onInstalled');
+        app.Utils.showMainTab();
+      });
     } else if (details.reason === 'update') {
       if (!Chrome.Utils.DEBUG) {
         if (Chrome.Utils.getVersion() === details.previousVersion) {

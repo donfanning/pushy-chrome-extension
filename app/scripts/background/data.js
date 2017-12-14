@@ -14,7 +14,7 @@ app.Data = (function() {
   'use strict';
 
   new ExceptionHandler();
-  
+
   /**
    * Version of data - update when items are added, removed, changed
    * @type {int}
@@ -91,7 +91,7 @@ app.Data = (function() {
    * @private
    * @memberOf app.Data
    */
-  const _INTRO_TEXT =
+  const _ITEM_TXT =
       `A clipboard manager that can share with all your devices.
 https://pushy-clipboard.github.io/index.html
 
@@ -154,19 +154,18 @@ If you find the extension of value please rate it. Thanks. \
 
   /**
    * Add a {@link ClipItem} with a {@link Label}
+   * @returns {Promise<void>}
    * @private
    * @memberOf app.Data
    */
   function _addLabelExample() {
     let label;
-    app.Label.add('Example').then((lbl) => {
+    return app.Label.add('Example').then((lbl) => {
       label = lbl;
       return app.ClipItem.add(_EXAMPLE_LABEL, Date.now() - 1000, true, false,
           app.Device.myName());
     }).then((clipItem) => {
       return clipItem.addLabel(label);
-    }).catch((err) => {
-      Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INIT);
     });
   }
 
@@ -194,7 +193,7 @@ If you find the extension of value please rate it. Thanks. \
       this.onsuccess = function() {
         const msg =
             Chrome.JSONUtils.shallowCopy(app.ChromeMsg.CLIP_ITEM_UPDATED);
-         msg.item = {
+        msg.item = {
           text: obj.text,
           mods: mods,
         };
@@ -218,26 +217,25 @@ If you find the extension of value please rate it. Thanks. \
   return {
     /**
      * Initialize the data saved in localStorage
+     * @returns {Promise<void>}
      * @memberOf app.Data
      */
     initialize: function() {
       _addDefaults();
 
-      _addLabelExample();
-
-      const introClip = new app.ClipItem(_INTRO_TEXT, Date.now(), true, false,
-          app.Device.myName());
-      introClip.save().catch((err) => {
-        Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INIT);
-      });
-
-      app.User.setInfo().catch((err) => {
-        Chrome.Log.error(err.message, 'app.Data.initialize', _ERROR_INIT);
-      });
-
-      // and the last error
-      Chrome.Storage.clearLastError().catch((err) => {
-        Chrome.Log.error(err.message, 'Data.initialize', _ERROR_INIT);
+      // info. on chrome user
+      return app.User.setInfo().then(() => {
+        // initialize LastError
+        return Chrome.Storage.clearLastError();
+      }).then(() => {
+        // add clip with label
+        return _addLabelExample();
+      }).then(() => {
+        // add intro clip
+        const date = Date.now();
+        const dName = app.Device.myName();
+        const introClip = new app.ClipItem(_ITEM_TXT, date, true, false, dName);
+        return introClip.save();
       });
     },
 
