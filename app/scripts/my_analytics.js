@@ -33,7 +33,7 @@ app.GA = (function() {
    * @property {Chrome.GA.Event} REGISTERED - {@link Device} registered
    * @property {Chrome.GA.Event} UNREGISTERED - {@link Device} unregistered
    * @property {Chrome.GA.Event} TOKEN_REFRESHED - firebase token refreshed
-   * @property {Chrome.GA.Event} DB_CHANGED - any db change
+   * @property {Chrome.GA.Event} DB - any db change
    * @property {Chrome.GA.Event} CHROME_SIGN_OUT - Chrome signed out of our act.
    * @const
    * @memberOf app.GA
@@ -74,9 +74,9 @@ app.GA = (function() {
       eventAction: 'refreshed',
       eventLabel: '',
     },
-    DB_CHANGED: {
+    DB: {
       eventCategory: 'database',
-      eventAction: 'changed',
+      eventAction: 'unknown',
       eventLabel: '',
     },
     CHROME_SIGN_OUT: {

@@ -15,6 +15,15 @@ app.DB = (function() {
   'use strict';
 
   new ExceptionHandler();
+  
+  const _CLIP_ITEM = 'clipItem';
+  const _LABEL = 'label';
+  const _CREATE = 'create';
+  const _UPDATE = 'update';
+  const _DELETE = 'delete';
+  const _CREATING = 'creating';
+  const _UPDATING = 'updating';
+  const _DELETING = 'deleting';
 
   /**
    * The Dexie database
@@ -100,23 +109,52 @@ app.DB = (function() {
       });
     });
 
-    _db.labels.hook('deleting', function(primKey) {
+    _db.labels.hook(_CREATING, function() {
       // eslint-disable-next-line no-invalid-this
       this.onsuccess = function() {
-        app.ClipItem.removeLabel(primKey);
+        Chrome.GA.event(app.GA.EVENT.DB, _LABEL, _CREATE);
       };
     });
 
-    _db.labels.hook('updating', function(mods, primKey, obj) {
+    _db.labels.hook(_UPDATING, function(mods, primKey, obj) {
       // eslint-disable-next-line no-invalid-this
       this.onsuccess = function() {
         if (mods.hasOwnProperty('name')) {
           // 'name' property is being updated
           if (typeof mods.name === 'string') {
-            // change not delete
+            Chrome.GA.event(app.GA.EVENT.DB, _LABEL, _UPDATE);
             app.ClipItem.updateLabel(mods.name, obj.name);
           }
         }
+      };
+    });
+
+    _db.labels.hook(_DELETING, function(primKey) {
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        Chrome.GA.event(app.GA.EVENT.DB, _LABEL, _DELETE);
+        app.ClipItem.removeLabel(primKey);
+      };
+    });
+
+    _db.clipItems.hook(_CREATING, function() {
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        Chrome.GA.event(app.GA.EVENT.DB, _CLIP_ITEM, _CREATE);
+      };
+    });
+
+    _db.clipItems.hook(_UPDATING, function() {
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        Chrome.GA.event(app.GA.EVENT.DB, _CLIP_ITEM, _UPDATE);
+      };
+    });
+
+    _db.clipItems.hook(_DELETING, function() {
+      // eslint-disable-next-line no-invalid-this
+      this.onsuccess = function() {
+        Chrome.GA.event(app.GA.EVENT.DB, _CLIP_ITEM, _DELETE);
       };
     });
 
