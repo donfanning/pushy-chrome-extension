@@ -135,6 +135,10 @@
   function _onStorageChanged(event) {
     if ((event.key === 'allowPush') || (event.key === 'signedIn')) {
       app.Utils.setBadgeText();
+      if ((event.key === 'allowPush') && app.Utils.allowPush()) {
+        // reset no device error count
+        Chrome.Storage.set('noDevicesCt', 0);
+      }
     }
   }
 

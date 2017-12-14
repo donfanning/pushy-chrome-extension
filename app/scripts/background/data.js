@@ -22,7 +22,7 @@ app.Data = (function() {
    * @private
    * @memberOf app.Data
    */
-  const _VERSION = 7;
+  const _VERSION = 8;
 
   /**
    * The data items saved to localStorage
@@ -49,6 +49,7 @@ app.Data = (function() {
    * @property {string} uid - our unique id
    * @property {string} photoURL - path to out photo url
    * @property {string} permissions - enum: notSet allowed denied
+   * @property {int} noDevicesCt - count of noDevice send errors
    * @property {Chrome.Storage.LastError} lastError - last error that we saved
    * @memberOf app.Data
    */
@@ -82,6 +83,7 @@ app.Data = (function() {
     'uid': '',
     'photoURL': '',
     'permissions': 'notSet', // enum: notSet allowed denied
+    'noDevicesCt': 0,
   };
 
   /**

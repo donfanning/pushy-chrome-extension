@@ -83,6 +83,32 @@ app.Msg = (function() {
   };
 
   /**
+   * Max number of no device errors before turning off push to devices
+   * @const
+   * @private
+   * @memberOf app.Msg
+   */
+  const _MAX_NO_DEVICES_CT = 5;
+
+  /**
+   * Starting portion of server error indicating no other registered devices
+   * @const
+   * @private
+   * @memberOf app.Msg
+   */
+  const _ERR_NO_DEVICES = 'No other devices are registered';
+
+  /**
+   * Error to display if we have disabled push to devices
+   * @const
+   * @private
+   * @memberOf app.Msg
+   */
+  const _ERR_PUSH_DISABLED = 'No remote devices are registered.\n' +
+      'Push to devices has been disabled.\n' +
+      'You can reenable it in the Settings.';
+
+  /**
    * Get the data packet we will send
    * @param {string} action - message type
    * @param {string} body - message body
@@ -168,7 +194,27 @@ app.Msg = (function() {
 
       const data = _getData(_ACTION.MESSAGE, text);
       data.fav = clipItem.fav ? '1' : '0';
-      return _sendMessage(data, true, app.Notify.TYPE.MESSAGE_SENT);
+      const notifyType = app.Notify.TYPE.MESSAGE_SENT;
+      return _sendMessage(data, true, notifyType).catch((err) => {
+        if (err.message.includes(_ERR_NO_DEVICES)) {
+          // check for too many sends without any remote devices
+          let errCt = Chrome.Storage.getInt('noDevicesCt', 0);
+          if (errCt >= _MAX_NO_DEVICES_CT) {
+            Chrome.Storage.set('allowPush', false);
+            // because Background._onStorageChanged won't be called
+            app.Utils.setBadgeText();
+            return Promise.reject(new Error(_ERR_PUSH_DISABLED));
+          } else {
+            // let it go, but increment error count
+            errCt++;
+            Chrome.Storage.set('noDevicesCt', errCt);
+            return Promise.resolve();
+          }
+        } else {
+          // all other errors
+          return Promise.reject(err);
+        }
+      });
     },
 
     /**
