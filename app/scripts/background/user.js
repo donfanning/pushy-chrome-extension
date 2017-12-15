@@ -128,7 +128,7 @@ app.User = (function() {
 
   /**
    * Unregister {@link Device} and sign out of firebase
-   * @returns {Promise<void>} void
+   * @returns {Promise<void>} - always resolves
    * @private
    * @memberOf app.User
    */
@@ -142,6 +142,16 @@ app.User = (function() {
     }).then(() => {
       _setSignIn(false);
       app.Devices.clear();
+      return Promise.resolve();
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'User._signOut');
+      // just force the sign out
+      return app.User.forceSignOut(false, err.message);
+    }).catch((err) => {
+      Chrome.Storage.set('registered', false);
+      _setSignIn(false);
+      app.Devices.clear();
+      Chrome.Log.error(err.message, 'User.forceSignOut');
       return Promise.resolve();
     });
   }
