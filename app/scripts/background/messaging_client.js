@@ -88,7 +88,7 @@ app.Msg = (function() {
    * @private
    * @memberOf app.Msg
    */
-  const _MAX_NO_DEVICES_CT = 5;
+  const _MAX_NO_DEVICES_CT = 10;
 
   /**
    * Starting portion of server error indicating no other registered devices
@@ -203,7 +203,9 @@ app.Msg = (function() {
             Chrome.Storage.set('allowPush', false);
             // because Background._onStorageChanged won't be called
             app.Utils.setBadgeText();
-            return Promise.reject(new Error(_ERR_PUSH_DISABLED));
+            // return Promise.reject(new Error(_ERR_PUSH_DISABLED));
+            // be silent about turning it off.
+            return Promise.resolve();
           } else {
             // let it go, but increment error count
             errCt++;
