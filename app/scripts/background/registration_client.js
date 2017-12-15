@@ -92,7 +92,7 @@ app.Reg = (function() {
       }).catch((err) => {
         Chrome.Log.error(err.message, 'Reg.register');
         const prefix = 'Failed to register with the server.\n';
-        throw new Error(prefix + err.message);
+        return Promise.reject(new Error(prefix + err.message));
       });
     },
 
@@ -104,6 +104,7 @@ app.Reg = (function() {
      */
     unregister: function(interactive = false) {
       if (!app.Utils.isSignedIn()) {
+        Chrome.Storage.set('registered', false);
         return Promise.resolve();
       }
 
@@ -117,7 +118,7 @@ app.Reg = (function() {
       }).catch((err) => {
         Chrome.Log.error(err.message, 'Reg.unregister');
         const prefix = 'Failed to unregister with the server.\n';
-        throw new Error(prefix + err.message);
+        return Promise.reject(new Error(prefix + err.message));
       });
     },
   };
