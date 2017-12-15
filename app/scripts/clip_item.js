@@ -274,14 +274,14 @@
         return ClipItem._deleteOldest();
       } else {
         // some other error
-        throw err;
+        return Promise.reject(err);
       }
     }).catch((err) => {
       if (err.message === ClipItem.ERROR_REMOVE_FAILED) {
         // nothing to delete, give up
         err.message = ClipItem.ERROR_DB_FULL;
       }
-      throw err;
+      return Promise.reject(err);
     });
   };
 
@@ -291,7 +291,7 @@
    */
   ClipItem.prototype._safeSave = function() {
     if (Chrome.Utils.isWhiteSpace(this.text)) {
-      throw new Error(ClipItem.ERROR_EMPTY_TEXT);
+      return Promise.reject(new Error(ClipItem.ERROR_EMPTY_TEXT));
     }
     const MAX_DELETES = 100;
 
@@ -302,7 +302,7 @@
      */
     const repeatFunc = ((count) => {
       if (count === 0) {
-        throw new Error(ClipItem.ERROR_DB_FULL);
+        return Promise.reject(new Error(ClipItem.ERROR_DB_FULL));
       }
       return this._saveOrDeleteOldest().then(function(key) {
         if (key) {
@@ -311,7 +311,7 @@
         return repeatFunc(count - 1);
       }).catch((err) => {
         console.error(err);
-        throw err;
+        return Promise.reject(err);
       });
     });
 
@@ -566,7 +566,7 @@
     return ClipItem.loadAll().then((clipItems) => {
       let found = false;
       if (!clipItems) {
-        throw new Error(ClipItem.ERROR_REMOVE_FAILED);
+        return Promise.reject(new Error(ClipItem.ERROR_REMOVE_FAILED));
       }
       clipItems.sort((a, b) => {
         return a.date - b.date;
@@ -581,7 +581,7 @@
       if (found) {
         return ClipItem.remove(clipItem.text);
       } else {
-        throw new Error(ClipItem.ERROR_REMOVE_FAILED);
+        return Promise.reject(new Error(ClipItem.ERROR_REMOVE_FAILED));
       }
     }).then(() => {
       return Promise.resolve();
