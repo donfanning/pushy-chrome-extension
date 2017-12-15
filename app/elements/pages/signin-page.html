@@ -344,16 +344,14 @@
               // force sign out
               this._forceSignOut();
             }
-            this._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE,
-                false);
+            this._showDialog(ERROR_PERMISSION, ERROR_BLOCKED_MESSAGE, false);
           } else if (permission === 'default') {
             // user closed notification popup
             if (app.Utils.isSignedIn()) {
               // force sign out
               this._forceSignOut();
             }
-            this._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE,
-                true);
+            this._showDialog(ERROR_PERMISSION, ERROR_DEFAULT_MESSAGE, true);
           } else {
             // granted
             this.set('isSignInDisabled', false);
@@ -362,8 +360,8 @@
         }).catch((err) => {
           // something went wrong
           Chrome.Log.error(err.message, 'SignInPage._checkPermissions');
-          this._showDialog(ERROR_PERMISSION,
-              ERROR_UNKNOWN_MESSAGE + err.message, false);
+          const text = ERROR_UNKNOWN_MESSAGE + err.message;
+          this._showDialog(ERROR_PERMISSION, text, false);
         });
       },
 
@@ -386,16 +384,12 @@
       },
 
       /**
-       * Attempt to sign out of current Browser account
+       * sign out user - will always do it, one way or another
        * @private
        * @memberOf SignInPage
        */
       _signOut: function() {
-        Chrome.Msg.send(app.ChromeMsg.SIGN_OUT).then((response) => {
-          if (response.message === 'error') {
-            // just force it to happen
-            this._forceSignOut();
-          }
+        Chrome.Msg.send(app.ChromeMsg.SIGN_OUT).then(() => {
           this.set('isWaiting', false);
           return Promise.resolve();
         }).catch(() => {

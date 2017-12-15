@@ -181,26 +181,20 @@ app.User = (function() {
         Chrome.Log.error(`${request.message}: ${err.message}`,
             'User._onChromeMessage');
         // eslint-disable-next-line promise/no-nesting
-        _signOut().then(() => {
-          return Promise.resolve();
-        }).catch((err) => {
-          Chrome.Log.error(`${request.message}: ${err.message}`,
-              'User._onChromeMessage');
-          _setSignIn(false);
-          Chrome.Storage.set('registered', false);
+        _signOut().catch(() => {
+          // always resolves
         });
         response({message: 'error', error: err.message});
       });
     } else if (request.message === app.ChromeMsg.SIGN_OUT.message) {
-      // try to signOut a user
+      // signOut a user - will always sign out
       ret = true; // async
       _signOut().then(() => {
         response({message: 'ok'});
         return Promise.resolve();
-      }).catch((err) => {
-        Chrome.Log.error(`${request.message}: ${err.message}`,
-            'User._onChromeMessage');
-        response({message: 'error', error: err.message});
+      }).catch(() => {
+        // always resolves
+        response({message: 'ok'});
       });
     } else if (request.message === app.ChromeMsg.FORCE_SIGN_OUT.message) {
       // force sign out
@@ -208,12 +202,10 @@ app.User = (function() {
       app.User.forceSignOut().then(() => {
         response({message: 'ok'});
         return Promise.resolve();
-      }).catch((err) => {
+      }).catch(() => {
         _setSignIn(false);
         app.Devices.clear();
-        Chrome.Log.error(`${request.message}: ${err.message}`,
-            'User._onChromeMessage');
-        response({message: 'error', error: err.message});
+        response({message: 'ok'});
       });
     }
     return ret;
