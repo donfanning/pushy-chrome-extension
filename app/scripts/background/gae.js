@@ -66,7 +66,7 @@ app.Gae = (function() {
         if (json.success) {
           return Promise.resolve();
         } else {
-          throw new Error(json.reason);
+          return Promise.reject(new Error(json.reason));
         }
       });
     },
