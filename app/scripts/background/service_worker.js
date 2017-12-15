@@ -48,7 +48,7 @@ app.SW = (function() {
       _reg = swReg;
       return Promise.resolve(_reg);
     }).catch((err) => {
-      throw new Error(_ERR_REG + err.message);
+      return Promise.reject(new Error(_ERR_REG + err.message));
     });
   }
 
@@ -85,7 +85,7 @@ app.SW = (function() {
       return _register().then((swReg) => {
         return app.Fb.initialize(swReg);
       }).catch((err) => {
-        throw new Error(_ERR_REG + err.message);
+        return Promise.reject(new Error(_ERR_REG + err.message));
       });
     },
 
