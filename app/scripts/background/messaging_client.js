@@ -104,7 +104,7 @@ app.Msg = (function() {
    * @private
    * @memberOf app.Msg
    */
-  const _ERR_PUSH_DISABLED = 'No remote devices are registered.\n' +
+  const _ERR_PUSH_DISABLED = 'No other devices are registered.\n' +
       'Push to devices has been disabled.\n' +
       'You can reenable it in the Settings.';
 
@@ -244,7 +244,20 @@ app.Msg = (function() {
      */
     sendPing: function() {
       const data = _getData(_ACTION.PING, _BODY.PING);
-      return _sendMessage(data, false);
+      return _sendMessage(data, false).catch((err) => {
+        if (err.message.includes(_ERR_NO_DEVICES)) {
+          // send Chrome message on this error
+          const msg =
+              Chrome.JSONUtils.shallowCopy(app.ChromeMsg.NO_REMOTE_DEVICES);
+          msg.item = _ERR_NO_DEVICES;
+          // eslint-disable-next-line promise/no-nesting
+          Chrome.Msg.send(msg).catch(() => {});
+          return Promise.resolve();
+        } else {
+          // all other errors
+          return Promise.reject(err);
+        }
+      });
     },
 
     /**

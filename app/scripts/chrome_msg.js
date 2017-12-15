@@ -78,6 +78,10 @@ app.ChromeMsg = (function() {
     UNREGISTER_FAILED: {
       message: 'unregisterFailed',
     },
+    NO_REMOTE_DEVICES: {
+      message: 'noRemoteDevices',
+      item: '',
+    },
     CLIP_ITEM_CREATED: {
       message: 'clipItemCreated',
       item: '',
@@ -104,6 +108,7 @@ app.ChromeMsg = (function() {
     MSG_FAILED: _MSG.MSG_FAILED,
     REGISTER_FAILED: _MSG.REGISTER_FAILED,
     UNREGISTER_FAILED: _MSG.UNREGISTER_FAILED,
+    NO_REMOTE_DEVICES: _MSG.NO_REMOTE_DEVICES,
     CLIP_ITEM_CREATED: _MSG.CLIP_ITEM_CREATED,
     CLIP_ITEM_DELETED: _MSG.CLIP_ITEM_DELETED,
     CLIP_ITEM_UPDATED: _MSG.CLIP_ITEM_UPDATED,

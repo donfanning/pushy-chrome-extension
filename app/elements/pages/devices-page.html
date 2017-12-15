@@ -14,6 +14,9 @@
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
 
 <link rel="import" href="../my_icons.html">
 
@@ -64,6 +67,21 @@
 
     <paper-card class="page-content" heading="Devices">
       <div class="card-content">
+        
+        <!-- Error dialog -->
+        <paper-dialog id="errorDialog" modal
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+          <h2 id="dialogTitle" class="vertical layout center"></h2>
+          <paper-dialog-scrollable>
+            <paper-item id="dialogText"></paper-item>
+          </paper-dialog-scrollable>
+          <div class="buttons">
+            <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
+          </div>
+        </paper-dialog>
+
+        <!-- Main Content -->
         <div id="deviceList" class="flex">
           <template is="dom-repeat" id="listTemplate" items="{{devices}}" as="device"
                     sort="_sortByDate">
@@ -120,14 +138,10 @@
        * @memberOf DevicesPage
        */
       ready: function() {
-        // listen for chrome messages
-        chrome.runtime.onMessage.addListener((request) => {
-          if (request.message ===
-              app.ChromeMsg.DEVICES_CHANGED.message) {
-            this._loadDevices();
-          }
-        });
         this._loadDevices();
+        
+        // listen for chrome messages
+        Chrome.Msg.listen(this._onChromeMessage.bind(this));
       },
 
       /**
@@ -135,20 +149,34 @@
        * @memberOf DevicesPage
        */
       onCurrentPage: function() {
-        this._ping();
-        this._loadDevices();
+        if (app.Utils.allowPush()) {
+          this._ping();
+          this._loadDevices();
+        } else {
+          this._showNoPushDialog();
+        }
       },
 
+      // noinspection JSUnusedLocalSymbols
       /**
-       * Sort filter for the Devices - by last seen date
-       * @param {Device} a - first comparator
-       * @param {Device} b - second comparator
-       * @returns {int}
+       * Event: Fired when a message is sent from either an extension process<br>
+       * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
+       * @see https://developer.chrome.com/extensions/runtime#event-onMessage
+       * @param {Chrome.Msg.Message} request - details for the
+       * @param {Object} sender - MessageSender object
+       * @param {function} response - function to call once after processing
+       * @returns {boolean} true if asynchronous
        * @private
        * @memberOf DevicesPage
        */
-      _sortByDate: function(a, b) {
-        return b.lastSeen - a.lastSeen;
+      _onChromeMessage: function(request, sender, response) {
+        let ret = false;
+        if (request.message === app.ChromeMsg.DEVICES_CHANGED.message) {
+          this._loadDevices();
+        } else if (request.message === app.ChromeMsg.NO_REMOTE_DEVICES.message) {
+          this._showNoDevicesDialog();
+        }
+        return ret;
       },
 
       /**
@@ -172,7 +200,11 @@
        * @memberOf DevicesPage
        */
       _onFabTapped: function() {
-        this._ping();
+        if (app.Utils.allowPush()) {
+          this._ping();
+        } else {
+          this._showNoPushDialog();
+        }
       },
 
       /**
@@ -201,12 +233,24 @@
           for (let key in devices) {
             if (devices.hasOwnProperty(key)) {
               const v = devices[key];
-              const device = new app.Device(v.model, v.sn, v.os,
-                  v.nickname, v.lastSeen);
+              const device =
+                  new app.Device(v.model, v.sn, v.os, v.nickname, v.lastSeen);
               this.push('devices', device);
             }
           }
         }
+      },
+
+      /**
+       * Sort filter for the Devices - by last seen date
+       * @param {Device} a - first comparator
+       * @param {Device} b - second comparator
+       * @returns {int}
+       * @private
+       * @memberOf DevicesPage
+       */
+      _sortByDate: function(a, b) {
+        return b.lastSeen - a.lastSeen;
       },
 
       /**
@@ -216,6 +260,44 @@
        */
       _ping: function() {
         Chrome.Msg.send(app.ChromeMsg.PING).catch(() => {});
+      },
+
+      /**
+       * Display error dialog when no devices are registered
+       * @private
+       * @memberOf DevicesPage
+       */
+      _showNoDevicesDialog: function() {
+        const title = 'No other devices are registered';
+        const text = 'Please turn off \'Push to devices\' in the Settings\n' +
+            'or register other devices. Thank you.';
+        this._showDialog(title, text);
+      },
+
+      /**
+       * Display error dialog when push is disabled
+       * @private
+       * @memberOf DevicesPage
+       */
+      _showNoPushDialog: function() {
+        const title = 'Push to devices is turned off';
+        const text = 'Turn on \'Push to devices\' in the Settings\n' +
+            'to check for other registered devices';
+        this._showDialog(title, text);
+      },
+
+      /**
+       * Display error dialog
+       * @param {string} title - error title
+       * @param {string} text - description of error
+       * @private
+       * @memberOf DevicesPage
+       */
+      _showDialog: function(title, text) {
+        text = text.replace('\n', '<br/>');
+        this.$.dialogTitle.innerHTML = title;
+        this.$.dialogText.innerHTML = text;
+        this.$.errorDialog.open();
       },
     });
   })(window);
