@@ -141,22 +141,30 @@
        */
       ready: function() {
         // listen for chrome messages
-        chrome.runtime.onMessage.addListener((request) => {
-          if (request.message === app.ChromeMsg.REGISTER_FAILED.message) {
-            let error = request.error;
-            if (error.message) {
-              error = error.message;
-            }
-            this._showDialog(ERROR_TITLE, error);
-          } else if (request.message ===
-              app.ChromeMsg.UNREGISTER_FAILED.message) {
-            let error = request.error;
-            if (error.message) {
-              error = error.message;
-            }
-            this._showDialog(ERROR_TITLE, error);
-          }
-        });
+        Chrome.Msg.listen(this._onChromeMessage.bind(this));
+      },
+
+      // noinspection JSUnusedLocalSymbols
+      /**
+       * Event: Fired when a message is sent from either an extension process<br>
+       * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
+       * @see https://developer.chrome.com/extensions/runtime#event-onMessage
+       * @param {Chrome.Msg.Message} request - details for the
+       * @param {string} request.error - error message
+       * @param {Object} sender - MessageSender object
+       * @param {function} response - function to call once after processing
+       * @returns {boolean} true if asynchronous
+       * @private
+       * @memberOf SettingsPage
+       */
+      _onChromeMessage: function(request, sender, response) {
+        let ret = false;
+        if (request.message === app.ChromeMsg.REGISTER_FAILED.message) {
+          this._showDialog(ERROR_TITLE, request.error);
+        } else if (request.message === app.ChromeMsg.UNREGISTER_FAILED.message) {
+          this._showDialog(ERROR_TITLE, request.error);
+        }
+        return ret;
       },
 
       /**
