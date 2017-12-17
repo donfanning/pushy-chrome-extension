@@ -389,6 +389,8 @@
           this.$.clipList.updateClipItem(item.text, item.mods);
         } else if (request.message === app.ChromeMsg.CLIP_ITEM_DELETED.message) {
           this.$.clipList.deleteClipItem(request.item);
+        } else if (request.message === app.ChromeMsg.NO_REMOTE_DEVICES.message) {
+          this.set('canSend', app.Utils.canSend());
         }
         return ret;
       },

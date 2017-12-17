@@ -203,6 +203,12 @@ app.Msg = (function() {
             Chrome.Storage.set('allowPush', false);
             // because Background._onStorageChanged won't be called
             app.Utils.setBadgeText();
+            // send Chrome message on this error
+            const msg =
+                Chrome.JSONUtils.shallowCopy(app.ChromeMsg.NO_REMOTE_DEVICES);
+            msg.item = _ERR_NO_DEVICES;
+            // eslint-disable-next-line promise/no-nesting
+            Chrome.Msg.send(msg).catch(() => {});
             // return Promise.reject(new Error(_ERR_PUSH_DISABLED));
             // be silent about turning it off.
             return Promise.resolve();
