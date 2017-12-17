@@ -31,6 +31,7 @@
       }
 
       .card-content {
+        min-height: 40vh;
         padding-top: 0;
         padding-bottom: 0;
       }
@@ -62,46 +63,41 @@
       .date {
         color: var(--accent-color);
       }
-
+      
+      #infoMessage {
+        white-space: pre-wrap;
+        @apply(--paper-font-subhead);
+      }
     </style>
 
     <paper-card class="page-content" heading="Devices">
-      <div class="card-content">
-        
-        <!-- Error dialog -->
-        <paper-dialog id="errorDialog" modal
-                      entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-          <h2 id="dialogTitle" class="vertical layout center"></h2>
-          <paper-dialog-scrollable>
-            <paper-item id="dialogText"></paper-item>
-          </paper-dialog-scrollable>
-          <div class="buttons">
-            <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
-          </div>
-        </paper-dialog>
+      <div class="card-content vertical layout">
 
         <!-- Main Content -->
-        <div id="deviceList" class="flex">
-          <template is="dom-repeat" id="listTemplate" items="{{devices}}" as="device"
-                    sort="_sortByDate">
-            <div class="list-item horizontal center layout" id="item[[index]]">
-              <paper-icon-button id="delete[[index]]" icon="myicons:close"
-                                 on-tap="_onDeleteTapped"></paper-icon-button>
-              <div class="vertical layout flex" tabindex="-1">
-                <paper-item>Nickname: [[device.nickname]]</paper-item>
-                <paper-item>Model: [[device.model]]</paper-item>
-                <paper-item>SN: [[device.sn]]</paper-item>
-                <paper-item>OS: [[device.os]]</paper-item>
-                <paper-item class="date">Last seen: [[_computeDate(device.lastSeen)]]</paper-item>
+          <div id="deviceList" hidden$="[[_computeHasInfoMessage(infoMessage)]]">
+            <template is="dom-repeat" id="listTemplate" items="{{devices}}" as="device"
+                      sort="_sortByDate">
+              <div class="list-item horizontal layout center" id="item[[index]]">
+                <paper-icon-button id="delete[[index]]" icon="myicons:close"
+                                   on-tap="_onDeleteTapped"></paper-icon-button>
+                <div class="flex vertical layout" tabindex="-1">
+                  <paper-item>Nickname: [[device.nickname]]</paper-item>
+                  <paper-item>Model: [[device.model]]</paper-item>
+                  <paper-item>SN: [[device.sn]]</paper-item>
+                  <paper-item>OS: [[device.os]]</paper-item>
+                  <paper-item class="date">Last seen: [[_computeDate(device.lastSeen)]]</paper-item>
+                </div>
               </div>
-            </div>
-          </template>
+            </template>
+          </div>
+          <div class="flex horizontal end-justified layout end" hidden$="[[_computeHasInfoMessage(infoMessage)]]">
+            <paper-fab icon="myicons:refresh" on-tap="_onFabTapped"></paper-fab>
+          </div>
+          <div class="flex horizontal center-justified layout center"
+               hidden$="[[!_computeHasInfoMessage(infoMessage)]]">
+            <pre id="infoMessage">[[infoMessage]]</pre>
+          </div>
         </div>
-        <div class="horizontal end-justified layout">
-          <paper-fab icon="myicons:refresh" on-tap="_onFabTapped"></paper-fab>
-        </div>
-      </div>
     </paper-card>
   </template>
 </dom-module>
@@ -111,7 +107,19 @@
     'use strict';
 
     new ExceptionHandler();
+    
+    const _MSG_NO_DEVICES = 'No remote devices are registered.\n\n' +
+        'Please disable \'Push to devices\' in the ' +
+        'Settings or register other devices.\nThank you.';
 
+    const _MSG_NO_PUSH = 'Unable to look for remote devices\n\n' +
+        '\'Push to devices\' is disabled.\n' +
+        'You can enable it in the Settings.';
+
+    const _MSG_NO_RECEIVE = 'Unable to look for remote devices\n\n' +
+        '\'Receive from devices\' is disabled.\n' +
+        'You can enable it in the Settings.';
+    
     window.app = window.app || {};
     /**
      * Polymer element to manage our {@link Device} objects
@@ -121,7 +129,6 @@
       is: 'devices-page',
 
       properties: {
-
         /**
          * The Array of {@link Device} objects
          * @memberOf DevicesPage
@@ -129,6 +136,16 @@
         devices: {
           type: Array,
           value: [],
+          notify: true,
+        },
+
+        /**
+         * A message about why Device list is not available
+         * @memberOf DevicesPage
+         */
+        infoMessage: {
+          type: String,
+          value: '',
           notify: true,
         },
       },
@@ -139,7 +156,7 @@
        */
       ready: function() {
         this._loadDevices();
-        
+
         // listen for chrome messages
         Chrome.Msg.listen(this._onChromeMessage.bind(this));
       },
@@ -149,11 +166,14 @@
        * @memberOf DevicesPage
        */
       onCurrentPage: function() {
-        if (app.Utils.allowPush()) {
+        if (!app.Utils.allowPush()) {
+          this.set('infoMessage', _MSG_NO_PUSH);
+        } else if (!app.Utils.allowReceive()) {
+          this.set('infoMessage', _MSG_NO_RECEIVE);
+        } else {
+          this.set('infoMessage', '');
           this._ping();
           this._loadDevices();
-        } else {
-          this._showNoPushDialog();
         }
       },
 
@@ -174,7 +194,7 @@
         if (request.message === app.ChromeMsg.DEVICES_CHANGED.message) {
           this._loadDevices();
         } else if (request.message === app.ChromeMsg.NO_REMOTE_DEVICES.message) {
-          this._showNoDevicesDialog();
+          this.set('infoMessage', _MSG_NO_DEVICES);
         }
         return ret;
       },
@@ -219,6 +239,17 @@
       },
 
       /**
+       * Computed property: Do we have an info message
+       * @param {string} infoMessage
+       * @returns {boolean}
+       * @private
+       * @memberOf DevicesPage
+       */
+      _computeHasInfoMessage: function(infoMessage) {
+        return !Chrome.Utils.isWhiteSpace(infoMessage);
+      },
+
+      /**
        * Load the devices
        * @private
        * @memberOf DevicesPage
@@ -260,44 +291,6 @@
        */
       _ping: function() {
         Chrome.Msg.send(app.ChromeMsg.PING).catch(() => {});
-      },
-
-      /**
-       * Display error dialog when no devices are registered
-       * @private
-       * @memberOf DevicesPage
-       */
-      _showNoDevicesDialog: function() {
-        const title = 'No other devices are registered';
-        const text = 'Please turn off \'Push to devices\' in the Settings\n' +
-            'or register other devices. Thank you.';
-        this._showDialog(title, text);
-      },
-
-      /**
-       * Display error dialog when push is disabled
-       * @private
-       * @memberOf DevicesPage
-       */
-      _showNoPushDialog: function() {
-        const title = 'Push to devices is turned off';
-        const text = 'Turn on \'Push to devices\' in the Settings\n' +
-            'to check for other registered devices';
-        this._showDialog(title, text);
-      },
-
-      /**
-       * Display error dialog
-       * @param {string} title - error title
-       * @param {string} text - description of error
-       * @private
-       * @memberOf DevicesPage
-       */
-      _showDialog: function(title, text) {
-        text = text.replace('\n', '<br/>');
-        this.$.dialogTitle.innerHTML = title;
-        this.$.dialogText.innerHTML = text;
-        this.$.errorDialog.open();
       },
     });
   })(window);
