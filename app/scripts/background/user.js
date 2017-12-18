@@ -92,9 +92,7 @@ app.User = (function() {
     return _needsCleanup().then(() => {
       return app.SW.initialize();
     }).then(() => {
-      return app.Reg.register(true);
-    }).then(() => {
-      return Chrome.Auth.getToken();
+      return Chrome.Auth.getToken(true);
     }).then((token) => {
       return app.Fb.signIn(token);
     }).then((user) => {
@@ -102,6 +100,8 @@ app.User = (function() {
       if (!Chrome.Utils.isWhiteSpace(user.photoURL)) {
         Chrome.Storage.set('photoURL', user.photoURL);
       }
+      return app.Reg.register(true);
+    }).then(() => {
       return app.Msg.sendDeviceAdded();
     });
   }
