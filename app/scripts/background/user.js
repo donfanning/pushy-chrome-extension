@@ -32,21 +32,6 @@ app.User = (function() {
   }
 
   /**
-   * Get an OAuth2.0 token
-   * @see https://developer.chrome.com/apps/identity#method-getAuthToken
-   * @returns {Promise<string>} An access token
-   * @private
-   * @memberOf app.User
-   */
-  function _getAuthToken() {
-    return chromep.identity.getAuthToken({
-      'interactive': false,
-    }).then((token) => {
-      return Promise.resolve(token);
-    });
-  }
-
-  /**
    * Event: Fired when signin state changes for an act. on the user's profile.
    * @see https://developer.chrome.com/apps/identity#event-onSignInChanged
    * @param {Object} account - chrome AccountInfo
@@ -76,12 +61,7 @@ app.User = (function() {
    * @private
    */
   function _removeAuthToken() {
-    return _getAuthToken().then((token) => {
-      if (token) {
-        return chromep.identity.removeCachedAuthToken({'token': token});
-      }
-      return Promise.resolve();
-    }).catch((err) => {
+    return Chrome.Auth.removeCachedToken().catch((err) => {
       Chrome.Log.error(err.message, 'User._removeAuthToken');
       return Promise.resolve();
     });
@@ -114,7 +94,7 @@ app.User = (function() {
     }).then(() => {
       return app.Reg.register(true);
     }).then(() => {
-      return _getAuthToken();
+      return Chrome.Auth.getToken();
     }).then((token) => {
       return app.Fb.signIn(token);
     }).then((user) => {
