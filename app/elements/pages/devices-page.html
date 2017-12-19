@@ -215,6 +215,7 @@
        * @memberOf DevicesPage
        */
       _onFabTapped: function() {
+        Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'refreshDevicesTapped');
         if (app.Utils.allowPush()) {
           this._ping();
         } else {
