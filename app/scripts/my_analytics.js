@@ -28,6 +28,7 @@ app.GA = (function() {
    * @type {{}}
    * @property {Chrome.GA.Event} CLICK - generic click
    * @property {Chrome.GA.Event} IMAGE_BUTTON - icon clicked (non-menu)
+   * @property {Chrome.GA.Event} FAB_BUTTON - fab clicked
    * @property {Chrome.GA.Event} SENT - message sent
    * @property {Chrome.GA.Event} RECEIVED - message received
    * @property {Chrome.GA.Event} REGISTERED - {@link Device} registered
@@ -47,6 +48,11 @@ app.GA = (function() {
     IMAGE_BUTTON: {
       eventCategory: 'ui',
       eventAction: 'imageButtonClicked',
+      eventLabel: '',
+    },
+    FAB_BUTTON: {
+      eventCategory: 'ui',
+      eventAction: 'fabButtonClicked',
       eventLabel: '',
     },
     SENT: {
