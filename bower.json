@@ -49,7 +49,7 @@
     "setting-elements": "opus1269/setting-elements#^4.0.0",
     "firebase": "^4.0.0",
     "dexie": "^2.0.0",
-    "linkifyjs": "^2.1.5",
-    "moment": "^2.19.0"
+    "linkifyjs": "^2.0.0",
+    "moment": "^2.0.0"
   }
 }
