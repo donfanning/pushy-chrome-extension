@@ -38,7 +38,7 @@ app.Utils = (function() {
 
     /**
      * Get our email address
-     * @returns {string} email address
+     * @returns {string}
      * @memberOf app.Utils
      */
     getEmail: function() {
@@ -47,7 +47,7 @@ app.Utils = (function() {
 
     /**
      * Get our Github base path
-     * @returns {string} path
+     * @returns {string}
      * @memberOf app.Utils
      */
     getGithubPath: function() {
@@ -56,7 +56,7 @@ app.Utils = (function() {
 
     /**
      * Get our Github pages base path
-     * @returns {string} path
+     * @returns {string}
      * @memberOf app.Utils
      */
     getGithubPagesPath: function() {
@@ -78,7 +78,7 @@ app.Utils = (function() {
      * Get encoded url for an email
      * @param {string} subject - email subject
      * @param {string} body - email body
-     * @returns {string} encoded url
+     * @returns {string}
      * @memberOf app.Utils
      */
     getEmailUrl: function(subject, body) {
@@ -118,7 +118,7 @@ app.Utils = (function() {
     /**
      * Get a date string in time ago format
      * @param {int} time - time since epoch in millis
-     * @returns {string} Relative time format
+     * @returns {string}
      * @memberOf app.Utils
      */
     getRelativeTime: function(time) {
@@ -137,7 +137,7 @@ app.Utils = (function() {
 
     /**
      * Are we saving clipboard contents
-     * @returns {boolean} true if enabled
+     * @returns {boolean}
      * @memberOf app.Utils
      */
     isMonitorClipboard: function() {
@@ -146,7 +146,7 @@ app.Utils = (function() {
 
     /**
      * Has user enabled pushing to {@link app.Devices}
-     * @returns {boolean} true if enabled
+     * @returns {boolean}
      * @memberOf app.Utils
      */
     allowPush: function() {
@@ -155,7 +155,7 @@ app.Utils = (function() {
 
     /**
      * Has user enabled autoSend option
-     * @returns {boolean} true if enabled
+     * @returns {boolean}
      * @memberOf app.Utils
      */
     isAutoSend: function() {
@@ -164,7 +164,7 @@ app.Utils = (function() {
 
     /**
      * Has user enabled receiving from {@link app.Devices}
-     * @returns {boolean} true if enabled
+     * @returns {boolean}
      * @memberOf app.Utils
      */
     allowReceive: function() {
@@ -196,6 +196,15 @@ app.Utils = (function() {
      */
     notRegistered: function() {
       return !this.isRegistered();
+    },
+
+    /**
+     * Has user allowed backup of data to Google Drive
+     * @returns {boolean}
+     * @memberOf app.Utils
+     */
+    allowBackup: function() {
+      return Chrome.Storage.getBool('backup');
     },
 
     /**
