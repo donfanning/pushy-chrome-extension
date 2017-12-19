@@ -104,9 +104,9 @@ app.Msg = (function() {
    * @private
    * @memberOf app.Msg
    */
-  const _ERR_PUSH_DISABLED = 'No other devices are registered.\n' +
-      'Push to devices has been disabled.\n' +
-      'You can reenable it in the Settings.';
+  // const _ERR_PUSH_DISABLED = 'No other devices are registered.\n' +
+  //     'Push to devices has been disabled.\n' +
+  //     'You can reenable it in the Settings.';
 
   /**
    * Get the data packet we will send
