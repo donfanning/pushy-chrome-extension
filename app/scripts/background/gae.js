@@ -7,7 +7,7 @@
 window.app = window.app || {};
 
 /**
- * Handle calls to the  Google App Engine Endpoints
+ * Handle calls to the Google App Engine Endpoints
  * @see https://cloud.google.com/appengine/docs/standard/java/endpoints/
  * @namespace
  */
@@ -17,42 +17,39 @@ app.Gae = (function() {
   new ExceptionHandler();
 
   /**
-   * Base path of real gae server
+   * Base path of production gae server
    * @const
-   * @default
    * @private
    * @memberOf app.Gae
    */
-  const GAE_ROOT_REMOTE = 'https://clip-man.appspot.com/_ah/api';
+  const _GAE_ROOT_REMOTE = 'https://clip-man.appspot.com/_ah/api';
 
-  // noinspection Eslint,JSUnusedLocalSymbols
+  // noinspection JSUnusedLocalSymbols
   /**
    * Base path of local testing server
    * @const
-   * @default
    * @private
    * @memberOf app.Gae
    */
-      // eslint-disable-next-line no-unused-vars
-  const GAE_ROOT_LOCAL = 'http://localhost:8080/_ah/api';
+  // eslint-disable-next-line no-unused-vars
+  const _GAE_ROOT_LOCAL = 'http://localhost:8080/_ah/api';
 
-  // Set to GAE_ROOT_LOCAL for local testing
+  // Set to _GAE_ROOT_LOCAL for local testing
   // noinspection UnnecessaryLocalVariableJS
-  const GAE_ROOT = GAE_ROOT_REMOTE;
+  const _GAE_ROOT = _GAE_ROOT_REMOTE;
 
   return {
     /**
-     *  Root path to our gae server
+     * Root path to our gae server
      * @type {string}
      * @memberOf app.Gae
      */
-    GAE_ROOT: GAE_ROOT,
+    GAE_ROOT: _GAE_ROOT,
 
     /**
      * Perform POST request to endpoint
      * @param {string} url - server Endpoint
-     * @param {boolean} retryToken - if true,
-     * retry with new token on error
+     * @param {boolean} retryToken - if true, retry with new auth token on error
      * @param {boolean} [interactive=false] - true if user initiated
      * @returns {Promise.<void>} void
      * @memberOf app.Gae
