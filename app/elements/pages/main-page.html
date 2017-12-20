@@ -633,7 +633,6 @@
               msg.item = this.currentClip;
               // eslint-disable-next-line promise/no-nesting
               Chrome.Msg.send(msg).catch(() => {});
-              this.$.messageToast.show();
               return Promise.resolve();
             }).catch((err) => {
               this._showMessageToast('Failed to update clip.', err);
