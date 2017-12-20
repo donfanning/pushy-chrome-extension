@@ -60,7 +60,7 @@
       .date {
         color: var(--accent-color);
       }
-      
+
       #infoMessage {
         padding-top: 10vh;
         white-space: pre-wrap;
@@ -72,32 +72,35 @@
       <div class="card-content vertical layout">
 
         <!-- Main Content -->
-          <div id="deviceList"
-               hidden$="[[_computeHasInfoMessage(infoMessage)]]">
-            <template is="dom-repeat" id="listTemplate" items="{{devices}}" as="device"
-                      sort="_sortByDate">
-              <div class="list-item horizontal layout" id="item[[index]]">
-                <paper-icon-button id="delete[[index]]" icon="myicons:close"
-                                   on-tap="_onDeleteTapped"></paper-icon-button>
-                <div class="flex vertical layout" tabindex="-1">
-                  <paper-item>Nickname: [[device.nickname]]</paper-item>
-                  <paper-item>Model: [[device.model]]</paper-item>
-                  <paper-item>SN: [[device.sn]]</paper-item>
-                  <paper-item>OS: [[device.os]]</paper-item>
-                  <paper-item class="date">Last seen: [[_computeDate(device.lastSeen)]]</paper-item>
-                </div>
+        <div id="deviceList"
+             hidden$="[[_computeHasInfoMessage(infoMessage)]]">
+          <template is="dom-repeat" id="listTemplate" items="{{devices}}" as="device"
+                    sort="_sortByDate">
+            <div class="list-item horizontal layout" id="item[[index]]">
+              <paper-icon-button id="delete[[index]]" icon="myicons:close"
+                                 on-tap="_onDeleteTapped"></paper-icon-button>
+              <div class="flex vertical layout" tabindex="-1">
+                <paper-item>Nickname: [[device.nickname]]</paper-item>
+                <paper-item>Model: [[device.model]]</paper-item>
+                <paper-item>SN: [[device.sn]]</paper-item>
+                <paper-item>OS: [[device.os]]</paper-item>
+                <paper-item class="date">Last seen: [[_computeDate(device.lastSeen)]]</paper-item>
               </div>
-            </template>
-          </div>
-          <div class="flex horizontal end-justified layout end"
-               hidden$="[[_computeHasInfoMessage(infoMessage)]]">
-            <paper-fab icon="myicons:refresh" on-tap="_onFabTapped"></paper-fab>
-          </div>
-          <div class="flex horizontal center-justified layout"
-               hidden$="[[!_computeHasInfoMessage(infoMessage)]]">
-            <pre id="infoMessage">[[infoMessage]]</pre>
-          </div>
+            </div>
+          </template>
         </div>
+        <div class="flex horizontal end-justified layout end"
+             hidden$="[[_computeHasInfoMessage(infoMessage)]]">
+          <paper-fab
+              title="Refresh device list"
+              icon="myicons:refresh"
+              on-tap="_onFabTapped"></paper-fab>
+        </div>
+        <div class="flex horizontal center-justified layout"
+             hidden$="[[!_computeHasInfoMessage(infoMessage)]]">
+          <pre id="infoMessage">[[infoMessage]]</pre>
+        </div>
+      </div>
     </paper-card>
   </template>
 </dom-module>
@@ -107,7 +110,7 @@
     'use strict';
 
     new ExceptionHandler();
-    
+
     const _MSG_NO_DEVICES = 'No remote devices are registered.\n\n' +
         'Please disable \'Push to devices\' in the ' +
         'Settings or register other devices.\nThank you.';
@@ -119,7 +122,7 @@
     const _MSG_NO_RECEIVE = 'Unable to look for remote devices\n\n' +
         '\'Receive from devices\' is disabled.\n' +
         'You can enable it in the Settings.';
-    
+
     window.app = window.app || {};
     /**
      * Polymer element to manage our {@link Device} objects
