@@ -201,6 +201,20 @@
   };
 
   /**
+   * Delete from database
+   * @returns {Promise<void>}
+   */
+  ClipItem.prototype.delete = function() {
+    return this._getId().then((id) => {
+      if (id) {
+        return ClipItem.remove([id]);
+      } else {
+        return Promise.resolve();
+      }
+    });
+  };
+
+  /**
    * Clear labels - don't save
    */
   ClipItem.prototype._clearLabels = function() {
@@ -328,7 +342,7 @@
    * @returns {Promise<int|null>} database PK or null if text not found
    */
   ClipItem.prototype._getId = function() {
-    return app.DB.clips().where('text').equals(this.text).first((clipItem) => {
+    return ClipItem.get(this.text).then((clipItem) => {
       if (clipItem !== undefined) {
         return Promise.resolve(clipItem._id);
       }
@@ -337,33 +351,30 @@
   };
 
   /**
-   * Get a new {@link ClipItem} from the database
-   * @param {string} text - The text of the clip
-   * @returns {Promise<ClipItem>} A new {@link ClipItem}
-   */
-  ClipItem.getNew = function(text) {
-    const clipTable = app.DB.clips();
-    return clipTable.where('text').equals(text).first().then((c) => {
-      if (c) {
-        const clipItem = new app.ClipItem(c.text, c.date, c.fav, c.remote,
-            c.device, c.labelsId, c.labels);
-        clipItem._id = c._id;
-        return Promise.resolve(clipItem);
-      }
-      return Promise.reject(new Error(ClipItem._ERROR_NO_CLIP));
-    });
-  };
-
-  /**
    * Get a {@link ClipItem} data from the database
    * @param {string} text - The text of the clip
    * @returns {Promise<ClipItem|undefined>} A new {@link ClipItem},
    * undefined if not found
-   * @private
    */
-  ClipItem._get = function(text) {
+  ClipItem.get = function(text) {
     return app.DB.clips().where('text').equals(text).first();
   };
+
+  // /**
+  //  * Does a {@link ClipItem} with the given text exist in the database
+  //  * @param {string} text
+  //  * @returns {Promise<boolean>} 
+  //  * @private
+  //  */
+  // ClipItem.exists = function(text) {
+  //   return ClipItem.get(text).then((clipItem) => {
+  //     let ret = true;
+  //     if (clipItem === undefined) {
+  //       ret = false;
+  //     }
+  //     return Promise.resolve(ret);
+  //   });
+  // };
 
   /**
    * Add new {@link ClipItem} to storage
@@ -379,7 +390,7 @@
     const clipItem = new ClipItem(text, date, fav, remote, device);
     if (keepState) {
       // make sure fav stays true and labels stay
-      return ClipItem._get(text).then((clip) => {
+      return ClipItem.get(text).then((clip) => {
         if (clip !== undefined) {
           if (clip.fav) {
             clipItem.fav = true;
@@ -546,7 +557,7 @@
   /**
    * Delete non-favorite {@link ClipItem} objects older than the given time
    * @param {int} time - time in millis since epoch
-   * @returns {Dexie.Promise<boolean>} true if items were deleted
+   * @returns {Promise<boolean>} true if items were deleted
    * @private
    */
   ClipItem._deleteOlderThan = function(time) {

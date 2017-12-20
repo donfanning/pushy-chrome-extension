@@ -47,23 +47,20 @@
       }
 
       .body-content {
-        padding-top: 0;
+        height: 85vh;
+        padding: 0;
       }
 
       #clipList {
         min-width: 600px;
-        height: 82vh;
         border: 1px #CCCCCC;
         border-right-style: solid;
-        padding: 0 0 32px 0;
+        padding: 0;
         margin: 0;
       }
 
       #clipViewer {
-        height: 82vh;
-        overflow: hidden;
-        overflow-y: scroll;
-        padding: 16px;
+        padding: 0;
         margin: 0;
       }
 
@@ -159,12 +156,15 @@
             is-bulk-op="{{isBulkOp}}"
             on-selected-clip-change="_onSelectedClipChanged"
             on-row-label-tap="_onRowLabelTapped"></clip-list>
-        
+
         <!-- Clip Viewer -->
         <clip-viewer
             id="clipViewer"
             class="flex-3"
             clip-item="{{currentClip}}"
+            is-edit-mode="{{isEditMode}}"
+            on-text-changed="_onViewerTextChanged"
+            on-clip-add="_onViewerClipAdd"
             on-labels-tapped="_onViewerLabelsTapped"></clip-viewer>
 
       </div>
@@ -200,6 +200,16 @@
         currentClip: {
           type: Object,
           value: null,
+          notify: true,
+        },
+
+        /**
+         * Are we editing {@link currentClip}
+         * @memberOf MainPage
+         */
+        isEditMode: {
+          type: Boolean,
+          value: false,
           notify: true,
         },
 
@@ -319,6 +329,9 @@
         self = this;
         this.set('canSend', app.Utils.canSend());
         this._loadClipItems(true).then(() => {
+          // !Important
+          this.$.clipList.deselectAll();
+          this.$.clipList.selectFirst();
 
           // don't do in attached. need clips to be loaded before listening
           Chrome.Msg.listen(this._onChromeMessage.bind(this));
@@ -571,12 +584,168 @@
       },
 
       /**
+       * Event: {@link ClipViewer} wants to change the text
+       * @param {Event} event
+       * @param {Event} event.detail - new text
+       * @private
+       * @memberOf MainPage
+       */
+      _onViewerTextChanged: function(event) {
+        const newText = event.detail.text;
+        if (!Chrome.Utils.isWhiteSpace(newText)) {
+          let clipItem = this.$.clipList.getClip(newText);
+          if (clipItem) {
+            // text changed to an existing clip, update it instead
+            clipItem.update({
+              date: Date.now(),
+              remote: false,
+            }).then(() => {
+              // delete the one we were editing
+              return this.currentClip.delete();
+            }).then(() => {
+              this.$.clipList.deselectAll();
+              this.$.clipList.selectByText(newText);
+              this.$.clipList.scrollToText(newText);
+              // send message to copy to clipboard
+              const msg =
+                  Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
+              msg.item = clipItem;
+              // eslint-disable-next-line promise/no-nesting
+              Chrome.Msg.send(msg).catch(() => {});
+              return Promise.resolve();
+            }).catch((err) => {
+              // TODO toast?
+              console.error(err);
+            });
+          } else {
+            // update current clip
+            this.currentClip.update({
+              date: Date.now(),
+              text: newText,
+              remote: false,
+            }).then(() => {
+              this.$.clipList.scrollToText(newText);
+              // send message to copy to clipboard
+              const msg =
+                  Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
+              msg.item = this.currentClip;
+              // eslint-disable-next-line promise/no-nesting
+              Chrome.Msg.send(msg).catch(() => {});
+              return Promise.resolve();
+            }).catch((err) => {
+              // TODO toast?
+              console.error(err);
+            });
+          }
+        } else {
+          // delete it
+          this.currentClip.delete().then(() => {
+            this.$.clipList.selectFirst(true);
+            return Promise.resolve();
+          }).catch((err) => {
+            // TODO toast?
+            console.error(err);
+          });
+        }
+      },
+
+      // /**
+      //  * Event: {@link ClipViewer} wants to change the text
+      //  * @param {Event} event
+      //  * @param {Event} event.detail - new text
+      //  * @private
+      //  * @memberOf MainPage
+      //  */
+      // _onViewerTextChanged: function(event) {
+      //   const newText = event.detail.text;
+      //   if (!Chrome.Utils.isWhiteSpace(newText)) {
+      //     let deleteCur = false;
+      //     app.ClipItem.get(newText).then((clipItem) => {
+      //       if (clipItem !== undefined) {
+      //         // text changed to an existing clip, update it instead
+      //         deleteCur = true;
+      //         return clipItem.update({
+      //           date: Date.now(),
+      //           remote: false,
+      //         });
+      //       } else {
+      //         // update it
+      //         return this.currentClip.update({
+      //           date: Date.now(),
+      //           text: newText,
+      //           remote: false,
+      //         });
+      //       }
+      //     }).then(() => {
+      //       if (deleteCur) {
+      //         return this.currentClip.delete();
+      //       } else {
+      //         return Promise.resolve();
+      //       }
+      //     }).then(() => {
+      //       this.$.clipList.selectFirst();
+      //       // send message to copy to clipboard
+      //       const msg =
+      //           Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
+      //       msg.item = this.currentClip;
+      //       // eslint-disable-next-line promise/no-nesting
+      //       Chrome.Msg.send(msg).catch(() => {});
+      //       return Promise.resolve();
+      //     }).catch((err) => {
+      //       // TODO toast?
+      //       console.error(err);
+      //     });
+      //   } else {
+      //     // delete it
+      //     this.currentClip.delete().then(() => {
+      //       this.$.clipList.selectFirst(true);
+      //       return Promise.resolve();
+      //     }).catch((err) => {
+      //       // TODO toast?
+      //       console.error(err);
+      //     });
+      //   }
+      // },
+      //
+      
+      /**
+       * Event: {@link ClipViewer} wants to add a new {@link ClipItem}
+       * @param {Event} event
+       * @param {Event} event.detail - text for clip
+       * @private
+       * @memberOf MainPage
+       */
+      _onViewerClipAdd: function(event) {
+        const text = event.detail.text;
+        const date = Date.now();
+        const device = app.Device.myName();
+        app.ClipItem.add(text, date, false, false, device, true).then((clip) => {
+          // send message to copy to clipboard
+          const msg =
+              Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
+          msg.item = clip;
+          // eslint-disable-next-line promise/no-nesting
+          Chrome.Msg.send(msg).catch(() => {});
+          this.$.clipList.deselectAll();
+          this.$.clipList.selectByText(text);
+          this.$.clipList.scrollToText(text);
+          return Promise.resolve();
+        }).catch((err) => {
+          // TODO toast?
+          console.error(err);
+        });
+      },
+
+      /**
        * Event: Text was copied to clipboard
        * @private
        * @memberOf MainPage
        */
       _onCopy: function() {
-        Chrome.Msg.send(app.ChromeMsg.COPIED_TO_CLIPBOARD).catch(() => {});
+        if (!this.isEditMode) {
+          // skip when editing the current clip
+          Chrome.Msg.send(app.ChromeMsg.COPIED_TO_CLIPBOARD).catch(() => {});
+        }
       },
 
       /**
@@ -785,7 +954,7 @@
        */
       _setCurrentClip: function() {
         let currentItem = this.$.clipList.getLastSelected();
-        
+
         // override dirty checking
         this.set('currentClip', null);
         if (currentItem) {

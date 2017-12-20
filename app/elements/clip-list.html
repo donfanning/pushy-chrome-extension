@@ -191,7 +191,7 @@
      * @memberOf ClipList
      */
     addClipItem: function(text) {
-      app.ClipItem.getNew(text).then((clipItem) => {
+      app.ClipItem.get(text).then((clipItem) => {
         if (this._getClipPos(clipItem.text) === -1) {
           if (!this.labelFilter || clipItem.hasLabel(this.labelFilter)) {
             // add to list if not filtering or has our labelFilter
@@ -400,6 +400,37 @@
       }
       this.$.ironList.scrollToIndex(0);
       return this._select(this.clips[0]);
+    },
+
+    /**
+     * Select {@link ClipItem} with the given text if not already
+     * @param {string} text
+     * @returns {boolean} true if selected
+     * @memberOf ClipList
+     */
+    selectByText: function(text) {
+      let ret = false;
+      let clipItem = this.getClip(text);
+      if (clipItem && !this._isSelected(clipItem)) {
+        this.$.ironList.selectItem(clipItem);
+        if (!this.isBulkOp) {
+          this.fire('selected-clip-change');
+        }
+        ret = true;
+      }
+      return ret;
+    },
+
+    /**
+     * Scroll to the {@link ClipItem} with the given text
+     * @param {string} text
+     * @memberOf ClipList
+     */
+    scrollToText: function(text) {
+      let clipItem = this.getClip(text);
+      if (clipItem) {
+        this.$.ironList.scrollToItem(clipItem);
+      }
     },
 
     /**

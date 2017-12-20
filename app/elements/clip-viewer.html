@@ -10,6 +10,7 @@
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html">
 
 <script src="../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
 
@@ -23,18 +24,35 @@
         position: relative;
       }
 
-      .text {
-        @apply(--paper-font-subhead);
-        white-space: pre-wrap;
+      .container {
+        height: 100%;
+        margin: 0;
+        padding: 0;
       }
 
-      .labels {
+      .labelsContainer {
         cursor: pointer;
         margin: 0;
-        padding-bottom: 16px;
+        padding-top: 16px;
+        padding-left: 16px;
+        padding-right: 16px;
       }
 
-      .labels paper-item {
+      .textContainer {
+        overflow: hidden;
+        overflow-y: scroll;
+        padding-top: 16px;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .fabContainer {
+        margin: 0;
+        padding: 0;
+        padding-bottom: 8px;
+      }
+
+      .labelsContainer paper-item {
         @apply(--paper-font-subhead);
         --paper-item: {
           min-height: 0;
@@ -48,20 +66,64 @@
         };
         --paper-item-disabled-color: var(--primary-text-color);
       }
+
+      .text {
+        @apply(--paper-font-subhead);
+        white-space: pre-wrap;
+      }
+
+      #textArea {
+        --paper-input-container-label-floating: {
+          @apply(--paper-font-headline);
+        };
+      }
+
+      hr {
+        margin: 0;
+      }
     </style>
 
-    <div id="labels" class="labels no-select" on-tap="_onLabelsTapped">
-      <div class="horizontal layout">
-        <template
-            is="dom-repeat" id="labelsTemplate"
-            items="{{labels}}" as="label">
-          <paper-item disabled>[[label.name]]</paper-item>
-        </template>
-      </div>
-      <hr/>
-    </div>
-    <div id="text" class="text"></div>
+    <div class="container layout vertical">
 
+      <div id="labels" class="labelsContainer no-select" on-tap="_onLabelsTapped">
+        <div class="horizontal layout">
+          <template
+              is="dom-repeat" id="labelsTemplate"
+              items="{{labels}}" as="label">
+            <paper-item disabled>[[label.name]]</paper-item>
+          </template>
+        </div>
+        <hr/>
+      </div>
+
+      <div class="textContainer flex">
+        <div id="text" class="text" hidden$="[[isEditMode]]"></div>
+        <paper-textarea
+            id="textArea"
+            label="[[_computeTextAreaLabel(clipItem)]]"
+            value="{{editText}}"
+            hidden$="[[!isEditMode]]"></paper-textarea>
+      </div>
+      <div class="fabContainer horizontal end-justified layout">
+        <paper-fab
+            title="[[_computeAddEditTitle(clipItem)]]"
+            icon="[[_computeAddEditIcon(clipItem)]]"
+            hidden$="[[isEditMode]]"
+            on-tap="_onEditModeTapped"></paper-fab>
+        <paper-fab
+            mini
+            title="Save changes"
+            icon="myicons:check"
+            hidden$="[[!isEditMode]]"
+            on-tap="_onSaveChangesTapped"></paper-fab>
+        <paper-fab
+            mini
+            title="Discard changes"
+            icon="myicons:close"
+            hidden$="[[!isEditMode]]"
+            on-tap="_onCancelEditModeTapped"></paper-fab>
+      </div>
+    </div>
   </template>
 </dom-module>
 
@@ -78,13 +140,25 @@
     is: 'clip-viewer',
 
     properties: {
-      
+
       /**
        * Fires when labels section is tapped
        * @event labels-tapped
        * @memberOf ClipViewer
        */
-      
+
+      /**
+       * Fires when text is changed
+       * @event text-changed
+       * @memberOf ClipViewer
+       */
+
+      /**
+       * Fires when a new clip should be added
+       * @event clip-add
+       * @memberOf ClipViewer
+       */
+
       /**
        * {@link ClipItem} to view
        * @memberOf ClipViewer
@@ -105,6 +179,27 @@
         value: [],
         notify: true,
       },
+
+      /**
+       * Are we editing the text
+       * @memberOf ClipViewer
+       */
+      isEditMode: {
+        type: Boolean,
+        value: false,
+        notify: true,
+        observer: '_isEditModeChanged',
+      },
+
+      /**
+       * Text currently being edited
+       * @memberOf ClipViewer
+       */
+      editText: {
+        type: String,
+        value: '',
+        notify: true,
+      },
     },
 
     /**
@@ -118,11 +213,74 @@
     },
 
     /**
+     * Event: Edit mode fab tapped
+     * @private
+     * @memberOf ClipViewer
+     */
+    _onEditModeTapped: function() {
+      Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'clipViewerEdit');
+      if (this.clipItem) {
+        // editing existing
+        this.set('editText', this.clipItem.text);
+      } else {
+        // adding new
+        this.set('editText', '');
+      }
+      this.set('isEditMode', true);
+    },
+
+    /**
+     * Event: Cancel edit mode fab tapped
+     * @private
+     * @memberOf ClipViewer
+     */
+    _onCancelEditModeTapped: function() {
+      Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'clipViewerCancelEdit');
+      this.set('isEditMode', false);
+      this.set('editText', '');
+    },
+
+    /**
+     * Event: Save changes fab tapped
+     * @private
+     * @memberOf ClipViewer
+     */
+    _onSaveChangesTapped: function() {
+      if (!this.clipItem && !Chrome.Utils.isWhiteSpace(this.editText)) {
+        // new clip
+        this.fire('clip-add', {text: this.editText});
+        Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'clipViewerAddClip');
+      } else if (this.editText !== this.clipItem.text) {
+        // modified clip
+        Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'clipViewerSaveChanges');
+        this.fire('text-changed', {text: this.editText});
+      } else {
+        // no changes
+        Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'clipViewerNoChanges');
+      }
+      this._clearEditMode();
+    },
+
+    /**
+     * Observer: The label filter changed
+     * @private
+     * @memberOf ClipViewer
+     */
+    _isEditModeChanged: function() {
+      if (this.isEditMode) {
+        this.$.textArea.focus();
+      }
+    },
+
+    /**
      * Observer: The current clip changed
      * @private
      * @memberOf ClipViewer
      */
     _clipItemChanged: function() {
+
+      this._clearEditMode();
+
       // clear text
       const el = this.$.text;
       while (el.firstChild) {
@@ -130,7 +288,7 @@
         el.removeChild(el.firstChild);
       }
       window.getSelection().empty();
-      
+
       // clear labels
       // not guaranteed to be initialized yet
       if (this.labels === undefined) {
@@ -153,6 +311,52 @@
         this.push('labels', ...this.clipItem.labels);
         this.$.labels.style.display = 'block';
       }
+    },
+
+    /**
+     * Computed property: Title (tooltip) for editMode fab
+     * @param {ClipItem} clipItem
+     * @returns {string}
+     * @private
+     * @memberOf ClipViewer
+     */
+    _computeAddEditTitle: function(clipItem) {
+      return clipItem ? 'Edit clip' : 'Add new clip';
+    },
+
+    /**
+     * Computed property: Icon for editMode fab
+     * @param {ClipItem} clipItem
+     * @returns {string}
+     * @private
+     * @memberOf ClipViewer
+     */
+    _computeAddEditIcon: function(clipItem) {
+      return clipItem ? 'myicons:mode-edit' : 'myicons:add';
+    },
+
+    /**
+     * Computed property: Label for editMode fab
+     * @param {ClipItem} clipItem
+     * @returns {string}
+     * @private
+     * @memberOf ClipViewer
+     */
+    _computeTextAreaLabel: function(clipItem) {
+      return clipItem ? 'Editing clip' : 'Creating new clip';
+    },
+
+    /**
+     * Reset to view mode
+     * @private
+     * @memberOf ClipViewer
+     */
+    _clearEditMode() {
+      if ((this.isEditMode === undefined) || (this.editText === undefined)) {
+        return;
+      }
+      this.set('isEditMode', false);
+      this.set('editText', '');
     },
   });
 </script>
