@@ -131,6 +131,9 @@
             selected-labels="{{selDialogLabels}}">
         </labels-dialog>
 
+        <!-- Message toast -->
+        <paper-toast id="messageToast" class="fit-bottom"></paper-toast>
+        
         <!-- Undo delete toast -->
         <paper-toast id="undoToast" duration="0">
           <div class="horizontal center layout">
@@ -614,8 +617,7 @@
               Chrome.Msg.send(msg).catch(() => {});
               return Promise.resolve();
             }).catch((err) => {
-              // TODO toast?
-              console.error(err);
+              this._showMessageToast('Failed to update clip.', err);
             });
           } else {
             // update current clip
@@ -631,10 +633,10 @@
               msg.item = this.currentClip;
               // eslint-disable-next-line promise/no-nesting
               Chrome.Msg.send(msg).catch(() => {});
+              this.$.messageToast.show();
               return Promise.resolve();
             }).catch((err) => {
-              // TODO toast?
-              console.error(err);
+              this._showMessageToast('Failed to update clip.', err);
             });
           }
         } else {
@@ -643,71 +645,11 @@
             this.$.clipList.selectFirst(true);
             return Promise.resolve();
           }).catch((err) => {
-            // TODO toast?
-            console.error(err);
+            this._showMessageToast('Failed to delete clip.', err);
           });
         }
       },
 
-      // /**
-      //  * Event: {@link ClipViewer} wants to change the text
-      //  * @param {Event} event
-      //  * @param {Event} event.detail - new text
-      //  * @private
-      //  * @memberOf MainPage
-      //  */
-      // _onViewerTextChanged: function(event) {
-      //   const newText = event.detail.text;
-      //   if (!Chrome.Utils.isWhiteSpace(newText)) {
-      //     let deleteCur = false;
-      //     app.ClipItem.get(newText).then((clipItem) => {
-      //       if (clipItem !== undefined) {
-      //         // text changed to an existing clip, update it instead
-      //         deleteCur = true;
-      //         return clipItem.update({
-      //           date: Date.now(),
-      //           remote: false,
-      //         });
-      //       } else {
-      //         // update it
-      //         return this.currentClip.update({
-      //           date: Date.now(),
-      //           text: newText,
-      //           remote: false,
-      //         });
-      //       }
-      //     }).then(() => {
-      //       if (deleteCur) {
-      //         return this.currentClip.delete();
-      //       } else {
-      //         return Promise.resolve();
-      //       }
-      //     }).then(() => {
-      //       this.$.clipList.selectFirst();
-      //       // send message to copy to clipboard
-      //       const msg =
-      //           Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
-      //       msg.item = this.currentClip;
-      //       // eslint-disable-next-line promise/no-nesting
-      //       Chrome.Msg.send(msg).catch(() => {});
-      //       return Promise.resolve();
-      //     }).catch((err) => {
-      //       // TODO toast?
-      //       console.error(err);
-      //     });
-      //   } else {
-      //     // delete it
-      //     this.currentClip.delete().then(() => {
-      //       this.$.clipList.selectFirst(true);
-      //       return Promise.resolve();
-      //     }).catch((err) => {
-      //       // TODO toast?
-      //       console.error(err);
-      //     });
-      //   }
-      // },
-      //
-      
       /**
        * Event: {@link ClipViewer} wants to add a new {@link ClipItem}
        * @param {Event} event
@@ -731,8 +673,7 @@
           this.$.clipList.scrollToText(text);
           return Promise.resolve();
         }).catch((err) => {
-          // TODO toast?
-          console.error(err);
+          this._showMessageToast('Failed to add clip.', err);
         });
       },
 
@@ -1006,6 +947,22 @@
             this.set('selDialogLabels', names);
             this.$.labelsDialog.open();
           }
+        }
+      },
+
+      /**
+       * Show an auto hiding message toast
+       * @param {string} text
+       * @param {?Error} [err=null]
+       * @private
+       * @memberOf MainPage
+       */
+      _showMessageToast: function(text, err = null) {
+        this.$.messageToast.fitInto = this.$.clipViewer;
+        this.$.messageToast.text = text;
+        this.$.messageToast.show();
+        if (err) {
+          Chrome.Log.error(err.message, 'MainPage._showMessageToast', text);
         }
       },
 
