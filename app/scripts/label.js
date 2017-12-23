@@ -83,6 +83,16 @@
   Label.ERROR_EXISTS = 'Label exists.';
 
   /**
+   * Get a {@link Label} from the database
+   * @param {string} name - label name
+   * @returns {Promise<Label|undefined>} A new {@link Label},
+   * undefined if not found
+   */
+  Label.get = function(name) {
+    return app.DB.labels().where('name').equals(name).first();
+  };
+
+  /**
    * Add a new {@link Label} to database
    * @param {string} name - The text of the label
    * @returns {Promise<Label>} A new {@link Label}
