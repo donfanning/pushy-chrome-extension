@@ -660,11 +660,25 @@
         const text = event.detail.text;
         const date = Date.now();
         const device = app.Device.myName();
+        let clipItem = null;
         app.ClipItem.add(text, date, false, false, device, true).then((clip) => {
+          clipItem = clip;
+          if (!Chrome.Utils.isWhiteSpace(this.labelFilter)) {
+            // get the label we are filtering on
+            return app.Label.get(this.labelFilter);
+          }
+          return Promise.resolve(undefined);
+        }).then((label) => {
+          if (label !== undefined) {
+            // add the label we are filtering on
+            return clipItem.addLabel(label);
+          }
+          return Promise.resolve();
+        }).then(() => {
           // send message to copy to clipboard
           const msg =
               Chrome.JSONUtils.shallowCopy(app.ChromeMsg.COPY_TO_CLIPBOARD);
-          msg.item = clip;
+          msg.item = clipItem;
           // eslint-disable-next-line promise/no-nesting
           Chrome.Msg.send(msg).catch(() => {});
           this.$.clipList.deselectAll();
