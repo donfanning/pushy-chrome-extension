@@ -151,35 +151,31 @@
   /**
    * Add a label
    * @param {Label} label
+   * @returns {Promise<void>}
    */
   ClipItem.prototype.addLabel = function(label) {
-    label.getId().then((id) => {
+    return label.getId().then((id) => {
       if (id) {
         this._addLabel(label);
         return this.save();
       }
       return Promise.reject(new Error(ClipItem._ERROR_NO_LABEL));
-    }).catch((err) => {
-      Chrome.Log.error(err.message, 'ClipItem.addLabel',
-          ClipItem.ERROR_ADD_LABEL);
     });
   };
 
   /**
    * Remove a label
    * @param {Label} label
+   * @returns {Promise<void>}
    */
   ClipItem.prototype.removeLabel = function(label) {
-    label.getId().then((id) => {
+    return label.getId().then((id) => {
       if (id) {
         if (this._removeLabel(label)) {
           return this.save();
         }
       }
       return Promise.reject(new Error(ClipItem._ERROR_NO_LABEL));
-    }).catch((err) => {
-      Chrome.Log.error(err.message, 'ClipItem.removeLabel',
-          ClipItem.ERROR_REMOVE_LABEL);
     });
   };
 
