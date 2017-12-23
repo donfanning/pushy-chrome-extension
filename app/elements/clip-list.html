@@ -123,7 +123,7 @@
         value: null,
         notify: true,
       },
-      
+
       /**
        * True if we are performing an operation on multiple clips
        * @memberOf ClipList
@@ -218,6 +218,16 @@
     updateClipItem: function(text, mods) {
       const pos = this._getClipPos(text);
       if (pos === -1) {
+        if (this.labelFilter && mods.hasOwnProperty('labels')) {
+          const labels = mods['labels'];
+          for (let i = 0; i < labels.length; i++) {
+            if (labels[i].name === this.labelFilter) {
+              // added the label we are filtering on
+              this.addClipItem(text);
+              break;
+            }
+          }
+        }
         return;
       }
 
