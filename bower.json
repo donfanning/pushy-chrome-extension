@@ -50,6 +50,7 @@
     "firebase": "^4.0.0",
     "dexie": "^2.0.0",
     "linkifyjs": "^2.0.0",
-    "moment": "^2.0.0"
+    "moment": "^2.0.0",
+    "jszip": "Stuk/jszip#^3.0.0"
   }
 }

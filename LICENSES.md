@@ -12,6 +12,10 @@
 
 ### [License](https://github.com/firebase/firebase-js-sdk/blob/master/LICENSE)
 
+## Stuk/jszip
+
+### [License](https://github.com/Stuk/jszip/blob/master/LICENSE.markdown)
+
 ## Linkify
 
 ### [License](https://github.com/SoapBox/linkifyjs/blob/master/LICENSE)

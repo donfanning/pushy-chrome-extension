@@ -40,6 +40,7 @@ module.exports = {
     'ChromePromise': true,
     'Dexie': true,
     'ga': true,
+    'JSZip': true,
   },
 
   'rules': {
