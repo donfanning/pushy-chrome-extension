@@ -15,6 +15,12 @@ app.Zip = (function() {
 
   new ExceptionHandler();
 
+  /**
+   * Data to backup
+   * @typedef {Array} app.Zip.Data
+   * @memberOf app.Zip
+   */
+
   const _ERR_ZIP_FAILED = 'Failed to create zip file.';
 
   return {
@@ -23,7 +29,7 @@ app.Zip = (function() {
      * Zip a file
      * @param {string} fileName
      * @param {string} dataString
-     * @returns {Promise<Array>} zipped bytes
+     * @returns {Promise<app.Zip.Data>} zipped bytes
      * @memberOf app.Zip
      */
     zipFile: function(fileName, dataString) {
@@ -38,10 +44,11 @@ app.Zip = (function() {
       zip.file(fileName, dataString);
       return zip.generateAsync(options);
     },
+    
     /**
      * Unzip a file into a string
      * @param {string} fileName
-     * @param {Array[]} data
+     * @param {app.Zip.Data} data
      * @returns {Promise<string>} file contents as string
      * @memberOf app.Zip
      */

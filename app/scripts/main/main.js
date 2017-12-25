@@ -534,6 +534,7 @@
   function _onStorageChanged(event) {
     if (event.key === 'signedIn') {
       _setDevicesMenuState();
+      _setBackupMenuState();
     } else if (event.key === 'photoURL') {
       t.avatar = Chrome.Storage.get('photoURL');
     }

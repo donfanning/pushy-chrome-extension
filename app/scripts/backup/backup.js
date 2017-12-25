@@ -25,7 +25,18 @@ app.Backup = (function() {
 
   const _BACKUP_FILENAME = 'backup.txt';
 
-  const _ERR_NO_DATA = 'No data to backup.';
+  /**
+   * Error messages
+   * @type {Object}
+   * @private
+   * @memberOf app.Backup
+   */
+  const _ERR = {
+    NO_SIGNIN: 'Not signed in',
+    NO_BACKUP: 'Backup not enabled',
+    STRINGIFY: 'Failed to stringify data',
+    NO_DATA: 'No data to backup.',
+  };
 
   /**
    * Get the zip filename
@@ -66,26 +77,29 @@ app.Backup = (function() {
      * @memberOf app.Backup
      */
     doBackup: function(interactive = false) {
-      // const conf = Chrome.JSONUtils.shallowCopy(Chrome.Http.conf);
-      // conf.isAuth = true;
-      // conf.retryToken = true;
-      // conf.interactive = interactive;
       return _getData().then((data) => {
         if (!data.labels.length && !data.clipItems.length) {
-          return Promise.reject(new Error(_ERR_NO_DATA));
+          return Promise.reject(new Error(_ERR.NO_DATA));
         }
-        const dataString = JSON.stringify(data);
+        let dataString;
+        try {
+          dataString = JSON.stringify(data);
+        } catch (ex) {
+          return Promise.reject(new Error(_ERR.STRINGIFY));
+        }
         return Promise.resolve(dataString);
       }).then((dataString) => {
         return app.Zip.zipFile(_BACKUP_FILENAME, dataString);
       }).then((zipData) => {
-        // TODO remove
-        return app.Zip.unzipFileAsString(_BACKUP_FILENAME, zipData);
-      }).then((dataString) => {
-        // TODO remove
-        // console.log('unzipped string:\n\n', dataString);
-        const data = JSON.parse(dataString);
-        console.log('unzipped data:\n\n', data);
+        const zipFilename = _getZipFilename();
+        return app.Drive.createZipFile(zipFilename, zipData, interactive);
+      }).then((fileId) => {
+        const oldId = Chrome.Storage.get('backupFileId', null);
+        Chrome.Storage.set('backupFileId', fileId);
+        if (!Chrome.Utils.isWhiteSpace(oldId)) {
+          // delete old backup
+          return app.Drive.deleteFile(fileId, interactive);
+        }
         return Promise.resolve();
       });
     },

@@ -23,6 +23,7 @@ const path = {
   styles: `${base.src}styles/`,
   images: `${base.src}images/`,
   assets: `${base.src}assets/`,
+  lib: `${base.src}libs/`,
   locales: `${base.src}_locales/`,
   bower: `${base.src}bower_components/`,
   bowerScripts: `${base.src}bower_components/chrome-extension-utils/`,
@@ -36,6 +37,9 @@ const files = {
   elements: `${path.elements}**/*.html`,
   images: `${path.images}*.*`,
   assets: `${path.assets}*.*`,
+  lib: [
+    `${path.lib}**/*.*`,
+  ],
   locales: `${path.locales}**/*.*`,
   bower: [
     `${path.bower}**/*`,
@@ -49,6 +53,7 @@ const files = {
   prodDelete: [
     `${base.dist}app/bower_components/`,
     `${base.dist}app/scripts/**/*.js`,
+    `${base.dist}app/libs/**/*.js`,
     `!${base.dist}app/scripts/on_copy_cut_content_script.js`,
     `!${base.dist}app/scripts/sw.js`,
     `!${base.dist}app/scripts/main/main.js`,
@@ -141,6 +146,7 @@ gulp.task('dev', (cb) => {
     'scripts',
     'styles',
     'elements',
+    'libs',
     'images',
     'assets',
     'locales',
@@ -330,6 +336,16 @@ gulp.task('images', () => {
 // assets
 gulp.task('assets', () => {
   const input = files.assets;
+  watchOpts.name = currentTaskName;
+  return gulp.src(input, {base: '.'}).
+      pipe(isWatch ? watch(input, watchOpts) : util.noop()).
+      pipe(plumber()).
+      pipe(isProd ? gulp.dest(base.dist) : gulp.dest(base.dev));
+});
+
+// lib
+gulp.task('libs', () => {
+  const input = files.lib;
   watchOpts.name = currentTaskName;
   return gulp.src(input, {base: '.'}).
       pipe(isWatch ? watch(input, watchOpts) : util.noop()).
