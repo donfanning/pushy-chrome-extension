@@ -11,6 +11,7 @@
 
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
 
 <script src="../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
 
@@ -106,7 +107,7 @@
       </div>
       <div class="fabContainer horizontal end-justified layout">
         <paper-fab
-            title="[[_computeAddEditTitle(clipItem)]]"
+            title$="[[_computeAddEditTitle(clipItem)]]"
             icon="[[_computeAddEditIcon(clipItem)]]"
             hidden$="[[isEditMode]]"
             on-tap="_onEditModeTapped"></paper-fab>
