@@ -1,0 +1,90 @@
+<!--
+  ~ Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
+  ~ Licensed under Apache 2.0
+  ~ https://opensource.org/licenses/Apache-2.0
+  ~ https://goo.gl/wFvBM1
+  -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="my_icons.html">
+
+<script src="../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
+
+<dom-module id="error-dialog">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      .dialog {
+        min-width: 25vw;
+      }
+    </style>
+
+    <paper-dialog
+        id="dialog" class="dialog" modal
+        entry-animation="scale-up-animation"
+        exit-animation="fade-out-animation">
+      <h2 id="dialogTitle" class="vertical layout center"></h2>
+      <paper-dialog-scrollable>
+        <paper-item id="dialogText" class="text"></paper-item>
+      </paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
+      </div>
+    </paper-dialog>
+
+  </template>
+</dom-module>
+
+<script>
+  'use strict';
+
+  new ExceptionHandler();
+
+  /**
+   * Polymer dialog to select from a list of labels
+   * @namespace ErrorDialog
+   */
+  Polymer({
+    is: 'error-dialog',
+
+    properties: {
+    },
+
+    /**
+     * Show the dialog
+     * @param {string} title
+     * @param {string} text
+     * @private
+     * @memberOf ErrorDialog
+     */
+    open: function(title, text) {
+      text = text.replace('\n', '<br/>');
+      this.$.dialogTitle.innerHTML = title;
+      this.$.dialogText.innerHTML = text;
+      this.$.dialog.open();
+    },
+
+    /**
+     * Hide the dialog
+     * @private
+     * @memberOf ErrorDialog
+     */
+    close: function() {
+      this.$.dialog.close();
+    },
+  });
+</script>

@@ -21,6 +21,8 @@
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 
+<link rel="import" href="../error-dialog.html">
+
 <dom-module id="backup-page">
   <template>
     <style include="iron-flex iron-flex-alignment"></style>
@@ -74,6 +76,8 @@
       
       <!-- Content -->
       <div class="body-content horizontal layout">
+        <!-- Error dialog -->
+        <error-dialog id="errorDialog"></error-dialog>
       </div>
       
     </paper-material>
@@ -112,7 +116,8 @@
       _onBackupTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'Backup');
         app.Backup.doBackup(true).catch((err) => {
-          console.log(err);
+          Chrome.Log.error(err.message, '_onBackupTapped', 'Backup failed.');
+          this.$.errorDialog.open('Backup failed.', err.message);
         });
       },
 

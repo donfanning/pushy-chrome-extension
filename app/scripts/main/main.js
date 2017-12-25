@@ -155,20 +155,6 @@
   t.pagesLabels = [];
 
   /**
-   * Error dialog title
-   * @type {string}
-   * @memberOf Main
-   */
-  t.dialogTitle = '';
-
-  /**
-   * Error dialog text
-   * @type {string}
-   * @memberOf Main
-   */
-  t.dialogText = '';
-
-  /**
    * Current route
    * @type {string}
    * @memberOf Main
@@ -349,17 +335,6 @@
   };
 
   /**
-   * Event: display error dialog
-   * @param {Event} event
-   * @memberOf Main
-   */
-  t._onShowErrorDialog = function(event) {
-    t.dialogTitle = event.detail.title;
-    t.dialogText = event.detail.text;
-    t.$.errorDialog.open();
-  };
-
-  /**
    * Event: Selected {@link Main.page} changed
    * @param {Event} event
    * @memberOf Main
@@ -518,9 +493,7 @@
       });
       response(JSON.stringify({message: 'OK'}));
     } else if (request.message === app.ChromeMsg.MSG_FAILED.message) {
-      t.dialogTitle = 'Failed to send push notification';
-      t.dialogText = request.error;
-      t.$.errorDialog.open();
+      t.$.errorDialog.open('Failed to send push notification', request.error);
     }
   }
 

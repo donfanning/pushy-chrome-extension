@@ -139,16 +139,7 @@
       <div id="mainContainer">
 
         <!-- Error dialog -->
-        <paper-dialog id="errorDialog" modal entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-          <h2>[[dialogTitle]]</h2>
-          <paper-dialog-scrollable>
-            <pre>[[dialogText]]</pre>
-          </paper-dialog-scrollable>
-          <div class="buttons">
-            <paper-button dialog-dismiss>OK</paper-button>
-          </div>
-        </paper-dialog>
+        <error-dialog id="errorDialog"></error-dialog>
 
         <!-- permissions dialog -->
         <paper-dialog id="permissionsDialog" modal entry-animation="scale-up-animation"

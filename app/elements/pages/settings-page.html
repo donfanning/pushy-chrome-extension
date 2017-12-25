@@ -19,6 +19,8 @@
 <link rel="import" href="../../bower_components/setting-elements/setting-dropdown/setting-dropdown.html">
 <link rel="import" href="../../bower_components/setting-elements/setting-text/setting-text.html">
 
+<link rel="import" href="../error-dialog.html">
+
 <dom-module id="settings-page">
   <style include="iron-flex iron-flex-alignment"></style>
   <style include="shared-styles"></style>
@@ -36,17 +38,7 @@
       <div class="card-content">
 
         <!-- Error dialog -->
-        <paper-dialog id="errorDialog" modal
-                      entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-          <h2 id="dialogTitle" class="vertical layout center"></h2>
-          <paper-dialog-scrollable>
-            <paper-item id="dialogText"></paper-item>
-          </paper-dialog-scrollable>
-          <div class="buttons">
-            <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
-          </div>
-        </paper-dialog>
+        <error-dialog id="errorDialog"></error-dialog>
 
         <setting-toggle
             section-title="Clipboard & messaging"
@@ -144,20 +136,17 @@
         Chrome.Msg.listen(this._onChromeMessage.bind(this));
       },
 
-      // noinspection JSUnusedLocalSymbols
       /**
        * Event: Fired when a message is sent from either an extension process<br>
        * (by runtime.sendMessage) or a content script (by tabs.sendMessage).
        * @see https://developer.chrome.com/extensions/runtime#event-onMessage
        * @param {Chrome.Msg.Message} request - details for the
        * @param {string} request.error - error message
-       * @param {Object} sender - MessageSender object
-       * @param {function} response - function to call once after processing
        * @returns {boolean} true if asynchronous
        * @private
        * @memberOf SettingsPage
        */
-      _onChromeMessage: function(request, sender, response) {
+      _onChromeMessage: function(request) {
         let ret = false;
         if (request.message === app.ChromeMsg.REGISTER_FAILED.message) {
           this._showDialog(ERROR_TITLE, request.error);
@@ -175,10 +164,7 @@
        * @memberOf SettingsPage
        */
       _showDialog: function(title, text) {
-        text = text.replace('\n', '<br/>');
-        this.$.dialogTitle.innerHTML = title;
-        this.$.dialogText.innerHTML = text;
-        this.$.errorDialog.open();
+        this.$.errorDialog.open(title, text);
       },
     });
   })(window);
