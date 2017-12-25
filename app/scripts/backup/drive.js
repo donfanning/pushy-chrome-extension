@@ -44,34 +44,6 @@ app.Drive = (function() {
   };
 
   /**
-   * Delete the backup with the given fileId
-   * @param {string} fileId
-   * @returns {Promise<void>}
-   * @private
-   */
-  // function _deleteBackup(fileId) {
-  //   const url = _BASE_URL + fileId;
-  //   const conf = Chrome.JSONUtils.shallowCopy(Chrome.Http2.conf);
-  //   conf.isAuth = true;
-  //   conf.retryToken = true;
-  //   conf.interactive = true;
-  //   return Chrome.Http2.doDelete(url, conf).then((response) => {
-  //     if (response.ok) {
-  //       return Promise.resolve();
-  //     } else {
-  //       return Promise.reject(new Error(Chrome.Http2.getError(response)));
-  //     }
-  //   }).catch((response) => {
-  //     if (response.status === 404) {
-  //       // file not found
-  //       return Promise.resolve();
-  //     } else {
-  //       return Promise.reject(new Error(Chrome.Http2.getError(response)));
-  //     }
-  //   });
-  // }
-
-  /**
    * Get the array of files in our app folder
    * @param {boolean} interactive - if true, user initiated
    * @returns {Promise<Object[]>} Array of file objects
@@ -84,10 +56,29 @@ app.Drive = (function() {
     }).then((response) => {
       response = response || {};
       const result = response.result || {};
-      const files = result.files || [];
-      console.log(files);
-      return Promise.resolve();
+      return Promise.resolve(result.files);
     });
+  }
+
+  /**
+   * Process the error message
+   * @param {Object} errObj
+   * @returns {string} error message
+   * @private
+   */
+  function _getErrorMsg(errObj) {
+    let ret = 'Unknown error';
+    if (errObj.message) {
+      ret = errObj.message;
+    } else if (errObj.result) {
+      const result = errObj.result;
+      if (result.error && result.error.message) {
+        ret = result.error.message;
+      } else if (result.statusText) {
+        ret = result.statusText;
+      }
+    }
+    return ret;
   }
 
   /**
@@ -183,11 +174,11 @@ app.Drive = (function() {
         return _createZipFile(filename, data);
       }).then((response) => {
         response = response || {};
-        console.log('createZipFile response: ', response);
         const result = response.result || {};
         return Promise.resolve(result.id);
       }).catch((err) => {
-        const msg = 'Failed to create file on Google Drive: ' + err.message;
+        const msg =
+            'Failed to create file on Google Drive: ' + _getErrorMsg(err);
         return Promise.reject(new Error(msg));
       });
     },
@@ -207,10 +198,10 @@ app.Drive = (function() {
       return Chrome.Auth.getToken(interactive).then((token) => {
         gapi.client.setToken({access_token: token});
         return _deleteFile(fileId);
-      }).then((response) => {
-        response = response || {};
-        console.log('deleteFile response: ', response);
-        return Promise.resolve();
+      }).catch((err) => {
+        const msg =
+            'Failed to delete file on Google Drive: ' + _getErrorMsg(err);
+        return Promise.reject(new Error(msg));
       });
     },
   };
