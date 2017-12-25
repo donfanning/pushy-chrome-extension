@@ -1,0 +1,129 @@
+<!--
+  ~ Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
+  ~ Licensed under Apache 2.0
+  ~ https://opensource.org/licenses/Apache-2.0
+  ~ https://goo.gl/wFvBM1
+  -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../../bower_components/paper-tooltip/paper-tooltip.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+
+<dom-module id="backup-page">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      .page-content {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .page-toolbar {
+        margin-bottom: 0;
+      }
+
+      .body-content {
+        padding-top: 0;
+      }
+
+    </style>
+
+    <paper-material elevation="1" class="page-content">
+      <!-- Tool bar -->
+      <paper-material elevation="1">
+        <paper-toolbar class="page-toolbar">
+          <span class="space"></span>
+          <div class="middle middle-container center horizontal layout flex">
+            <div class="flex">Backup and restore data</div>
+            <paper-icon-button
+                id="backup" icon="myicons:cloud-upload" on-tap="_onBackupTapped">
+            </paper-icon-button>
+            <paper-tooltip for="backup" position="left" offset="0">
+              Backup data to Google Drive
+            </paper-tooltip>
+            <paper-icon-button
+                id="restore" icon="myicons:cloud-download" on-tap="_onRestoreTapped">
+            </paper-icon-button>
+            <paper-tooltip for="restore" position="left" offset="0">
+              Restore data from Google Drive
+            </paper-tooltip>
+          </div>
+        </paper-toolbar>
+      </paper-material>
+      
+      <!-- Content -->
+      <div class="body-content horizontal layout">
+      </div>
+      
+    </paper-material>
+  </template>
+</dom-module>
+
+<script>
+  window.app = window.app || {};
+  (function() {
+    'use strict';
+
+    new ExceptionHandler();
+
+    /**
+     * Polymer element to manage backup and restore of data
+     * @namespace BackupPage
+     */
+    app.BackupPageFactory = Polymer({
+      is: 'backup-page',
+
+      properties: {
+      },
+
+      /**
+       * Element is ready
+       * @memberOf BackupPage
+       */
+      ready: function() {
+      },
+
+      /**
+       * Event: Backup menu tapped
+       * @private
+       * @memberOf BackupPage
+       */
+      _onBackupTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'Backup');
+        app.Backup.doBackup(true).catch((err) => {
+          console.log(err);
+        });
+      },
+
+      /**
+       * Event: Restore menu tapped
+       * @private
+       * @memberOf BackupPage
+       */
+      _onRestoreTapped: function() {
+        console.log('_onRestoreTapped');
+      },
+    });
+  })(window);
+</script>

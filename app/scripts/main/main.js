@@ -87,6 +87,11 @@
       obj: app.SignInPageFactory, insertion: 'signInInsertion', el: null,
     },
     {
+      label: 'Manage backups', route: 'page-backup',
+      icon: 'myicons:cloud', ready: false, divider: false,
+      obj: app.BackupPageFactory, insertion: 'backupInsertion', el: null,
+    },
+    {
       label: 'Manage devices', route: 'page-devices',
       icon: 'myicons:phonelink', ready: false, divider: false,
       obj: app.DevicesPageFactory, insertion: 'devicesInsertion', el: null,
@@ -215,6 +220,7 @@
     // concatenate all the pages for the main menu
     _buildPages().then(() => {
       // initialize menu states
+      _setBackupMenuState();
       _setDevicesMenuState();
       _setErrorMenuState();
 
@@ -721,6 +727,21 @@
       });
       return Promise.resolve(pages);
     });
+  }
+
+  /**
+   * Set enabled state of Backup menu item
+   * @memberOf Main
+   */
+  function _setBackupMenuState() {
+    // disable devices-page if not signed in
+    const idx = _getPageIdx('page-backup');
+    const el = document.getElementById(pages[idx].route);
+    if (el && app.Utils.isSignedIn()) {
+      el.removeAttribute('disabled');
+    } else if (el) {
+      el.setAttribute('disabled', 'true');
+    }
   }
 
   /**
