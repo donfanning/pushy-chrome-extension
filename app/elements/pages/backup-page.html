@@ -18,6 +18,7 @@
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
 
 <link rel="import" href="../error-dialog.html">
+<link rel="import" href="../waiter-element.html">
 
 <dom-module id="backup-page">
   <template>
@@ -74,6 +75,10 @@
         white-space: pre-wrap;
         @apply(--paper-font-subhead);
       }
+
+      #waiter {
+        padding-top: 10vh;
+      }
     </style>
 
     <paper-material elevation="1" class="page-content">
@@ -99,47 +104,55 @@
         <!-- Error dialog -->
         <error-dialog id="errorDialog"></error-dialog>
 
+        <waiter-element id="waiter" active="[[isWaiting]]" hidden$="[[!isWaiting]]"></waiter-element>
+
         <!-- Main content -->
-        <div id="fileList"
-             hidden$="[[_computeHasInfoMessage(infoMessage)]]">
-          <template is="dom-repeat" id="listTemplate" items="{{files}}" as="file"
-                    sort="_sortByDate">
-            <div class="list-item horizontal layout" id="item[[index]]">
-              <div class="flex vertical layout" tabindex="-1">
-                <paper-item hidden$="[[!file.isMine]]">This device</paper-item>
-                <paper-item>Nickname: [[file.nickname]]</paper-item>
-                <paper-item>Model: [[file.model]]</paper-item>
-                <paper-item>SN: [[file.sn]]</paper-item>
-                <paper-item>OS: [[file.os]]</paper-item>
-                <paper-item class="date">Backup date: [[_computeDate(file.date)]]</paper-item>
+        <div hidden$="[[isWaiting]]">
+
+          <div id="fileList"
+               hidden$="[[_computeHasInfoMessage(infoMessage)]]">
+            <template is="dom-repeat" id="listTemplate" items="{{files}}" as="file"
+                      sort="_sortByDate">
+              <div class="list-item horizontal layout" id="item[[index]]">
+                <div class="flex vertical layout" tabindex="-1">
+                  <paper-item hidden$="[[!file.isMine]]">This device</paper-item>
+                  <paper-item>Nickname: [[file.nickname]]</paper-item>
+                  <paper-item>Model: [[file.model]]</paper-item>
+                  <paper-item>SN: [[file.sn]]</paper-item>
+                  <paper-item>OS: [[file.os]]</paper-item>
+                  <paper-item class="date">Backup date: [[_computeDate(file.date)]]</paper-item>
+                </div>
+                <div class="vertical layout" tabindex="-1">
+                  <paper-icon-button
+                      title="Restore data from Google Drive"
+                      icon="myicons:cloud-download"
+                      on-tap="_onRestoreTapped"></paper-icon-button>
+                  <paper-icon-button
+                      title="Sync data between device and Google Drive"
+                      icon="myicons:cloud-sync"
+                      on-tap="_onSyncTapped"></paper-icon-button>
+                  <paper-icon-button
+                      title="Delete backup on Google Drive"
+                      icon="myicons:delete"
+                      on-tap="_onDeleteTapped"></paper-icon-button>
+                </div>
               </div>
-              <div class="vertical layout" tabindex="-1">
-                <paper-icon-button
-                    title="Restore data from Google Drive"
-                    icon="myicons:cloud-download"
-                    on-tap="_onRestoreTapped"></paper-icon-button>
-                <paper-icon-button
-                    title="Sync data between device and Google Drive"
-                    icon="myicons:cloud-sync"
-                    on-tap="_onSyncTapped"></paper-icon-button>
-                <paper-icon-button
-                    title="Delete backup on Google Drive"
-                    icon="myicons:delete"
-                    on-tap="_onDeleteTapped"></paper-icon-button>
-              </div>
-            </div>
-          </template>
-        </div>
-        <div class="flex horizontal end-justified layout end"
-             hidden$="[[_computeHasInfoMessage(infoMessage)]]">
-          <paper-fab
-              title="Refresh file list"
-              icon="myicons:refresh"
-              on-tap="_onFabTapped"></paper-fab>
-        </div>
-        <div class="flex horizontal center-justified layout"
-             hidden$="[[!_computeHasInfoMessage(infoMessage)]]">
-          <pre id="infoMessage">[[infoMessage]]</pre>
+            </template>
+          </div>
+
+          <div class="flex horizontal end-justified layout end"
+               hidden$="[[_computeHasInfoMessage(infoMessage)]]">
+            <paper-fab
+                title="Refresh file list"
+                icon="myicons:refresh"
+                on-tap="_onFabTapped"></paper-fab>
+          </div>
+
+          <div class="flex horizontal center-justified layout"
+               hidden$="[[!_computeHasInfoMessage(infoMessage)]]">
+            <pre id="infoMessage">[[infoMessage]]</pre>
+          </div>
+
         </div>
       </div>
 
@@ -178,6 +191,16 @@
         },
 
         /**
+         * Waiting for operation to complete
+         * @memberOf BackupPage
+         */
+        isWaiting: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
+
+        /**
          * A message about why file list is not available
          * @memberOf DevicesPage
          */
@@ -200,7 +223,12 @@
        * @memberOf BackupPage
        */
       onCurrentPage: function() {
-        this._loadFiles().catch((err) => {
+        this.set('isWaiting', true);
+        this._loadFiles().then(() => {
+          this.set('isWaiting', false);
+          return Promise.resolve();
+        }).catch((err) => {
+          this.set('isWaiting', false);
           Chrome.Log.error(err.message, 'BackupPage.onCurrentPage', _ERR_FILES);
           this.$.errorDialog.open(_ERR_FILES, err.message);
         });
@@ -213,7 +241,12 @@
        */
       _onFabTapped: function() {
         Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'refreshBackupFilesTapped');
-        this._loadFiles().catch((err) => {
+        this.set('isWaiting', true);
+        this._loadFiles().then(() => {
+          this.set('isWaiting', false);
+          return Promise.resolve();
+        }).catch((err) => {
+          this.set('isWaiting', false);
           Chrome.Log.error(err.message, 'BackupPage._onFabTapped', _ERR_FILES);
           this.$.errorDialog.open(_ERR_FILES, err.message);
         });
@@ -226,12 +259,16 @@
        */
       _onBackupTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.MENU, 'BackupPage.backupData');
+        this.set('isWaiting', true);
         let backupOk = false;
         app.Backup.doBackup(true).then(() => {
-          console.log('backup complete');
           backupOk = true;
           return this._loadFiles();
+        }).then(() => {
+          this.set('isWaiting', false);
+          return Promise.resolve();
         }).catch((err) => {
+          this.set('isWaiting', false);
           let reason = backupOk ? _ERR_FILES : _ERR_BACKUP;
           Chrome.Log.error(err.message, '_onBackupTapped', reason);
           this.$.errorDialog.open(reason, err.message);
@@ -247,11 +284,13 @@
        */
       _onRestoreTapped: function(event) {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupPage.restoreData');
+        this.set('isWaiting', true);
         const file = event.model.file;
         app.Backup.doRestore(file.id, true).then(() => {
-          console.log('restore complete');
+          this.set('isWaiting', false);
           return Promise.resolve();
         }).catch((err) => {
+          this.set('isWaiting', false);
           Chrome.Log.error(err.message, 'BackupPage._onRestoreTapped',
               _ERR_RESTORE);
           this.$.errorDialog.open(_ERR_RESTORE, err.message);
@@ -266,17 +305,8 @@
        * @memberOf BackupPage
        */
       _onSyncTapped: function(event) {
+        // TODO add sync
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupPage.syncData');
-        console.log('sync complete');
-        // const file = event.model.file;
-        // app.Backup.doRestore(file.id, true).then(() => {
-        //   console.log('restore complete');
-        //   return Promise.resolve();
-        // }).catch((err) => {
-        //   Chrome.Log.error(err.message, 'BackupPage._onRestoreTapped',
-        //       _ERR_RESTORE);
-        //   this.$.errorDialog.open(_ERR_RESTORE, err.message);
-        // });
       },
 
       /**
@@ -288,13 +318,17 @@
        */
       _onDeleteTapped: function(event) {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupPage.deleteBackup');
+        this.set('isWaiting', true);
         const file = event.model.file;
         let deleteOk = false;
         app.Backup.doDelete(file.id, true).then(() => {
           deleteOk = true;
-          console.log('delete complete');
           return this._loadFiles();
+        }).then(() => {
+          this.set('isWaiting', false);
+          return Promise.resolve();
         }).catch((err) => {
+          this.set('isWaiting', false);
           let reason = deleteOk ? _ERR_FILES : _ERR_DELETE;
           Chrome.Log.error(err.message, 'BackupPage._onDeleteTapped',
               reason);
