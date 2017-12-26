@@ -222,7 +222,7 @@
         if (app.Utils.allowPush()) {
           this._ping();
         } else {
-          this._showNoPushDialog();
+          this.set('infoMessage', _MSG_NO_PUSH);
         }
       },
 
