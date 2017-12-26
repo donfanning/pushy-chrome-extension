@@ -90,6 +90,10 @@
     'use strict';
 
     new ExceptionHandler();
+    
+    const _ERR_BACKUP = 'Backup failed.';
+    const _ERR_RESTORE = 'Restore failed.';
+    
 
     /**
      * Polymer element to manage backup and restore of data
@@ -114,10 +118,13 @@
        * @memberOf BackupPage
        */
       _onBackupTapped: function() {
-        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'Backup');
-        app.Backup.doBackup(true).catch((err) => {
-          Chrome.Log.error(err.message, '_onBackupTapped', 'Backup failed.');
-          this.$.errorDialog.open('Backup failed.', err.message);
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'backupData');
+        app.Backup.doBackup(true).then(() => {
+          console.log('backup complete');
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, '_onBackupTapped', _ERR_BACKUP);
+          this.$.errorDialog.open(_ERR_BACKUP, err.message);
         });
       },
 
@@ -127,7 +134,14 @@
        * @memberOf BackupPage
        */
       _onRestoreTapped: function() {
-        console.log('_onRestoreTapped');
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'restoreData');
+        app.Backup.doRestore(null, true).then(() => {
+          console.log('restore complete');
+          return Promise.resolve();
+        }).catch((err) => {
+          Chrome.Log.error(err.message, '_onBackupTapped', _ERR_RESTORE);
+          this.$.errorDialog.open(_ERR_RESTORE, err.message);
+        });
       },
     });
   })(window);

@@ -16,14 +16,16 @@ app.Backup = (function() {
   new ExceptionHandler();
 
   /**
-   * Data to backup
+   * Data to backup or restore
    * @typedef {{}} app.Backup.Data
-   * @property {app.Label[]} labels - Array of Label objects
-   * @property {app.ClipItem[]} clipItems - Array of ClipItem object
+   * @property {Label[]} labels - Array of Label objects
+   * @property {ClipItem[]} clipItems - Array of ClipItem object
    * @memberOf app.Backup
    */
 
   const _BACKUP_FILENAME = 'backup.txt';
+
+  const _BACKUP_ID_KEY = 'backupFileId';
 
   /**
    * Error messages
@@ -32,10 +34,12 @@ app.Backup = (function() {
    * @memberOf app.Backup
    */
   const _ERR = {
-    NO_SIGNIN: 'Not signed in',
-    NO_BACKUP: 'Backup not enabled',
-    STRINGIFY: 'Failed to stringify data',
+    NO_SIGNIN: 'Not signed in.',
+    NO_BACKUP: 'Backup not enabled.',
+    STRINGIFY: 'Failed to stringify data.',
+    PARSE: 'Failed to parse data.',
     NO_DATA: 'No data to backup.',
+    NO_FILE_ID: 'Could not find backup file on Google Drive.',
   };
 
   /**
@@ -68,6 +72,31 @@ app.Backup = (function() {
     });
   }
 
+  /**
+   * Delete all the data in the db
+   * @returns {Promise<void>}
+   * @private
+   * @memberOf app.Backup
+   */
+  function _deleteAllData() {
+    return app.ClipItem.deleteAll().then(() => {
+      return app.Label.deleteAll();
+    });
+  }
+
+  /**
+   * Add all the data to the db
+   * @param {app.Backup.Data} dbData
+   * @returns {Promise<void>}
+   * @private
+   * @memberOf app.Backup
+   */
+  function _addAllData(dbData) {
+    return app.Label.bulkPut(dbData.labels).then(() => {
+      return app.ClipItem.bulkPut(dbData.clipItems);
+    });
+  }
+
   return {
 
     /**
@@ -94,13 +123,43 @@ app.Backup = (function() {
         const zipFilename = _getZipFilename();
         return app.Drive.createZipFile(zipFilename, zipData, interactive);
       }).then((fileId) => {
-        const oldId = Chrome.Storage.get('backupFileId', null);
-        Chrome.Storage.set('backupFileId', fileId);
+        const oldId = Chrome.Storage.get(_BACKUP_ID_KEY, null);
+        Chrome.Storage.set(_BACKUP_ID_KEY, fileId);
         if (!Chrome.Utils.isWhiteSpace(oldId)) {
           // delete old backup
-          return app.Drive.deleteFile(fileId, interactive);
+          return app.Drive.deleteFile(oldId, interactive);
         }
         return Promise.resolve();
+      });
+    },
+    
+    /**
+     * Perform a restore
+     * @param {?string} fileId - drive id to restore
+     * @param {boolean} [interactive=false] - true if user initiated
+     * @returns {Promise.<void>}
+     * @memberOf app.Backup
+     */
+    doRestore: function(fileId, interactive = false) {
+      let restoreData;
+      if (Chrome.Utils.isWhiteSpace(fileId)) {
+        fileId = Chrome.Storage.get(_BACKUP_ID_KEY);
+      }
+      if (Chrome.Utils.isWhiteSpace(fileId)) {
+        return Promise.reject(new Error(_ERR.NO_FILE_ID));
+      }
+      return app.Drive.getZipFileContents(fileId, interactive).then((data) => {
+        return app.Zip.unzipFileAsString(_BACKUP_FILENAME, data);
+      }).then((dataString) => {
+        console.log(dataString);
+        restoreData = Chrome.JSONUtils.parse(dataString);
+        console.log(restoreData);
+        if (!restoreData) {
+          return Promise.reject(new Error(_ERR.PARSE));
+        }
+        return _deleteAllData();
+      }).then(() => {
+        return _addAllData(restoreData);
       });
     },
   };

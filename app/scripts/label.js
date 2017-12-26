@@ -116,6 +116,24 @@
   };
 
   /**
+   * Add the given {@link Label} objects
+   * @param {Label[]|label} labels
+   * @returns {Promise<void>}
+   */
+  Label.bulkPut = function(labels) {
+    const array = Array.isArray(labels) ? labels : [labels];
+    return app.DB.get().transaction('rw', app.DB.labels(), () => {
+      return app.DB.labels().bulkPut(array).catch((err) => {
+        // some may have failed if the same Label text was added again
+        // we'll go ahead and commit the successes
+        Chrome.Log.error(err.message, 'Label.bulkPut',
+            'Not all labels were added');
+        return Promise.resolve();
+      });
+    });
+  };
+
+  /**
    * Return true is there are no stored {@link Label} objects
    * @returns {Promise<boolean>} true if no {@link Label} objects
    */
@@ -131,6 +149,14 @@
    */
   Label.loadAll = function() {
     return app.DB.labels().orderBy('name').toArray();
+  };
+
+  /**
+   * Delete all the {@link Label} objects from storage
+   * @returns {Promise<void>}
+   */
+  Label.deleteAll = function() {
+    return app.DB.labels().clear();
   };
 
   window.app = window.app || {};

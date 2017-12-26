@@ -407,7 +407,7 @@
 
   /**
    * Add the given {@link ClipItem} objects
-   * @param {ClipItem[]} clipItems
+   * @param {ClipItem[]|ClipItem} clipItems
    * @returns {Promise<void>}
    */
   ClipItem.bulkPut = function(clipItems) {
@@ -417,7 +417,7 @@
         // some may have failed if the same clipItem text was added again
         // we'll go ahead and commit the successes
         Chrome.Log.error(err.message, 'ClipItem.bulkPut',
-            'Not all deletes were undone');
+            'Not all clips were added');
         return Promise.resolve();
       });
     });
@@ -480,7 +480,7 @@
             changedClipItems.push(clipItem);
           }
         });
-        
+
         const promises = [];
         changedClipItems.forEach((clipItem) => {
           promises.push(clipItem.save());
@@ -513,7 +513,7 @@
             changedClipItems.push(clipItem);
           }
         });
-        
+
         const promises = [];
         changedClipItems.forEach((clipItem) => {
           promises.push(clipItem.save());
@@ -526,6 +526,14 @@
       Chrome.Log.error(err.message, 'ClipItem.removeLabel',
           'Failed to remove label from Clip Items.');
     });
+  };
+
+  /**
+   * Delete all the {@link ClipItem} objects from storage
+   * @returns {Promise<void>}
+   */
+  ClipItem.deleteAll = function() {
+    return app.DB.clips().clear();
   };
 
   /**

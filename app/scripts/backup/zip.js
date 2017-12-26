@@ -17,7 +17,7 @@ app.Zip = (function() {
 
   /**
    * Data to backup
-   * @typedef {Array} app.Zip.Data
+   * @typedef {int[]} app.Zip.Data
    * @memberOf app.Zip
    */
 
