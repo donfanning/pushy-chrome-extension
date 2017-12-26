@@ -43,6 +43,8 @@
       </paper-dialog-scrollable>
       <div class="buttons">
         <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
+        <paper-button dialog-confirm hidden$="[[!showConfirmButton]]"
+                      on-tap="_onConfirmTapped">OK</paper-button>
       </div>
     </paper-dialog>
 
@@ -62,6 +64,30 @@
     is: 'error-dialog',
 
     properties: {
+      /**
+       * Fired when the confirm button is tapped
+       * @event confirm-tap
+       * @memberOf ErrorDialog
+       */
+      
+      /**
+       * Display confirm button state
+       * @memberOf ErrorDialog
+       */
+      showConfirmButton: {
+        type: Boolean,
+        value: false,
+        notify: true,
+      },
+    },
+
+    /**
+     * Event: Dialog confirm button click
+     * @private
+     * @memberOf ErrorDialog
+     */
+    _onConfirmTapped: function() {
+      this.fire('confirm-tap');
     },
 
     /**

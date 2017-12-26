@@ -23,6 +23,7 @@
 <link rel="import" href="../../bower_components/neon-animation/animations/scale-up-animation.html">
 
 <link rel="import" href="../my_icons.html">
+<link rel="import" href="../error-dialog.html">
 
 <dom-module id="signin-page">
   <template>
@@ -90,20 +91,10 @@
       <div class="card-content">
 
         <!-- Error dialog -->
-        <paper-dialog id="errorDialog" modal
-                      entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-          <h2 id="dialogTitle" class="vertical layout center"></h2>
-          <paper-dialog-scrollable>
-            <paper-item id="dialogText"></paper-item>
-          </paper-dialog-scrollable>
-          <div class="buttons">
-            <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
-            <paper-button dialog-confirm hidden$="[[!showConfirmButton]]"
-                          on-click="_onDialogOKClicked">OK
-            </paper-button>
-          </div>
-        </paper-dialog>
+        <error-dialog 
+            id="errorDialog"
+            show-confirm-button="[[showConfirmButton]]"
+            on-confirm-tap="_onDialogConfirmTapped"></error-dialog>
 
         <div class="contentContainer horizontal layout center">
           <paper-item id="description"
@@ -212,6 +203,7 @@
         showConfirmButton: {
           type: Boolean,
           value: false,
+          notify: true,
         },
       },
 
@@ -242,11 +234,11 @@
       },
 
       /**
-       * Event: Dialog OK button click
+       * Event: Dialog confirm button click
        * @private
        * @memberOf SignInPage
        */
-      _onDialogOKClicked: function() {
+      _onDialogConfirmTapped: function() {
         this._checkPermissions();
       },
 
@@ -415,11 +407,8 @@
        * @memberOf SignInPage
        */
       _showDialog: function(title, text, showConfirmButton) {
-        text = text.replace('\n', '<br/>');
-        this.$.dialogTitle.innerHTML = title;
-        this.$.dialogText.innerHTML = text;
         this.set('showConfirmButton', showConfirmButton);
-        this.$.errorDialog.open();
+        this.$.errorDialog.open(title, text);
       },
 
       /**
