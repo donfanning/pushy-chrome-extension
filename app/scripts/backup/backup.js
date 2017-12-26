@@ -39,7 +39,7 @@ app.Backup = (function() {
     STRINGIFY: 'Failed to stringify data.',
     PARSE: 'Failed to parse data.',
     NO_DATA: 'No data to backup.',
-    NO_FILE_ID: 'Could not find backup file on Google Drive.',
+    NO_FILE_ID: 'No file id was found.',
   };
 
   /**
@@ -147,7 +147,7 @@ app.Backup = (function() {
     doRestore: function(fileId, interactive = false) {
       let restoreData;
       if (Chrome.Utils.isWhiteSpace(fileId)) {
-        fileId = Chrome.Storage.get(_BACKUP_ID_KEY);
+        fileId = Chrome.Storage.get(_BACKUP_ID_KEY, '');
       }
       if (Chrome.Utils.isWhiteSpace(fileId)) {
         return Promise.reject(new Error(_ERR.NO_FILE_ID));
@@ -162,6 +162,24 @@ app.Backup = (function() {
         return _deleteAllData();
       }).then(() => {
         return _addAllData(restoreData);
+      });
+    },
+    
+    /**
+     * Delete a backup file
+     * @param {string} fileId - drive id to restore
+     * @param {boolean} [interactive=false] - true if user initiated
+     * @returns {Promise.<void>}
+     * @memberOf app.Backup
+     */
+    doDelete: function(fileId, interactive = false) {
+      return app.Drive.deleteFile(fileId, interactive).then(() => {
+        const ourFileId = Chrome.Storage.get(_BACKUP_ID_KEY, '');
+        if (ourFileId === fileId) {
+          // deleted our backup
+          Chrome.Storage.set(_BACKUP_ID_KEY, null);
+        }
+        return Promise.resolve();
       });
     },
   };

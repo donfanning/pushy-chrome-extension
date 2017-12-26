@@ -37,7 +37,7 @@
       .page-toolbar {
         margin-bottom: 0;
       }
-      
+
       .body-content {
         height: 85vh;
         padding-top: 0;
@@ -65,7 +65,8 @@
       }
 
       .list-item paper-icon-button {
-        margin-left: 28px;
+        color: var(--accent-color);
+        margin-right: 8px;
       }
 
       .date {
@@ -92,19 +93,13 @@
             <paper-tooltip for="backup" position="left" offset="0">
               Backup data to Google Drive
             </paper-tooltip>
-            <paper-icon-button
-                id="restore" icon="myicons:cloud-download" on-tap="_onRestoreTapped">
-            </paper-icon-button>
-            <paper-tooltip for="restore" position="left" offset="0">
-              Restore data from Google Drive
-            </paper-tooltip>
           </div>
         </paper-toolbar>
       </paper-material>
-      
+
       <!-- Content -->
-      <div class="body-content horizontal layout">
-        
+      <div class="body-content vertical layout">
+
         <!-- Error dialog -->
         <error-dialog id="errorDialog"></error-dialog>
 
@@ -114,14 +109,27 @@
           <template is="dom-repeat" id="listTemplate" items="{{files}}" as="file"
                     sort="_sortByDate">
             <div class="list-item horizontal layout" id="item[[index]]">
-              <!--<paper-icon-button id="delete[[index]]" icon="myicons:close"-->
-                                 <!--on-tap="_onDeleteTapped"></paper-icon-button>-->
               <div class="flex vertical layout" tabindex="-1">
+                <paper-item hidden$="[[!file.isMine]]">This device</paper-item>
                 <paper-item>Nickname: [[file.nickname]]</paper-item>
                 <paper-item>Model: [[file.model]]</paper-item>
                 <paper-item>SN: [[file.sn]]</paper-item>
                 <paper-item>OS: [[file.os]]</paper-item>
                 <paper-item class="date">Backup date: [[_computeDate(file.date)]]</paper-item>
+              </div>
+              <div class="vertical layout" tabindex="-1">
+                <paper-icon-button
+                    title="Restore data from Google Drive"
+                    icon="myicons:cloud-download"
+                    on-tap="_onRestoreTapped"></paper-icon-button>
+                <paper-icon-button
+                    title="Sync data between device and Google Drive"
+                    icon="myicons:cloud-sync"
+                    on-tap="_onSyncTapped"></paper-icon-button>
+                <paper-icon-button
+                    title="Delete backup on Google Drive"
+                    icon="myicons:delete"
+                    on-tap="_onDeleteTapped"></paper-icon-button>
               </div>
             </div>
           </template>
@@ -138,7 +146,7 @@
           <pre id="infoMessage">[[infoMessage]]</pre>
         </div>
       </div>
-      
+
     </paper-material>
   </template>
 </dom-module>
@@ -149,11 +157,12 @@
     'use strict';
 
     new ExceptionHandler();
-    
+
     const _ERR_BACKUP = 'Backup failed.';
     const _ERR_RESTORE = 'Restore failed.';
+    const _ERR_DELETE = 'Delete failed.';
     const _ERR_FILES = 'List files failed.';
-    
+
     /**
      * Polymer element to manage backup and restore of data
      * @namespace BackupPage
@@ -163,17 +172,7 @@
 
       properties: {
         /**
-         * The latest backup file for this device
-         * @memberOf BackupPage
-         */
-        myFile: {
-          type: Object,
-          value: null,
-          notify: true,
-        },
-
-        /**
-         * The Array of other file objects
+         * The Array of {@link app.BackupFile} objects
          * @memberOf BackupPage
          */
         files: {
@@ -230,7 +229,7 @@
        * @memberOf BackupPage
        */
       _onBackupTapped: function() {
-        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'backupData');
+        Chrome.GA.event(Chrome.GA.EVENT.MENU, 'BackupPage.backupData');
         let backupOk = false;
         app.Backup.doBackup(true).then(() => {
           console.log('backup complete');
@@ -244,18 +243,66 @@
       },
 
       /**
-       * Event: Restore menu tapped
+       * Event: Restore row item tapped
+       * @param {Event} event
+       * @param {Object} event.model
        * @private
        * @memberOf BackupPage
        */
-      _onRestoreTapped: function() {
-        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'restoreData');
-        app.Backup.doRestore(null, true).then(() => {
+      _onRestoreTapped: function(event) {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupPage.restoreData');
+        const file = event.model.file;
+        app.Backup.doRestore(file.id, true).then(() => {
           console.log('restore complete');
           return Promise.resolve();
         }).catch((err) => {
-          Chrome.Log.error(err.message, '_onBackupTapped', _ERR_RESTORE);
+          Chrome.Log.error(err.message, 'BackupPage._onRestoreTapped',
+              _ERR_RESTORE);
           this.$.errorDialog.open(_ERR_RESTORE, err.message);
+        });
+      },
+
+      /**
+       * Event: Sync row item tapped
+       * @param {Event} event
+       * @param {Object} event.model
+       * @private
+       * @memberOf BackupPage
+       */
+      _onSyncTapped: function(event) {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupPage.syncData');
+        console.log('sync complete');
+        // const file = event.model.file;
+        // app.Backup.doRestore(file.id, true).then(() => {
+        //   console.log('restore complete');
+        //   return Promise.resolve();
+        // }).catch((err) => {
+        //   Chrome.Log.error(err.message, 'BackupPage._onRestoreTapped',
+        //       _ERR_RESTORE);
+        //   this.$.errorDialog.open(_ERR_RESTORE, err.message);
+        // });
+      },
+
+      /**
+       * Event: Delete row item tapped
+       * @param {Event} event
+       * @param {Object} event.model
+       * @private
+       * @memberOf BackupPage
+       */
+      _onDeleteTapped: function(event) {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupPage.deleteBackup');
+        const file = event.model.file;
+        let deleteOk = false;
+        app.Backup.doDelete(file.id, true).then(() => {
+          deleteOk = true;
+          console.log('delete complete');
+          return this._loadFiles();
+        }).catch((err) => {
+          let reason = deleteOk ? _ERR_FILES : _ERR_DELETE;
+          Chrome.Log.error(err.message, 'BackupPage._onDeleteTapped',
+              reason);
+          this.$.errorDialog.open(reason, err.message);
         });
       },
 
@@ -288,11 +335,12 @@
        * @memberOf DevicesPage
        */
       _loadFiles: function() {
-        // clear list
-        this.splice('files', 0, this.files.length);
-
-        // populate list
+        // get files from Google Drive
         return app.Drive.getFiles(true).then((driveFiles) => {
+          // clear list
+          this.splice('files', 0, this.files.length);
+
+          // populate list
           driveFiles = driveFiles || [];
           driveFiles.forEach((driveFile) => {
             const file = new app.BackupFile(driveFile);
