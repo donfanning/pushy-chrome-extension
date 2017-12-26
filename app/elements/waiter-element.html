@@ -1,0 +1,84 @@
+<!--
+  ~ Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
+  ~ Licensed under Apache 2.0
+  ~ https://opensource.org/licenses/Apache-2.0
+  ~ https://goo.gl/wFvBM1
+  -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+
+
+<script src="../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
+
+<dom-module id="waiter-element">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      .waiter {
+        margin: 20px auto;
+      }
+
+      .waiter paper-item {
+        @apply(--paper-font-title);
+      }
+    </style>
+
+    <div class="waiter vertical layout center"
+         hidden$="[[!active]]">
+      <div class="horizontal center-justified layout">
+        <paper-spinner active="[[active]]" tabindex="-1"></paper-spinner>
+      </div>
+      <paper-item>[[label]]</paper-item>
+    </div>
+
+  </template>
+</dom-module>
+
+<script>
+  'use strict';
+
+  new ExceptionHandler();
+
+  /**
+   * Polymer element to display a spinner and text while performing a
+   * lengthy operation
+   * @namespace WaiterElement
+   */
+  Polymer({
+    is: 'waiter-element',
+
+    properties: {
+      /**
+       * Visible and active state
+       * @memberOf WaiterElement
+       */
+      active: {
+        type: Boolean,
+        value: false,
+        notify: true,
+      },
+
+      /**
+       * Label to display
+       * @memberOf WaiterElement
+       */
+      label: {
+        type: String,
+        value: '',
+        notify: true,
+      },
+    },
+
+  });
+</script>

@@ -15,15 +15,12 @@
 <link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
-<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-ripple/paper-ripple.html">
 
-<link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
-<link rel="import" href="../../bower_components/neon-animation/animations/scale-up-animation.html">
-
 <link rel="import" href="../my_icons.html">
 <link rel="import" href="../error-dialog.html">
+<link rel="import" href="../waiter-element.html">
 
 <dom-module id="signin-page">
   <template>
@@ -46,7 +43,7 @@
 
       #description {
         padding: 0;
-        margin: 16px 16px 16px 16px
+        margin: 16px 16px 16px 16px;
       }
 
       .buttonContainer {
@@ -75,15 +72,6 @@
         height: 22px;
         margin: 6px;
       }
-
-      #waiter {
-        margin: 20px auto;
-      }
-
-      #waiter paper-item {
-        @apply(--paper-font-title);
-      }
-
     </style>
 
     <paper-card class="page-content"
@@ -96,22 +84,20 @@
             show-confirm-button="[[showConfirmButton]]"
             on-confirm-tap="_onDialogConfirmTapped"></error-dialog>
 
-        <div class="contentContainer horizontal layout center">
+        <div class="contentContainer vertical center-justified layout center">
           <paper-item id="description"
-                      style$="display: [[_computeDescDisplay(isWaiting, signedIn)]];">
+                      hidden$="[[_computeDescHidden(isWaiting, signedIn)]]">
             You must be signed in to the Browser with the account you
             wish to use to share with your other devices. It is only used to ensure
             that all messages goes to a single account. You also need to "Allow Notifications"
             so the extension can send and receive messages.
           </paper-item>
 
-          <div id="waiter" class="vertical layout center"
-               style$="display: [[_computeWaiterDisplay(isWaiting)]];">
-            <div class="horizontal center-justified layout">
-              <paper-spinner active="[[isWaiting]]" tabindex="-1"></paper-spinner>
-            </div>
-            <paper-item>[[_computeWaiterLabel(isWaiting)]]</paper-item>
-          </div>
+          <waiter-element
+              active="[[isWaiting]]" 
+              label="[[_computeWaiterLabel(isWaiting)]]">
+          </waiter-element>
+          
         </div>
         <div class="buttonContainer vertical layout center">
           <paper-item id="googleAccountButton" tabindex="0"
@@ -277,26 +263,15 @@
       },
 
       /**
-       * Computed Binding: Description display style
+       * Computed Binding: Description hidden
        * @param {boolean} isWaiting - true if signing in
        * @param {boolean} isSignedIn - true if signed in
-       * @returns {string}
+       * @returns {boolean}
        * @private
        * @memberOf SignInPage
        */
-      _computeDescDisplay: function(isWaiting, isSignedIn) {
-        return (isWaiting || isSignedIn) ? 'none' : 'block';
-      },
-
-      /**
-       * Computed Binding: Spinner display style
-       * @param {boolean} isWaiting - true if signing in
-       * @returns {string}
-       * @private
-       * @memberOf SignInPage
-       */
-      _computeWaiterDisplay: function(isWaiting) {
-        return isWaiting ? 'block' : 'none';
+      _computeDescHidden: function(isWaiting, isSignedIn) {
+        return (isWaiting || isSignedIn);
       },
 
       /**
