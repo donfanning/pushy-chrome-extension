@@ -79,8 +79,11 @@ app.Backup = (function() {
    * @memberOf app.Backup
    */
   function _deleteAllData() {
-    return app.ClipItem.deleteAll().then(() => {
-      return app.Label.deleteAll();
+    const db = app.DB.get();
+    return db.transaction('rw', app.DB.labels(), app.DB.clips(), () => {
+      return app.ClipItem.deleteAll().then(() => {
+        return app.Label.deleteAll();
+      });
     });
   }
 
@@ -120,8 +123,9 @@ app.Backup = (function() {
       }).then((dataString) => {
         return app.Zip.zipFile(_BACKUP_FILENAME, dataString);
       }).then((zipData) => {
-        const zipFilename = _getZipFilename();
-        return app.Drive.createZipFile(zipFilename, zipData, interactive);
+        const file = _getZipFilename();
+        const appProps = app.BackupFile.getAppProperties();
+        return app.Drive.createZipFile(file, appProps, zipData, interactive);
       }).then((fileId) => {
         const oldId = Chrome.Storage.get(_BACKUP_ID_KEY, null);
         Chrome.Storage.set(_BACKUP_ID_KEY, fileId);
@@ -132,7 +136,7 @@ app.Backup = (function() {
         return Promise.resolve();
       });
     },
-    
+
     /**
      * Perform a restore
      * @param {?string} fileId - drive id to restore
@@ -151,9 +155,7 @@ app.Backup = (function() {
       return app.Drive.getZipFileContents(fileId, interactive).then((data) => {
         return app.Zip.unzipFileAsString(_BACKUP_FILENAME, data);
       }).then((dataString) => {
-        console.log(dataString);
         restoreData = Chrome.JSONUtils.parse(dataString);
-        console.log(restoreData);
         if (!restoreData) {
           return Promise.reject(new Error(_ERR.PARSE));
         }

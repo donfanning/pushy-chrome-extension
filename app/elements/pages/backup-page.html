@@ -34,21 +34,49 @@
         position: relative;
       }
 
-      .page-content {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-
       .page-toolbar {
         margin-bottom: 0;
       }
-
+      
       .body-content {
+        height: 85vh;
         padding-top: 0;
+        padding-bottom: 0;
       }
 
+      #fileList {
+        max-height: 72vh;
+        overflow: hidden;
+        overflow-y: scroll;
+        padding: 0 0 16px;
+        margin: 0;
+      }
+
+      .list-item {
+        position: relative;
+        border: 1px #CCCCCC;
+        border-bottom-style: solid;
+        padding: 16px 0 16px 0;
+        margin: 0;
+      }
+
+      .list-item paper-item {
+        --paper-item-min-height: 0px;
+      }
+
+      .list-item paper-icon-button {
+        margin-left: 28px;
+      }
+
+      .date {
+        color: var(--accent-color);
+      }
+
+      #infoMessage {
+        padding-top: 10vh;
+        white-space: pre-wrap;
+        @apply(--paper-font-subhead);
+      }
     </style>
 
     <paper-material elevation="1" class="page-content">
@@ -76,8 +104,39 @@
       
       <!-- Content -->
       <div class="body-content horizontal layout">
+        
         <!-- Error dialog -->
         <error-dialog id="errorDialog"></error-dialog>
+
+        <!-- Main content -->
+        <div id="fileList"
+             hidden$="[[_computeHasInfoMessage(infoMessage)]]">
+          <template is="dom-repeat" id="listTemplate" items="{{files}}" as="file"
+                    sort="_sortByDate">
+            <div class="list-item horizontal layout" id="item[[index]]">
+              <!--<paper-icon-button id="delete[[index]]" icon="myicons:close"-->
+                                 <!--on-tap="_onDeleteTapped"></paper-icon-button>-->
+              <div class="flex vertical layout" tabindex="-1">
+                <paper-item>Nickname: [[file.nickname]]</paper-item>
+                <paper-item>Model: [[file.model]]</paper-item>
+                <paper-item>SN: [[file.sn]]</paper-item>
+                <paper-item>OS: [[file.os]]</paper-item>
+                <paper-item class="date">Backup date: [[_computeDate(file.date)]]</paper-item>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="flex horizontal end-justified layout end"
+             hidden$="[[_computeHasInfoMessage(infoMessage)]]">
+          <paper-fab
+              title="Refresh file list"
+              icon="myicons:refresh"
+              on-tap="_onFabTapped"></paper-fab>
+        </div>
+        <div class="flex horizontal center-justified layout"
+             hidden$="[[!_computeHasInfoMessage(infoMessage)]]">
+          <pre id="infoMessage">[[infoMessage]]</pre>
+        </div>
       </div>
       
     </paper-material>
@@ -93,8 +152,8 @@
     
     const _ERR_BACKUP = 'Backup failed.';
     const _ERR_RESTORE = 'Restore failed.';
+    const _ERR_FILES = 'List files failed.';
     
-
     /**
      * Polymer element to manage backup and restore of data
      * @namespace BackupPage
@@ -103,6 +162,35 @@
       is: 'backup-page',
 
       properties: {
+        /**
+         * The latest backup file for this device
+         * @memberOf BackupPage
+         */
+        myFile: {
+          type: Object,
+          value: null,
+          notify: true,
+        },
+
+        /**
+         * The Array of other file objects
+         * @memberOf BackupPage
+         */
+        files: {
+          type: Array,
+          value: [],
+          notify: true,
+        },
+
+        /**
+         * A message about why file list is not available
+         * @memberOf DevicesPage
+         */
+        infoMessage: {
+          type: String,
+          value: '',
+          notify: true,
+        },
       },
 
       /**
@@ -113,18 +201,45 @@
       },
 
       /**
+       * We are now the current page
+       * @memberOf BackupPage
+       */
+      onCurrentPage: function() {
+        this._loadFiles().catch((err) => {
+          Chrome.Log.error(err.message, 'BackupPage.onCurrentPage', _ERR_FILES);
+          this.$.errorDialog.open(_ERR_FILES, err.message);
+        });
+      },
+
+      /**
+       * Event: Refresh Fab tapped
+       * @private
+       * @memberOf BackupPage
+       */
+      _onFabTapped: function() {
+        Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'refreshBackupFilesTapped');
+        this._loadFiles().catch((err) => {
+          Chrome.Log.error(err.message, 'BackupPage._onFabTapped', _ERR_FILES);
+          this.$.errorDialog.open(_ERR_FILES, err.message);
+        });
+      },
+
+      /**
        * Event: Backup menu tapped
        * @private
        * @memberOf BackupPage
        */
       _onBackupTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'backupData');
+        let backupOk = false;
         app.Backup.doBackup(true).then(() => {
           console.log('backup complete');
-          return Promise.resolve();
+          backupOk = true;
+          return this._loadFiles();
         }).catch((err) => {
-          Chrome.Log.error(err.message, '_onBackupTapped', _ERR_BACKUP);
-          this.$.errorDialog.open(_ERR_BACKUP, err.message);
+          let reason = backupOk ? _ERR_FILES : _ERR_BACKUP;
+          Chrome.Log.error(err.message, '_onBackupTapped', reason);
+          this.$.errorDialog.open(reason, err.message);
         });
       },
 
@@ -143,6 +258,62 @@
           this.$.errorDialog.open(_ERR_RESTORE, err.message);
         });
       },
+
+      /**
+       * Computed property: Relative date string
+       * @param {int} date
+       * @returns {string}
+       * @private
+       * @memberOf BackupPage
+       */
+      _computeDate: function(date) {
+        return new Date(date).toString();
+      },
+
+      /**
+       * Computed property: Do we have an info message
+       * @param {string} infoMessage
+       * @returns {boolean}
+       * @private
+       * @memberOf BackupPage
+       */
+      _computeHasInfoMessage: function(infoMessage) {
+        return !Chrome.Utils.isWhiteSpace(infoMessage);
+      },
+
+      /**
+       * Load the list of {@link app.BackupFile} objects
+       * @returns {Promise<void>}
+       * @private
+       * @memberOf DevicesPage
+       */
+      _loadFiles: function() {
+        // clear list
+        this.splice('files', 0, this.files.length);
+
+        // populate list
+        return app.Drive.getFiles(true).then((driveFiles) => {
+          driveFiles = driveFiles || [];
+          driveFiles.forEach((driveFile) => {
+            const file = new app.BackupFile(driveFile);
+            this.push('files', file);
+          });
+          return Promise.resolve();
+        });
+      },
+
+      /**
+       * Sort filter for the Devices - by last seen date
+       * @param {Device} a - first comparator
+       * @param {Device} b - second comparator
+       * @returns {int}
+       * @private
+       * @memberOf BackupPage
+       */
+      _sortByDate: function(a, b) {
+        return b.date - a.date;
+      },
+
     });
   })(window);
 </script>

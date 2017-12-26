@@ -361,6 +361,7 @@
         t.$.mainPage.onCurrentPage();
         break;
       case 'page-signin':
+      case 'page-backup':
       case 'page-devices':
       case 'page-labels':
         page.el.onCurrentPage();

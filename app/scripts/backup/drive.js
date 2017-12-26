@@ -45,23 +45,6 @@ app.Drive = (function() {
   };
 
   /**
-   * Get the array of files in our app folder
-   * @param {boolean} interactive - if true, user initiated
-   * @returns {Promise<Object[]>} Array of file objects
-   * @private
-   */
-  function _getFiles(interactive = false) {
-    return Chrome.Auth.getToken(interactive).then((token) => {
-      gapi.client.setToken({access_token: token});
-      return gapi.client.drive.files.list({spaces: _PARENT_FOLDER});
-    }).then((response) => {
-      response = response || {};
-      const result = response.result || {};
-      return Promise.resolve(result.files);
-    });
-  }
-
-  /**
    * Convert a CSV string to an int array
    * @param {string} input
    * @returns {int[]} Array of integers
@@ -98,13 +81,34 @@ app.Drive = (function() {
   }
 
   /**
+   * Get the array of files in our app folder
+   * @returns {Promise<Object[]>} Array of file objects
+   * @private
+   */
+  function _getFiles() {
+    const metadata = {
+      pageSize: 1000,
+      spaces: [_PARENT_FOLDER],
+      fields: 'files(id, name, modifiedTime, appProperties)',
+    };
+    return Promise.resolve().then(() => {
+      return gapi.client.drive.files.list(metadata);
+    }).then((response) => {
+      response = response || {};
+      const result = response.result || {};
+      return Promise.resolve(result.files);
+    });
+  }
+
+  /**
    * Create a zip file in our app folder
    * @param {string} filename
+   * @param {{}} appProps - metadata
    * @param {app.Zip.Data} data
    * @returns {Promise<Object>} gapi response
    * @private
    */
-  function _createZipFile(filename, data) {
+  function _createZipFile(filename, appProps, data) {
     const boundary = '-------314159265358979323846';
     const delimiter = '\r\n--' + boundary + '\r\n';
     const closeDelim = '\r\n--' + boundary + '--';
@@ -113,9 +117,10 @@ app.Drive = (function() {
     const contentType = 'application/zip';
 
     const metadata = {
-      'name': filename,
-      'parents': [_PARENT_FOLDER],
-      'mimeType': contentType,
+      name: filename,
+      parents: [_PARENT_FOLDER],
+      mimeType: contentType,
+      appProperties: appProps,
     };
 
     const multipartRequestBody =
@@ -128,13 +133,13 @@ app.Drive = (function() {
         closeDelim;
 
     return gapi.client.request({
-      'path': '/upload' + _FILES_PATH,
-      'method': 'POST',
-      'params': {'uploadType': 'multipart'},
-      'headers': {
+      path: '/upload' + _FILES_PATH,
+      method: 'POST',
+      params: {'uploadType': 'multipart'},
+      headers: {
         'Content-Type': 'multipart/related; boundary="' + boundary + '"',
       },
-      'body': multipartRequestBody,
+      body: multipartRequestBody,
     });
   }
 
@@ -204,22 +209,42 @@ app.Drive = (function() {
   window.addEventListener('load', _onLoad);
 
   return {
-    /**
-     * Create a zip file in our app folder
-     * @param {string} filename
-     * @param {app.Zip.Data} data - data bytes
-     * @param {boolean} [interactive=false] - if true, user initiated
-     * @returns {Promise<string>} file id
-     * @memberOf app.Drive
-     */
-    createZipFile: function(filename, data, interactive = false) {
+    
+    getFiles: function(interactive = false) {
       if (!app.Utils.isSignedIn()) {
         return Promise.reject(new Error(_ERR.NO_SIGNIN));
       }
 
       return Chrome.Auth.getToken(interactive).then((token) => {
         gapi.client.setToken({access_token: token});
-        return _createZipFile(filename, data);
+        return _getFiles();
+      }).then((files) => {
+        files = files || [];
+        return Promise.resolve(files);
+      }).catch((err) => {
+        const msg =
+            'Failed to get files list from Google Drive: ' + _getErrorMsg(err);
+        return Promise.reject(new Error(msg));
+      });
+    },
+    
+    /**
+     * Create a zip file in our app folder
+     * @param {string} filename
+     * @param {{}} appProps - metadata
+     * @param {app.Zip.Data} data - data bytes
+     * @param {boolean} [interactive=false] - if true, user initiated
+     * @returns {Promise<string>} file id
+     * @memberOf app.Drive
+     */
+    createZipFile: function(filename, appProps, data, interactive = false) {
+      if (!app.Utils.isSignedIn()) {
+        return Promise.reject(new Error(_ERR.NO_SIGNIN));
+      }
+
+      return Chrome.Auth.getToken(interactive).then((token) => {
+        gapi.client.setToken({access_token: token});
+        return _createZipFile(filename, appProps, data);
       }).then((response) => {
         response = response || {};
         const result = response.result || {};
