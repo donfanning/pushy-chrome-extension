@@ -41,6 +41,16 @@
         padding-bottom: 0;
       }
 
+      waiter-element {
+        padding-top: 10vh;
+      }
+
+      .list-content {
+        height: 100%;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+
       #fileList {
         max-height: 72vh;
         overflow: hidden;
@@ -75,10 +85,6 @@
         white-space: pre-wrap;
         @apply(--paper-font-subhead);
       }
-
-      #waiter {
-        padding-top: 10vh;
-      }
     </style>
 
     <paper-material elevation="1" class="page-content">
@@ -98,18 +104,19 @@
         </paper-toolbar>
       </paper-material>
 
+      <!-- Error dialog -->
+      <error-dialog id="errorDialog"></error-dialog>
+
       <!-- Content -->
       <div class="body-content vertical layout">
 
-        <!-- Error dialog -->
-        <error-dialog id="errorDialog"></error-dialog>
-
-        <waiter-element id="waiter" active="[[isWaiting]]" hidden$="[[!isWaiting]]"></waiter-element>
+        <!-- Working... element -->
+        <waiter-element active="[[isWaiting]]" hidden$="[[!isWaiting]]"></waiter-element>
 
         <!-- Main content -->
-        <div hidden$="[[isWaiting]]">
+        <div class="list-content vertical layout" hidden$="[[isWaiting]]">
 
-          <div id="fileList"
+          <div id="fileList" class="flex"
                hidden$="[[_computeHasInfoMessage(infoMessage)]]">
             <template is="dom-repeat" id="listTemplate" items="{{files}}" as="file"
                       sort="_sortByDate">
@@ -140,17 +147,17 @@
             </template>
           </div>
 
+          <div class="flex horizontal center-justified layout"
+               hidden$="[[!_computeHasInfoMessage(infoMessage)]]">
+            <pre id="infoMessage">[[infoMessage]]</pre>
+          </div>
+
           <div class="flex horizontal end-justified layout end"
                hidden$="[[_computeHasInfoMessage(infoMessage)]]">
             <paper-fab
                 title="Refresh file list"
                 icon="myicons:refresh"
                 on-tap="_onFabTapped"></paper-fab>
-          </div>
-
-          <div class="flex horizontal center-justified layout"
-               hidden$="[[!_computeHasInfoMessage(infoMessage)]]">
-            <pre id="infoMessage">[[infoMessage]]</pre>
           </div>
 
         </div>
@@ -167,11 +174,14 @@
 
     new ExceptionHandler();
 
-    const _ERR_BACKUP = 'Backup failed.';
-    const _ERR_RESTORE = 'Restore failed.';
-    const _ERR_DELETE = 'Delete failed.';
-    const _ERR_FILES = 'List files failed.';
-
+    const _ERR = {
+      BACKUP: 'Backup failed.',
+      RESTORE: 'Backup failed.',
+      DELETE: 'Backup failed.',
+      FILES: 'Backup failed.',
+      NO_FILES: 'No backup files exist on Google Drive.',
+    };
+    
     /**
      * Polymer element to manage backup and restore of data
      * @namespace BackupPage
@@ -223,14 +233,9 @@
        * @memberOf BackupPage
        */
       onCurrentPage: function() {
-        this.set('isWaiting', true);
-        this._loadFiles().then(() => {
-          this.set('isWaiting', false);
-          return Promise.resolve();
-        }).catch((err) => {
-          this.set('isWaiting', false);
-          Chrome.Log.error(err.message, 'BackupPage.onCurrentPage', _ERR_FILES);
-          this.$.errorDialog.open(_ERR_FILES, err.message);
+        this._loadFiles().catch((err) => {
+          Chrome.Log.error(err.message, 'BackupPage.onCurrentPage', _ERR.FILES);
+          this.$.errorDialog.open(_ERR.FILES, err.message);
         });
       },
 
@@ -241,14 +246,9 @@
        */
       _onFabTapped: function() {
         Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'refreshBackupFilesTapped');
-        this.set('isWaiting', true);
-        this._loadFiles().then(() => {
-          this.set('isWaiting', false);
-          return Promise.resolve();
-        }).catch((err) => {
-          this.set('isWaiting', false);
-          Chrome.Log.error(err.message, 'BackupPage._onFabTapped', _ERR_FILES);
-          this.$.errorDialog.open(_ERR_FILES, err.message);
+        this._loadFiles().catch((err) => {
+          Chrome.Log.error(err.message, 'BackupPage._onFabTapped', _ERR.FILES);
+          this.$.errorDialog.open(_ERR.FILES, err.message);
         });
       },
 
@@ -264,14 +264,13 @@
         app.Backup.doBackup(true).then(() => {
           backupOk = true;
           return this._loadFiles();
-        }).then(() => {
-          this.set('isWaiting', false);
-          return Promise.resolve();
         }).catch((err) => {
           this.set('isWaiting', false);
-          let reason = backupOk ? _ERR_FILES : _ERR_BACKUP;
+          let reason = backupOk ? _ERR.FILES : _ERR.BACKUP;
           Chrome.Log.error(err.message, '_onBackupTapped', reason);
-          this.$.errorDialog.open(reason, err.message);
+          if (!backupOk) {
+            this.$.errorDialog.open(reason, err.message);
+          }
         });
       },
 
@@ -292,8 +291,8 @@
         }).catch((err) => {
           this.set('isWaiting', false);
           Chrome.Log.error(err.message, 'BackupPage._onRestoreTapped',
-              _ERR_RESTORE);
-          this.$.errorDialog.open(_ERR_RESTORE, err.message);
+              _ERR.RESTORE);
+          this.$.errorDialog.open(_ERR.RESTORE, err.message);
         });
       },
 
@@ -324,20 +323,19 @@
         app.Backup.doDelete(file.id, true).then(() => {
           deleteOk = true;
           return this._loadFiles();
-        }).then(() => {
-          this.set('isWaiting', false);
-          return Promise.resolve();
         }).catch((err) => {
           this.set('isWaiting', false);
-          let reason = deleteOk ? _ERR_FILES : _ERR_DELETE;
+          let reason = deleteOk ? _ERR.FILES : _ERR.DELETE;
           Chrome.Log.error(err.message, 'BackupPage._onDeleteTapped',
               reason);
-          this.$.errorDialog.open(reason, err.message);
+          if (!deleteOk) {
+            this.$.errorDialog.open(reason, err.message);
+          }
         });
       },
 
       /**
-       * Computed property: Relative date string
+       * Computed property: Last modified date string
        * @param {int} date
        * @returns {string}
        * @private
@@ -366,6 +364,7 @@
        */
       _loadFiles: function() {
         // get files from Google Drive
+        this.set('isWaiting', true);
         return app.Drive.getFiles(true).then((driveFiles) => {
           // clear list
           this.splice('files', 0, this.files.length);
@@ -376,7 +375,16 @@
             const file = new app.BackupFile(driveFile);
             this.push('files', file);
           });
+          if (this.files.length) {
+            this.set('infoMessage', '');
+          } else {
+            this.set('infoMessage', _ERR.NO_FILES);
+          }
+          this.set('isWaiting', false);
           return Promise.resolve();
+        }).catch((err) => {
+          this.set('isWaiting', false);
+          return Promise.reject(err);
         });
       },
 
