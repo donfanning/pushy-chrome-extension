@@ -207,6 +207,16 @@
         },
 
         /**
+         * Are we the current page
+         * @memberOf MainPage
+         */
+        isCurrentPage: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
+
+        /**
          * Are we editing {@link currentClip}
          * @memberOf MainPage
          */
@@ -354,6 +364,7 @@
        * @memberOf MainPage
        */
       onCurrentPage: function() {
+        this.set('isCurrentPage', true);
         this.set('isBulkOp', false);
         this.set('canSend', app.Utils.canSend());
         this.$.clipList.selectFirst(true);
@@ -368,6 +379,7 @@
         this.set('isBulkOp', false);
         this._closeUndoToast();
         this.$.clipList.deselectAll();
+        this.set('isCurrentPage', false);
       },
 
       /**
@@ -1008,21 +1020,27 @@
       db.clipItems.hook('creating', function(primKey, obj) {
         // eslint-disable-next-line no-invalid-this
         this.onsuccess = function() {
-          self.$.clipList.addClipItem(obj.text);
+          if (this.isCurrentPage) {
+            self.$.clipList.addClipItem(obj.text);
+          }
         };
       });
 
       db.clipItems.hook('updating', function(mods, primKey, obj) {
         // eslint-disable-next-line no-invalid-this
         this.onsuccess = function() {
-          self.$.clipList.updateClipItem(obj.text, mods);
+          if (this.isCurrentPage) {
+            self.$.clipList.updateClipItem(obj.text, mods);
+          }
         };
       });
 
       db.clipItems.hook('deleting', function(primKey, obj) {
         // eslint-disable-next-line no-invalid-this
         this.onsuccess = function() {
-          self.$.clipList.deleteClipItem(obj.text);
+          if (this.isCurrentPage) {
+            self.$.clipList.deleteClipItem(obj.text);
+          }
         };
       });
     }
