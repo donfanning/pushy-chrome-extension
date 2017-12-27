@@ -21,8 +21,6 @@ app.Zip = (function() {
    * @memberOf app.Zip
    */
 
-  const _ERR_ZIP_FAILED = 'Failed to create zip file.';
-
   return {
 
     /**
@@ -47,8 +45,8 @@ app.Zip = (function() {
     
     /**
      * Unzip a file into a string
-     * @param {string} fileName
-     * @param {app.Zip.Data} data
+     * @param {string} fileName - name of file in data
+     * @param {app.Zip.Data} data - zip file contents
      * @returns {Promise<string>} file contents as string
      * @memberOf app.Zip
      */

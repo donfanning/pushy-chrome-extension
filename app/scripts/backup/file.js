@@ -11,8 +11,15 @@
   new ExceptionHandler();
 
   /**
-   * a backup file's metadata
-   * @property {int} date - file creation date
+   * A backup file's metadata
+   * @property {string} id - Drive file id
+   * @property {boolean} isMine - true if backup from our device
+   * @property {string} name - Drive filename
+   * @property {string} model - model of backup device
+   * @property {string} nickname - nickname of backup device
+   * @property {string} sn - sn of backup device
+   * @property {string} os - os of backup device
+   * @property {int} date - file modification date
    * @alias app.BackupFile
    */
   app.BackupFile = class BackupFile {
@@ -57,6 +64,7 @@
           (this.model === app.Device.myModel()) &&
           (this.os === app.Device.myOS()));
     }
+    
     /**
      * Is this file more recent than the given file
      * @param {app.BackupFile} file

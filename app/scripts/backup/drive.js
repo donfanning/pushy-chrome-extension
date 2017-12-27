@@ -82,7 +82,8 @@ app.Drive = (function() {
 
   /**
    * Get the array of files in our app folder
-   * @returns {Promise<Object[]>} Array of file objects
+   * @see https://developers.google.com/drive/v3/reference/files/list
+   * @returns {Promise<Object[]>} Array of Google Drive file objects
    * @private
    */
   function _getFiles() {
@@ -91,12 +92,11 @@ app.Drive = (function() {
       spaces: [_PARENT_FOLDER],
       fields: 'files(id, name, modifiedTime, appProperties)',
     };
-    return Promise.resolve().then(() => {
-      return gapi.client.drive.files.list(metadata);
-    }).then((response) => {
+    return gapi.client.drive.files.list(metadata).then((response) => {
       response = response || {};
       const result = response.result || {};
-      return Promise.resolve(result.files);
+      const files = result.files || [];
+      return Promise.resolve(files);
     });
   }
 
@@ -113,7 +113,6 @@ app.Drive = (function() {
     const delimiter = '\r\n--' + boundary + '\r\n';
     const closeDelim = '\r\n--' + boundary + '--';
 
-    // const contentType = 'application/zip, application/octet-stream';
     const contentType = 'application/zip';
 
     const metadata = {
@@ -135,7 +134,7 @@ app.Drive = (function() {
     return gapi.client.request({
       path: '/upload' + _FILES_PATH,
       method: 'POST',
-      params: {'uploadType': 'multipart'},
+      params: {uploadType: 'multipart'},
       headers: {
         'Content-Type': 'multipart/related; boundary="' + boundary + '"',
       },
