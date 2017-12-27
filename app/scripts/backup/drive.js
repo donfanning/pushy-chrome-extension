@@ -39,10 +39,48 @@ app.Drive = (function() {
    * @memberOf app.Drive
    */
   const _ERR = {
-    NO_SIGNIN: 'Not signed in',
-    NO_FILE_ID: 'No fileId specified',
-    GET_FAILED: 'Failed to get file from Google Drive: ',
+    NO_SIGNIN: 'Not signed in.\n',
+    NO_FILE_ID: 'No fileId specified.\n',
+    LOAD_LIB: 'Failed to load gapi library.\n',
+    GET_FILES: 'Failed to list of backups from Google Drive.\n',
+    GET: 'Failed to get backup from Google Drive.\n',
+    DELETE: 'Failed to delete backup on Google Drive.\n',
+    CREATE: 'Failed to create backup on Google Drive.\n',
   };
+
+  /**
+   * Load drive library
+   * @returns {Promise<void>}
+   * @private
+   */
+  function _loadLib() {
+      return Promise.resolve().then(() => {
+        return gapi.client.load('drive', 'v3');
+      }).then(() => {
+        return Promise.resolve();
+      }, (reason) => {
+        let msg = _ERR.LOAD_LIB;
+        if (reason.error && reason.error.message) {
+          msg += reason.error.message;
+        }
+        return Promise.reject(new Error(msg));
+      });
+  }
+
+  /**
+   * Get an authorized drive client
+   * @param {boolean} [interactive=false] - if true, user initiated
+   * @returns {Promise<void>}
+   * @private
+   */
+  function _getAuthorization(interactive = false) {
+    return _loadLib().then(() => {
+      return Chrome.Auth.getToken(interactive);
+    }).then((token) => {
+      gapi.client.setToken({access_token: token});
+      return Promise.resolve();
+    });
+  }
 
   /**
    * Convert a CSV string to an int array
@@ -51,12 +89,36 @@ app.Drive = (function() {
    * @private
    */
   function _csvToIntArray(input) {
+    input = input || '';
     let ret;
     ret = input.split(',');
     for (let i = 0; i < ret.length; i++) {
       ret[i] = parseInt(ret[i], 10);
     }
     return ret;
+  }
+
+  /**
+   * Get an Error from a failed gapi call
+   * @param {{string}} prefix  - error prefix text
+   * @param {{}} reason - reason for failure
+   * @param {{}} reason.result
+   * @param {{}} reason.status
+   * @param {{}} reason.statusText
+   * @returns {Error}
+   * @private
+   */
+  function _getError(prefix, reason) {
+    let msg = `${prefix} `;
+    if (reason.result && reason.result.error && reason.result.error.message) {
+      msg += reason.result.error.message;
+    } else {
+      msg += 'Status: ' + reason.status;
+      if (reason.statusText) {
+        msg+= ' ' + reason.statusText;
+      }
+    }
+    return new Error(msg);
   }
 
   /**
@@ -71,11 +133,11 @@ app.Drive = (function() {
       spaces: [_PARENT_FOLDER],
       fields: 'files(id, name, modifiedTime, appProperties)',
     };
-    
+
     return gapi.client.drive.files.list(request).then((response) => {
       return Promise.resolve(response.result.files);
     }, (reason) => {
-      return Promise.reject(new Error(reason.result.error.message));
+      return Promise.reject(_getError(_ERR.GET_FILES, reason));
     });
   }
 
@@ -119,16 +181,11 @@ app.Drive = (function() {
       },
       body: multipartRequestBody,
     };
-    
+
     return gapi.client.request(request).then((response) => {
-      if ((response.status >= 200) && (response.status < 300)) {
         return Promise.resolve(response.result.id);
-      }
-      const msg = _ERR.GET_FAILED + 'Status: ' + response.status + ' ' +
-          response.statusText;
-      return Promise.reject(new Error(msg));
     }, (reason) => {
-      return Promise.reject(new Error(reason.result.error.message));
+      return Promise.reject(_getError(_ERR.CREATE, reason));
     });
   }
 
@@ -151,7 +208,7 @@ app.Drive = (function() {
     return gapi.client.request(request).then(() => {
       return Promise.resolve();
     }, (reason) => {
-      return Promise.reject(new Error(reason.result.error.message));
+      return Promise.reject(_getError(_ERR.DELETE, reason));
     });
   }
 
@@ -165,7 +222,7 @@ app.Drive = (function() {
     if (Chrome.Utils.isWhiteSpace(fileId)) {
       return Promise.reject(_ERR.NO_FILE_ID);
     }
-    
+
     const request = {
       'path': _FILES_PATH + fileId,
       'method': 'GET',
@@ -173,52 +230,31 @@ app.Drive = (function() {
     };
 
     return gapi.client.request(request).then((response) => {
-      if (((response.status >= 200) && (response.status < 300)) &&
-          response.body) {
-        const data = _csvToIntArray(response.body);
-        return Promise.resolve(data);
-      }
-      const msg = _ERR.GET_FAILED + 'Status: ' + response.status + ' ' +
-          response.statusText;
-      return Promise.reject(new Error(msg));
+      const data = _csvToIntArray(response.body);
+      return Promise.resolve(data);
     }, (reason) => {
-      return Promise.reject(new Error(reason.result.error.message));
+      return Promise.reject(_getError(_ERR.GET, reason));
     });
   }
-
-  /**
-   * Event: called when document and resources are loaded<br />
-   * Initialize Google Analytics
-   * @private
-   * @memberOf app.GA
-   */
-  function _onLoad() {
-    // load the drive library
-    gapi.client.load('drive', 'v3', function() {
-      console.log('gapi loaded');
-    });
-  }
-
-  // listen for document and resources loaded
-  window.addEventListener('load', _onLoad);
 
   return {
 
+    /**
+     * Get the list of files in our app folder
+     * @param {boolean} [interactive=false] - if true, user initiated
+     * @returns {Promise<Array>} Array of Drive files metadata
+     * @memberOf app.Drive
+     */
     getFiles: function(interactive = false) {
       if (!app.Utils.isSignedIn()) {
         return Promise.reject(new Error(_ERR.NO_SIGNIN));
       }
 
-      return Chrome.Auth.getToken(interactive).then((token) => {
-        gapi.client.setToken({access_token: token});
+      return _getAuthorization(interactive).then(() => {
         return _getFiles();
       }).then((files) => {
         files = files || [];
         return Promise.resolve(files);
-      }).catch((err) => {
-        const msg =
-            'Failed to get files list from Google Drive: ' + err.message;
-        return Promise.reject(new Error(msg));
       });
     },
 
@@ -236,13 +272,8 @@ app.Drive = (function() {
         return Promise.reject(new Error(_ERR.NO_SIGNIN));
       }
 
-      return Chrome.Auth.getToken(interactive).then((token) => {
-        gapi.client.setToken({access_token: token});
+      return _getAuthorization(interactive).then(() => {
         return _createZipFile(filename, appProps, data);
-      }).catch((err) => {
-        const msg =
-            'Failed to create file on Google Drive: ' + err.message;
-        return Promise.reject(new Error(msg));
       });
     },
 
@@ -258,12 +289,8 @@ app.Drive = (function() {
         return Promise.reject(new Error(_ERR.NO_SIGNIN));
       }
 
-      return Chrome.Auth.getToken(interactive).then((token) => {
-        gapi.client.setToken({access_token: token});
+      return _getAuthorization(interactive).then(() => {
         return _getZipFileContents(fileId);
-      }).catch((err) => {
-        const msg = _ERR.GET_FAILED + err.message;
-        return Promise.reject(new Error(msg));
       });
     },
 
@@ -280,18 +307,15 @@ app.Drive = (function() {
         return Promise.reject(new Error(_ERR.NO_SIGNIN));
       }
 
-      return Chrome.Auth.getToken(interactive).then((token) => {
-        gapi.client.setToken({access_token: token});
+      return _getAuthorization(interactive).then(() => {
         return _deleteFile(fileId);
       }).catch((err) => {
-        const msg =
-            'Failed to delete file on Google Drive: ' + err.message;
         if (eatError) {
           // unfortunate, but OK
-          Chrome.Log.error(msg, 'Drive.deleteFile');
+          Chrome.Log.error(err.message, 'Drive.deleteFile');
           return Promise.resolve();
         }
-        return Promise.reject(new Error(msg));
+        return Promise.reject(err);
       });
     },
   };

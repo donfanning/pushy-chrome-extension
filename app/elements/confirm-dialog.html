@@ -88,6 +88,8 @@
      * @memberOf ConfirmDialog
      */
     open: function(title, text) {
+      title = title || 'Unknown';
+      text = text || 'Unknown';
       text = text.replace('\n', '<br/>');
       this.$.dialogTitle.innerHTML = title;
       this.$.dialogText.innerHTML = text;
