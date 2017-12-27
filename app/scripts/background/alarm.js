@@ -15,16 +15,19 @@ app.Alarm = (function() {
 
   new ExceptionHandler();
 
+  const chromep = new ChromePromise();
+
   /**
-   * Alarm for cleaning up old {@link ClipItem} objects
-   * @type {string}
-   * @const
-   * @default
+   * Alarm types
+   * @type {{}}
    * @private
    * @memberOf app.Alarm
    */
-  const ALARM_STORAGE = 'storage';
-
+  const _ALARM = {
+    STORAGE: 'storage',
+    BACKUP: 'backup',
+  };
+  
   /**
    * Event: Fired when an alarm has elapsed.
    * @see https://developer.chrome.com/apps/alarms#event-onAlarm
@@ -33,8 +36,15 @@ app.Alarm = (function() {
    * @memberOf app.Alarm
    */
   function _onAlarm(alarm) {
-    if (alarm.name === ALARM_STORAGE) {
+    if (alarm.name === _ALARM.STORAGE) {
       app.Alarm.deleteOldClipItems();
+    } else if (alarm.name === _ALARM.BACKUP) {
+      if (app.Utils.isSignedIn()) {
+        app.Backup.doBackup(false).catch((err) => {
+          Chrome.Log.error(err.message, 'Alarm._onAlarm',
+              'Auto backup failed.');
+        });
+      }
     }
   }
 
@@ -47,7 +57,8 @@ app.Alarm = (function() {
    * @memberOf app.Alarm
    */
   function _onStorageChanged(event) {
-    if (event.key === 'storageDuration') {
+    if ((event.key === 'storageDuration') ||
+        (event.key === 'autoBackup')) {
       app.Alarm.updateAlarms();
     }
   }
@@ -74,20 +85,38 @@ app.Alarm = (function() {
      * @memberOf app.Alarm
      */
     updateAlarms: function() {
+      
+      // delete old clips
       const durationType = Chrome.Storage.getInt('storageDuration', 2);
       if (durationType === 4) {
         // until room is needed
-        chrome.alarms.clear(ALARM_STORAGE);
+        chrome.alarms.clear(_ALARM.STORAGE);
       } else {
         // Add daily alarm to delete old clipItems
-        chrome.alarms.get(ALARM_STORAGE, (alarm) => {
+        chrome.alarms.get(_ALARM.STORAGE, (alarm) => {
           if (!alarm) {
-            chrome.alarms.create(ALARM_STORAGE, {
+            chrome.alarms.create(_ALARM.STORAGE, {
               when: Date.now() + app.Utils.MILLIS_IN_DAY,
               periodInMinutes: app.Utils.MIN_IN_DAY,
             });
           }
         });
+      }
+      
+      // daily backup
+      const autoBackup = Chrome.Storage.getBool('autoBackup', false);
+      if (autoBackup) {
+        // Add daily alarm backup data
+        chrome.alarms.get(_ALARM.BACKUP, (alarm) => {
+          if (!alarm) {
+            chrome.alarms.create(_ALARM.BACKUP, {
+              when: Date.now() + app.Utils.MILLIS_IN_DAY,
+              periodInMinutes: app.Utils.MIN_IN_DAY,
+            });
+          }
+        });
+      } else {
+        chrome.alarms.clear(_ALARM.BACKUP);
       }
     },
 

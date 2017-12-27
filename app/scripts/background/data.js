@@ -22,7 +22,7 @@ app.Data = (function() {
    * @private
    * @memberOf app.Data
    */
-  const _VERSION = 8;
+  const _VERSION = 9;
 
   /**
    * The data items saved to localStorage
@@ -40,6 +40,7 @@ app.Data = (function() {
    * @property {boolean} notifyOnSend - show notification on send push
    * @property {boolean} notifyOnError - show notification on errors
    * @property {boolean} highPriority - send high priority messages
+   * @property {boolean} autoBackup - automatically backup data
    * @property {string} deviceNickname - nickname of our device
    * @property {Object} devices - other devices we know about
    * @property {boolean} signedIn - are we logged in
@@ -74,6 +75,7 @@ app.Data = (function() {
     'notifyOnSend': false,
     'notifyOnError': true,
     'highPriority': true,
+    'autoBackup': false,
     'deviceNickname': '',
     'devices': {},
     'signedIn': false,

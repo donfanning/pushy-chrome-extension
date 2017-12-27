@@ -34,7 +34,7 @@ app.Drive = (function() {
 
   /**
    * Error messages
-   * @type {Object}
+   * @type {{}}
    * @private
    * @memberOf app.Drive
    */

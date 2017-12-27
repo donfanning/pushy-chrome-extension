@@ -250,7 +250,7 @@
        * @memberOf BackupPage
        */
       _onFabTapped: function() {
-        Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'refreshBackupFiles');
+        Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'BackupPage.refreshBackupFiles');
         this._loadFiles().catch((err) => {
           Chrome.Log.error(err.message, 'BackupPage._onFabTapped', _ERR.FILES);
           this.$.errorDialog.open(_ERR.FILES, err.message);
@@ -272,7 +272,7 @@
         }).catch((err) => {
           this.set('isWaiting', false);
           let reason = backupOk ? _ERR.FILES : _ERR.BACKUP;
-          Chrome.Log.error(err.message, '_onBackupTapped', reason);
+          Chrome.Log.error(err.message, 'BackupPage._onBackupTapped', reason);
           if (!backupOk) {
             this.$.errorDialog.open(reason, err.message);
           }

@@ -23,8 +23,20 @@ app.Backup = (function() {
    * @memberOf app.Backup
    */
 
+  /**
+   * Filename in zip file
+   * @type {string}
+   * @private
+   * @memberOf app.Backup
+   */
   const _BACKUP_FILENAME = 'backup.txt';
 
+  /**
+   * Local Storage key for last backup fileId
+   * @type {string}
+   * @private
+   * @memberOf app.Backup
+   */
   const _BACKUP_ID_KEY = 'backupFileId';
 
   /**
