@@ -19,7 +19,7 @@
 
 <script src="../bower_components/chrome-extension-utils/scripts/exception_handler.js"></script>
 
-<dom-module id="error-dialog">
+<dom-module id="confirm-dialog">
   <template>
     <style include="iron-flex iron-flex-alignment"></style>
     <style include="shared-styles"></style>
@@ -44,8 +44,7 @@
       </paper-dialog-scrollable>
       <div class="buttons">
         <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
-        <paper-button dialog-confirm hidden$="[[!showConfirmButton]]"
-                      on-tap="_onConfirmTapped">OK</paper-button>
+        <paper-button dialog-confirm on-tap="_onConfirmTapped">OK</paper-button>
       </div>
     </paper-dialog>
 
@@ -57,35 +56,25 @@
 
   new ExceptionHandler();
 
-  /**
-   * Polymer dialog to display an error
-   * @namespace ErrorDialog
+  /** 
+   * Polymer dialog confirm an action
+   * @namespace ConfirmDialog
    */
   Polymer({
-    is: 'error-dialog',
+    is: 'confirm-dialog',
 
     properties: {
       /**
        * Fired when the confirm button is tapped
        * @event confirm-tap
-       * @memberOf ErrorDialog
+       * @memberOf ConfirmDialog
        */
-      
-      /**
-       * Display confirm button state
-       * @memberOf ErrorDialog
-       */
-      showConfirmButton: {
-        type: Boolean,
-        value: false,
-        notify: true,
-      },
     },
 
     /**
      * Event: Dialog confirm button click
      * @private
-     * @memberOf ErrorDialog
+     * @memberOf ConfirmDialog
      */
     _onConfirmTapped: function() {
       this.fire('confirm-tap');
@@ -96,7 +85,7 @@
      * @param {string} title
      * @param {string} text
      * @private
-     * @memberOf ErrorDialog
+     * @memberOf ConfirmDialog
      */
     open: function(title, text) {
       text = text.replace('\n', '<br/>');
@@ -108,7 +97,7 @@
     /**
      * Hide the dialog
      * @private
-     * @memberOf ErrorDialog
+     * @memberOf ConfirmDialog
      */
     close: function() {
       this.$.dialog.close();
