@@ -15,8 +15,6 @@ app.Alarm = (function() {
 
   new ExceptionHandler();
 
-  const chromep = new ChromePromise();
-
   /**
    * Alarm types
    * @type {{}}
