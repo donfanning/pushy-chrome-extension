@@ -35,8 +35,10 @@ app.Alarm = (function() {
    */
   function _onAlarm(alarm) {
     if (alarm.name === _ALARM.STORAGE) {
+      Chrome.GA.event(Chrome.GA.EVENT.ALARM, _ALARM.STORAGE);
       app.Alarm.deleteOldClipItems();
     } else if (alarm.name === _ALARM.BACKUP) {
+      Chrome.GA.event(Chrome.GA.EVENT.ALARM, _ALARM.BACKUP);
       if (app.Utils.isSignedIn()) {
         app.Backup.doBackup(false).catch((err) => {
           Chrome.Log.error(err.message, 'Alarm._onAlarm',
