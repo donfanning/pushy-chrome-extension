@@ -130,8 +130,8 @@ app.Backup = (function() {
         const oldId = Chrome.Storage.get(_BACKUP_ID_KEY, null);
         Chrome.Storage.set(_BACKUP_ID_KEY, fileId);
         if (!Chrome.Utils.isWhiteSpace(oldId)) {
-          // delete old backup
-          return app.Drive.deleteFile(oldId, interactive);
+          // delete old backup - ignore failure to delete
+          return app.Drive.deleteFile(oldId, interactive, true);
         }
         return Promise.resolve();
       });
@@ -173,7 +173,7 @@ app.Backup = (function() {
      * @memberOf app.Backup
      */
     doDelete: function(fileId, interactive = false) {
-      return app.Drive.deleteFile(fileId, interactive).then(() => {
+      return app.Drive.deleteFile(fileId, interactive, false).then(() => {
         const ourFileId = Chrome.Storage.get(_BACKUP_ID_KEY, '');
         if (ourFileId === fileId) {
           // deleted our backup

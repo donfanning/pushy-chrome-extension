@@ -60,43 +60,22 @@ app.Drive = (function() {
   }
 
   /**
-   * Process the error message
-   * @param {Object} errObj
-   * @returns {string} error message
-   * @private
-   */
-  function _getErrorMsg(errObj) {
-    let ret = 'Unknown error';
-    if (errObj.message) {
-      ret = errObj.message;
-    } else if (errObj.result) {
-      const result = errObj.result;
-      if (result.error && result.error.message) {
-        ret = result.error.message;
-      } else if (result.statusText) {
-        ret = result.statusText;
-      }
-    }
-    return ret;
-  }
-
-  /**
    * Get the array of files in our app folder
    * @see https://developers.google.com/drive/v3/reference/files/list
    * @returns {Promise<Object[]>} Array of Google Drive file objects
    * @private
    */
   function _getFiles() {
-    const metadata = {
+    const request = {
       pageSize: 1000,
       spaces: [_PARENT_FOLDER],
       fields: 'files(id, name, modifiedTime, appProperties)',
     };
-    return gapi.client.drive.files.list(metadata).then((response) => {
-      response = response || {};
-      const result = response.result || {};
-      const files = result.files || [];
-      return Promise.resolve(files);
+    
+    return gapi.client.drive.files.list(request).then((response) => {
+      return Promise.resolve(response.result.files);
+    }, (reason) => {
+      return Promise.reject(new Error(reason.result.error.message));
     });
   }
 
@@ -105,7 +84,7 @@ app.Drive = (function() {
    * @param {string} filename
    * @param {{}} appProps - metadata
    * @param {app.Zip.Data} data
-   * @returns {Promise<Object>} gapi response
+   * @returns {Promise<string>} file id
    * @private
    */
   function _createZipFile(filename, appProps, data) {
@@ -131,7 +110,7 @@ app.Drive = (function() {
         data +
         closeDelim;
 
-    return gapi.client.request({
+    const request = {
       path: '/upload' + _FILES_PATH,
       method: 'POST',
       params: {uploadType: 'multipart'},
@@ -139,6 +118,17 @@ app.Drive = (function() {
         'Content-Type': 'multipart/related; boundary="' + boundary + '"',
       },
       body: multipartRequestBody,
+    };
+    
+    return gapi.client.request(request).then((response) => {
+      if ((response.status >= 200) && (response.status < 300)) {
+        return Promise.resolve(response.result.id);
+      }
+      const msg = _ERR.GET_FAILED + 'Status: ' + response.status + ' ' +
+          response.statusText;
+      return Promise.reject(new Error(msg));
+    }, (reason) => {
+      return Promise.reject(new Error(reason.result.error.message));
     });
   }
 
@@ -153,9 +143,15 @@ app.Drive = (function() {
       return Promise.reject(_ERR.NO_FILE_ID);
     }
 
-    return gapi.client.request({
+    const request = {
       'path': _FILES_PATH + fileId,
       'method': 'DELETE',
+    };
+
+    return gapi.client.request(request).then(() => {
+      return Promise.resolve();
+    }, (reason) => {
+      return Promise.reject(new Error(reason.result.error.message));
     });
   }
 
@@ -169,25 +165,24 @@ app.Drive = (function() {
     if (Chrome.Utils.isWhiteSpace(fileId)) {
       return Promise.reject(_ERR.NO_FILE_ID);
     }
+    
+    const request = {
+      'path': _FILES_PATH + fileId,
+      'method': 'GET',
+      'params': {'alt': 'media'},
+    };
 
-    return Promise.resolve().then(() => {
-      return gapi.client.request({
-        'path': _FILES_PATH + fileId,
-        'method': 'GET',
-        'params': {'alt': 'media'},
-      });
-    }).then((response) => {
-      response = response || {};
-      if ((response.status === 200) && response.body) {
+    return gapi.client.request(request).then((response) => {
+      if (((response.status >= 200) && (response.status < 300)) &&
+          response.body) {
         const data = _csvToIntArray(response.body);
         return Promise.resolve(data);
       }
-      const msg = _ERR.GET_FAILED + _getErrorMsg(response);
+      const msg = _ERR.GET_FAILED + 'Status: ' + response.status + ' ' +
+          response.statusText;
       return Promise.reject(new Error(msg));
-    }).catch((err) => {
-      const msg = _ERR.GET_FAILED + _getErrorMsg(err);
-      Chrome.Log.error(msg, 'Drive.getZipFileContents');
-      return Promise.reject(new Error(msg));
+    }, (reason) => {
+      return Promise.reject(new Error(reason.result.error.message));
     });
   }
 
@@ -208,7 +203,7 @@ app.Drive = (function() {
   window.addEventListener('load', _onLoad);
 
   return {
-    
+
     getFiles: function(interactive = false) {
       if (!app.Utils.isSignedIn()) {
         return Promise.reject(new Error(_ERR.NO_SIGNIN));
@@ -222,11 +217,11 @@ app.Drive = (function() {
         return Promise.resolve(files);
       }).catch((err) => {
         const msg =
-            'Failed to get files list from Google Drive: ' + _getErrorMsg(err);
+            'Failed to get files list from Google Drive: ' + err.message;
         return Promise.reject(new Error(msg));
       });
     },
-    
+
     /**
      * Create a zip file in our app folder
      * @param {string} filename
@@ -244,13 +239,9 @@ app.Drive = (function() {
       return Chrome.Auth.getToken(interactive).then((token) => {
         gapi.client.setToken({access_token: token});
         return _createZipFile(filename, appProps, data);
-      }).then((response) => {
-        response = response || {};
-        const result = response.result || {};
-        return Promise.resolve(result.id);
       }).catch((err) => {
         const msg =
-            'Failed to create file on Google Drive: ' + _getErrorMsg(err);
+            'Failed to create file on Google Drive: ' + err.message;
         return Promise.reject(new Error(msg));
       });
     },
@@ -271,20 +262,20 @@ app.Drive = (function() {
         gapi.client.setToken({access_token: token});
         return _getZipFileContents(fileId);
       }).catch((err) => {
-        const msg =
-            _ERR.GET_FAILED + _getErrorMsg(err);
-        Chrome.Log.error(msg, 'Drive.getZipFileContents');
+        const msg = _ERR.GET_FAILED + err.message;
         return Promise.reject(new Error(msg));
       });
     },
+
     /**
      * Delete a file in our app folder
      * @param {string} fileId
      * @param {boolean} [interactive=false] - if true, user initiated
+     * @param {boolean} [eatError=false] - if true, ignore failed delete
      * @returns {Promise<void>}
      * @memberOf app.Drive
      */
-    deleteFile: function(fileId, interactive = false) {
+    deleteFile: function(fileId, interactive = false, eatError = false) {
       if (!app.Utils.isSignedIn()) {
         return Promise.reject(new Error(_ERR.NO_SIGNIN));
       }
@@ -294,10 +285,13 @@ app.Drive = (function() {
         return _deleteFile(fileId);
       }).catch((err) => {
         const msg =
-            'Failed to delete file on Google Drive: ' + _getErrorMsg(err);
-        Chrome.Log.error(msg, 'Drive.deleteFile');
-        // unfortunate, but OK
-        return Promise.resolve();
+            'Failed to delete file on Google Drive: ' + err.message;
+        if (eatError) {
+          // unfortunate, but OK
+          Chrome.Log.error(msg, 'Drive.deleteFile');
+          return Promise.resolve();
+        }
+        return Promise.reject(new Error(msg));
       });
     },
   };
