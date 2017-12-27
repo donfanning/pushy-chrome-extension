@@ -52,7 +52,7 @@
       }
 
       #fileList {
-        max-height: 72vh;
+        height: 72vh;
         overflow: hidden;
         overflow-y: scroll;
         padding: 0 0 16px;
@@ -116,13 +116,14 @@
         <!-- Main content -->
         <div class="list-content vertical layout" hidden$="[[isWaiting]]">
 
-          <div id="fileList" class="flex"
+          <div id="fileList"
                hidden$="[[_computeHasInfoMessage(infoMessage)]]">
-            <template is="dom-repeat" id="listTemplate" items="{{files}}" as="file"
-                      sort="_sortByDate">
+            <template is="dom-repeat" items="{{files}}" as="file">
               <div class="list-item horizontal layout" id="item[[index]]">
                 <div class="flex vertical layout" tabindex="-1">
-                  <paper-item hidden$="[[!file.isMine]]">This device</paper-item>
+                  <paper-item 
+                      class="horizontal center-justified layout"
+                      hidden$="[[!file.isMine]]">This device</paper-item>
                   <paper-item>Nickname: [[file.nickname]]</paper-item>
                   <paper-item>Model: [[file.model]]</paper-item>
                   <paper-item>SN: [[file.sn]]</paper-item>
@@ -147,12 +148,12 @@
             </template>
           </div>
 
-          <div class="flex horizontal center-justified layout"
+          <div class="horizontal center-justified layout"
                hidden$="[[!_computeHasInfoMessage(infoMessage)]]">
             <pre id="infoMessage">[[infoMessage]]</pre>
           </div>
 
-          <div class="flex horizontal end-justified layout end"
+          <div class="horizontal end-justified layout"
                hidden$="[[_computeHasInfoMessage(infoMessage)]]">
             <paper-fab
                 title="Refresh file list"
@@ -212,7 +213,7 @@
 
         /**
          * A message about why file list is not available
-         * @memberOf DevicesPage
+         * @memberOf BackupPage
          */
         infoMessage: {
           type: String,
@@ -245,7 +246,7 @@
        * @memberOf BackupPage
        */
       _onFabTapped: function() {
-        Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'refreshBackupFilesTapped');
+        Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'refreshBackupFiles');
         this._loadFiles().catch((err) => {
           Chrome.Log.error(err.message, 'BackupPage._onFabTapped', _ERR.FILES);
           this.$.errorDialog.open(_ERR.FILES, err.message);
@@ -342,7 +343,7 @@
        * @memberOf BackupPage
        */
       _computeDate: function(date) {
-        return new Date(date).toString();
+        return app.Utils.getRelativeTime(date);
       },
 
       /**
@@ -357,25 +358,22 @@
       },
 
       /**
-       * Load the list of {@link app.BackupFile} objects
+       * Load the list of {@link app.BackupFile} objects from Google Drive
        * @returns {Promise<void>}
        * @private
-       * @memberOf DevicesPage
+       * @memberOf BackupPage
        */
       _loadFiles: function() {
-        // get files from Google Drive
         this.set('isWaiting', true);
         return app.Drive.getFiles(true).then((driveFiles) => {
+          driveFiles = driveFiles || [];
+          
           // clear list
           this.splice('files', 0, this.files.length);
 
-          // populate list
-          driveFiles = driveFiles || [];
-          driveFiles.forEach((driveFile) => {
-            const file = new app.BackupFile(driveFile);
-            this.push('files', file);
-          });
-          if (this.files.length) {
+          if (driveFiles.length) {
+            // populate list
+            this._setSortedFiles(driveFiles);
             this.set('infoMessage', '');
           } else {
             this.set('infoMessage', _ERR.NO_FILES);
@@ -389,17 +387,34 @@
       },
 
       /**
-       * Sort filter for the Devices - by last seen date
-       * @param {Device} a - first comparator
-       * @param {Device} b - second comparator
-       * @returns {int}
+       * Set the list of sorted files
+       * @param {Array} driveFiles
        * @private
        * @memberOf BackupPage
        */
-      _sortByDate: function(a, b) {
-        return b.date - a.date;
+      _setSortedFiles: function(driveFiles) {
+        driveFiles = driveFiles || [];
+        
+        // keep this devices files on top and sort newest first
+        const myFiles = [];
+        const otherFiles = [];
+        driveFiles.forEach((driveFile) => {
+          const file = new app.BackupFile(driveFile);
+          if (file.isMine) {
+            myFiles.push(file);
+          } else {
+            otherFiles.push(file);
+          }
+        });
+        myFiles.sort((a, b) => {
+          return b.data - a.date;
+        });
+        otherFiles.sort((a, b) => {
+          return b.data - a.date;
+        });
+        this.push('files', ...myFiles);
+        this.push('files', ...otherFiles);
       },
-
     });
   })(window);
 </script>
