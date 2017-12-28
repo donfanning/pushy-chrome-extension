@@ -1021,7 +1021,7 @@
       db.clipItems.hook('creating', function(primKey, obj) {
         // eslint-disable-next-line no-invalid-this
         this.onsuccess = function() {
-          if (this.isCurrentPage) {
+          if (self.isCurrentPage) {
             self.$.clipList.addClipItem(obj.text);
           }
         };
@@ -1030,7 +1030,7 @@
       db.clipItems.hook('updating', function(mods, primKey, obj) {
         // eslint-disable-next-line no-invalid-this
         this.onsuccess = function() {
-          if (this.isCurrentPage) {
+          if (self.isCurrentPage) {
             self.$.clipList.updateClipItem(obj.text, mods);
           }
         };
@@ -1039,7 +1039,7 @@
       db.clipItems.hook('deleting', function(primKey, obj) {
         // eslint-disable-next-line no-invalid-this
         this.onsuccess = function() {
-          if (this.isCurrentPage) {
+          if (self.isCurrentPage) {
             self.$.clipList.deleteClipItem(obj.text);
           }
         };
