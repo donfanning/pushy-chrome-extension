@@ -17,6 +17,18 @@ app.Drive = (function() {
   new ExceptionHandler();
 
   /**
+   * Scopes required for drive - override manifest values
+   * @const
+   * @private
+   * @memberOf app.Drive
+   */
+  const _SCOPES = [
+    'email',
+    'profile',
+    'https://www.googleapis.com/auth/drive.appfolder',
+  ];
+
+  /**
    * path to drive files api
    * @const
    * @private
@@ -54,17 +66,17 @@ app.Drive = (function() {
    * @private
    */
   function _loadLib() {
-      return Promise.resolve().then(() => {
-        return gapi.client.load('drive', 'v3');
-      }).then(() => {
-        return Promise.resolve();
-      }, (reason) => {
-        let msg = _ERR.LOAD_LIB;
-        if (reason.error && reason.error.message) {
-          msg += reason.error.message;
-        }
-        return Promise.reject(new Error(msg));
-      });
+    return Promise.resolve().then(() => {
+      return gapi.client.load('drive', 'v3');
+    }).then(() => {
+      return Promise.resolve();
+    }, (reason) => {
+      let msg = _ERR.LOAD_LIB;
+      if (reason.error && reason.error.message) {
+        msg += reason.error.message;
+      }
+      return Promise.reject(new Error(msg));
+    });
   }
 
   /**
@@ -75,7 +87,7 @@ app.Drive = (function() {
    */
   function _getAuthorization(interactive = false) {
     return _loadLib().then(() => {
-      return Chrome.Auth.getToken(interactive);
+      return Chrome.Auth.getToken(interactive, _SCOPES);
     }).then((token) => {
       gapi.client.setToken({access_token: token});
       return Promise.resolve();
@@ -115,7 +127,7 @@ app.Drive = (function() {
     } else {
       msg += 'Status: ' + reason.status;
       if (reason.statusText) {
-        msg+= ' ' + reason.statusText;
+        msg += ' ' + reason.statusText;
       }
     }
     return new Error(msg);
@@ -183,7 +195,7 @@ app.Drive = (function() {
     };
 
     return gapi.client.request(request).then((response) => {
-        return Promise.resolve(response.result.id);
+      return Promise.resolve(response.result.id);
     }, (reason) => {
       return Promise.reject(_getError(_ERR.CREATE, reason));
     });
@@ -255,6 +267,21 @@ app.Drive = (function() {
       }).then((files) => {
         files = files || [];
         return Promise.resolve(files);
+      });
+    },
+
+    /**
+     * Make sure the user has added the Drive scope
+     * @returns {Promise<void>}
+     * @memberOf app.Drive
+     */
+    addScope: function() {
+      if (!app.Utils.isSignedIn()) {
+        return Promise.reject(new Error(_ERR.NO_SIGNIN));
+      }
+
+      return _getAuthorization(true).then(() => {
+        return Promise.resolve();
       });
     },
 

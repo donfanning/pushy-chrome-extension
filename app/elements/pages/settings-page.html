@@ -88,9 +88,11 @@
             noseparator>
         </setting-dropdown>
         <setting-toggle
+            id="autoBackup"
             name="autoBackup"
             main-label="Auto data backup"
             secondary-label="Perform a daily backup of all your data to Google Drive"
+            on-change="_onAutoBackupChanged"
             noseparator>
         </setting-toggle>
 
@@ -122,7 +124,7 @@
 
     new ExceptionHandler();
 
-    const ERROR_TITLE = 'Failed to change setting';
+    const _ERR_SETTING_CHANGE = 'Failed to change setting';
 
     window.app = window.app || {};
 
@@ -155,11 +157,26 @@
       _onChromeMessage: function(request) {
         let ret = false;
         if (request.message === app.ChromeMsg.REGISTER_FAILED.message) {
-          this._showDialog(ERROR_TITLE, request.error);
+          this._showDialog(_ERR_SETTING_CHANGE, request.error);
         } else if (request.message === app.ChromeMsg.UNREGISTER_FAILED.message) {
-          this._showDialog(ERROR_TITLE, request.error);
+          this._showDialog(_ERR_SETTING_CHANGE, request.error);
         }
         return ret;
+      },
+
+      /**
+       * Event: Auto backup changed by user
+       * @param {Event} event
+       * @private
+       * @memberOf SettingsPage
+       */
+      _onAutoBackupChanged: function(event) {
+        if (event.target.checked) {
+          app.Drive.addScope().catch((err) => {
+            this.$.autoBackup.setChecked(false);
+            this._showDialog(_ERR_SETTING_CHANGE, err.message);
+          });
+        }
       },
 
       /**
