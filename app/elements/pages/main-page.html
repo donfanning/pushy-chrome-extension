@@ -340,6 +340,7 @@
        */
       ready: function() {
         self = this;
+        this.set('isCurrentPage', true);
         this.set('canSend', app.Utils.canSend());
         this._loadClipItems(true).then(() => {
           // !Important
