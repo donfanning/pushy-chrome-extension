@@ -50,24 +50,27 @@
             name="allowPush"
             main-label="Push to devices"
             secondary-label="Send messages to your registered devices"
+            disabled$="[[!isSignedIn]]"
             checked="{{pushEnabled}}">
         </setting-toggle>
         <setting-toggle
             name="autoSend"
             main-label="Auto send"
             secondary-label="Automatically send when possible"
-            disabled$="[[!pushEnabled]]"
+            disabled$="[[_computeAutoSendDisabled(isSignedIn, pushEnabled)]]"
             indent>
         </setting-toggle>
         <setting-toggle
             name="allowReceive"
             main-label="Receive from devices"
+            disabled$="[[!isSignedIn]]"
             secondary-label="Receive messages from your registered devices">
         </setting-toggle>
         <setting-toggle
             name="highPriority"
             main-label="High priority message"
             secondary-label="Wakes android devices for immediate delivery. Uses more battery."
+            disabled$="[[!isSignedIn]]"
             noseparator>
         </setting-toggle>
 
@@ -93,6 +96,7 @@
             main-label="Auto data backup"
             secondary-label="Perform a daily backup of all your data to Google Drive"
             on-change="_onAutoBackupChanged"
+            disabled$="[[!isSignedIn]]"
             noseparator>
         </setting-toggle>
 
@@ -105,7 +109,8 @@
         <setting-toggle
             name="notifyOnSend"
             main-label="Notify on send"
-            secondary-label="Display notification when a message is sent">
+            secondary-label="Display notification when a message is sent"
+            disabled$="[[!isSignedIn]]">
         </setting-toggle>
         <setting-toggle
             name="notifyOnError"
@@ -135,6 +140,18 @@
     app.SettingsPageFactory = Polymer({
       is: 'settings-page',
 
+      properties: {
+        /**
+         * Is user signed in
+         * @memberOf SettingsPage
+         */
+        isSignedIn: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
+      },
+
       /**
        * Element is ready
        * @memberOf SettingsPage
@@ -142,6 +159,14 @@
       ready: function() {
         // listen for chrome messages
         Chrome.Msg.listen(this._onChromeMessage.bind(this));
+      },
+
+      /**
+       * We have animated in and are now the current page
+       * @memberOf SettingsPage
+       */
+      onCurrentPage: function() {
+        this.set('isSignedIn', app.Utils.isSignedIn());
       },
 
       /**
@@ -177,6 +202,18 @@
             this._showDialog(_ERR_SETTING_CHANGE, err.message);
           });
         }
+      },
+
+      /**
+       * Computed Binding: Is autoSend setting disabled
+       * @param {boolean} isSignedIn
+       * @param {boolean} allowPush
+       * @returns {boolean} true if disabled
+       * @private
+       * @memberOf SettingsPage
+       */
+      _computeAutoSendDisabled: function(isSignedIn, allowPush) {
+        return !(isSignedIn && allowPush);
       },
 
       /**

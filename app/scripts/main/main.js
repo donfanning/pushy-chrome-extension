@@ -364,6 +364,7 @@
       case 'page-backup':
       case 'page-devices':
       case 'page-labels':
+      case 'page-settings':
         page.el.onCurrentPage();
         break;
       default:
