@@ -53,7 +53,6 @@ const files = {
   prodDelete: [
     `${base.dist}app/bower_components/`,
     `${base.dist}app/scripts/**/*.js`,
-    `${base.dist}app/libs/**/*.js`,
     `!${base.dist}app/scripts/on_copy_cut_content_script.js`,
     `!${base.dist}app/scripts/sw.js`,
     `!${base.dist}app/scripts/main/main.js`,
@@ -81,6 +80,7 @@ const vulcanizeOpts = {
   stripComments: true,
   inlineCss: true,
   inlineScripts: true,
+  excludes: [`${path.lib}client.js`],
 };
 
 // flag for watching
@@ -130,6 +130,7 @@ gulp.task('incrementalBuild', (cb) => {
     'scripts',
     'styles',
     'elements',
+    'libs',
     'images',
     'assets',
     'locales',
@@ -163,6 +164,7 @@ gulp.task('prod', (cb) => {
     'styles',
     'vulcanize_main',
     'vulcanize_background',
+    'libs',
     'images',
     'assets',
     'locales',
@@ -180,6 +182,7 @@ gulp.task('prodTest', (cb) => {
     'styles',
     'vulcanize_main',
     'vulcanize_background',
+    'libs',
     'images',
     'assets',
     'locales',
