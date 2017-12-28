@@ -389,11 +389,9 @@
        * @memberOf MainPage
        */
       setLabelFilter: function(labelName = '') {
-        if (this.labelFilter === labelName) {
-          this.$.clipList.updateDates();
-        } else {
-          this.set('labelFilter', labelName);
-        }
+        // override dirty checking
+        this.set('labelFilter', null);
+        this.set('labelFilter', labelName);
       },
 
       // noinspection JSUnusedLocalSymbols
@@ -726,13 +724,14 @@
 
       /**
        * Observer: The label filter changed
-       * @param {string} newValue
+       * @param {?string} newValue
        * @param {string|undefined} oldValue
        * @private
        * @memberOf MainPage
        */
       _labelFilterChanged: function(newValue, oldValue) {
-        if (typeof(oldValue) !== 'undefined') {
+        if ((typeof(oldValue) !== 'undefined') &&
+            (newValue !== null)) {
           this.$.clipList.deselectAll();
           this._loadClipItems().catch((err) => {
             Chrome.Log.error(err.message, 'MainPage.setLabelFilter', _ERR_LOAD);
