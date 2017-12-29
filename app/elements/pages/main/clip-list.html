@@ -241,22 +241,29 @@
           }
         }
         this.set(`clips.${pos}.${key}`, mods[key]);
+        // if (this.isBulkOp) {
+        //   this.clips[pos][key] = mods[key];
+        // } else {
+        //   this.set(`clips.${pos}.${key}`, mods[key]);
+        // }
       }
 
       if (!needsSort && mods.hasOwnProperty('date')) {
         needsSort = true;
       }
 
-      if (this.currentClip && mods.hasOwnProperty('labels') &&
+      if (!this.isBulkOp && this.currentClip && mods.hasOwnProperty('labels') &&
           (clipItem.text === this.currentClip.text)) {
         // update current clip if labels changed
         this.fire('selected-clip-change');
       }
 
-      if (needsSort) {
-        this._sortClipItems();
-      } else {
-        this.updateDates();
+      if (!this.isBulkOp) {
+        if (needsSort) {
+          this._sortClipItems();
+        } else {
+          this.updateDates();
+        }
       }
     },
 
@@ -435,6 +442,31 @@
       if (clipItem) {
         this.$.ironList.scrollToItem(clipItem);
       }
+    },
+
+    /**
+     * Set favorite state for selected items
+     * @param {boolean} value
+     * @private
+     * @memberOf ClipList
+     */
+    setFavForSelected(value) {
+      this.set('isBulkOp', true);
+      const promises = [];
+      const clipItems = this.getSelected();
+      clipItems.forEach((clipItem) => {
+        if (clipItem.fav !== value) {
+          promises.push(clipItem.update({fav: value}));
+        }
+      });
+      Promise.all(promises).then(() => {
+        this.set('isBulkOp', false);
+        return Promise.resolve();
+      }).catch((err) => {
+        this.set('isBulkOp', false);
+        Chrome.Log.error(err.message, 'ClipList.setFavForSelected',
+            'Failed to change favorite(s)');
+      });
     },
 
     /**

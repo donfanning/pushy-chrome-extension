@@ -51,6 +51,11 @@
         padding: 0;
       }
 
+      #deselect {
+        border: 1px white;
+        border-right-style: solid;
+      }
+
       #clipList {
         min-width: 600px;
         border: 1px #CCCCCC;
@@ -107,6 +112,16 @@
                 id="deselect" icon="myicons:check-box-outline-blank"
                 on-tap="_onDeselectAllTapped"></paper-icon-button>
             <paper-tooltip for="deselect" position="left" offset="0">Deselect all items</paper-tooltip>
+            <paper-icon-button
+                id="setFavs" icon="myicons:favorite"
+                disabled$="[[!hasSelections]]"
+                on-tap="_onSetFavoriteTapped"></paper-icon-button>
+            <paper-tooltip for="setFavs" position="left" offset="0">Set favorite for selected items</paper-tooltip>
+            <paper-icon-button
+                id="clearFavs" icon="myicons:favorite-off"
+                disabled$="[[!hasSelections]]"
+                on-tap="_onClearFavoriteTapped"></paper-icon-button>
+            <paper-tooltip for="clearFavs" position="left" offset="0">Remove favorite for selected items</paper-tooltip>
             <paper-icon-button
                 id="labels" icon="myicons:label"
                 disabled$="[[!hasSelections]]"
@@ -454,6 +469,28 @@
       },
 
       /**
+       * Event: Remove favorite icon tapped
+       * @private
+       * @memberOf MainPage
+       */
+      _onClearFavoriteTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON,
+            'clearFavoriteForSelectedClipItems');
+        this.$.clipList.setFavForSelected(false);
+      },
+      
+      /**
+       * Event: Set favorite icon tapped
+       * @private
+       * @memberOf MainPage
+       */
+      _onSetFavoriteTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON,
+            'setFavoriteForSelectedClipItems');
+        this.$.clipList.setFavForSelected(true);
+      },
+
+        /**
        * Event: Delete menu icon tapped
        * @private
        * @memberOf MainPage
