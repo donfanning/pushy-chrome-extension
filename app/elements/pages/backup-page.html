@@ -13,13 +13,12 @@
 <link rel="import" href="../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
 <link rel="import" href="../../bower_components/paper-tooltip/paper-tooltip.html">
-<link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
 
 <link rel="import" href="../error-dialog.html">
-<link rel="import" href="../confirm-dialog.html">
 <link rel="import" href="../waiter-element.html">
+<link rel="import" href="../backup-row.html">
 
 <dom-module id="backup-page">
   <template>
@@ -60,27 +59,6 @@
         margin: 0;
       }
 
-      .list-item {
-        position: relative;
-        border: 1px #CCCCCC;
-        border-bottom-style: solid;
-        padding: 16px 0 16px 0;
-        margin: 0;
-      }
-
-      .list-item paper-item {
-        --paper-item-min-height: 0px;
-      }
-
-      .list-item paper-icon-button {
-        color: var(--accent-color);
-        margin-right: 8px;
-      }
-
-      .date {
-        color: var(--accent-color);
-      }
-
       #infoMessage {
         padding-top: 10vh;
         white-space: pre-wrap;
@@ -108,9 +86,6 @@
       <!-- Error dialog -->
       <error-dialog id="errorDialog"></error-dialog>
 
-      <!-- Confirm dialog -->
-      <confirm-dialog id="cantUndoDialog"></confirm-dialog>
-
       <!-- Content -->
       <div class="body-content vertical layout">
 
@@ -123,32 +98,11 @@
           <div id="fileList"
                hidden$="[[_computeHasInfoMessage(infoMessage)]]">
             <template is="dom-repeat" items="{{files}}" as="file">
-              <div class="list-item horizontal layout" id="item[[index]]">
-                <div class="flex vertical layout" tabindex="-1">
-                  <paper-item 
-                      class="horizontal center-justified layout"
-                      hidden$="[[!file.isMine]]">This device</paper-item>
-                  <paper-item>Nickname: [[file.nickname]]</paper-item>
-                  <paper-item>Model: [[file.model]]</paper-item>
-                  <paper-item>SN: [[file.sn]]</paper-item>
-                  <paper-item>OS: [[file.os]]</paper-item>
-                  <paper-item class="date">Backup date: [[_computeDate(file.date)]]</paper-item>
-                </div>
-                <div class="vertical center-justified layout " tabindex="-1">
-                  <paper-icon-button
-                      title="Restore data from Google Drive"
-                      icon="myicons:cloud-download"
-                      on-tap="_onRestoreTapped"></paper-icon-button>
-                  <!--<paper-icon-button-->
-                      <!--title="Sync data between device and Google Drive"-->
-                      <!--icon="myicons:cloud-sync"-->
-                      <!--on-tap="_onSyncTapped"></paper-icon-button>-->
-                  <paper-icon-button
-                      title="Delete backup on Google Drive"
-                      icon="myicons:delete"
-                      on-tap="_onDeleteTapped"></paper-icon-button>
-                </div>
-              </div>
+              <backup-row
+                  id="item[[index]]"
+                  file="{{file}}"
+                  is-waiting="{{isWaiting}}"
+                  on-delete="_onRowDeleted"></backup-row>
             </template>
           </div>
 
@@ -181,12 +135,10 @@
 
     const _ERR = {
       BACKUP: 'Backup failed',
-      RESTORE: 'Restore failed',
-      DELETE: 'Delete failed',
       FILES: 'Failed to get backup files',
       NO_FILES: 'No backup files exist on Google Drive',
     };
-    
+
     /**
      * Polymer element to manage backup and restore of data
      * @namespace BackupPage
@@ -280,62 +232,15 @@
       },
 
       /**
-       * Event: Restore row item tapped
-       * @param {Event} event
-       * @param {Object} event.model
+       * Event: Row was deleted
        * @private
        * @memberOf BackupPage
        */
-      _onRestoreTapped: function(event) {
-        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupPage.restoreData');
-        this.set('isWaiting', true);
-        const file = event.model.file;
-        app.Backup.doRestore(file.id, true).then(() => {
-          this.set('isWaiting', false);
-          return Promise.resolve();
-        }).catch((err) => {
-          this.set('isWaiting', false);
-          Chrome.Log.error(err.message, 'BackupPage._onRestoreTapped',
-              _ERR.RESTORE);
-          this.$.errorDialog.open(_ERR.RESTORE, err.message);
-        });
-      },
-
-      /**
-       * Event: Sync row item tapped
-       * @param {Event} event
-       * @param {Object} event.model
-       * @private
-       * @memberOf BackupPage
-       */
-      _onSyncTapped: function(event) {
-        // TODO add sync
-        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupPage.syncData');
-      },
-
-      /**
-       * Event: Delete row item tapped
-       * @param {Event} event
-       * @param {Object} event.model
-       * @private
-       * @memberOf BackupPage
-       */
-      _onDeleteTapped: function(event) {
-        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupPage.deleteBackup');
-        this.set('isWaiting', true);
-        const file = event.model.file;
-        let deleteOk = false;
-        app.Backup.doDelete(file.id, true).then(() => {
-          deleteOk = true;
-          return this._loadFiles();
-        }).catch((err) => {
-          this.set('isWaiting', false);
-          let reason = deleteOk ? _ERR.FILES : _ERR.DELETE;
-          Chrome.Log.error(err.message, 'BackupPage._onDeleteTapped',
-              reason);
-          if (!deleteOk) {
-            this.$.errorDialog.open(reason, err.message);
-          }
+      _onRowDeleted: function() {
+        this._loadFiles().catch((err) => {
+          Chrome.Log.error(err.message, 'BackupPage._onRowDelete',
+              _ERR.FILES);
+          this.$.errorDialog.open(_ERR.FILES, err.message);
         });
       },
 
@@ -371,7 +276,7 @@
         this.set('isWaiting', true);
         return app.Drive.getFiles(true).then((driveFiles) => {
           driveFiles = driveFiles || [];
-          
+
           // clear list
           this.splice('files', 0, this.files.length);
 
@@ -398,7 +303,7 @@
        */
       _setSortedFiles: function(driveFiles) {
         driveFiles = driveFiles || [];
-        
+
         // keep this devices files on top and sort newest first
         const myFiles = [];
         const otherFiles = [];

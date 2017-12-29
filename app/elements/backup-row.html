@@ -1,0 +1,206 @@
+<!--
+  ~ Copyright (c) 2016-2017, Michael A. Updike All rights reserved.
+  ~ Licensed under Apache 2.0
+  ~ https://opensource.org/licenses/Apache-2.0
+  ~ https://goo.gl/wFvBM1
+  -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/paper-tooltip/paper-tooltip.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="error-dialog.html">
+<link rel="import" href="confirm-dialog.html">
+
+<dom-module id="backup-row">
+  <template>
+    <style include="iron-flex iron-flex-alignment"></style>
+    <style include="shared-styles"></style>
+    <style>
+
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      .backup-item {
+        position: relative;
+        border: 1px #CCCCCC;
+        border-bottom-style: solid;
+        padding: 16px 0 16px 0;
+        margin: 0;
+      }
+
+      .backup-item paper-item {
+        --paper-item-min-height: 0px;
+      }
+
+      .backup-item paper-icon-button {
+        color: var(--accent-color);
+        margin-right: 8px;
+      }
+
+      .date {
+        color: var(--accent-color);
+      }
+
+    </style>
+
+    <!-- Error dialog -->
+    <error-dialog id="errorDialog"></error-dialog>
+
+    <!-- Confirm dialog -->
+    <confirm-dialog id="cantUndoDialog"></confirm-dialog>
+
+    <!-- Content -->
+    <div
+        tabindex="-1"
+        file="{{file}}"
+        is-waiting="{{isWaiting}}">
+      <div class="backup-item horizontal layout">
+        <div class="flex vertical layout" tabindex="-1">
+          <paper-item
+              class="horizontal center-justified layout"
+              hidden$="[[!file.isMine]]">This device
+          </paper-item>
+          <paper-item>Nickname: [[file.nickname]]</paper-item>
+          <paper-item>Model: [[file.model]]</paper-item>
+          <paper-item>SN: [[file.sn]]</paper-item>
+          <paper-item>OS: [[file.os]]</paper-item>
+          <paper-item class="date">Backup date: [[_computeDate(file.date)]]</paper-item>
+        </div>
+        <div class="vertical center-justified layout " tabindex="-1">
+          <paper-icon-button
+              title="Restore data from Google Drive"
+              icon="myicons:cloud-download"
+              on-tap="_onRestoreTapped"></paper-icon-button>
+          <!--<paper-icon-button-->
+          <!--title="Sync data between device and Google Drive"-->
+          <!--icon="myicons:cloud-sync"-->
+          <!--on-tap="_onSyncTapped"></paper-icon-button>-->
+          <paper-icon-button
+              title="Delete backup on Google Drive"
+              icon="myicons:delete"
+              on-tap="_onDeleteTapped"></paper-icon-button>
+        </div>
+      </div>
+    </div>
+
+  </template>
+</dom-module>
+
+<script>
+  window.app = window.app || {};
+  (function() {
+    'use strict';
+
+    new ExceptionHandler();
+
+    const _ERR = {
+      RESTORE: 'Restore failed',
+      DELETE: 'Delete failed',
+    };
+
+    /**
+     * Polymer element that represents a backup file
+     * @namespace BackupRow
+     */
+    Polymer({
+      is: 'backup-row',
+
+      properties: {
+        /**
+         * Fired when the row is deleted
+         * @event delete
+         * @memberOf BackupRow
+         */
+
+        /**
+         * The {@link app.BackupFile}
+         * @memberOf BackupRow
+         */
+        file: {
+          type: Object,
+          value: null,
+          notify: true,
+        },
+
+        /**
+         * Waiting for operation to complete
+         * @memberOf BackupRow
+         */
+        isWaiting: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
+      },
+
+      /**
+       * Event: Restore icon tapped
+       * @private
+       * @memberOf BackupRow
+       */
+      _onRestoreTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupRow.restoreData');
+        this.set('isWaiting', true);
+        const file = this.file;
+        app.Backup.doRestore(file.id, true).then(() => {
+          this.set('isWaiting', false);
+          return Promise.resolve();
+        }).catch((err) => {
+          this.set('isWaiting', false);
+          Chrome.Log.error(err.message, 'BackupRow._onRestoreTapped',
+              _ERR.RESTORE);
+          this.$.errorDialog.open(_ERR.RESTORE, err.message);
+        });
+      },
+
+      /**
+       * Event: Sync icon tapped
+       * @private
+       * @memberOf BackupRow
+       */
+      _onSyncTapped: function() {
+        // TODO add sync
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupRow.syncData');
+      },
+
+      /**
+       * Event: Delete icon tapped
+       * @private
+       * @memberOf BackupRow
+       */
+      _onDeleteTapped: function() {
+        Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupRow.deleteBackup');
+        this.set('isWaiting', true);
+        const file = this.file;
+        app.Backup.doDelete(file.id, true).then(() => {
+          this.set('isWaiting', false);
+          this.fire('delete');
+          return Promise.resolve();
+        }).catch((err) => {
+          this.set('isWaiting', false);
+          Chrome.Log.error(err.message, 'BackupRow._onDeleteTapped', _ERR.DELETE);
+          this.$.errorDialog.open(_ERR.DELETE, err.message);
+        });
+      },
+
+      /**
+       * Computed property: Last modified date string
+       * @param {int} date
+       * @returns {string}
+       * @private
+       * @memberOf BackupRow
+       */
+      _computeDate: function(date) {
+        return app.Utils.getRelativeTime(date);
+      },
+    });
+  })(window);
+</script>
