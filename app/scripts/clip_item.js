@@ -543,10 +543,10 @@
   ClipItem.deleteOld = function() {
     const durIndex = Chrome.Storage.getInt('storageDuration', 2);
     const durations = [
-      app.Utils.MILLIS_IN_DAY,
-      app.Utils.MILLIS_IN_DAY * 7,
-      app.Utils.MILLIS_IN_DAY * 30,
-      app.Utils.MILLIS_IN_DAY * 365,
+      Chrome.Time.MSEC_IN_DAY,
+      Chrome.Time.MSEC_IN_DAY * 7,
+      Chrome.Time.MSEC_IN_DAY * 30,
+      Chrome.Time.MSEC_IN_DAY * 365,
     ];
 
     if (durIndex === 4) {

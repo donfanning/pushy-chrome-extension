@@ -64,6 +64,7 @@ app.Drive = (function() {
    * Load drive library
    * @returns {Promise<void>}
    * @private
+   * @memberOf app.Drive
    */
   function _loadLib() {
     return Promise.resolve().then(() => {
@@ -84,6 +85,7 @@ app.Drive = (function() {
    * @param {boolean} [interactive=false] - if true, user initiated
    * @returns {Promise<void>}
    * @private
+   * @memberOf app.Drive
    */
   function _getAuthorization(interactive = false) {
     return _loadLib().then(() => {
@@ -99,6 +101,7 @@ app.Drive = (function() {
    * @param {string} input
    * @returns {int[]} Array of integers
    * @private
+   * @memberOf app.Drive
    */
   function _csvToIntArray(input) {
     input = input || '';
@@ -119,6 +122,7 @@ app.Drive = (function() {
    * @param {{}} reason.statusText
    * @returns {Error}
    * @private
+   * @memberOf app.Drive
    */
   function _getError(prefix, reason) {
     let msg = `${prefix} `;
@@ -138,6 +142,7 @@ app.Drive = (function() {
    * @see https://developers.google.com/drive/v3/reference/files/list
    * @returns {Promise<Object[]>} Array of Google Drive file objects
    * @private
+   * @memberOf app.Drive
    */
   function _getFiles() {
     const request = {
@@ -160,6 +165,7 @@ app.Drive = (function() {
    * @param {app.Zip.Data} data
    * @returns {Promise<string>} file id
    * @private
+   * @memberOf app.Drive
    */
   function _createZipFile(filename, appProps, data) {
     const boundary = '-------314159265358979323846';
@@ -206,6 +212,7 @@ app.Drive = (function() {
    * @param {string} fileId
    * @returns {Promise<void>}
    * @private
+   * @memberOf app.Drive
    */
   function _deleteFile(fileId) {
     if (Chrome.Utils.isWhiteSpace(fileId)) {
@@ -229,6 +236,7 @@ app.Drive = (function() {
    * @param {string} fileId
    * @returns {Promise<app.Zip.Data>}
    * @private
+   * @memberOf app.Drive
    */
   function _getZipFileContents(fileId) {
     if (Chrome.Utils.isWhiteSpace(fileId)) {
@@ -248,6 +256,30 @@ app.Drive = (function() {
       return Promise.reject(_getError(_ERR.GET, reason));
     });
   }
+
+  /**
+   * Event: called when document and resources are loaded<br />
+   * Load gapi
+   * @private
+   * @memberOf app.Drive
+   */
+  function _onLoad() {
+    const script = document.createElement('script');
+    script.src = '../libs/client.js';
+    script.async = false;
+
+    script.onload = function() {
+      gapi.load('client', function() {
+        gapi.client.load('drive', 'v3', function() {
+        });
+      });
+    };
+
+    document.head.appendChild(script);
+  }
+
+  // listen for document and resources loaded
+  addEventListener('load', _onLoad);
 
   return {
 

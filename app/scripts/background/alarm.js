@@ -96,8 +96,8 @@ app.Alarm = (function() {
         chrome.alarms.get(_ALARM.STORAGE, (alarm) => {
           if (!alarm) {
             chrome.alarms.create(_ALARM.STORAGE, {
-              when: Date.now() + app.Utils.MILLIS_IN_DAY,
-              periodInMinutes: app.Utils.MIN_IN_DAY,
+              when: Date.now() + Chrome.Time.MSEC_IN_DAY,
+              periodInMinutes: Chrome.Time.MIN_IN_DAY,
             });
           }
         });
@@ -110,8 +110,8 @@ app.Alarm = (function() {
         chrome.alarms.get(_ALARM.BACKUP, (alarm) => {
           if (!alarm) {
             chrome.alarms.create(_ALARM.BACKUP, {
-              when: Date.now() + app.Utils.MILLIS_IN_DAY,
-              periodInMinutes: app.Utils.MIN_IN_DAY,
+              when: Date.now() + Chrome.Time.MSEC_IN_DAY,
+              periodInMinutes: Chrome.Time.MIN_IN_DAY,
             });
           }
         });

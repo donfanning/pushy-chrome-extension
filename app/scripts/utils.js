@@ -15,27 +15,7 @@ app.Utils = (function() {
 
   new ExceptionHandler();
 
-  const MIN_IN_DAY = 60 * 24;
-
-  const MILLIS_IN_DAY = MIN_IN_DAY * 60 * 1000;
-
   return {
-    /**
-     * Number of minutes in a day
-     * @const
-     * @type {int}
-     * @memberOf app.Utils
-     */
-    MIN_IN_DAY: MIN_IN_DAY,
-
-    /**
-     * Number of milliseconds a in day
-     * @const
-     * @type {int}
-     * @memberOf app.Utils
-     */
-    MILLIS_IN_DAY: MILLIS_IN_DAY,
-
     /**
      * Get our email address
      * @returns {string}
