@@ -200,7 +200,7 @@
     }
     const tag = getTag(data);
     const noteOpt = {
-      requireInteraction: (tag === TAG_MESSAGE),
+      requireInteraction: false,
       body: body,
       icon: getIcon(data),
       tag: tag,
