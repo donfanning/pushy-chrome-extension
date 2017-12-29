@@ -43,8 +43,8 @@
         <paper-item id="dialogText" class="text"></paper-item>
       </paper-dialog-scrollable>
       <div class="buttons">
-        <paper-button dialog-dismiss autofocus>CLOSE</paper-button>
-        <paper-button dialog-confirm on-tap="_onConfirmTapped">OK</paper-button>
+        <paper-button dialog-dismiss autofocus>CANCEL</paper-button>
+        <paper-button dialog-confirm on-tap="_onConfirmTapped">{{confirmLabel}}</paper-button>
       </div>
     </paper-dialog>
 
@@ -69,6 +69,16 @@
        * @event confirm-tap
        * @memberOf ConfirmDialog
        */
+      
+      /**
+       * Label for confirm button
+       * @memberOf ConfirmDialog
+       */
+      confirmLabel: {
+        type: String,
+        value: 'OK',
+        notify: true,
+      },
     },
 
     /**
@@ -77,19 +87,19 @@
      * @memberOf ConfirmDialog
      */
     _onConfirmTapped: function() {
+      Chrome.GA.event(Chrome.GA.EVENT.BUTTON, 'ConfirmDialog._onConfirmTapped');
       this.fire('confirm-tap');
     },
 
     /**
      * Show the dialog
-     * @param {string} title
-     * @param {string} text
+     * @param {string} [text]
+     * @param {string} [title]
      * @private
      * @memberOf ConfirmDialog
      */
-    open: function(title, text) {
-      title = title || 'Unknown';
-      text = text || 'Unknown';
+    open: function(text = 'Continue?',
+                   title = 'This operation cannot be undone') {
       text = text.replace('\n', '<br/>');
       this.$.dialogTitle.innerHTML = title;
       this.$.dialogText.innerHTML = text;

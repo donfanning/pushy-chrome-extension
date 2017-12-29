@@ -55,7 +55,10 @@
     <error-dialog id="errorDialog"></error-dialog>
 
     <!-- Confirm dialog -->
-    <confirm-dialog id="cantUndoDialog"></confirm-dialog>
+    <confirm-dialog
+        id="cantUndoDialog"
+        confirm-label="{{confirmLabel}}"
+        on-confirm-tap="_onConfirmTapped"></confirm-dialog>
 
     <!-- Content -->
     <div
@@ -139,6 +142,25 @@
           value: false,
           notify: true,
         },
+
+        /**
+         * Label for confirm button
+         * @memberOf BackupRow
+         */
+        confirmLabel: {
+          type: String,
+          value: 'OK',
+          notify: true,
+        },
+
+        /**
+         * function to execute on confirm button tap
+         * @memberOf BackupRow
+         */
+        confirmFunction: {
+          type: Function,
+          value: null,
+        },
       },
 
       /**
@@ -148,17 +170,9 @@
        */
       _onRestoreTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupRow.restoreData');
-        this.set('isWaiting', true);
-        const file = this.file;
-        app.Backup.doRestore(file.id, true).then(() => {
-          this.set('isWaiting', false);
-          return Promise.resolve();
-        }).catch((err) => {
-          this.set('isWaiting', false);
-          Chrome.Log.error(err.message, 'BackupRow._onRestoreTapped',
-              _ERR.RESTORE);
-          this.$.errorDialog.open(_ERR.RESTORE, err.message);
-        });
+        this.set('confirmFunction', this._restoreBackup);
+        this.set('confirmLabel', 'RESTORE');
+        this.$.cantUndoDialog.open('Restore backup?');
       },
 
       /**
@@ -178,17 +192,20 @@
        */
       _onDeleteTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupRow.deleteBackup');
-        this.set('isWaiting', true);
-        const file = this.file;
-        app.Backup.doDelete(file.id, true).then(() => {
-          this.set('isWaiting', false);
-          this.fire('delete');
-          return Promise.resolve();
-        }).catch((err) => {
-          this.set('isWaiting', false);
-          Chrome.Log.error(err.message, 'BackupRow._onDeleteTapped', _ERR.DELETE);
-          this.$.errorDialog.open(_ERR.DELETE, err.message);
-        });
+        this.set('confirmFunction', this._deleteBackup);
+        this.set('confirmLabel', 'DELETE');
+        this.$.cantUndoDialog.open('Delete backup on Google Drive?');
+      },
+
+      /**
+       * Event: Dialog confirm button tapped
+       * @private
+       * @memberOf BackupRow
+       */
+      _onConfirmTapped: function() {
+        if (this.confirmFunction) {
+          this.confirmFunction();
+        }
       },
 
       /**
@@ -200,6 +217,44 @@
        */
       _computeDate: function(date) {
         return app.Utils.getRelativeTime(date);
+      },
+      
+      /**
+       * Restore a backup from Google Drive
+       * @private
+       * @memberOf BackupRow
+       */
+      _restoreBackup: function() {
+        this.set('isWaiting', true);
+        const file = this.file;
+        app.Backup.doRestore(file.id, true).then(() => {
+          this.set('isWaiting', false);
+          return Promise.resolve();
+        }).catch((err) => {
+          this.set('isWaiting', false);
+          Chrome.Log.error(err.message, 'BackupRow._restoreBackup',
+              _ERR.RESTORE);
+          this.$.errorDialog.open(_ERR.RESTORE, err.message);
+        });
+      },
+
+      /**
+       * Delete a backup from Google Drive
+       * @private
+       * @memberOf BackupRow
+       */
+      _deleteBackup: function() {
+        this.set('isWaiting', true);
+        const file = this.file;
+        app.Backup.doDelete(file.id, true).then(() => {
+          this.set('isWaiting', false);
+          this.fire('delete');
+          return Promise.resolve();
+        }).catch((err) => {
+          this.set('isWaiting', false);
+          Chrome.Log.error(err.message, 'BackupRow._onDeleteTapped', _ERR.DELETE);
+          this.$.errorDialog.open(_ERR.DELETE, err.message);
+        });
       },
     });
   })(window);
