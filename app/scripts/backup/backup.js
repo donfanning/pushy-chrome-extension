@@ -91,11 +91,8 @@ app.Backup = (function() {
    * @memberOf app.Backup
    */
   function _deleteAllData() {
-    const db = app.DB.get();
-    return db.transaction('rw', app.DB.labels(), app.DB.clips(), () => {
-      return app.ClipItem.deleteAll().then(() => {
-        return app.Label.deleteAll();
-      });
+    return app.ClipItem.deleteAll().then(() => {
+      return app.Label.deleteAll();
     });
   }
 
@@ -109,6 +106,22 @@ app.Backup = (function() {
   function _addAllData(dbData) {
     return app.Label.bulkPut(dbData.labels).then(() => {
       return app.ClipItem.bulkPut(dbData.clipItems);
+    });
+  }
+
+  /**
+   * Perform the restore transaction to the database
+   * @param {app.Backup.Data} dbData
+   * @returns {Promise<void>}
+   * @private
+   * @memberOf app.Backup
+   */
+  function _restoreTransaction(dbData) {
+    const db = app.DB.get();
+    return db.transaction('rw', db.clipItems, db.labels, () => {
+      return _deleteAllData().then(() => {
+        return _addAllData(dbData);
+      });
     });
   }
 
@@ -157,26 +170,24 @@ app.Backup = (function() {
      * @memberOf app.Backup
      */
     doRestore: function(fileId, interactive = false) {
-      let restoreData;
       if (Chrome.Utils.isWhiteSpace(fileId)) {
         fileId = Chrome.Storage.get(_BACKUP_ID_KEY, '');
       }
       if (Chrome.Utils.isWhiteSpace(fileId)) {
         return Promise.reject(new Error(_ERR.NO_FILE_ID));
       }
+
       return app.Drive.getZipFileContents(fileId, interactive).then((data) => {
         return app.Zip.unzipFileAsString(_BACKUP_FILENAME, data);
       }).then((dataString) => {
-        restoreData = Chrome.JSONUtils.parse(dataString);
+        let restoreData = Chrome.JSONUtils.parse(dataString);
         if (!restoreData) {
           return Promise.reject(new Error(_ERR.PARSE));
         }
-        return _deleteAllData();
-      }).then(() => {
-        return _addAllData(restoreData);
+        return _restoreTransaction(restoreData);
       });
     },
-    
+
     /**
      * Delete a backup file
      * @param {string} fileId - drive id to restore
