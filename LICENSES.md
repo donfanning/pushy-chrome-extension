@@ -12,6 +12,10 @@
 
 ### [License](https://github.com/firebase/firebase-js-sdk/blob/master/LICENSE)
 
+## google-api-javascript-client
+
+### [License](https://github.com/google/google-api-javascript-client/blob/master/LICENSE)
+
 ## Stuk/jszip
 
 ### [License](https://github.com/Stuk/jszip/blob/master/LICENSE.markdown)
