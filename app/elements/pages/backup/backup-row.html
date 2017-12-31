@@ -38,11 +38,12 @@
 
       .backup-item paper-item {
         --paper-item-min-height: 0px;
+        margin-left: 16px;
       }
 
       .backup-item paper-icon-button {
         color: var(--accent-color);
-        margin-right: 8px;
+        margin-left: 16px;
       }
 
       .date {
@@ -66,17 +67,6 @@
         file="{{file}}"
         is-waiting="{{isWaiting}}">
       <div class="backup-item horizontal layout">
-        <div class="flex vertical layout" tabindex="-1">
-          <paper-item
-              class="horizontal center-justified layout"
-              hidden$="[[!file.isMine]]">This device
-          </paper-item>
-          <paper-item>Nickname: [[file.nickname]]</paper-item>
-          <paper-item>Model: [[file.model]]</paper-item>
-          <paper-item>SN: [[file.sn]]</paper-item>
-          <paper-item>OS: [[file.os]]</paper-item>
-          <paper-item class="date">Backup date: [[_computeDate(file.date)]]</paper-item>
-        </div>
         <div class="vertical center-justified layout " tabindex="-1">
           <paper-icon-button
               title="Restore data from Google Drive"
@@ -90,6 +80,17 @@
               title="Delete backup on Google Drive"
               icon="myicons:delete"
               on-tap="_onDeleteTapped"></paper-icon-button>
+        </div>
+        <div class="flex vertical layout" tabindex="-1">
+          <paper-item
+              class="horizontal center-justified layout"
+              hidden$="[[!file.isMine]]">This device
+          </paper-item>
+          <paper-item>Nickname: [[file.nickname]]</paper-item>
+          <paper-item>Model: [[file.model]]</paper-item>
+          <paper-item>SN: [[file.sn]]</paper-item>
+          <paper-item>OS: [[file.os]]</paper-item>
+          <paper-item class="date">Backup date: [[_computeDate(file.date)]]</paper-item>
         </div>
       </div>
     </div>

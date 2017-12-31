@@ -59,8 +59,15 @@
         margin: 0;
       }
 
+      .info-content {
+        height: 62vh;
+        margin: 10vh 0 0;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+
       #infoMessage {
-        padding-top: 10vh;
+        margin: 0;
         white-space: pre-wrap;
         @apply(--paper-font-subhead);
       }
@@ -106,13 +113,12 @@
             </template>
           </div>
 
-          <div class="horizontal center-justified layout"
+          <div class="info-content horizontal center-justified layout"
                hidden$="[[!_computeHasInfoMessage(infoMessage)]]">
             <pre id="infoMessage">[[infoMessage]]</pre>
           </div>
 
-          <div class="horizontal end-justified layout"
-               hidden$="[[_computeHasInfoMessage(infoMessage)]]">
+          <div class="horizontal end-justified layout">
             <paper-fab
                 title="Refresh file list"
                 icon="myicons:refresh"
