@@ -17,7 +17,7 @@ app.Zip = (function() {
 
   /**
    * Data to backup
-   * @typedef {int[]} app.Zip.Data
+   * @typedef {base64} app.Zip.Data
    * @memberOf app.Zip
    */
 
@@ -31,8 +31,10 @@ app.Zip = (function() {
      * @memberOf app.Zip
      */
     zipFile: function(fileName, dataString) {
+      // need to do base64
+      // https://stackoverflow.com/a/34731665/4468645
       const options = {
-        type: 'uint8array',
+        type: 'base64',
         compression: 'DEFLATE',
         compressionOptions: {
           level: 9,

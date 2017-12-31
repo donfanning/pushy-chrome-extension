@@ -181,12 +181,15 @@ app.Drive = (function() {
       appProperties: appProps,
     };
 
+    // need to do base64
+    // https://stackoverflow.com/a/34731665/4468645
     const multipartRequestBody =
         delimiter +
         'Content-Type: application/json\r\n\r\n' +
         JSON.stringify(metadata) +
         delimiter +
-        'Content-Type: ' + contentType + '\r\n\r\n' +
+        'Content-Type: ' + contentType + '\r\n' +
+        'Content-Transfer-Encoding: base64\r\n' + '\r\n' +
         data +
         closeDelim;
 
@@ -250,8 +253,7 @@ app.Drive = (function() {
     };
 
     return gapi.client.request(request).then((response) => {
-      const data = _csvToIntArray(response.body);
-      return Promise.resolve(data);
+      return Promise.resolve(response.body);
     }, (reason) => {
       return Promise.reject(_getError(_ERR.GET, reason));
     });
