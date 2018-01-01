@@ -173,7 +173,8 @@
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupRow.restoreData');
         this.set('confirmFunction', this._restoreBackup);
         this.set('confirmLabel', 'RESTORE');
-        this.$.cantUndoDialog.open('Restore backup?');
+        this.$.cantUndoDialog.open('We\'ll replace all your clips and labels' +
+            ' with those in the selected backup.\nRestore backup?');
       },
 
       /**
@@ -182,8 +183,11 @@
        * @memberOf BackupRow
        */
       _onSyncTapped: function() {
-        // TODO add sync
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupRow.syncData');
+        this.set('confirmFunction', this._syncBackup);
+        this.set('confirmLabel', 'SYNC');
+        this.$.cantUndoDialog.open('We\'ll merge all your clips and labels' +
+            ' with those in the selected backup.\nSync backup?');
       },
 
       /**
@@ -237,6 +241,15 @@
               _ERR.RESTORE);
           this.$.errorDialog.open(_ERR.RESTORE, err.message);
         });
+      },
+
+      /**
+       * Sync a backup with Google Drive
+       * @private
+       * @memberOf BackupRow
+       */
+      _syncBackup: function() {
+        // TODO add sync
       },
 
       /**
