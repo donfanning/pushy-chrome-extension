@@ -4,13 +4,14 @@
  * https://opensource.org/licenses/Apache-2.0
  * https://goo.gl/wFvBM1
  */
-(function() {
-  'use strict';
+window.app = window.app || {};
 
-  /**
-   * Script for the main.html page
-   * @namespace Main
-   */
+/**
+ * Script for the main.html page
+ * @namespace
+ */
+app.Main = (function() {
+  'use strict';
 
   new ExceptionHandler();
 
@@ -203,20 +204,8 @@
    * @memberOf Main
    */
   function _onDomChange() {
-    // concatenate all the pages for the main menu
-    _buildPages().then(() => {
-      // initialize menu states
-      _setBackupMenuState();
-      _setDevicesMenuState();
-      _setErrorMenuState();
-
-      // select menu
-      t.$.mainMenu.select(t.route);
-
-      return Promise.resolve();
-    }).catch((err) => {
-      Chrome.Log.error(err.message, 'Main._buildPages');
-    });
+    // setup the main menu
+    _initializePages();
 
     // listen for Chrome messages
     Chrome.Msg.listen(_onChromeMessage);
@@ -686,6 +675,27 @@
   }
 
   /**
+   * Setup the main menu
+   * @private
+   * @memberOf Main
+   */
+  function _initializePages() {
+    _buildPages().then(() => {
+      // initialize menu states
+      _setBackupMenuState();
+      _setDevicesMenuState();
+      _setErrorMenuState();
+
+      // select menu
+      t.$.mainMenu.select(t.route);
+
+      return Promise.resolve();
+    }).catch((err) => {
+      Chrome.Log.error(err.message, 'Main._initializePages');
+    });
+  }
+
+  /**
    * Build the menu items for {@link Label} objects
    * @returns {Promise<Main.page[]>}
    * @memberOf Main
@@ -737,7 +747,7 @@
 
   /**
    * Set enabled state of Error Viewer menu item
-   * @memberOf Main
+   * @memberOf app.Main
    */
   function _setErrorMenuState() {
     // disable error-page if no lastError
@@ -760,4 +770,16 @@
 
   // listen for documents and resources loaded
   window.addEventListener('load', _onLoad);
+
+  return {
+
+    /**
+     * Update the the list of labels in the main menu
+     * @memberOf app.Main
+     */
+    updateLabels: function() {
+      _initializePages();
+    },
+  };
+
 })(window);

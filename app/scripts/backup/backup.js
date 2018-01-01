@@ -122,6 +122,12 @@ app.Backup = (function() {
       return _deleteAllData().then(() => {
         return _addAllData(dbData);
       });
+    }).catch((err) => {
+      if (app.Main) {
+        // need to reload menu labels on rollback
+        app.Main.updateLabels();
+      }
+      return Promise.reject(err);
     });
   }
 
