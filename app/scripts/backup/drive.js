@@ -97,23 +97,6 @@ app.Drive = (function() {
   }
 
   /**
-   * Convert a CSV string to an int array
-   * @param {string} input
-   * @returns {int[]} Array of integers
-   * @private
-   * @memberOf app.Drive
-   */
-  function _csvToIntArray(input) {
-    input = input || '';
-    let ret;
-    ret = input.split(',');
-    for (let i = 0; i < ret.length; i++) {
-      ret[i] = parseInt(ret[i], 10);
-    }
-    return ret;
-  }
-
-  /**
    * Get an Error from a failed gapi call
    * @param {{string}} prefix  - error prefix text
    * @param {{}} reason - reason for failure

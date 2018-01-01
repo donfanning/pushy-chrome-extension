@@ -79,7 +79,7 @@
       <div class="card-content">
 
         <!-- Error dialog -->
-        <error-dialog 
+        <error-dialog
             id="errorDialog"
             show-confirm-button="[[showConfirmButton]]"
             on-confirm-tap="_onDialogConfirmTapped"></error-dialog>
@@ -88,16 +88,18 @@
           <paper-item id="description"
                       hidden$="[[_computeDescHidden(isWaiting, signedIn)]]">
             You must be signed in to the Browser with the account you
-            wish to use to share with your other devices. It is only used to ensure
-            that all messages goes to a single account. You also need to "Allow Notifications"
-            so the extension can send and receive messages.
+            wish to use to share with your other devices.
+            Sign-In is only required if you want to share data with your
+            other devices or backup/restore your data to Google Drive.
+            Your email address is used only for these purposes.
+            You also need to "Allow Notifications" so the extension can receive messages.
           </paper-item>
 
           <waiter-element
-              active="[[isWaiting]]" 
+              active="[[isWaiting]]"
               label="[[_computeWaiterLabel(isWaiting)]]">
           </waiter-element>
-          
+
         </div>
         <div class="buttonContainer vertical layout center">
           <paper-item id="googleAccountButton" tabindex="0"
