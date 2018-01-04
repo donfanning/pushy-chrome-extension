@@ -113,6 +113,7 @@
 
     const _ERR = {
       RESTORE: 'Restore failed',
+      SYNC: 'Sync failed',
       DELETE: 'Delete failed',
     };
 
@@ -256,8 +257,17 @@
        * @memberOf BackupRow
        */
       _syncBackup: function() {
-        // TODO add sync
-        console.log('_syncBackup');
+        this.set('isWaiting', true);
+        const file = this.file;
+        app.Backup.doSync(file.id, true).then(() => {
+          this.set('isWaiting', false);
+          return Promise.resolve();
+        }).catch((err) => {
+          this.set('isWaiting', false);
+          Chrome.Log.error(err.message, 'BackupRow._syncBackup',
+              _ERR.SYNC);
+          this.$.errorDialog.open(_ERR.SYNC, err.message);
+        });
       },
 
       /**
