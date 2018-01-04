@@ -85,127 +85,6 @@ app.Backup = (function() {
   }
 
   /**
-   * Merge the data in two {@link app.Backup.Data} objects
-   * @param {app.Backup.Data} data1
-   * @param {app.Backup.Data} data2
-   * @returns {Promise<app.Backup.Data>} merged data
-   * @private
-   * @memberOf app.Backup
-   */
-  function _mergeData(data1, data2) {
-
-    function getLargestLabelId(labels) {
-      let ret = 0;
-      labels.forEach((label) => {
-        ret = (label._id > ret) ? label._id : ret;
-      });
-      return ret;
-    }
-
-    function getLargestClipItemId(clipItems) {
-      let ret = 0;
-      clipItems.forEach((clipItem) => {
-        ret = (clipItem._id > ret) ? clipItem._id : ret;
-      });
-      return ret;
-    }
-
-    function getLabelPos(labels, theLabel) {
-      return labels.findIndex((label) => {
-        return label.name === theLabel.name;
-      });
-    }
-
-    function getClipItemPos(clipItems, theClipItem) {
-      return clipItems.findIndex((clipItem) => {
-        return clipItem.text === theClipItem.text;
-      });
-    }
-
-    function updateLabelId(clipItems, theLabel) {
-      // update labelId in all clipItems
-      clipItems.forEach((clipItem) => {
-        const labels = clipItem.labels;
-        const labelsId = clipItem.labelsId;
-        for (let i = 0; i < labels.length; i++) {
-          if (labels[i].name === theLabel.name) {
-            const idx = labelsId.indexOf(labels[i]._id);
-            if (idx !== -1) {
-              labelsId[idx] = theLabel._id; 
-            }
-            labels[i]._id = theLabel._id;
-            break;
-          }
-        }
-      });
-    }
-
-    const data = data1;
-    const dataLabels = data.labels;
-    const dataClipItems = data.clipItems;
-
-    const data2Labels = data2.labels;
-    const data2ClipItems = data2.clipItems;
-
-    let newLabelId = getLargestLabelId(dataLabels);
-    newLabelId++;
-    let newClipItemId = getLargestClipItemId(dataClipItems);
-    newClipItemId++;
-
-    data2Labels.forEach((label) => {
-      const pos = getLabelPos(dataLabels, label);
-      if (pos === -1) {
-        // add new label with unique id to theirs
-        const newLabel = new app.Label(label.name);
-        newLabel._id = newLabelId;
-        dataLabels.push(newLabel);
-        newLabelId++;
-        // update labelId in our clips
-        updateLabelId(data2ClipItems, newLabel);
-      } else {
-        // label exists in both
-        if (label._id !== dataLabels[pos]._id) {
-          // update label id our clips
-          updateLabelId(data2ClipItems, dataLabels[pos]);
-        }
-      }
-    });
-    
-    data2ClipItems.forEach((clipItem) => {
-      const pos = getClipItemPos(dataClipItems, clipItem);
-      if (pos === -1) {
-        // add new clip
-        dataClipItems.push(clipItem);
-      } else {
-        // shared clip - sync
-        const dataClipItem = dataClipItems[pos];
-        if (clipItem.fav) {
-          // favorite true has priority
-          dataClipItem.fav = true;
-        }
-        if (clipItem.date > dataClipItem.date) {
-          // newest clip has priority
-          dataClipItem.date = clipItem.date;
-          dataClipItem.device = clipItem.device;
-          dataClipItem.remote = true;
-        }
-        // sync labels and labelsId
-        const dataLabels = dataClipItem.labels;
-        const dataLabelsId = dataClipItem.labelsId;
-        clipItem.labels.forEach((label) => {
-          const pos = getLabelPos(dataLabels, label);
-          if (pos === -1) {
-            // add new label
-            dataLabels.push(label);
-            dataLabelsId.push(label._id);
-          }
-        });
-      }
-    });
-    return Promise.resolve(data);
-  }
-
-  /**
    * Delete all the data in the db
    * @returns {Promise<void>}
    * @private
@@ -266,7 +145,7 @@ app.Backup = (function() {
     const db = app.DB.get();
     return db.transaction('rw', db.clipItems, db.labels, () => {
       return _getAllData().then((dbData) => {
-        return _mergeData(dbData, cloudData);
+        return app.MergeDBData.merge(dbData, cloudData);
       }).then((mergeData) => {
         mergedData = mergeData;
         return _deleteAllData();
