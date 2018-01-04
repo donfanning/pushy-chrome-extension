@@ -132,6 +132,12 @@
          */
 
         /**
+         * Fired when the row changed
+         * @event change
+         * @memberOf BackupRow
+         */
+
+        /**
          * The {@link app.BackupFile}
          * @memberOf BackupRow
          */
@@ -259,8 +265,12 @@
       _syncBackup: function() {
         this.set('isWaiting', true);
         const file = this.file;
-        app.Backup.doSync(file.id, true).then(() => {
+        app.Backup.doSync(file, true).then((fileId) => {
           this.set('isWaiting', false);
+          // update file
+          this.set('file.id', fileId);
+          this.set('file.date', Date.now());
+          this.fire('change');
           return Promise.resolve();
         }).catch((err) => {
           this.set('isWaiting', false);

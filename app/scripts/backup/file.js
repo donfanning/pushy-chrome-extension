@@ -39,27 +39,28 @@
       this.os = driveFile.appProperties.os;
       this.date = new Date(driveFile.modifiedTime).valueOf();
       
-      this.isMine = this.isMyFile();
+      this.isMine = this._isMyFile();
     }
-
+    
     /**
-     * Get the appProperties for our device
+     * Get the Drive (Custom) appProperties for this file
      * @returns {{}} key-value pairs
      */
-    static getAppProperties() {
+    getAppProperties() {
       return {
-        model: app.Device.myModel(),
-        nickname: app.Device.myNickname(),
-        sn: app.Device.mySN(),
-        os: app.Device.myOS(),
+        model: this.model,
+        nickname: this.nickname,
+        sn: this.sn,
+        os: this.os,
       };
     }
 
     /**
      * Is this file for our device
+     * @private
      * @returns {boolean}
      */
-    isMyFile() {
+    _isMyFile() {
       return ((this.sn === app.Device.mySN()) &&
           (this.model === app.Device.myModel()) &&
           (this.os === app.Device.myOS()));

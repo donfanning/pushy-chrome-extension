@@ -55,14 +55,29 @@ app.Backup = (function() {
   };
 
   /**
-   * Get the zip filename
+   * Get the zip filename for this device
    * @returns {string}
    * @private
    * @memberOf app.Backup
    */
-  function _getZipFilename() {
+  function _getMyZipFilename() {
     let name = `Chrome_${app.Device.myOS()}_${app.Device.mySN()}.zip`;
     return name.replace(/ /g, '_');
+  }
+
+  /**
+   * Get the appProperties for this device
+   * @returns {{}} key-value pairs
+   * @private
+   * @memberOf app.Backup
+   */
+  function _getMyAppProperties() {
+    return {
+      model: app.Device.myModel(),
+      nickname: app.Device.myNickname(),
+      sn: app.Device.mySN(),
+      os: app.Device.myOS(),
+    };
   }
 
   /**
@@ -132,15 +147,14 @@ app.Backup = (function() {
   }
 
   /**
-   * Perform the sync transaction between the database and Drive
-   * @param {?string} fileId - drive id to sync with
+   * Perform the sync transaction between the database and the data from the
+   * cloud
    * @param {app.Backup.Data} cloudData
-   * @param {boolean} [interactive=false] - true if user initiated
-   * @returns {Promise<void>}
+   * @returns {Promise<app.Backup.Data>} merged data
    * @private
    * @memberOf app.Backup
    */
-  function _syncTransaction(fileId, cloudData, interactive = false) {
+  function _syncTransaction(cloudData) {
     let mergedData;
     const db = app.DB.get();
     return db.transaction('rw', db.clipItems, db.labels, () => {
@@ -153,15 +167,11 @@ app.Backup = (function() {
         return _addAllData(mergedData);
       });
     }).then(() => {
-      // TODO need to backup to correct fileId
-      // can't do this in transaction
-      console.log('doing backup');
-      // return _backupData(mergedData);
       if (app.Main) {
         // need to reload menu labels
         app.Main.updateLabels();
       }
-      return Promise.resolve();
+      return Promise.resolve(mergedData);
     }).catch((err) => {
       if (app.Main) {
         // need to reload menu labels on rollback
@@ -171,10 +181,43 @@ app.Backup = (function() {
     });
   }
 
+  /**
+   * Replace a backup on Google Drive
+   * @param {app.BackupFile} backupFile to replace
+   * @param {app.Backup.Data} data for the backup
+   * @param {boolean} [interactive=false] - true if user initiated
+   * @returns {Promise.<string>} new Drive file id
+   * @memberOf app.Backup
+   */
+  function _replaceBackup(backupFile, data, interactive = false) {
+    if (!data.labels.length && !data.clipItems.length) {
+      return Promise.reject(new Error(_ERR.NO_DATA));
+    }
+    
+    let dataString;
+    try {
+      dataString = JSON.stringify(data);
+    } catch (ex) {
+      return Promise.reject(new Error(_ERR.STRINGIFY));
+    }
+    return app.Zip.zipFile(_BACKUP_FILENAME, dataString).then((zipData) => {
+      const file = backupFile.name;
+      const appProps = backupFile.getAppProperties();
+      return app.Drive.createZipFile(file, appProps, zipData, interactive);
+    }).then((fileId) => {
+      const oldId = backupFile.id;
+      if (!Chrome.Utils.isWhiteSpace(oldId)) {
+        // delete old backup - ignore failure to delete
+        return app.Drive.deleteFile(oldId, interactive, true);
+      }
+      return Promise.resolve(fileId);
+    });
+  }
+
   return {
 
     /**
-     * Perform the backup
+     * Perform the backup of our device
      * @param {boolean} [interactive=false] - true if user initiated
      * @returns {Promise.<void>}
      * @memberOf app.Backup
@@ -194,8 +237,8 @@ app.Backup = (function() {
       }).then((dataString) => {
         return app.Zip.zipFile(_BACKUP_FILENAME, dataString);
       }).then((zipData) => {
-        const file = _getZipFilename();
-        const appProps = app.BackupFile.getAppProperties();
+        const file = _getMyZipFilename();
+        const appProps = _getMyAppProperties();
         return app.Drive.createZipFile(file, appProps, zipData, interactive);
       }).then((fileId) => {
         const oldId = Chrome.Storage.get(_BACKUP_ID_KEY, null);
@@ -235,16 +278,14 @@ app.Backup = (function() {
     },
 
     /**
-     * Perform a sync
-     * @param {?string} fileId - drive id to sync
+     * Perform a sync between our data and a backup's
+     * @param {app.BackupFile} file - file to sync with
      * @param {boolean} [interactive=false] - true if user initiated
-     * @returns {Promise.<void>}
+     * @returns {Promise.<string>} new Drive file id
      * @memberOf app.Backup
      */
-    doSync: function(fileId, interactive = false) {
-      if (Chrome.Utils.isWhiteSpace(fileId)) {
-        fileId = Chrome.Storage.get(_BACKUP_ID_KEY, '');
-      }
+    doSync: function(file, interactive = false) {
+      const fileId = file.id;
       if (Chrome.Utils.isWhiteSpace(fileId)) {
         return Promise.reject(new Error(_ERR.NO_FILE_ID));
       }
@@ -252,11 +293,13 @@ app.Backup = (function() {
       return app.Drive.getZipFileContents(fileId, interactive).then((data) => {
         return app.Zip.unzipFileAsString(_BACKUP_FILENAME, data);
       }).then((dataString) => {
-        let syncData = Chrome.JSONUtils.parse(dataString);
-        if (!syncData) {
+        let cloudData = Chrome.JSONUtils.parse(dataString);
+        if (!cloudData) {
           return Promise.reject(new Error(_ERR.PARSE));
         }
-        return _syncTransaction(fileId, syncData, interactive);
+        return _syncTransaction(cloudData);
+      }).then((mergedData) => {
+        return _replaceBackup(file, mergedData);
       });
     },
 

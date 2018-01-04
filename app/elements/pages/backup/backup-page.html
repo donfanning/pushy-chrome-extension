@@ -109,6 +109,7 @@
                   id="item[[index]]"
                   file="{{file}}"
                   is-waiting="{{isWaiting}}"
+                  on-change="_onRowChanged"
                   on-delete="_onRowDeleted"></backup-row>
             </template>
           </div>
@@ -251,6 +252,15 @@
       },
 
       /**
+       * Event: Row was changed
+       * @private
+       * @memberOf BackupPage
+       */
+      _onRowChanged: function() {
+        this._sortFiles();
+      },
+
+      /**
        * Computed property: Last modified date string
        * @param {int} date
        * @returns {string}
@@ -283,12 +293,9 @@
         return app.Drive.getFiles(true).then((driveFiles) => {
           driveFiles = driveFiles || [];
 
-          // clear list
-          this.splice('files', 0, this.files.length);
-
           if (driveFiles.length) {
             // populate list
-            this._setSortedFiles(driveFiles);
+            this._setFiles(driveFiles);
             this.set('infoMessage', '');
           } else {
             this.set('infoMessage', _ERR.NO_FILES);
@@ -302,19 +309,33 @@
       },
 
       /**
-       * Set the list of sorted files
-       * @param {Array} driveFiles
+       * Set the list files from a list of Google Drive files
+       * @param {Array} driveFiles Google Drive file
        * @private
        * @memberOf BackupPage
        */
-      _setSortedFiles: function(driveFiles) {
+      _setFiles: function(driveFiles) {
         driveFiles = driveFiles || [];
 
+        const files = [];
+        driveFiles.forEach((driveFile) => {
+          files.push(new app.BackupFile(driveFile));
+        });
+        this.splice('files', 0, this.files.length);
+        this.push('files', ...files);
+        this._sortFiles();
+      },
+      
+      /**
+       * Sort the files
+       * @private
+       * @memberOf BackupPage
+       */
+      _sortFiles: function() {
         // keep this devices files on top and sort newest first
         const myFiles = [];
         const otherFiles = [];
-        driveFiles.forEach((driveFile) => {
-          const file = new app.BackupFile(driveFile);
+        this.files.forEach((file) => {
           if (file.isMine) {
             myFiles.push(file);
           } else {
@@ -322,11 +343,12 @@
           }
         });
         myFiles.sort((a, b) => {
-          return b.data - a.date;
+          return b.isNewer(a);
         });
         otherFiles.sort((a, b) => {
-          return b.data - a.date;
+          return b.isNewer(a);
         });
+        this.splice('files', 0, this.files.length);
         this.push('files', ...myFiles);
         this.push('files', ...otherFiles);
       },
