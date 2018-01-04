@@ -22,25 +22,10 @@ app.MergeDBData = (function() {
    * @private
    * @memberOf app.MergeDBData
    */
-  function getLargestLabelId(labels) {
+  function _getLargestLabelId(labels) {
     let ret = 0;
     labels.forEach((label) => {
       ret = (label._id > ret) ? label._id : ret;
-    });
-    return ret;
-  }
-
-  /**
-   * Get the largest PK in the {@link ClipItem} objects
-   * @param {ClipItem[]} clipItems
-   * @returns {int}
-   * @private
-   * @memberOf app.MergeDBData
-   */
-  function getLargestClipItemId(clipItems) {
-    let ret = 0;
-    clipItems.forEach((clipItem) => {
-      ret = (clipItem._id > ret) ? clipItem._id : ret;
     });
     return ret;
   }
@@ -53,7 +38,7 @@ app.MergeDBData = (function() {
    * @private
    * @memberOf app.MergeDBData
    */
-  function getLabelPos(labels, theLabel) {
+  function _getLabelPos(labels, theLabel) {
     return labels.findIndex((label) => {
       return label.name === theLabel.name;
     });
@@ -67,7 +52,7 @@ app.MergeDBData = (function() {
    * @private
    * @memberOf app.MergeDBData
    */
-  function getClipItemPos(clipItems, theClipItem) {
+  function _getClipItemPos(clipItems, theClipItem) {
     return clipItems.findIndex((clipItem) => {
       return clipItem.text === theClipItem.text;
     });
@@ -81,7 +66,7 @@ app.MergeDBData = (function() {
    * @private
    * @memberOf app.MergeDBData
    */
-  function updateLabelId(clipItems, theLabel) {
+  function _updateLabelId(clipItems, theLabel) {
     // update labelId in all clipItems
     clipItems.forEach((clipItem) => {
       const labels = clipItem.labels;
@@ -116,11 +101,11 @@ app.MergeDBData = (function() {
       const data2Labels = data2.labels;
       const data2ClipItems = data2.clipItems;
 
-      let newLabelId = getLargestLabelId(dataLabels);
+      let newLabelId = _getLargestLabelId(dataLabels);
       newLabelId++;
 
       data2Labels.forEach((label) => {
-        const pos = getLabelPos(dataLabels, label);
+        const pos = _getLabelPos(dataLabels, label);
         if (pos === -1) {
           // add new label with unique id to theirs
           const newLabel = new app.Label(label.name);
@@ -128,18 +113,18 @@ app.MergeDBData = (function() {
           dataLabels.push(newLabel);
           newLabelId++;
           // update labelId in our clips
-          updateLabelId(data2ClipItems, newLabel);
+          _updateLabelId(data2ClipItems, newLabel);
         } else {
           // label exists in both
           if (label._id !== dataLabels[pos]._id) {
             // update label id our clips
-            updateLabelId(data2ClipItems, dataLabels[pos]);
+            _updateLabelId(data2ClipItems, dataLabels[pos]);
           }
         }
       });
 
       data2ClipItems.forEach((clipItem) => {
-        const pos = getClipItemPos(dataClipItems, clipItem);
+        const pos = _getClipItemPos(dataClipItems, clipItem);
         if (pos === -1) {
           // add new clip
           dataClipItems.push(clipItem);
@@ -160,7 +145,7 @@ app.MergeDBData = (function() {
           const dataLabels = dataClipItem.labels;
           const dataLabelsId = dataClipItem.labelsId;
           clipItem.labels.forEach((label) => {
-            const pos = getLabelPos(dataLabels, label);
+            const pos = _getLabelPos(dataLabels, label);
             if (pos === -1) {
               // add new label
               dataLabels.push(label);
