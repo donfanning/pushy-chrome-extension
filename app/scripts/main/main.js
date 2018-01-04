@@ -93,7 +93,7 @@ app.Main = (function() {
       obj: app.BackupPageFactory, insertion: 'backupInsertion', el: null,
     },
     {
-      label: 'Manage devices', route: 'page-devices',
+      label: 'Query remote devices', route: 'page-devices',
       icon: 'myicons:phonelink', ready: false, divider: false,
       obj: app.DevicesPageFactory, insertion: 'devicesInsertion', el: null,
     },
