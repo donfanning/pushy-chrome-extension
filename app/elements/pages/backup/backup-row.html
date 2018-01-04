@@ -46,6 +46,10 @@
         margin-left: 32px;
       }
 
+      .this-device {
+        @apply(--paper-font-headline);
+      }
+
       .date {
         color: var(--accent-color);
       }
@@ -66,31 +70,33 @@
         tabindex="-1"
         file="{{file}}"
         is-waiting="{{isWaiting}}">
-      <div class="backup-item horizontal layout">
-        <div class="vertical center-justified layout " tabindex="-1">
-          <paper-icon-button
-              title="Restore data from Google Drive"
-              icon="myicons:cloud-download"
-              on-tap="_onRestoreTapped"></paper-icon-button>
-          <!--<paper-icon-button-->
-          <!--title="Sync data between device and Google Drive"-->
-          <!--icon="myicons:cloud-sync"-->
-          <!--on-tap="_onSyncTapped"></paper-icon-button>-->
-          <paper-icon-button
-              title="Delete backup on Google Drive"
-              icon="myicons:delete"
-              on-tap="_onDeleteTapped"></paper-icon-button>
-        </div>
-        <div class="flex vertical layout" tabindex="-1">
-          <paper-item
-              class="horizontal center-justified layout"
-              hidden$="[[!file.isMine]]">This device
-          </paper-item>
-          <paper-item>Nickname: [[file.nickname]]</paper-item>
-          <paper-item>Model: [[file.model]]</paper-item>
-          <paper-item>SN: [[file.sn]]</paper-item>
-          <paper-item>OS: [[file.os]]</paper-item>
-          <paper-item class="date">Backup date: [[_computeDate(file.date)]]</paper-item>
+      <div class="backup-item">
+        <paper-item
+            class="this-device horizontal center-justified layout"
+            hidden$="[[!file.isMine]]">This device
+        </paper-item>
+        <div class="horizontal layout">
+          <div class="vertical center-justified layout " tabindex="-1">
+            <paper-icon-button
+                title="Restore data from Google Drive"
+                icon="myicons:cloud-download"
+                on-tap="_onRestoreTapped"></paper-icon-button>
+            <paper-icon-button
+                title="Sync data between device and Google Drive"
+                icon="myicons:cloud-sync"
+                on-tap="_onSyncTapped"></paper-icon-button>
+            <paper-icon-button
+                title="Delete backup on Google Drive"
+                icon="myicons:delete"
+                on-tap="_onDeleteTapped"></paper-icon-button>
+          </div>
+          <div class="flex vertical layout" tabindex="-1">
+            <paper-item>Nickname: [[file.nickname]]</paper-item>
+            <paper-item>Model: [[file.model]]</paper-item>
+            <paper-item>SN: [[file.sn]]</paper-item>
+            <paper-item>OS: [[file.os]]</paper-item>
+            <paper-item class="date">Backup date: [[_computeDate(file.date)]]</paper-item>
+          </div>
         </div>
       </div>
     </div>
@@ -174,7 +180,7 @@
         this.set('confirmFunction', this._restoreBackup);
         this.set('confirmLabel', 'RESTORE');
         this.$.cantUndoDialog.open('We\'ll replace all your clips and labels' +
-            ' with those in the selected backup.\nRestore backup?');
+            ' with those in the selected backup.\n\nRestore backup?');
       },
 
       /**
@@ -186,8 +192,9 @@
         Chrome.GA.event(Chrome.GA.EVENT.ICON, 'BackupRow.syncData');
         this.set('confirmFunction', this._syncBackup);
         this.set('confirmLabel', 'SYNC');
-        this.$.cantUndoDialog.open('We\'ll merge all your clips and labels' +
-            ' with those in the selected backup.\nSync backup?');
+        this.$.cantUndoDialog.open('We\'ll sync all your clips and labels' +
+            ' with those in the selected backup.\nUpdates will be made' +
+            ' locally and on the cloud.\n\nSync with backup?');
       },
 
       /**
@@ -223,7 +230,7 @@
       _computeDate: function(date) {
         return app.Utils.getRelativeTime(date);
       },
-      
+
       /**
        * Restore a backup from Google Drive
        * @private
@@ -244,12 +251,13 @@
       },
 
       /**
-       * Sync a backup with Google Drive
+       * Sync our data with a backup on Google Drive
        * @private
        * @memberOf BackupRow
        */
       _syncBackup: function() {
         // TODO add sync
+        console.log('_syncBackup');
       },
 
       /**
