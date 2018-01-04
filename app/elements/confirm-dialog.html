@@ -100,7 +100,7 @@
      */
     open: function(text = 'Continue?',
                    title = 'This operation cannot be undone') {
-      text = text.replace('\n', '<br/>');
+      text = text.replace(/\n/g, '<br/>');
       this.$.dialogTitle.innerHTML = title;
       this.$.dialogText.innerHTML = text;
       this.$.dialog.open();
