@@ -193,7 +193,7 @@ app.Backup = (function() {
     if (!data.labels.length && !data.clipItems.length) {
       return Promise.reject(new Error(_ERR.NO_DATA));
     }
-    
+
     let dataString;
     try {
       dataString = JSON.stringify(data);
@@ -201,16 +201,11 @@ app.Backup = (function() {
       return Promise.reject(new Error(_ERR.STRINGIFY));
     }
     return app.Zip.zipFile(_BACKUP_FILENAME, dataString).then((zipData) => {
-      const file = backupFile.name;
+      const filename = backupFile.name;
+      const fileId = backupFile.id;
       const appProps = backupFile.getAppProperties();
-      return app.Drive.createZipFile(file, appProps, zipData, interactive);
-    }).then((fileId) => {
-      const oldId = backupFile.id;
-      if (!Chrome.Utils.isWhiteSpace(oldId)) {
-        // delete old backup - ignore failure to delete
-        return app.Drive.deleteFile(oldId, interactive, true);
-      }
-      return Promise.resolve(fileId);
+      return app.Drive.updateZipFile(filename, fileId, appProps, zipData,
+          interactive);
     });
   }
 

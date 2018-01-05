@@ -194,6 +194,58 @@ app.Drive = (function() {
   }
 
   /**
+   * Update a zip file in our app folder
+   * @param {string} filename
+   * @param {string} fileId
+   * @param {{}} appProps - metadata
+   * @param {app.Zip.Data} data
+   * @returns {Promise<string>} file id
+   * @private
+   * @memberOf app.Drive
+   */
+  function _updateZipFile(filename, fileId, appProps, data) {
+    const boundary = '-------314159265358979323846';
+    const delimiter = '\r\n--' + boundary + '\r\n';
+    const closeDelim = '\r\n--' + boundary + '--';
+
+    const contentType = 'application/zip';
+
+    const metadata = {
+      name: filename,
+      mimeType: contentType,
+      appProperties: appProps,
+    };
+
+    // need to do base64
+    // https://stackoverflow.com/a/34731665/4468645
+    const multipartRequestBody =
+        delimiter +
+        'Content-Type: application/json\r\n\r\n' +
+        JSON.stringify(metadata) +
+        delimiter +
+        'Content-Type: ' + contentType + '\r\n' +
+        'Content-Transfer-Encoding: base64\r\n' + '\r\n' +
+        data +
+        closeDelim;
+
+    const request = {
+      path: '/upload' + _FILES_PATH + fileId,
+      method: 'PATCH',
+      params: {uploadType: 'multipart'},
+      headers: {
+        'Content-Type': 'multipart/related; boundary="' + boundary + '"',
+      },
+      body: multipartRequestBody,
+    };
+
+    return gapi.client.request(request).then((response) => {
+      return Promise.resolve(response.result.id);
+    }, (reason) => {
+      return Promise.reject(_getError(_ERR.CREATE, reason));
+    });
+  }
+
+  /**
    * Delete a file in our app folder
    * @param {string} fileId
    * @returns {Promise<void>}
@@ -318,6 +370,26 @@ app.Drive = (function() {
 
       return _getAuthorization(interactive).then(() => {
         return _createZipFile(filename, appProps, data);
+      });
+    },
+
+    /**
+     * Create a zip file in our app folder
+     * @param {string} filename
+     * @param {string} fileId
+     * @param {{}} appProps - metadata
+     * @param {app.Zip.Data} data - data bytes
+     * @param {boolean} [interactive=false] - if true, user initiated
+     * @returns {Promise<string>} file id
+     * @memberOf app.Drive
+     */
+    updateZipFile: function(filename, fileId, appProps, data, interactive = false) {
+      if (!app.Utils.isSignedIn()) {
+        return Promise.reject(new Error(_ERR.NO_SIGNIN));
+      }
+
+      return _getAuthorization(interactive).then(() => {
+        return _updateZipFile(filename, fileId, appProps, data);
       });
     },
 

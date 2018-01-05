@@ -265,10 +265,9 @@
       _syncBackup: function() {
         this.set('isWaiting', true);
         const file = this.file;
-        app.Backup.doSync(file, true).then((fileId) => {
+        app.Backup.doSync(file, true).then(() => {
           this.set('isWaiting', false);
           // update file
-          this.set('file.id', fileId);
           this.set('file.date', Date.now());
           this.fire('change');
           return Promise.resolve();
