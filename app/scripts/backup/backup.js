@@ -204,13 +204,12 @@ app.Backup = (function() {
       const filename = backupFile.name;
       const fileId = backupFile.id;
       const appProps = backupFile.getAppProperties();
-      return app.Drive.updateZipFile(filename, fileId, appProps, zipData,
+      return app.Drive.updateZipFile(fileId, filename, appProps, zipData,
           interactive);
     });
   }
 
   return {
-
     /**
      * Perform the backup of our device
      * @param {boolean} [interactive=false] - true if user initiated
