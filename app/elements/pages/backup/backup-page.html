@@ -197,6 +197,7 @@
        * @memberOf BackupPage
        */
       onCurrentPage: function() {
+        this.set('isWaiting', false);
         this._loadFiles().catch((err) => {
           Chrome.Log.error(err.message, 'BackupPage.onCurrentPage', _ERR.FILES);
           this.$.errorDialog.open(_ERR.FILES, err.message);

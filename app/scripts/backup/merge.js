@@ -139,8 +139,8 @@ app.MergeDBData = (function() {
           if (clipItem.date > dataClipItem.date) {
             // newest clip has priority
             dataClipItem.date = clipItem.date;
+            dataClipItem.remote = (clipItem.device !== app.Device.myName());
             dataClipItem.device = clipItem.device;
-            dataClipItem.remote = true;
           }
           // sync labels and labelsId
           const dataLabels = dataClipItem.labels;
