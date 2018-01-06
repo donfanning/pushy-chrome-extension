@@ -127,6 +127,7 @@ app.MergeDBData = (function() {
         const pos = _getClipItemPos(dataClipItems, clipItem);
         if (pos === -1) {
           // add new clip
+          clipItem.remote = (clipItem.device !== app.Device.myName());
           dataClipItems.push(clipItem);
         } else {
           // shared clip - sync
