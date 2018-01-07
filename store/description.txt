@@ -1,9 +1,11 @@
 Monitor, store, and manage all text placed on the clipboard.
 
-Share with the following devices using push notifications:
+Share in real time with the following devices using push notifications:
 * Any desktop hardware that supports the Chrome Browser
 * Android phones and tablets using the companion app:
   https://play.google.com/store/apps/details?id=com.weebly.opus1269.clipman
+
+Backup, restore, and synchronize all your data using Google Drive.
 
 Mark favorite entries for easy access.
 
