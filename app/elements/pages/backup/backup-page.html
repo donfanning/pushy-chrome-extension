@@ -41,15 +41,11 @@
       }
 
       .list {
-        height: 72vh;
-        overflow: hidden;
-        overflow-y: scroll;
-        padding: 0 0 16px;
+        padding: 0;
         margin: 0;
       }
 
       .info-content {
-        height: 62vh;
         margin: 10vh 0 0;
         padding-top: 0;
         padding-bottom: 0;
@@ -61,13 +57,13 @@
         @apply(--paper-font-subhead);
       }
 
-      waiter-element {
-        padding-top: 10vh;
+      .waiter-content {
+        margin: 10vh 0 0;
       }
     </style>
 
     <paper-material elevation="1" class="page-content vertical layout">
-      
+
       <!-- Tool bar -->
       <paper-material elevation="1">
         <paper-toolbar class="page-toolbar">
@@ -91,7 +87,9 @@
         <error-dialog id="errorDialog"></error-dialog>
 
         <!-- Working... element -->
-        <waiter-element active="[[isWaiting]]" hidden$="[[!isWaiting]]"></waiter-element>
+        <div class="flex waiter-content" hidden$="[[!isWaiting]]">
+          <waiter-element active="[[isWaiting]]"></waiter-element>
+        </div>
 
         <div class="list-content flex vertical layout" hidden$="[[isWaiting]]">
 
@@ -114,7 +112,7 @@
           </div>
 
         </div>
-        
+
         <div class="fab-content horizontal end-justified layout">
           <paper-fab
               title="Refresh list of backups"
@@ -321,7 +319,7 @@
         this.push('files', ...files);
         this._sortFiles();
       },
-      
+
       /**
        * Sort the files
        * @private
