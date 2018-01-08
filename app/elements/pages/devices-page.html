@@ -15,6 +15,7 @@
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
 <link rel="import" href="../my_icons.html">
 
@@ -90,7 +91,13 @@
       </paper-material>
 
       <!-- Content -->
-      <div class="body-content flex vertical layout">
+      <div id="bodyContent" class="body-content flex vertical layout">
+
+        <!-- Message toast -->
+        <paper-toast
+            id="messageToast"
+            duration="5000">
+          Device responses may be delayed</paper-toast>
 
         <div class="list-content flex">
           <div id="deviceList"
@@ -249,6 +256,7 @@
       _onFabTapped: function() {
         Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'refreshDevicesTapped');
         if (app.Utils.allowPush()) {
+          this.$.messageToast.show();
           this._ping();
         } else {
           this.set('infoMessage', _MSG_NO_PUSH);

@@ -17,6 +17,7 @@
 <link rel="import" href="../../../bower_components/paper-fab/paper-fab.html">
 
 <link rel="import" href="../../error-dialog.html">
+<link rel="import" href="../../confirm-dialog.html">
 <link rel="import" href="../../waiter-element.html">
 <link rel="import" href="backup-row.html">
 
@@ -85,6 +86,12 @@
 
         <!-- Error dialog -->
         <error-dialog id="errorDialog"></error-dialog>
+
+        <!-- Confirm dialog -->
+        <confirm-dialog
+            id="cantUndoDialog"
+            confirm-label="{{confirmLabel}}"
+            on-confirm-tap="_onConfirmTapped"></confirm-dialog>
 
         <!-- Working... element -->
         <div class="flex waiter-content" hidden$="[[!isWaiting]]">
@@ -176,6 +183,25 @@
           value: '',
           notify: true,
         },
+
+        /**
+         * Label for confirm button
+         * @memberOf BackupPage
+         */
+        confirmLabel: {
+          type: String,
+          value: 'OK',
+          notify: true,
+        },
+
+        /**
+         * function to execute on confirm button tap
+         * @memberOf BackupPage
+         */
+        confirmFunction: {
+          type: Function,
+          value: null,
+        },
       },
 
       /**
@@ -217,19 +243,11 @@
        */
       _onBackupTapped: function() {
         Chrome.GA.event(Chrome.GA.EVENT.MENU, 'BackupPage.backupData');
-        this.set('isWaiting', true);
-        let backupOk = false;
-        app.Backup.doBackup(true).then(() => {
-          backupOk = true;
-          return this._loadFiles();
-        }).catch((err) => {
-          this.set('isWaiting', false);
-          let reason = backupOk ? _ERR.FILES : _ERR.BACKUP;
-          Chrome.Log.error(err.message, 'BackupPage._onBackupTapped', reason);
-          if (!backupOk) {
-            this.$.errorDialog.open(reason, err.message);
-          }
-        });
+        this.set('confirmFunction', this._doBackup);
+        this.set('confirmLabel', 'BACKUP');
+        this.$.cantUndoDialog.open('We\'ll backup all your clips and labels.' +
+            '\nAny existing backup will be replaced.\n\nBackup data?'
+        );
       },
 
       /**
@@ -252,6 +270,17 @@
        */
       _onRowChanged: function() {
         this._sortFiles();
+      },
+
+      /**
+       * Event: Dialog confirm button tapped
+       * @private
+       * @memberOf BackupPage
+       */
+      _onConfirmTapped: function() {
+        if (this.confirmFunction) {
+          this.confirmFunction();
+        }
       },
 
       /**
@@ -345,6 +374,27 @@
         this.splice('files', 0, this.files.length);
         this.push('files', ...myFiles);
         this.push('files', ...otherFiles);
+      },
+      
+      /**
+       * Backup the db
+       * @private
+       * @memberOf BackupPage
+       */
+      _doBackup: function() {
+        this.set('isWaiting', true);
+        let backupOk = false;
+        app.Backup.doBackup(true).then(() => {
+          backupOk = true;
+          return this._loadFiles();
+        }).catch((err) => {
+          this.set('isWaiting', false);
+          let reason = backupOk ? _ERR.FILES : _ERR.BACKUP;
+          Chrome.Log.error(err.message, 'BackupPage._doBackup', reason);
+          if (!backupOk) {
+            this.$.errorDialog.open(reason, err.message);
+          }
+        });
       },
     });
   })(window);
