@@ -5,13 +5,15 @@
  * https://goo.gl/wFvBM1
  */
 
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
 body {
 	font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	background: #ededed;
 	color: black;
-	min-width: 600px;
-	min-height: 700px;
-	overflow: hidden;
 }
 
 /* Scrollbars */
