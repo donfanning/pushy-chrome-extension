@@ -25,13 +25,13 @@
         position: relative;
       }
 
-      .container {
+      .content {
         height: 100%;
         margin: 0;
         padding: 0;
       }
 
-      .labelsContainer {
+      .labels-content {
         cursor: pointer;
         margin: 0;
         padding-top: 16px;
@@ -39,7 +39,7 @@
         padding-right: 16px;
       }
 
-      .textContainer {
+      .text-content {
         overflow: hidden;
         overflow-y: scroll;
         padding-top: 16px;
@@ -47,13 +47,7 @@
         padding-right: 16px;
       }
 
-      .fabContainer {
-        margin: 0;
-        padding: 0;
-        padding-bottom: 8px;
-      }
-
-      .labelsContainer paper-item {
+      .labels-content paper-item {
         @apply(--paper-font-subhead);
         --paper-item: {
           min-height: 0;
@@ -84,9 +78,9 @@
       }
     </style>
 
-    <div class="container layout vertical">
+    <div class="content layout vertical">
 
-      <div id="labels" class="labelsContainer no-select" on-tap="_onLabelsTapped">
+      <div id="labels" class="labels-content no-select" on-tap="_onLabelsTapped">
         <div class="horizontal layout">
           <template
               is="dom-repeat" id="labelsTemplate"
@@ -97,7 +91,7 @@
         <hr/>
       </div>
 
-      <div class="textContainer flex">
+      <div class="text-content flex">
         <div id="text" class="text" hidden$="[[isEditMode]]"></div>
         <paper-textarea
             id="textArea"
@@ -105,7 +99,8 @@
             value="{{editText}}"
             hidden$="[[!isEditMode]]"></paper-textarea>
       </div>
-      <div class="fabContainer horizontal end-justified layout">
+      
+      <div class="fab-content horizontal end-justified layout">
         <paper-fab
             title$="[[_computeAddEditTitle(clipItem)]]"
             icon="[[_computeAddEditIcon(clipItem)]]"

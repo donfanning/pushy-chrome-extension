@@ -25,12 +25,17 @@
         position: relative;
       }
 
+      .list-content {
+        margin: 0;
+        padding: 0;
+      }
+
       #ironList {
-        height: 82vh;
+        height: 800px;
       }
     </style>
 
-    <div class="no-select">
+    <div class="flex list-content no-select">
       <iron-list
           id=ironList items="{{clips}}" as="clip"
           multi-selection
