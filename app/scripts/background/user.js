@@ -57,12 +57,20 @@ app.User = (function() {
 
   /**
    * Remove the cached auth token
+   * @param {string[]|null} [scopes=null] - optional scopes to use, overrides
+   * those in the manifest
    * @returns {Promise.<void>} void
    * @private
    */
-  function _removeAuthToken() {
-    return Chrome.Auth.removeCachedToken().catch((err) => {
-      Chrome.Log.error(err.message, 'User._removeAuthToken');
+  function _removeAuthToken(scopes = null) {
+    return Chrome.Auth.removeCachedToken(false, null, scopes).catch((err) => {
+      if (!scopes) {
+        // should always have manifest token, but
+        // the overridden ones are optional and may not exist
+        // so just ignore the error removing them
+        Chrome.Log.error(err.message, 'User._removeAuthToken');
+      }
+      // nice to remove but not critical
       return Promise.resolve();
     });
   }
@@ -119,6 +127,9 @@ app.User = (function() {
       return app.Fb.signOut();
     }).then(() => {
       return _removeAuthToken();
+    }).then(() => {
+      // remove the Drive one too, if it exists
+      return _removeAuthToken(app.Drive.SCOPES);
     }).then(() => {
       _setSignIn(false);
       app.Devices.clear();
@@ -236,7 +247,10 @@ app.User = (function() {
           app.Notify.create(app.Notify.TYPE.ERROR_FORCE_SIGN_OUT, msg,
               new Chrome.Storage.LastError());
         }
-        return _removeAuthToken();
+        return _removeAuthToken;
+      }).then(() => {
+        // remove the Drive one too, if it exists
+        return _removeAuthToken(app.Drive.SCOPES);
       });
     },
 

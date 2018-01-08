@@ -17,7 +17,8 @@ app.Drive = (function() {
   new ExceptionHandler();
 
   /**
-   * Scopes required for drive - override manifest values
+   * Scopes required for drive - override manifest values<br />
+   * Note: Changing the scopes will create a new Auth token, so we will have two
    * @const
    * @private
    * @memberOf app.Drive
@@ -54,7 +55,7 @@ app.Drive = (function() {
     NO_SIGNIN: 'Not signed in.\n',
     NO_FILE_ID: 'No fileId specified.\n',
     LOAD_LIB: 'Failed to load gapi library.\n',
-    GET_FILES: 'Failed to list of backups from Google Drive.\n',
+    GET_FILES: 'Failed to get list of backups from Google Drive.\n',
     GET: 'Failed to get backup from Google Drive.\n',
     DELETE: 'Failed to delete backup on Google Drive.\n',
     CREATE: 'Failed to create backup on Google Drive.\n',
@@ -279,6 +280,12 @@ app.Drive = (function() {
   addEventListener('load', _onLoad);
 
   return {
+    /**
+     * OAuth2.0 scopes required for drive access
+     * @memberOf app.Drive
+     */
+    SCOPES: _SCOPES,
+    
     /**
      * Make sure the user has added the Drive scope
      * @returns {Promise<void>}
