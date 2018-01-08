@@ -10,7 +10,8 @@
 
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-styles/color.html">
-<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
 
 <link rel="import" href="../../bower_components/setting-elements/setting-link/setting-link.html">
 
@@ -19,7 +20,6 @@
     <style include="iron-flex iron-flex-alignment"></style>
     <style include="shared-styles"></style>
     <style>
-
       :host {
         display: block;
         position: relative;
@@ -29,16 +29,23 @@
         margin-left: 0;
         margin-right: 0;
       }
-
-      .card-content {
-        padding: 0;
-        margin: 0;
-      }
-
     </style>
 
-    <paper-card class="page-content" heading="Help & feedback">
-      <div class="card-content">
+    <paper-material elevation="1" class="page-content vertical layout">
+
+      <!-- Tool bar -->
+      <paper-material elevation="1">
+        <paper-toolbar class="page-toolbar">
+          <span class="space"></span>
+          <div class="middle middle-container center horizontal layout flex">
+            <div class="flex">Help & feedback</div>
+          </div>
+        </paper-toolbar>
+      </paper-material>
+
+      <!-- Content -->
+      <div class="body-content fit vertical layout">
+        
         <setting-link section-title="Feedback (English only, please)"
                       label="Question"
                       name="questionMail"
@@ -83,7 +90,7 @@
                       icon="myicons:github"
                       url="[[githubPagesPath]]"></setting-link>
       </div>
-    </paper-card>
+    </paper-material>
   </template>
 </dom-module>
 

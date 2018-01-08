@@ -11,9 +11,9 @@
 
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-styles/color.html">
-<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
-<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
-<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-ripple/paper-ripple.html">
@@ -27,7 +27,6 @@
     <style include="iron-flex iron-flex-alignment"></style>
     <style include="shared-styles"></style>
     <style>
-
       :host {
         display: block;
         position: relative;
@@ -37,7 +36,7 @@
         max-width: 40vw;
       }
 
-      .contentContainer {
+      .text-content {
         min-height: 25vh;
       }
 
@@ -46,7 +45,7 @@
         margin: 16px 16px 16px 16px;
       }
 
-      .buttonContainer {
+      .button-content {
         padding-top: 16px;
         padding-bottom: 8px;
         border-top: 1px solid #D9D9D9;
@@ -74,9 +73,20 @@
       }
     </style>
 
-    <paper-card class="page-content"
-                heading="[[_computeTitle(signedIn)]]">
-      <div class="card-content">
+    <paper-material elevation="1" class="page-content vertical layout">
+
+      <!-- Tool bar -->
+      <paper-material elevation="1">
+        <paper-toolbar class="page-toolbar">
+          <span class="space"></span>
+          <div class="middle middle-container center horizontal layout flex">
+            <div class="flex">[[_computeTitle(signedIn)]]</div>
+          </div>
+        </paper-toolbar>
+      </paper-material>
+
+      <!-- Content -->
+      <div class="body-content fit vertical layout">
 
         <!-- Error dialog -->
         <error-dialog
@@ -84,7 +94,7 @@
             show-confirm-button="[[showConfirmButton]]"
             on-confirm-tap="_onDialogConfirmTapped"></error-dialog>
 
-        <div class="contentContainer vertical center-justified layout center">
+        <div class="text-content vertical center-justified layout center">
           <paper-item id="description"
                       hidden$="[[_computeDescHidden(isWaiting, signedIn)]]">
             You must be signed in to the Browser with the account you
@@ -101,7 +111,8 @@
           </waiter-element>
 
         </div>
-        <div class="buttonContainer vertical layout center">
+        
+        <div class="button-content vertical layout center">
           <paper-item id="googleAccountButton" tabindex="0"
                       on-click="_onAccountButtonClicked" disabled$="[[isSignInDisabled]]">
             <paper-ripple center></paper-ripple>
@@ -109,8 +120,10 @@
             <span class="setting-label">[[_computeButtonLabel(signedIn)]]</span>
           </paper-item>
         </div>
+        
       </div>
-    </paper-card>
+      
+    </paper-material>
     <iron-localstorage name="signedIn" value="{{signedIn}}"
                        on-iron-localstorage-load-empty="_initSignedIn"></iron-localstorage>
   </template>
