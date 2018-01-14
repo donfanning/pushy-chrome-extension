@@ -246,10 +246,12 @@
      * @memberOf ClipViewer
      */
     _onSaveChangesTapped: function() {
-      if (!this.clipItem && !Chrome.Utils.isWhiteSpace(this.editText)) {
-        // new clip
-        this.fire('clip-add', {text: this.editText});
-        Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'clipViewerAddClip');
+      if (!this.clipItem) {
+        if (!Chrome.Utils.isWhiteSpace(this.editText)) {
+          // new clip
+          this.fire('clip-add', {text: this.editText});
+          Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'clipViewerAddClip');
+        }
       } else if (this.editText !== this.clipItem.text) {
         // modified clip
         Chrome.GA.event(app.GA.EVENT.FAB_BUTTON, 'clipViewerSaveChanges');
