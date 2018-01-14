@@ -362,6 +362,17 @@ app.Main = (function() {
   };
 
   /**
+   * Event: tapped on user avatar
+   * @memberOf Main
+   */
+  t._onAvatarTapped = function() {
+    const idx = _getPageIdx('page-signin');
+    if (idx !== -1) {
+      _showPage(pages[idx]);
+    }
+  };
+  
+    /**
    * Event: Clicked on accept permissions dialog button
    * @memberOf Main
    */
@@ -429,6 +440,20 @@ app.Main = (function() {
     let ret = 'inline';
     if (Chrome.Utils.isWhiteSpace(avatar)) {
       ret = 'none';
+    }
+    return ret;
+  };
+
+  /**
+   * Computed Binding: Tooltip for avatar
+   * @param {string} avatar - photo url
+   * @returns {string} email
+   * @memberOf Main
+   */
+  t._computeAvatarTooltip = function(avatar) {
+    let ret = '';
+    if (app.Utils.isSignedIn()) {
+      ret = Chrome.Storage.get('email', '');
     }
     return ret;
   };
@@ -604,6 +629,7 @@ app.Main = (function() {
    * @memberOf Main
    */
   function _showPage(page) {
+    _closeDrawer();
     if (page.insertion) {
       if (!page.ready) {
         // insert the page the first time

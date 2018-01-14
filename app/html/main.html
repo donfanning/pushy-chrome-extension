@@ -24,7 +24,7 @@
 
     #mainToolbar {
       background-color: var(--dark-primary-color);
-      height: 64px !important; 
+      height: 64px !important;
     }
 
     #mainToolbar .middle-container {
@@ -42,7 +42,7 @@
       background-color: var(--drawer-menu-color);
       border-bottom: var(--drawer-toolbar-border-color);
     }
-    
+
     #mainMenu paper-item {
       --paper-item-selected: {
         color: var(--dark-primary-color);
@@ -72,7 +72,7 @@
     #mainContainer {
       height: 100%;
     }
-    
+
     neon-animated-pages {
       height: 100%;
     }
@@ -96,18 +96,24 @@
   <!-- Top Panel -->
   <paper-drawer-panel id="paperDrawerPanel" responsive-width="1500px" drawer-width="300px">
     <paper-material elevation="2" drawer fixed>
-      
+
       <!-- Menu Drawer Header Panel -->
       <paper-scroll-header-panel>
-        
+
         <!-- Menu Drawer Toolbar -->
         <paper-toolbar id="drawerToolbar">
           <span class="menu-name flex">Menu</span>
           <!--suppress HtmlUnknownTarget -->
-          <img src="[[avatar]]"
-               style$="height: 40px; width: 40px;
-						             border-radius: 20px; box-sizing: border-box;
-						             display: [[_computeAvatarDisplay(avatar)]];">
+          <img
+              id="avatar"
+              src="[[avatar]]"
+              style$="height: 40px; width: 40px; cursor: pointer;
+                     border-radius: 20px; box-sizing: border-box;
+                     display: [[_computeAvatarDisplay(avatar)]];"
+              on-tap="_onAvatarTapped">
+          <paper-tooltip for="avatar" position="left" offset="0">
+            [[_computeAvatarTooltip(avatar)]]
+          </paper-tooltip>
         </paper-toolbar>
 
         <!-- Menu Drawer Content -->
@@ -138,13 +144,13 @@
             </paper-item>
           </template>
         </paper-menu>
-        
+
       </paper-scroll-header-panel>
     </paper-material>
 
     <!-- Main Header Panel -->
     <paper-scroll-header-panel id="mainPanel" main fixed>
-      
+
       <!-- Main Toolbar -->
       <paper-toolbar id="mainToolbar">
         <paper-icon-button id="paperToggle" icon="myicons:menu" paper-drawer-toggle></paper-icon-button>
@@ -229,12 +235,12 @@ You can always change whether the extension has this permission from the Menu op
             <section id="helpInsertion"></section>
           </neon-animatable>
         </neon-animated-pages>
-        
+
       </div>
-      
+
     </paper-scroll-header-panel>
   </paper-drawer-panel>
-  
+
 </template>
 <script src="../scripts/main/main.js"></script>
 </body>
